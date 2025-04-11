@@ -82,7 +82,7 @@ python run.py delete-webhook
 
 Here’s how the project looks inside VSCode:
 
-![Project Screenshot](https://your-image-link.com/vscode-structure.png)
+![Project Screenshot](https://i.imgur.com/W7voTlK.png)
 
 ---
 
