@@ -130,4 +130,3 @@ Free to use, modify, and share.
 ---
 
 ## 🙌 Made with ❤️ by a developer who loves bots.
-```
