@@ -8,7 +8,7 @@ from typing import Dict
 
 from fastapi import FastAPI, HTTPException, Request, Response
 
-from db import BOT_TOKEN
+import db
 from services.telegram import UserService
 
 
@@ -23,7 +23,7 @@ def _verify_telegram_auth(data: Dict[str, str]) -> bool:
 
     data_check = {k: v for k, v in data.items() if k != "hash"}
     data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(data_check.items()))
-    secret_key = hashlib.sha256(BOT_TOKEN.encode()).digest()
+    secret_key = hashlib.sha256(db.BOT_TOKEN.encode()).digest()
     computed_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
     return hmac.compare_digest(computed_hash, received_hash)
 
@@ -31,7 +31,7 @@ def _verify_telegram_auth(data: Dict[str, str]) -> bool:
 def _create_session(telegram_id: int) -> str:
     """Create a simple signed session token storing the telegram_id."""
     payload = json.dumps({"telegram_id": telegram_id})
-    signature = hmac.new(BOT_TOKEN.encode(), payload.encode(), hashlib.sha256).hexdigest()
+    signature = hmac.new(db.BOT_TOKEN.encode(), payload.encode(), hashlib.sha256).hexdigest()
     token = base64.urlsafe_b64encode(payload.encode()).decode() + "." + signature
     return token
 

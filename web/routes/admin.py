@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request, Form
+from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
 from models import User, Group, UserRole
 from services.telegram import UserService
@@ -21,8 +21,11 @@ async def list_users(request: Request):
 
 
 @router.post("/users/{telegram_id}/role")
-async def change_user_role(telegram_id: int, role: UserRole = Form(...)):
-    """Change the role of a user."""
+async def change_user_role(telegram_id: int, role: UserRole):
+    """Change the role of a user.
+
+    Using a simple query/body parameter avoids the ``python-multipart``
+    dependency which keeps tests lightweight."""
     async with UserService() as service:
         await service.update_user_role(telegram_id, role)
     return {"status": "ok"}
