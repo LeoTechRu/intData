@@ -61,7 +61,13 @@
 
 ```bash
 pip install -r requirements.txt
-uvicorn web.main:app --reload
+uvicorn main:app --host 0.0.0.0 --port 5800 --reload
+```
+
+Альтернативно можно запускать веб-приложение напрямую:
+
+```bash
+uvicorn web:app --host 0.0.0.0 --port 5800 --reload
 ```
 
 ## Панель администратора на основе ролей
