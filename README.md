@@ -44,16 +44,16 @@
 
 ```dotenv
 BOT_TOKEN=123456789:AA...your...token
-TELEGRAM_BOT_USERNAME=YourBotName   # БЕЗ @
+TELEGRAM_BOT_USERNAME=YourBotName   # БЕЗ @; можно оставить BOT_USERNAME — тоже подхватится
 PUBLIC_BASE_URL=https://bot.example.com
 SESSION_MAX_AGE=86400
 ```
 
 ### Telegram Login Widget
 
-1. В @BotFather выполните команду `/setdomain` и укажите домен, на котором открывается страница `/auth/login` (без схемы).
-2. Убедитесь, что `TELEGRAM_BOT_USERNAME` указан без `@`.
-3. Если виджет показывает «Bot domain invalid» — домен страницы не совпадает с доменом, заданным ботом, либо указан неверный username.
+1. В @BotFather сделайте `/setdomain` и укажите домен, где открывается `/auth/login` (без схемы).
+2. `TELEGRAM_BOT_USERNAME` — без `@`.
+3. Если видите «Bot domain invalid», домен страницы не совпадает с заданным у бота или указан username с `@`.
 
 ### Запуск
 
@@ -66,13 +66,19 @@ uvicorn main:app --host 0.0.0.0 --port 5800
 uvicorn web:app --host 0.0.0.0 --port 5800
 ```
 
-### Маршруты
+### Навигация
 
 - `/` → редирект на `/auth/login`
 - `/auth/login` — вход через Telegram
 - `/auth/callback` — обработчик виджета
 - `/admin` → редирект на `/admin/users`
 - `/admin/users`, `/admin/groups`, `/profile/{telegram_id}` — админские страницы
+
+### Траблшутинг
+
+- «ValidationError / Extra inputs…» → теперь игнорируются (`extra='ignore'`).
+- «Field required: TELEGRAM_BOT_USERNAME» → используйте `TELEGRAM_BOT_USERNAME` или `BOT_USERNAME`.
+- «Bot domain invalid» → проверьте `/setdomain` и username без `@`.
 
 ## Панель администратора на основе ролей
 
