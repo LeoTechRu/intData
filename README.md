@@ -34,41 +34,45 @@
 - [ ] Тесты и CI/CD для бота и веб-сервера
 - [ ] Дополнительные модули: заметки, трекер привычек, учёт финансов, интеграция с внешними задачниками и календарями.
 
-## Telegram Login Widget
+## Веб-морда
 
-Веб-интерфейс использует виджет входа в Telegram для аутентификации. Настройте виджет с помощью следующих переменных окружения:
+Веб-приложение на FastAPI предоставляет админ-панель с авторизацией через Telegram.
 
-| Переменные | Описание |
-|----------|-------------|
-| `BOT_USERNAME` | Имя пользователя Telegram-бота, указанное в виджете (`data-telegram-login`). |
-| `BOT_TOKEN` | Токен бота, используемый для проверки данных авторизации. |
-| `WEB_APP_URL` | Базовый URL-адрес, по которому работает сервер FastAPI. |
-| `LOGIN_REDIRECT_URL` | URL обратного вызова передан в поле `data-auth-url`. |
+### Настройка `.env`
 
-Пример фрагмента виджета:
+Создайте файл `.env` в корне репозитория со следующими переменными:
 
-```html
-<script async src="https://telegram.org/js/telegram-widget.js"
-        data-telegram-login="${BOT_USERNAME}"
-        data-size="large"
-        data-auth-url="${LOGIN_REDIRECT_URL}"
-        data-request-access="write"></script>
+```dotenv
+BOT_TOKEN=123456789:AA...your...token
+TELEGRAM_BOT_USERNAME=YourBotName   # БЕЗ @
+PUBLIC_BASE_URL=https://bot.example.com
+SESSION_MAX_AGE=86400
 ```
 
-## Запуск сервера FastAPI
+### Telegram Login Widget
+
+1. В @BotFather выполните команду `/setdomain` и укажите домен, на котором открывается страница `/auth/login` (без схемы).
+2. Убедитесь, что `TELEGRAM_BOT_USERNAME` указан без `@`.
+3. Если виджет показывает «Bot domain invalid» — домен страницы не совпадает с доменом, заданным ботом, либо указан неверный username.
+
+### Запуск
 
 Установите зависимости и запустите сервер:
 
 ```bash
 pip install -r requirements.txt
-uvicorn main:app --host 0.0.0.0 --port 5800 --reload
+uvicorn main:app --host 0.0.0.0 --port 5800
+# или
+uvicorn web:app --host 0.0.0.0 --port 5800
 ```
 
-Альтернативно можно запускать веб-приложение напрямую:
+### Маршруты
 
-```bash
-uvicorn web:app --host 0.0.0.0 --port 5800 --reload
-```
+- `/` → редирект на `/auth/login`
+- `/auth/login` — вход через Telegram
+- `/auth/callback` — обработчик виджета
+- `/admin` → редирект на `/admin/users`
+- `/admin/users`, `/admin/groups`, `/profile/{telegram_id}` — админские страницы
 
 ## Панель администратора на основе ролей
 
