@@ -5,6 +5,9 @@ from src.services.bot import BotService
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await BotService.load_application()
+    try:
+        await BotService.load_application()
+    except Exception as exc:
+        print(f"Failed to start bot: {exc}")
 
     yield
