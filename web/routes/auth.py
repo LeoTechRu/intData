@@ -49,7 +49,8 @@ async def login_page() -> HTMLResponse:
     const resp = await fetch('/auth/callback', {{
       method: 'POST',
       headers: {{ 'Content-Type': 'application/x-www-form-urlencoded' }},
-      body: form.toString()
+      body: form.toString(),
+      credentials: 'same-origin'
     }});
     if (resp.redirected) {{
       window.location = resp.url;
@@ -90,5 +91,12 @@ async def telegram_callback(request: Request):
             await service.update_user_role(telegram_id, role)
 
     response = RedirectResponse("/admin/users", status_code=303)
-    response.set_cookie("telegram_id", str(telegram_id))
+    response.set_cookie(
+        "telegram_id",
+        str(telegram_id),
+        max_age=S.SESSION_MAX_AGE,
+        path="/",
+        httponly=True,
+        samesite="lax",
+    )
     return response
