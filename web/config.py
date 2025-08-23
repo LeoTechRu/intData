@@ -4,7 +4,7 @@ from dotenv import load_dotenv, find_dotenv
 from pydantic import Field, AnyHttpUrl, AliasChoices, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Грузим .env из корня репозитория (даже если uvicorn запущен из другого cwd)
+# Всегда грузим КОРНЕВОЙ .env (repo root), даже если uvicorn запущен из другого cwd
 ROOT_ENV = find_dotenv(usecwd=False)
 if ROOT_ENV:
     load_dotenv(ROOT_ENV, override=False)
@@ -35,6 +35,5 @@ class Settings(BaseSettings):
         case_sensitive=True,
         extra="ignore",  # <-- критично: не валимся на лишних переменных
     )
-
 
 S = Settings()

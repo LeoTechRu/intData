@@ -45,17 +45,15 @@
 ```dotenv
 BOT_TOKEN=123456789:AA...your...token
 TELEGRAM_BOT_USERNAME=YourBotName   # БЕЗ @; можно оставить BOT_USERNAME — тоже подхватится
-PUBLIC_BASE_URL=https://your.domain.tld
+PUBLIC_BASE_URL=http://109.196.99.158:5800  # можно указать домен или IP с портом
 SESSION_MAX_AGE=86400
 ```
 
 ### Telegram Login Widget
 
-В @BotFather сделайте `/setdomain` → укажите домен, где открывается `/auth/login`.
-
-`TELEGRAM_BOT_USERNAME` — без `@`.
-
-Если видите «Bot domain invalid», значит домен страницы не совпадает с тем, что задан у бота, либо указан username с `@`.
+1. В @BotFather сделайте `/setdomain` и укажите домен или IP, где открывается `/auth/login` (без схемы).
+2. `TELEGRAM_BOT_USERNAME` — без `@`.
+3. Если видите «Bot domain invalid», домен страницы не совпадает с заданным у бота или указан username с `@`.
 
 ### Запуск
 
@@ -78,7 +76,7 @@ uvicorn web:app --host 0.0.0.0 --port 5800
 
 ### Траблшутинг
 
-- «ValidationError / Extra inputs…» → теперь игнорируются (`extra='ignore`).
+- «ValidationError / Extra inputs…» → теперь игнорируются (`extra='ignore'`).
 - «Field required: TELEGRAM_BOT_USERNAME» → используйте `TELEGRAM_BOT_USERNAME` или `BOT_USERNAME`.
 - «Bot domain invalid» → проверьте `/setdomain` и username без `@`.
 
