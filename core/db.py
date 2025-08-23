@@ -1,4 +1,4 @@
-# /sd/tg/LeonidBot/db.py
+# /sd/tg/LeonidBot/core/db.py
 from aiogram import Dispatcher, Bot
 from aiogram.fsm.storage.memory import MemoryStorage
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
@@ -25,3 +25,4 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 bot = Bot(token=BOT_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
+

@@ -8,7 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from typing import Callable, Dict, Any, Optional
 import logging
 import os
-from models import LogLevel
+from core.models import LogLevel
 
 # Настройка базового логгера (только консоль)
 logging.basicConfig(
@@ -131,7 +131,7 @@ class LoggerMiddleware(BaseMiddleware):
 
         # Отправляем в Telegram только если уровень соответствует настройкам
         try:
-            from services.telegram import UserService
+            from core.services.telegram import UserService
             async with UserService() as user_service:
                 settings = await user_service.get_log_settings()
                 current_level = settings.level if settings else LogLevel.DEBUG

@@ -1,7 +1,15 @@
-# /sd/tg/LeonidBot/services/telegram.py
-from db import async_session
+# /sd/tg/LeonidBot/core/services/telegram.py
+from core.db import async_session
 from logger import logger
-from models import User, Group, UserGroup, UserRole, LogSettings, LogLevel, GroupType
+from core.models import (
+    User,
+    Group,
+    UserGroup,
+    UserRole,
+    LogSettings,
+    LogLevel,
+    GroupType,
+)
 from sqlalchemy.future import select
 from sqlalchemy.exc import IntegrityError
 from typing import Optional, List, Tuple, Any

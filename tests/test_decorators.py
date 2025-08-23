@@ -3,7 +3,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import decorators
-from models import UserRole
+from core.models import UserRole
 
 
 def make_message():

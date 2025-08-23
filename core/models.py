@@ -1,4 +1,4 @@
-# /sd/tg/LeonidBot/models.py
+# /sd/tg/LeonidBot/core/models.py
 from sqlalchemy import Column, Integer, BigInteger, String, Date, Boolean, DateTime, Enum, ForeignKey
 from base import Base
 from datetime import datetime
