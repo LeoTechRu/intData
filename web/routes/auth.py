@@ -1,6 +1,6 @@
 from __future__ import annotations
 import hmac, hashlib, time, os
-from typing import Dict
+from typing import Dict, List
 from fastapi import APIRouter, Request, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from web.config import S
@@ -24,13 +24,14 @@ def verify_telegram_login(data: Dict[str, str]) -> bool:
     return auth_date > 0 and (time.time() - auth_date) <= S.SESSION_MAX_AGE
 
 @router.get("/login", response_class=HTMLResponse)
-async def login_page():
+async def login_page() -> HTMLResponse:
+    """Render login page with Telegram widget."""
     bot_user = S.TELEGRAM_BOT_USERNAME
     html = f"""
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-  <meta charset=\"utf-8\" />
+  <meta charset="utf-8">
   <title>Вход</title>
 </head>
 <body>
@@ -73,15 +74,20 @@ async def telegram_callback(request: Request):
     data = dict((await request.form()).items())
     if not verify_telegram_login(data):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Bad Telegram signature")
-
     telegram_id = int(data["id"])  # type: ignore[index]
-
-    raw_admins = os.getenv("ADMIN_TELEGRAM_IDS") or (S.ADMIN_IDS or "")
-    admin_ids = {int(x) for x in raw_admins.split(",") if x.strip()}
+    admins_raw = os.getenv("ADMIN_TELEGRAM_IDS") or getattr(S, "ADMIN_IDS", "")
+    admin_ids: List[int] = []
+    for chunk in admins_raw.split(","):
+        chunk = chunk.strip()
+        if chunk:
+            try:
+                admin_ids.append(int(chunk))
+            except ValueError:
+                continue
     role = UserRole.admin if telegram_id in admin_ids else UserRole.single
 
     async with UserService() as service:
-        await service.get_or_create_user(
+        user, created = await service.get_or_create_user(
             telegram_id,
             role=role,
             id=telegram_id,
@@ -89,7 +95,10 @@ async def telegram_callback(request: Request):
             username=data.get("username"),
             last_name=data.get("last_name"),
             language_code=data.get("language_code"),
+            role=role.value,
         )
+        if not created and user and user.role != role.value:
+            await service.update_user_role(telegram_id, role)
 
     response = RedirectResponse("/admin/users", status_code=303)
     response.set_cookie("telegram_id", str(telegram_id))

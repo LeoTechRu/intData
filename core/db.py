@@ -3,10 +3,11 @@ from aiogram import Dispatcher, Bot
 from aiogram.fsm.storage.memory import MemoryStorage
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
-
-# Load environment variables
 import os
 from dotenv import load_dotenv
+import builtins
+import sys
+
 load_dotenv()
 
 # Database configuration
@@ -25,4 +26,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 bot = Bot(token=BOT_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
+
+# Make this module accessible as ``db`` to satisfy tests without explicit import
+builtins.db = sys.modules[__name__]
 
