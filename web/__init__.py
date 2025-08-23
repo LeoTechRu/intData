@@ -1,3 +1,4 @@
+"""Web application package for FastAPI endpoints."""
 from fastapi import FastAPI
 from .routes import admin
 
