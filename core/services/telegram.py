@@ -39,12 +39,13 @@ class UserService:
     def determine_role(self, telegram_id: int, role: UserRole | int | None = None) -> UserRole:
         if role is not None:
             return role if isinstance(role, UserRole) else UserRole(role)
-        admins_raw = os.getenv("ADMIN_TELEGRAM_IDS", "")
-        admin_ids = []
-        for chunk in admins_raw.split(","):
-            chunk = chunk.strip()
-            if chunk.isdigit():
-                admin_ids.append(int(chunk))
+        from web.config import S
+
+        admin_ids = [
+            int(x)
+            for x in (S.ADMIN_IDS or "").split(",")
+            if x.strip().isdigit()
+        ]
         return UserRole.admin if telegram_id in admin_ids else UserRole.single
 
     async def get_or_create_user(

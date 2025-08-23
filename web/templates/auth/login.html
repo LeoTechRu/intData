@@ -21,7 +21,8 @@
         fetch('/auth/callback', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(user)
+            body: JSON.stringify(user),
+            credentials: 'same-origin'
         }).then(resp => resp.json()).then(() => window.location = '/admin');
     }
 </script>
