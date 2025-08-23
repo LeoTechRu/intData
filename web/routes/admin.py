@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
-from models import User, Group, UserRole
+from core.models import User, Group, UserRole
 from core.services.telegram import UserService
 from sqlalchemy import select
 from ..dependencies import role_required

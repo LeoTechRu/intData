@@ -14,7 +14,7 @@ from sqlalchemy.orm import sessionmaker
 
 BOT_TOKEN = "TEST_TOKEN"
 from base import Base
-import db
+import core.db
 
 os.environ.setdefault("BOT_TOKEN", BOT_TOKEN)
 os.environ.setdefault("TELEGRAM_BOT_USERNAME", "testbot")

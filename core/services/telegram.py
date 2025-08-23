@@ -1,5 +1,5 @@
 # /sd/tg/LeonidBot/core/services/telegram.py
-import db
+import core.db
 from logger import logger
 from core.models import (
     User,

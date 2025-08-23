@@ -2,7 +2,7 @@ import types
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from models import User, UserRole
+from core.models import User, UserRole
 from web.routes import profile
 
 

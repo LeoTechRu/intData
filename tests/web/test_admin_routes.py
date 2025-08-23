@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from base import Base
-from models import User, UserRole
-import db
+from core.models import User, UserRole
+import core.db
 
 try:
     from core.main import app  # type: ignore

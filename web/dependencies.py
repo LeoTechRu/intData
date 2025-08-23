@@ -3,7 +3,7 @@ from typing import Optional
 
 from fastapi import Depends, HTTPException, Request, status
 
-from models import User, UserRole
+from core.models import User, UserRole
 from core.services.telegram import UserService
 
 
