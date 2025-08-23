@@ -1,5 +1,5 @@
 # /sd/tg/LeonidBot/core/services/telegram.py
-from core.db import async_session
+import db
 from logger import logger
 from core.models import (
     User,
@@ -24,7 +24,7 @@ class UserService:
         self.session = None
 
     async def __aenter__(self):
-        self.session = async_session()
+        self.session = db.async_session()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -253,11 +253,3 @@ class UserService:
             logger.error(f"Ошибка отправки лога в Telegram: {e}")
             return False
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        try:
-            if exc_type is None:
-                await self.session.commit()
-            else:
-                await self.session.rollback()
-        finally:
-            await self.session.close()  # Всегда закрываем сессию

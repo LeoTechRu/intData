@@ -1,12 +1,43 @@
-from fastapi import Depends, HTTPException, status
+"""Common dependencies for FastAPI routes."""
+from typing import Optional
+
+from fastapi import Depends, HTTPException, Request, status
+
 from models import User, UserRole
+from services.telegram import UserService
 
 
-async def get_current_user() -> User:
-    """Return the current user. In a real application this would pull
-    the user from the request/session. Here we provide a placeholder
-    admin user so that the dependency can be used in examples."""
-    return User(telegram_id=0, first_name="Admin", role=UserRole.admin.value)
+async def get_current_user(request: Request) -> User:
+    """Extract the current user from request headers.
+
+    Supports ``X-Telegram-Id`` and ``Authorization: Bearer <id>`` headers
+    so tests and legacy clients can authenticate easily.
+    """
+    user_id: Optional[int] = None
+    raw = request.headers.get("X-Telegram-Id")
+    if raw:
+        try:
+            user_id = int(raw)
+        except ValueError as exc:  # pragma: no cover - defensive
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid X-Telegram-Id") from exc
+
+    if user_id is None:
+        auth = request.headers.get("Authorization")
+        if auth and auth.startswith("Bearer "):
+            token = auth.split(" ", 1)[1]
+            try:
+                user_id = int(token)
+            except ValueError as exc:  # pragma: no cover - defensive
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token") from exc
+
+    if user_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+
+    async with UserService() as service:
+        user = await service.get_user_by_telegram_id(user_id)
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+        return user
 
 
 def role_required(required_role: UserRole):
