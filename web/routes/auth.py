@@ -1,10 +1,12 @@
 from __future__ import annotations
 import hmac, hashlib, time
-from typing import Dict
+from typing import Dict, List
 from fastapi import APIRouter, Request, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from web.config import S
 from core.services.telegram import UserService
+from core.models import UserRole
+import os
 
 router = APIRouter(tags=["auth"])
 
@@ -23,35 +25,42 @@ def verify_telegram_login(data: Dict[str, str]) -> bool:
     return auth_date > 0 and (time.time() - auth_date) <= S.SESSION_MAX_AGE
 
 @router.get("/login", response_class=HTMLResponse)
-async def login_page():
+async def login_page() -> HTMLResponse:
+    """Render login page with Telegram widget."""
     bot_user = S.TELEGRAM_BOT_USERNAME
     html = f"""
-<!doctype html><meta charset="utf-8">
-<title>Login via Telegram</title>
-<script async src="https://telegram.org/js/telegram-widget.js?22"
-        data-telegram-login="{bot_user}"
-        data-size="large"
-        data-onauth="onTelegramAuth(user)"
-        data-request-access="write"></script>
-<script>
-async function onTelegramAuth(user) {{
-  const form = new URLSearchParams();
-  for (const [k, v] of Object.entries(user)) form.append(k, v);
-  const resp = await fetch("/auth/callback", {{
-    method: "POST",
-    headers: {{ "Content-Type": "application/x-www-form-urlencoded" }},
-    body: form.toString()
-  }});
-  if (resp.redirected) {{
-    window.location = resp.url;
-  }} else {{
-    const j = await resp.json();
-    if (resp.ok) window.location = "/admin";
-    else alert("Auth error: " + j.detail);
-  }}
-}}
-</script>
-<body><h1>Вход через Telegram</h1></body>
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Вход</title>
+</head>
+<body>
+  <h1>Вход через Telegram</h1>
+  <script src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="{bot_user}" data-size="medium" data-userpic="false" data-request-access="write" data-lang="ru" data-onauth="onTelegramAuth(user)"></script>
+  <script>
+    async function onTelegramAuth(user) {{
+      const form = new URLSearchParams();
+      for (const [k, v] of Object.entries(user)) form.append(k, v);
+      try {{
+        const resp = await fetch('/auth/callback', {{
+          method: 'POST',
+          headers: {{'Content-Type': 'application/x-www-form-urlencoded'}},
+          body: form.toString()
+        }});
+        if (resp.redirected) {{
+          window.location = resp.url;
+        }} else {{
+          const j = await resp.json();
+          alert(j.detail || 'Auth error');
+        }}
+      }} catch (e) {{
+        alert('Auth error');
+      }}
+    }}
+  </script>
+</body>
+</html>
 """
     return HTMLResponse(html)
 
@@ -62,16 +71,31 @@ async def telegram_callback(request: Request):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Bad Telegram signature")
 
     telegram_id = int(data["id"])  # type: ignore[index]
+
+    admins_raw = os.getenv("ADMIN_TELEGRAM_IDS") or getattr(S, "ADMIN_IDS", "")
+    admin_ids: List[int] = []
+    for chunk in admins_raw.split(","):
+        chunk = chunk.strip()
+        if chunk:
+            try:
+                admin_ids.append(int(chunk))
+            except ValueError:
+                continue
+    role = UserRole.admin if telegram_id in admin_ids else UserRole.single
+
     async with UserService() as service:
-        await service.get_or_create_user(
+        user, created = await service.get_or_create_user(
             telegram_id,
             id=telegram_id,
             first_name=data.get("first_name"),
             username=data.get("username"),
             last_name=data.get("last_name"),
             language_code=data.get("language_code"),
+            role=role.value,
         )
+        if not created and user and user.role != role.value:
+            await service.update_user_role(telegram_id, role)
 
-    response = RedirectResponse("/admin", status_code=303)
+    response = RedirectResponse("/admin/users", status_code=303)
     response.set_cookie("telegram_id", str(telegram_id))
     return response
