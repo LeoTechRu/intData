@@ -5,10 +5,28 @@
 </head>
 <body>
     <h1>Users</h1>
-    <ul>
+    <a href="/admin/groups">Группы</a>
+    {% if users %}
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>username</th>
+            <th>first_name</th>
+            <th>last_name</th>
+            <th>role</th>
+        </tr>
         {% for user in users %}
-        <li>{{ user.first_name }} ({{ user.role }})</li>
+        <tr>
+            <td>{{ user.telegram_id }}</td>
+            <td>{{ user.username }}</td>
+            <td>{{ user.first_name }}</td>
+            <td>{{ user.last_name }}</td>
+            <td>{{ UserRole(user.role).name }}</td>
+        </tr>
         {% endfor %}
-    </ul>
+    </table>
+    {% else %}
+    <p>нет пользователей</p>
+    {% endif %}
 </body>
 </html>

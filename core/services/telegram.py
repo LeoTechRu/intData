@@ -35,27 +35,31 @@ class UserService:
         await self.session.close()
 
     # ==== USER METHODS ====
-    async def get_or_create_user(self, telegram_id: int, **kwargs) -> Tuple[User, bool]:
+    async def get_or_create_user(
+        self,
+        telegram_id: int,
+        *,
+        role: UserRole = UserRole.single,
+        **kwargs,
+    ) -> Tuple[User, bool]:
         """Получает или создает пользователя с автоматическим заполнением данных"""
         user = await self.get_user_by_telegram_id(telegram_id)
         if user:
             return user, False
 
-        # Автоматическое заполнение из kwargs
         required_fields = {
             "telegram_id": telegram_id,
             "first_name": kwargs.get("first_name", f"User_{telegram_id}"),
-            "role": kwargs.get("role", UserRole.single.value)
+            "role": role.value,
         }
         if "id" in kwargs:
             required_fields["id"] = kwargs["id"]
 
-        # Добавляем опциональные поля
         optional_fields = {
             "username": kwargs.get("username"),
             "last_name": kwargs.get("last_name"),
             "language_code": kwargs.get("language_code"),
-            "is_premium": kwargs.get("is_premium", False)
+            "is_premium": kwargs.get("is_premium", False),
         }
 
         return await self.create_user(**{**required_fields, **optional_fields}), True
