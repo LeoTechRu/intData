@@ -1,8 +1,8 @@
 # /sd/tg/LeonidBot/decorators.py
 from functools import wraps
 from aiogram.types import Message
-from services.telegram import UserService
-from models import UserRole, GroupType
+from core.services.telegram import UserService
+from core.models import UserRole, GroupType
 from logger import logger
 
 def role_required(role: UserRole):

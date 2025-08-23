@@ -1,4 +1,4 @@
-# /sd/tg/LeonidBot/handlers/telegram.py
+# /sd/tg/LeonidBot/bot/handlers/telegram.py
 import re
 
 from aiogram import Router, F
@@ -9,8 +9,8 @@ from aiogram.fsm.state import State, StatesGroup
 from datetime import datetime
 from typing import Callable
 from decorators import role_required, group_required
-from models import User, GroupType, LogLevel, UserRole
-from services.telegram import UserService
+from core.models import User, GroupType, LogLevel, UserRole
+from core.services.telegram import UserService
 
 # ==============================
 # РОУТЕРЫ
@@ -212,14 +212,14 @@ async def unknown_message_handler(message: Message):
         meta_text = f"||origin_chat_id:{message.chat.id}|origin_msg_id:{message.message_id}||"
         await message.forward(log_chat_id)
         # Отправляем метаданные как отдельное сообщение (скрытое)
-        from db import bot
+        from core.db import bot
         await bot.send_message(log_chat_id, meta_text, parse_mode=None)
     except Exception as e:
         print(f"Ошибка логирования: {e}")
 
 @router.message(F.chat.id == log_chat_id)
 async def handle_admin_reply(message: Message):
-    from db import bot
+    from core.db import bot
     from aiogram.exceptions import TelegramAPIError
     from logger import logger
     if message.reply_to_message:

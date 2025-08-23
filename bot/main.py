@@ -1,11 +1,11 @@
-# /sd/tg/LeonidBot/main.py
+# /sd/tg/LeonidBot/bot/main.py
 import asyncio
 import logging
 
 from aiogram.exceptions import TelegramNetworkError
 
-from db import bot, dp
-from handlers.telegram import user_router, group_router, router
+from core.db import bot, dp
+from bot.handlers.telegram import user_router, group_router, router
 from logger import LoggerMiddleware
 
 

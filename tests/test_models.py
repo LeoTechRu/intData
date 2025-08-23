@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from base import Base
-from models import User, Group, Channel, UserRole, GroupType, ChannelType
+from core.models import User, Group, Channel, UserRole, GroupType, ChannelType
 
 
 @pytest.fixture()
