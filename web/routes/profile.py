@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.templating import Jinja2Templates
 
 from models import User, UserRole
-from services.telegram import UserService
+from core.services.telegram import UserService
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 

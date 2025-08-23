@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import Depends, HTTPException, Request, status
 
 from models import User, UserRole
-from services.telegram import UserService
+from core.services.telegram import UserService
 
 
 async def get_current_user(request: Request) -> User:

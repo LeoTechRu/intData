@@ -11,7 +11,7 @@ from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
-from services.telegram import UserService
+from core.services.telegram import UserService
 
 
 templates = Jinja2Templates(directory="web/templates")
