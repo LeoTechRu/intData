@@ -1,18 +1,27 @@
 # /sd/tg/LeonidBot/main.py
+import asyncio
+import logging
+
+from aiogram.exceptions import TelegramNetworkError
+
 from db import bot, dp
 from handlers.telegram import user_router, group_router, router
 from logger import LoggerMiddleware
-import asyncio
 
 
-async def main():
-    # Регистрация мидлвари
+async def main() -> None:
+    """Run bot polling with middleware and routers."""
     dp.message.middleware(LoggerMiddleware(bot))
     dp.callback_query.middleware(LoggerMiddleware(bot))
     dp.include_router(user_router)
     dp.include_router(group_router)
     dp.include_router(router)
-    await dp.start_polling(bot)
+    try:
+        await dp.start_polling(bot)
+    except TelegramNetworkError as e:
+        logging.error(f"Telegram network error: {e}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
+
