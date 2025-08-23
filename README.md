@@ -33,3 +33,44 @@
 - [ ] Разделение кода на модули и добавление миграций БД.
 - [ ] Тесты и CI/CD для бота и веб-сервера
 - [ ] Дополнительные модули: заметки, трекер привычек, учёт финансов, интеграция с внешними задачниками и календарями.
+
+## Telegram Login Widget
+
+The web interface uses the Telegram Login Widget for authentication.
+Configure the widget using the following environment variables:
+
+| Variable | Description |
+|----------|-------------|
+| `BOT_USERNAME` | Telegram bot username referenced by the widget (`data-telegram-login`). |
+| `BOT_TOKEN` | Bot token used to verify authorization data. |
+| `WEB_APP_URL` | Base URL where the FastAPI server is running. |
+| `LOGIN_REDIRECT_URL` | Callback URL passed to `data-auth-url`. |
+
+Example widget snippet:
+
+```html
+<script async src="https://telegram.org/js/telegram-widget.js"
+        data-telegram-login="${BOT_USERNAME}"
+        data-size="large"
+        data-auth-url="${LOGIN_REDIRECT_URL}"
+        data-request-access="write"></script>
+```
+
+## Running the FastAPI server
+
+Install dependencies and start the server:
+
+```bash
+pip install -r requirements.txt
+uvicorn web.main:app --reload
+```
+
+## Role-based admin panel
+
+Roles defined in `models.py` determine access to admin panel features:
+
+- `ban` – no access to the bot.
+- `single` – manage only personal data.
+- `multiplayer` – view group participants.
+- `moderator` – edit participant information.
+- `admin` – full access to all functions.
