@@ -1,6 +1,6 @@
 # /sd/tg/LeonidBot/core/services/telegram.py
-import core.db
-from logger import logger
+from core import db
+from core.logger import logger
 from core.models import (
     User,
     Group,
@@ -12,7 +12,7 @@ from core.models import (
 )
 from sqlalchemy.future import select
 from sqlalchemy.exc import IntegrityError
-from typing import Optional, List, Tuple, Any
+from typing import Optional, List, Tuple, Any, Dict
 from datetime import datetime, timedelta
 import os
 from aiogram import Bot
@@ -35,11 +35,23 @@ class UserService:
         await self.session.close()
 
     # ==== USER METHODS ====
+
+    def determine_role(self, telegram_id: int, role: UserRole | int | None = None) -> UserRole:
+        if role is not None:
+            return role if isinstance(role, UserRole) else UserRole(role)
+        admins_raw = os.getenv("ADMIN_TELEGRAM_IDS", "")
+        admin_ids = []
+        for chunk in admins_raw.split(","):
+            chunk = chunk.strip()
+            if chunk.isdigit():
+                admin_ids.append(int(chunk))
+        return UserRole.admin if telegram_id in admin_ids else UserRole.single
+
     async def get_or_create_user(
         self,
         telegram_id: int,
         *,
-        role: UserRole = UserRole.single,
+        role: UserRole | int | None = None,
         **kwargs,
     ) -> Tuple[User, bool]:
         """Получает или создает пользователя с автоматическим заполнением данных"""
@@ -47,10 +59,11 @@ class UserService:
         if user:
             return user, False
 
+        resolved_role = self.determine_role(telegram_id, role)
         required_fields = {
             "telegram_id": telegram_id,
             "first_name": kwargs.get("first_name", f"User_{telegram_id}"),
-            "role": role.value,
+            "role": resolved_role.value,
         }
         if "id" in kwargs:
             required_fields["id"] = kwargs["id"]
@@ -109,6 +122,15 @@ class UserService:
         except Exception as e:
             logger.error(f"Ошибка обновления роли пользователя: {e}")
             return False
+
+    async def list_users(self) -> List[User]:
+        """Возвращает список всех пользователей"""
+        try:
+            result = await self.session.execute(select(User))
+            return result.scalars().all()
+        except Exception as e:
+            logger.error(f"Ошибка получения списка пользователей: {e}")
+            return []
 
     # ==== GROUP METHODS ====
     async def get_or_create_group(self, telegram_id: int, **kwargs) -> Tuple[Group, bool]:
@@ -200,6 +222,20 @@ class UserService:
             return result.scalars().all()
         except Exception as e:
             logger.error(f"Ошибка получения участников группы: {e}")
+            return []
+
+    async def list_groups_with_members(self) -> List[Dict[str, Any]]:
+        """Возвращает список групп с участниками"""
+        try:
+            result = await self.session.execute(select(Group))
+            groups = result.scalars().all()
+            groups_with_members = []
+            for group in groups:
+                members = await self.get_group_members(group.telegram_id)
+                groups_with_members.append({"group": group, "members": members})
+            return groups_with_members
+        except Exception as e:
+            logger.error(f"Ошибка получения списка групп: {e}")
             return []
 
     # ==== LOGGING METHODS ====
