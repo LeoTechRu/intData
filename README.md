@@ -69,8 +69,8 @@ uvicorn web:app --host 0.0.0.0 --port 5800
 ### Навигация
 
 - `/` → редирект на `/auth/login`
-- `/auth/login` — вход через Telegram
-- `/auth/callback` — обработчик виджета
+- `/auth/login` — кнопка входа Telegram
+- `/auth/callback` — проверка подписи, апсерт пользователя → редирект на `/admin`
 - `/admin` → редирект на `/admin/users`
 - `/admin/users`, `/admin/groups`, `/profile/{telegram_id}` — админские страницы
 

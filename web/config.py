@@ -1,7 +1,8 @@
 from __future__ import annotations
+from pathlib import Path
+from dotenv import load_dotenv, find_dotenv
 from pydantic import Field, AnyHttpUrl, AliasChoices, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from dotenv import load_dotenv, find_dotenv
 
 # Всегда грузим КОРНЕВОЙ .env (repo root), даже если uvicorn запущен из другого cwd
 ROOT_ENV = find_dotenv(usecwd=False)
@@ -10,7 +11,8 @@ if ROOT_ENV:
 
 
 class Settings(BaseSettings):
-    BOT_TOKEN: str = Field(..., description="Telegram bot token")
+    # Основные переменные для веб-морды
+    BOT_TOKEN: str = Field(..., description="Telegram Bot API token")
     TELEGRAM_BOT_USERNAME: str = Field(
         ...,
         description="Bot username без @",
@@ -31,8 +33,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=ROOT_ENV if ROOT_ENV else ".env",
         case_sensitive=True,
-        extra="ignore",
+        extra="ignore",  # <-- критично: не валимся на лишних переменных
     )
-
 
 S = Settings()
