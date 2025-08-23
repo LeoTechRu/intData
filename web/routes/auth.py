@@ -1,10 +1,11 @@
 from __future__ import annotations
-import hmac, hashlib, time
+import hmac, hashlib, time, os
 from typing import Dict
 from fastapi import APIRouter, Request, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from web.config import S
 from core.services.telegram import UserService
+from core.models import UserRole
 
 router = APIRouter(tags=["auth"])
 
@@ -26,32 +27,44 @@ def verify_telegram_login(data: Dict[str, str]) -> bool:
 async def login_page():
     bot_user = S.TELEGRAM_BOT_USERNAME
     html = f"""
-<!doctype html><meta charset="utf-8">
-<title>Login via Telegram</title>
-<script async src="https://telegram.org/js/telegram-widget.js?22"
-        data-telegram-login="{bot_user}"
-        data-size="large"
-        data-onauth="onTelegramAuth(user)"
-        data-request-access="write"></script>
-<script>
-async function onTelegramAuth(user) {{
-  const form = new URLSearchParams();
-  for (const [k, v] of Object.entries(user)) form.append(k, v);
-  const resp = await fetch("/auth/callback", {{
-    method: "POST",
-    headers: {{ "Content-Type": "application/x-www-form-urlencoded" }},
-    body: form.toString()
-  }});
-  if (resp.redirected) {{
-    window.location = resp.url;
-  }} else {{
-    const j = await resp.json();
-    if (resp.ok) window.location = "/admin";
-    else alert("Auth error: " + j.detail);
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=\"utf-8\" />
+  <title>Вход</title>
+</head>
+<body>
+  <h1>Вход через Telegram</h1>
+  <script src=\"https://telegram.org/js/telegram-widget.js?22\"
+          data-telegram-login=\"{bot_user}\"
+          data-size=\"medium\"
+          data-userpic=\"false\"
+          data-request-access=\"write\"
+          data-lang=\"ru\"
+          data-onauth=\"onTelegramAuth(user)\"></script>
+  <script>
+  async function onTelegramAuth(user) {{
+    const form = new URLSearchParams();
+    for (const [k, v] of Object.entries(user)) {{ form.append(k, v); }}
+    const resp = await fetch('/auth/callback', {{
+      method: 'POST',
+      headers: {{ 'Content-Type': 'application/x-www-form-urlencoded' }},
+      body: form.toString()
+    }});
+    if (resp.redirected) {{
+      window.location = resp.url;
+    }} else {{
+      let detail = 'Ошибка авторизации';
+      try {{
+        const j = await resp.json();
+        if (j && j.detail) detail = j.detail;
+      }} catch (_) {{}}
+      alert(detail);
+    }}
   }}
-}}
-</script>
-<body><h1>Вход через Telegram</h1></body>
+  </script>
+</body>
+</html>
 """
     return HTMLResponse(html)
 
@@ -62,9 +75,15 @@ async def telegram_callback(request: Request):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Bad Telegram signature")
 
     telegram_id = int(data["id"])  # type: ignore[index]
+
+    raw_admins = os.getenv("ADMIN_TELEGRAM_IDS") or (S.ADMIN_IDS or "")
+    admin_ids = {int(x) for x in raw_admins.split(",") if x.strip()}
+    role = UserRole.admin if telegram_id in admin_ids else UserRole.single
+
     async with UserService() as service:
         await service.get_or_create_user(
             telegram_id,
+            role=role,
             id=telegram_id,
             first_name=data.get("first_name"),
             username=data.get("username"),
@@ -72,6 +91,6 @@ async def telegram_callback(request: Request):
             language_code=data.get("language_code"),
         )
 
-    response = RedirectResponse("/admin", status_code=303)
+    response = RedirectResponse("/admin/users", status_code=303)
     response.set_cookie("telegram_id", str(telegram_id))
     return response

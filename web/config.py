@@ -24,6 +24,11 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("PUBLIC_BASE_URL", "WEB_APP_URL"),
     )
     SESSION_MAX_AGE: int = 86400
+    ADMIN_IDS: str | None = Field(
+        default=None,
+        description="CSV-список ID администраторов",
+        validation_alias=AliasChoices("ADMIN_TELEGRAM_IDS", "ADMIN_IDS"),
+    )
 
     @field_validator("TELEGRAM_BOT_USERNAME")
     @classmethod

@@ -17,7 +17,10 @@ async def list_users(request: Request):
     async with UserService() as service:
         result = await service.session.execute(select(User))
         users = result.scalars().all()
-    return templates.TemplateResponse("admin/users.html", {"request": request, "users": users})
+    return templates.TemplateResponse(
+        "admin/users.html",
+        {"request": request, "users": users, "UserRole": UserRole},
+    )
 
 
 @router.post("/users/{telegram_id}/role")
