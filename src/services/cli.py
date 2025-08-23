@@ -1,4 +1,4 @@
-from telegram import Bot
+from aiogram import Bot
 from src.config.settings import BOT_TOKEN, WEBHOOK_URL
 import asyncio
 
