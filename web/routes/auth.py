@@ -1,11 +1,10 @@
 from __future__ import annotations
-import hmac, hashlib, time, os
-from typing import Dict, List
+import hmac, hashlib, time
+from typing import Dict
 from fastapi import APIRouter, Request, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from web.config import S
 from core.services.telegram import UserService
-from core.models import UserRole
 
 router = APIRouter(tags=["auth"])
 
@@ -75,18 +74,9 @@ async def telegram_callback(request: Request):
     if not verify_telegram_login(data):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Bad Telegram signature")
     telegram_id = int(data["id"])  # type: ignore[index]
-    admins_raw = os.getenv("ADMIN_TELEGRAM_IDS") or getattr(S, "ADMIN_IDS", "")
-    admin_ids: List[int] = []
-    for chunk in admins_raw.split(","):
-        chunk = chunk.strip()
-        if chunk:
-            try:
-                admin_ids.append(int(chunk))
-            except ValueError:
-                continue
-    role = UserRole.admin if telegram_id in admin_ids else UserRole.single
 
     async with UserService() as service:
+        role = service.determine_role(telegram_id)
         user, created = await service.get_or_create_user(
             telegram_id,
             role=role,
@@ -95,7 +85,6 @@ async def telegram_callback(request: Request):
             username=data.get("username"),
             last_name=data.get("last_name"),
             language_code=data.get("language_code"),
-            role=role.value,
         )
         if not created and user and user.role != role.value:
             await service.update_user_role(telegram_id, role)
