@@ -36,17 +36,16 @@
 
 ## Telegram Login Widget
 
-The web interface uses the Telegram Login Widget for authentication.
-Configure the widget using the following environment variables:
+Веб-интерфейс использует виджет входа в Telegram для аутентификации. Настройте виджет с помощью следующих переменных окружения:
 
-| Variable | Description |
+| Переменные | Описание |
 |----------|-------------|
-| `BOT_USERNAME` | Telegram bot username referenced by the widget (`data-telegram-login`). |
-| `BOT_TOKEN` | Bot token used to verify authorization data. |
-| `WEB_APP_URL` | Base URL where the FastAPI server is running. |
-| `LOGIN_REDIRECT_URL` | Callback URL passed to `data-auth-url`. |
+| `BOT_USERNAME` | Имя пользователя Telegram-бота, указанное в виджете (`data-telegram-login`). |
+| `BOT_TOKEN` | Токен бота, используемый для проверки данных авторизации. |
+| `WEB_APP_URL` | Базовый URL-адрес, по которому работает сервер FastAPI. |
+| `LOGIN_REDIRECT_URL` | URL обратного вызова передан в поле `data-auth-url`. |
 
-Example widget snippet:
+Пример фрагмента виджета:
 
 ```html
 <script async src="https://telegram.org/js/telegram-widget.js"
@@ -56,21 +55,21 @@ Example widget snippet:
         data-request-access="write"></script>
 ```
 
-## Running the FastAPI server
+## Запуск сервера FastAPI
 
-Install dependencies and start the server:
+Установите зависимости и запустите сервер:
 
 ```bash
 pip install -r requirements.txt
 uvicorn web.main:app --reload
 ```
 
-## Role-based admin panel
+## Панель администратора на основе ролей
 
-Roles defined in `models.py` determine access to admin panel features:
+Роли, определённые в файле `models.py`, определяют доступ к функциям панели администратора:
 
-- `ban` – no access to the bot.
-- `single` – manage only personal data.
-- `multiplayer` – view group participants.
-- `moderator` – edit participant information.
-- `admin` – full access to all functions.
+- `ban` – у меня нет доступа к боту.
+- `single` – управляйте только личными данными.
+- `multiplayer` – просмотр участников группы.
+- `moderator` – отредактируйте информацию об участнике.
+- `admin` – полный доступ ко всем функциям.
