@@ -1,10 +1,10 @@
-from src.config.settings import DEBUG, BOT_TOKEN
+from core.config.settings import DEBUG, BOT_TOKEN
 from argparse import ArgumentParser, RawTextHelpFormatter
 from colorama import Fore, init as colorama_init
 
 import uvicorn
 
-from src.services.cli import CLIService
+from core.services.cli import CLIService
 
 
 colorama_init(autoreset=True)
@@ -33,7 +33,7 @@ def main():
             print(Fore.RED + "Error " + message)
 
     elif command == "runserver":
-        uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=DEBUG)
+        uvicorn.run("core.main:app", host="0.0.0.0", port=8000, reload=DEBUG)
 
 
 if __name__ == "__main__":

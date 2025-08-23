@@ -9,7 +9,7 @@ from models import User, UserRole
 import db
 
 try:
-    from src.main import app  # type: ignore
+    from core.main import app  # type: ignore
 except ModuleNotFoundError:  # pragma: no cover
     from main import app  # type: ignore
 

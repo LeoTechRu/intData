@@ -12,7 +12,7 @@ from base import Base
 import db
 
 try:
-    from src.main import app  # type: ignore
+    from core.main import app  # type: ignore
 except ModuleNotFoundError:  # fallback if app located differently
     from main import app  # type: ignore
 
