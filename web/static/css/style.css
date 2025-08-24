@@ -1,0 +1,90 @@
+:root {
+  --color-bg: #ffffff;
+  --color-accent-turquoise: #64c6a9;
+  --color-accent-purple: #cfa0e9;
+  --font-family-base: 'Inter', 'Roboto', sans-serif;
+  --radius: 0.5rem;
+  --spacing: 1rem;
+  --font-size-base: 16px;
+  --font-size-xl: 2rem;
+}
+
+body {
+  background-color: var(--color-bg);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3 {
+  font-weight: 300;
+  margin-bottom: 0.5rem;
+}
+
+h1 { font-size: var(--font-size-xl); }
+
+.ui-layout {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--spacing);
+}
+
+button, .button {
+  background-color: var(--color-accent-turquoise);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.admin-panel {
+  margin-top: 2rem;
+  padding: var(--spacing);
+  background-color: var(--color-accent-purple);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  color: #fff;
+}
+
+.admin-panel nav ul {
+  display: flex;
+  gap: 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.admin-panel nav a {
+  color: #fff;
+  text-decoration: none;
+}
+
+@media (max-width: 600px) {
+  .admin-panel nav ul {
+    flex-direction: column;
+  }
+}
+
+/* @ui component helpers */
+.ui-table { width:100%; border-collapse: collapse; }
+.ui-table th, .ui-table td { padding:0.5rem; border-bottom:1px solid #e5e7eb; }
+
+.ui-form input, .ui-form select, .ui-form textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: var(--radius);
+  margin-bottom: var(--spacing);
+}
+
+.ui-notice {
+  padding: var(--spacing);
+  background-color: var(--color-accent-turquoise);
+  color: #fff;
+  border-radius: var(--radius);
+  margin-bottom: var(--spacing);
+}

@@ -59,6 +59,11 @@ class User(Base):  # Пользователь
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+    @property
+    def is_admin(self) -> bool:
+        """Return True if user has admin privileges."""
+        return self.role >= UserRole.admin.value
+
 
 class Group(Base):  # Группа
     __tablename__ = "groups"
