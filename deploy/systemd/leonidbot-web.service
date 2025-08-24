@@ -1,0 +1,16 @@
+[Unit]
+Description=LeonidBot Web Service (FastAPI)
+After=network.target
+
+[Service]
+WorkingDirectory=/sd/tg/LeonidBot # изменить при установке
+Environment="PATH=/sd/tg/LeonidBot/venv/bin"
+EnvironmentFile=/sd/tg/LeonidBot/.env # изменить при установке
+# Uvicorn будет слушать все интерфейсы на порту 5800
+ExecStart=/sd/tg/LeonidBot/venv/bin/uvicorn web:app --host 0.0.0.0 --port 5800
+Restart=always
+# User=www-data
+# Group=www-data
+
+[Install]
+WantedBy=multi-user.target
