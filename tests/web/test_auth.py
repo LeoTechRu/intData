@@ -73,8 +73,7 @@ async def test_middleware_redirects(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_middleware_allows_authenticated(client: AsyncClient):
-    """Authenticated users hitting root are sent to the dashboard."""
+    """Authenticated users should see the dashboard at root."""
     client.cookies.set("telegram_id", "1")
     resp = await client.get("/", follow_redirects=False)
-    assert resp.status_code in {302, 303, 307}
-    assert resp.headers["location"] == "/start"
+    assert resp.status_code == 200
