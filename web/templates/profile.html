@@ -10,18 +10,3 @@
     <input id="birth_date" type="date" name="birth_date" value="{{ user.birth_date or '' }}">
     <button type="submit">Сохранить</button>
 </form>
-<script>
-const form = document.getElementById('profile-edit-form');
-if (form) {
-  form.addEventListener('submit', async (ev) => {
-    ev.preventDefault();
-    const formData = new FormData(form);
-    const resp = await fetch(window.location.pathname, {method: 'POST', body: formData, credentials: 'include'});
-    if (resp.ok) {
-      const html = await resp.text();
-      const container = document.getElementById('main-content');
-      if (container) container.innerHTML = html;
-    }
-  });
-}
-</script>
