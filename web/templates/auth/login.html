@@ -1,40 +1,44 @@
 {% extends "layout.html" %}
 {% block title %}Вход{% endblock %}
 {% block content %}
-<header class="top-bar">
-  <h1 class="welcome"><a href="/">Привет, гость, авторизуйся для дальнейшей работы</a></h1>
-  <div class="top-right"></div>
-</header>
-<div id="login-page" class="ui-layout">
-  <h1>Вход через Telegram</h1>
-  <script src="https://telegram.org/js/telegram-widget.js?22"
-          data-telegram-login="{{ bot_username }}"
-          data-size="large"
-          data-userpic="false"
-          data-request-access="write"
-          data-lang="ru"
-          data-onauth="onTelegramAuth(user)"></script>
-</div>
-<script>
-async function onTelegramAuth(user) {
-  const form = new URLSearchParams();
-  for (const [k,v] of Object.entries(user)) { form.append(k, v); }
-  const resp = await fetch('/auth/callback{{ next_query }}', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: form.toString(),
-    credentials: 'same-origin'
-  });
-  if (resp.redirected) {
-    window.location = resp.url;
-  } else {
-    let detail = 'Ошибка авторизации';
-    try {
-      const j = await resp.json();
-      if (j && j.detail) detail = j.detail;
-    } catch (_) {}
-    alert(detail);
+  <div id="login-page" class="ui-layout">
+    <div class="top-bar">
+      <h1 class="welcome">Привет, гость, авторизуйся для дальнейшей работы</h1>
+    </div>
+
+    <h2>Вход через Telegram</h2>
+    <div>
+      <script async src="https://telegram.org/js/telegram-widget.js?22"
+              data-telegram-login="{{ bot_username }}"
+              data-size="large"
+              data-userpic="false"
+              data-onauth="onTelegramAuth(user)"
+              data-request-access="write">
+      </script>
+    </div>
+  </div>
+
+  <script>
+  async function onTelegramAuth(user) {
+    const form = new URLSearchParams();
+    for (const [k,v] of Object.entries(user)) { form.append(k, v); }
+    const resp = await fetch('/auth/callback{{ next_query }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: form.toString(),
+      credentials: 'same-origin'
+    });
+    if (resp.redirected) {
+      window.location = resp.url;
+    } else {
+      let detail = 'Ошибка авторизации';
+      try {
+        const j = await resp.json();
+        if (j && j.detail) detail = j.detail;
+      } catch (_) {}
+      alert(detail);
+    }
   }
-}
-</script>
+  </script>
 {% endblock %}
+

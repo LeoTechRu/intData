@@ -27,6 +27,10 @@ async def auth_middleware(request: Request, call_next):
     if not route_exists:
         return RedirectResponse("/")
 
+    # Allow serving static resources without authorization
+    if path.startswith("/static"):
+        return await call_next(request)
+
     # Allow direct access to API calls using explicit authorization headers
     if request.headers.get("Authorization"):
         return await call_next(request)
