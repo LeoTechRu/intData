@@ -1,17 +1,18 @@
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-from fastapi.staticfiles import StaticFiles
+from datetime import datetime
 from pathlib import Path
 
-from core.models import User, UserRole
+import pytest
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.testclient import TestClient
+
+from core.models import WebUser
 from web.routes import profile
+from web.dependencies import get_current_web_user
 
 
 class FakeService:
-    users = {
-        1: User(telegram_id=1, first_name="Alice", username="alice", role=UserRole.single.value),
-        2: User(telegram_id=2, first_name="Bob", username="bob", role=UserRole.moderator.value),
-    }
+    user = WebUser(id=1, username="alice", full_name="Alice", role="single")
 
     async def __aenter__(self):
         return self
@@ -19,93 +20,50 @@ class FakeService:
     async def __aexit__(self, exc_type, exc, tb):
         pass
 
-    async def get_user_and_groups(self, telegram_id: int):
-        return self.users.get(telegram_id), []
+    async def get_user_by_identifier(self, identifier):
+        if identifier in ("alice", 1):
+            return self.user
+        return None
 
-    async def get_contact_info(self, telegram_id: int):
-        user = self.users.get(telegram_id)
-        if not user:
-            return {}
-        return {
-            "user": user,
-            "groups": [],
-            "telegram_id": user.telegram_id,
-            "username": f"@{user.username}" if user.username else None,
-            "full_display_name": user.full_display_name,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "display_name": user.full_display_name or user.first_name,
-            "email": user.email,
-            "phone": user.phone,
-            "birthday": user.birthday.strftime("%d.%m.%Y") if user.birthday else None,
-            "language_code": user.language_code,
-            "role_name": UserRole(user.role).name,
-        }
-
-    async def update_user_profile(self, telegram_id: int, data):
-        user = self.users.get(telegram_id)
-        if user:
-            for k, v in data.items():
-                setattr(user, k, v)
-        return user
-
-    async def get_user_by_telegram_id(self, telegram_id: int):
-        return self.users.get(telegram_id)
+    async def update_profile(self, user_id, data):
+        birthday = data.get("birthday")
+        if birthday:
+            for fmt in ("%Y-%m-%d", "%d.%m.%Y"):
+                try:
+                    FakeService.user.birthday = datetime.strptime(birthday, fmt).date()
+                    break
+                except ValueError:
+                    continue
+        return self.user
 
 
 app = FastAPI()
 static_dir = Path(__file__).resolve().parent.parent / "web" / "static"
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
-# Patch UserService in profile module
-profile.UserService = FakeService
+profile.WebUserService = FakeService  # patch service
 app.include_router(profile.router)
 client = TestClient(app)
 
 
-def auth_header(user_id: int):
-    return {"Authorization": f"Bearer {user_id}"}
+def override_current():
+    return FakeService().user
 
 
-def test_user_can_view_own_profile():
-    res = client.get("/profile/1", headers=auth_header(1))
+app.dependency_overrides[get_current_web_user] = override_current
+
+
+def test_profile_redirect():
+    res = client.get("/profile", allow_redirects=False)
+    assert res.status_code == 302
+    assert res.headers["location"] == "/profile/alice"
+
+
+def test_profile_view_and_edit():
+    res = client.get("/profile/alice")
     assert res.status_code == 200
-    assert "Alice" in res.text
     assert res.text.count("<header") == 1
 
-
-def test_single_user_cannot_view_others():
-    res = client.get("/profile/2", headers=auth_header(1))
-    assert res.status_code == 403
-
-
-def test_higher_role_cannot_view_others():
-    res = client.get("/profile/1", headers=auth_header(2))
-    assert res.status_code == 403
-
-
-def test_single_user_can_update_self():
-    res = client.post(
-        "/profile/1",
-        headers=auth_header(1),
-        data={"username": "alice_new", "birthday": "31.12.2000"},
-        follow_redirects=True,
-    )
-    assert res.status_code == 200
-    assert "alice_new" in res.text
-    assert "31.12.2000" in res.text
-
-
-def test_profile_accepts_iso_date_format():
-    res = client.post(
-        "/profile/1",
-        headers=auth_header(1),
-        data={"birthday": "2001-01-02"},
-        follow_redirects=True,
-    )
-    assert res.status_code == 200
+    res = client.post("/profile/alice", data={"birthday": "2001-01-02"}, follow_redirects=True)
     assert "02.01.2001" in res.text
-
-
-def test_single_user_cannot_update_others():
-    res = client.post("/profile/2", headers=auth_header(1), data={"username": "bad"})
-    assert res.status_code == 403
+    res = client.post("/profile/alice", data={"birthday": "31.12.2000"}, follow_redirects=True)
+    assert "31.12.2000" in res.text

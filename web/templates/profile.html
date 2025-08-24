@@ -2,47 +2,33 @@
 {% block title %}Профиль{% endblock %}
 {% block content %}
 <div class="ui-layout">
-    <div id="main-content">
-        {% if editing %}
-        <form class="ui-form" method="post" action="/profile/{{ profile_user.telegram_id }}">
-            <label>Отображаемое имя</label>
-            <input type="text" name="full_display_name" value="{{ profile_user.full_display_name or '' }}">
-            <label>Имя</label>
-            <input type="text" name="first_name" value="{{ profile_user.first_name }}" required>
-            <label>Фамилия</label>
-            <input type="text" name="last_name" value="{{ profile_user.last_name or '' }}">
-            <label>Username</label>
-            <input type="text" name="username" value="{{ profile_user.username or '' }}">
-            <label>Email</label>
-            <input type="email" name="email" value="{{ profile_user.email or '' }}">
-            <label>Телефон</label>
-            <input type="text" name="phone" value="{{ profile_user.phone or '' }}">
-            <label>День рождения</label>
-            <input type="date" name="birthday" value="{{ profile_user.birthday.strftime('%Y-%m-%d') if profile_user.birthday else '' }}">
-            <label>Язык</label>
-            <input type="text" name="language_code" value="{{ profile_user.language_code or '' }}">
-            <button type="submit" class="button">Сохранить</button>
-            <button type="button" class="button" onclick="location.href='/profile/{{ profile_user.telegram_id }}'">Отмена</button>
-        </form>
-        {% else %}
-        <p><strong>Имя:</strong> {{ info.display_name }}</p>
-        <p><strong>Telegram ID:</strong> {{ info.telegram_id }}</p>
-        <p><strong>Username:</strong> {{ info.username or 'не указан' }}</p>
-        <p><strong>Email:</strong> {{ info.email or 'не указано' }}</p>
-        <p><strong>Телефон:</strong> {{ info.phone or 'не указан' }}</p>
-        <p><strong>День рождения:</strong> {{ info.birthday or 'не указано' }}</p>
-        <p><strong>Язык:</strong> {{ info.language_code or 'не указан' }}</p>
-        <p><strong>Роль:</strong> {{ role_name }}</p>
-        {% if groups %}
-        <h3>Группы</h3>
-        <ul class="ui-table">
-            {% for g in groups %}<li>{{ g.title }}</li>{% endfor %}
-        </ul>
-        {% else %}
-        <p>Группы отсутствуют.</p>
-        {% endif %}
-        <button class="button" onclick="location.href='/profile/{{ profile_user.telegram_id }}?edit=true'">Редактировать профиль</button>
-        {% endif %}
-    </div>
+  <div id="main-content">
+    {% if editing %}
+    <form class="ui-form" method="post" action="/profile/{{ profile_user.username }}">
+      <label>Полное имя</label>
+      <input type="text" name="full_name" value="{{ profile_user.full_name or '' }}">
+      <label>Email</label>
+      <input type="email" name="email" value="{{ profile_user.email or '' }}">
+      <label>Телефон</label>
+      <input type="text" name="phone" value="{{ profile_user.phone or '' }}">
+      <label>День рождения</label>
+      <input type="date" name="birthday" value="{{ profile_user.birthday.strftime('%Y-%m-%d') if profile_user.birthday else '' }}">
+      <label>Язык</label>
+      <input type="text" name="language" value="{{ profile_user.language or '' }}">
+      <button type="submit" class="button">Сохранить</button>
+      <button type="button" class="button" onclick="location.href='/profile/{{ profile_user.username }}'">Отмена</button>
+    </form>
+    {% else %}
+    <h2>Профиль</h2>
+    <p><strong>Full name:</strong> {{ profile_user.full_name or '' }}</p>
+    <p><strong>Username:</strong> {{ profile_user.username }}</p>
+    <p><strong>Email:</strong> {{ profile_user.email or 'не указано' }}</p>
+    <p><strong>Телефон:</strong> {{ profile_user.phone or 'не указан' }}</p>
+    <p><strong>День рождения:</strong> {{ profile_user.birthday.strftime('%d.%m.%Y') if profile_user.birthday else 'не указано' }}</p>
+    <p><strong>Язык:</strong> {{ profile_user.language or 'не указан' }}</p>
+    <p><strong>Роль:</strong> {{ profile_user.role }}</p>
+    <button class="button" onclick="location.href='/profile/{{ profile_user.username }}?edit=true'">Редактировать профиль</button>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}

@@ -12,6 +12,7 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
+    JSON,
 )
 
 from base import Base
@@ -39,6 +40,42 @@ class GroupType(PyEnum):  # Типы групп и каналов
 class ChannelType(PyEnum):
     channel = "channel"
     supergroup = "supergroup"
+
+
+class TgUser(Base):
+    """Telegram user data stored separately from web accounts."""
+
+    __tablename__ = "tg_users"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    telegram_id = Column(BigInteger, unique=True, nullable=False)
+    username = Column(String(32), unique=True)
+    first_name = Column(String(255))
+    last_name = Column(String(255))
+    language_code = Column(String(10))
+    bot_settings = Column(JSON, default=dict)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class WebUser(Base):
+    """User registered via web interface."""
+
+    __tablename__ = "web_users"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String(64), unique=True, nullable=False)
+    email = Column(String(255))
+    phone = Column(String(20))
+    full_name = Column(String(255))
+    password_hash = Column(String(255))
+    role = Column(String(20), default="single")
+    privacy_settings = Column(JSON, default=dict)
+    telegram_user_id = Column(Integer, ForeignKey("tg_users.id"))
+    birthday = Column(Date)
+    language = Column(String(10))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class User(Base):  # Пользователь

@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from core.models import User, UserRole
-from core.services.telegram import UserService
-from pydantic import ValidationError
-from web.schemas import ProfileUpdate
+from core.models import WebUser
+from core.services.web_user_service import WebUserService
+from web.dependencies import get_current_web_user
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
@@ -18,93 +17,47 @@ TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 
 
-async def get_current_user(request: Request) -> User:
-    """Extract current user from cookie, session or Authorization header."""
-    user_id: Optional[int] = None
-
-    # 1. Cookie set on login
-    telegram_cookie = request.cookies.get("telegram_id")
-    if telegram_cookie:
-        try:
-            user_id = int(telegram_cookie)
-        except ValueError as exc:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid telegram_id cookie") from exc
-
-    # 2. Session
-    if user_id is None and "session" in request.scope:
-        user_id = request.session.get("user_id")
-
-    # 3. Authorization header (Bearer token)
-    if user_id is None:
-        auth = request.headers.get("Authorization")
-        if auth and auth.startswith("Bearer "):
-            token = auth.split(" ", 1)[1]
-            try:
-                user_id = int(token)
-            except ValueError as exc:
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token") from exc
-
-    if user_id is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
-
-    async with UserService() as user_service:
-        user = await user_service.get_user_by_telegram_id(user_id)
-        if user is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-        return user
+@router.get("")
+async def profile_root(current_user: Optional[WebUser] = Depends(get_current_web_user)):
+    if not current_user:
+        return RedirectResponse("/auth/login", status_code=status.HTTP_302_FOUND)
+    return RedirectResponse(f"/profile/{current_user.username}", status_code=status.HTTP_302_FOUND)
 
 
-@router.get("/{telegram_id}")
+@router.get("/{username}")
 async def view_profile(
-    telegram_id: int,
+    username: str,
     request: Request,
     edit: bool = False,
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[WebUser] = Depends(get_current_web_user),
 ):
-    """Show profile page with optional edit mode."""
-    if current_user.telegram_id != telegram_id and UserRole(current_user.role) != UserRole.admin:
+    async with WebUserService() as service:
+        profile_user = await service.get_user_by_identifier(username)
+    if not profile_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    if not current_user or (current_user.id != profile_user.id and current_user.role != "admin"):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
-
-    async with UserService() as service:
-        info = await service.get_contact_info(telegram_id)
-        if not info:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-
     context = {
         "request": request,
-        "profile_user": info["user"],
-        "info": info,
-        "groups": info["groups"],
+        "profile_user": profile_user,
         "editing": edit,
-        "role_name": info["role_name"],
-        "current_role_name": UserRole(current_user.role).name,
         "user": current_user,
-        "is_admin": current_user.is_admin,
-        "page_title": "Профиль",
     }
     return templates.TemplateResponse("profile.html", context)
 
 
-@router.post("/{telegram_id}")
+@router.post("/{username}")
 async def update_profile(
-    telegram_id: int,
+    username: str,
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[WebUser] = Depends(get_current_web_user),
 ):
-    if current_user.telegram_id != telegram_id and UserRole(current_user.role) != UserRole.admin:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
-
-    form = await request.form()
-    form_data = {k: v for k, v in form.items()}
-    try:
-        payload = ProfileUpdate(**form_data)
-    except ValidationError as exc:  # pragma: no cover - defensive
-        raise HTTPException(status_code=400, detail="Неверный формат даты") from exc
-
-    async with UserService() as service:
-        await service.update_user_profile(telegram_id, payload.dict(exclude_none=True))
-
-    return RedirectResponse(
-        url=f"/profile/{telegram_id}",
-        status_code=status.HTTP_303_SEE_OTHER,
-    )
+    async with WebUserService() as service:
+        profile_user = await service.get_user_by_identifier(username)
+        if not profile_user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        if not current_user or (current_user.id != profile_user.id and current_user.role != "admin"):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+        form = await request.form()
+        await service.update_profile(profile_user.id, dict(form))
+    return RedirectResponse(f"/profile/{username}", status_code=status.HTTP_303_SEE_OTHER)
