@@ -16,7 +16,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
           source: .
-          target: ~/LeonidBot
+          target: /sd/tg/LeonidBot
       - name: Install and restart services
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -24,7 +24,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
           script: |
-            cd ~/LeonidBot
+            cd /sd/tg/LeonidBot
             pip install -r requirements.txt
             ./deploy/install_services.sh
             sudo systemctl restart leonidbot-bot.service leonidbot-web.service
