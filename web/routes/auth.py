@@ -78,7 +78,10 @@ async def register(
     phone: str | None = Form(None),
 ):
     async with WebUserService() as service:
-        await service.register(username=username, password=password, email=email, phone=phone)
+        try:
+            await service.register(username=username, password=password, email=email, phone=phone)
+        except ValueError as exc:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
     return RedirectResponse("/auth/login", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -162,7 +165,10 @@ async def create_web_account(
         response.delete_cookie("telegram_id", path="/")
         return response
     async with WebUserService() as wsvc:
-        web_user = await wsvc.register(username=username, password=password)
+        try:
+            web_user = await wsvc.register(username=username, password=password)
+        except ValueError as exc:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
         async with TelegramUserService() as tsvc:
             tg_user = await tsvc.get_user_by_telegram_id(int(telegram_id))
         await wsvc.link_telegram(web_user.id, tg_user.id)
