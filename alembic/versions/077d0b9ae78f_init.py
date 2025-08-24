@@ -24,7 +24,7 @@ def upgrade() -> None:
     op.create_table('log_settings',
     sa.Column('id', sa.BigInteger(), nullable=False),
     sa.Column('chat_id', sa.BigInteger(), nullable=False),
-    sa.Column('level', sa.Enum('DEBUG', 'INFO', 'ERROR', name='loglevel'), nullable=True),
+    sa.Column('level', sa.Enum('DEBUG', 'INFO', 'ERROR', name='loglevel', create_type=False), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
