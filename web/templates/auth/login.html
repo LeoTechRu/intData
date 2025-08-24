@@ -3,6 +3,9 @@
 {% block content %}
   <div class="ui-layout">
     <h2>Вход</h2>
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
     <form class="ui-form" method="post" action="/auth/login">
       <label>Username</label>
       <input type="text" name="username" required>

@@ -48,11 +48,28 @@ async def login_page(request: Request) -> HTMLResponse:
 
 
 @router.post("/login")
-async def login(username: str = Form(...), password: str = Form(...)):
-    async with WebUserService() as service:
-        user = await service.authenticate(username, password)
-        if not user:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+async def login(request: Request, username: str = Form(...), password: str = Form(...)):
+    try:
+        async with WebUserService() as service:
+            user = await service.authenticate(username, password)
+    except Exception as exc:  # pragma: no cover - defensive
+        context = {
+            "request": request,
+            "bot_username": S.TELEGRAM_BOT_USERNAME,
+            "telegram_id": request.cookies.get("telegram_id"),
+            "page_title": "Вход",
+            "error": f"Technical error: {exc}",
+        }
+        return templates.TemplateResponse("auth/login.html", context, status_code=500)
+    if not user:
+        context = {
+            "request": request,
+            "bot_username": S.TELEGRAM_BOT_USERNAME,
+            "telegram_id": request.cookies.get("telegram_id"),
+            "page_title": "Вход",
+            "error": "Invalid credentials",
+        }
+        return templates.TemplateResponse("auth/login.html", context, status_code=400)
     response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(
         "web_user_id",
