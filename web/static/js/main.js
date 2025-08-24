@@ -33,6 +33,7 @@ export function initProfileMenu() {
         }
         else if (resp.ok) {
             content.innerHTML = await resp.text();
+            initProfileEditForm();
         }
         dropdown.classList.add('hidden');
     });
@@ -62,12 +63,36 @@ export function initAdminMenu() {
         const resp = await fetch(url, { credentials: 'include' });
         if (resp.ok) {
             content.innerHTML = await resp.text();
+            initProfileEditForm();
         }
         dropdown.classList.add('hidden');
+    });
+}
+export function initProfileEditForm() {
+    const form = document.getElementById('profile-edit-form');
+    if (!form)
+        return;
+    form.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const formData = new FormData(form);
+        const resp = await fetch(window.location.pathname, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+        });
+        if (resp.ok) {
+            const html = await resp.text();
+            const container = document.getElementById('main-content');
+            if (container) {
+                container.innerHTML = html;
+                initProfileEditForm();
+            }
+        }
     });
 }
 document.addEventListener('DOMContentLoaded', () => {
     enableAccessibility();
     initProfileMenu();
     initAdminMenu();
+    initProfileEditForm();
 });

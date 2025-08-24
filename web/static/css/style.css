@@ -100,10 +100,16 @@ button, .button {
   align-items: center;
   margin: 0 0 var(--spacing) 0;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .top-bar .welcome {
   margin: 0;
+}
+
+.top-bar .welcome a {
+  color: inherit;
+  text-decoration: none;
 }
 
 .top-right {

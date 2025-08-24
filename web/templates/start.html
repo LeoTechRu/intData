@@ -2,7 +2,7 @@
 {% block title %}Дашборд{% endblock %}
 {% block content %}
 <header class="top-bar">
-    <h1 class="welcome">Привет, {{ user.first_name }}!</h1>
+    <h1 class="welcome"><a href="/">Привет, {{ user.first_name }}!</a></h1>
     <div class="top-right">
         {% if is_admin %}
         <div class="admin-menu">
