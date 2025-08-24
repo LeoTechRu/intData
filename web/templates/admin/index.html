@@ -4,8 +4,8 @@
 <div class="ui-layout">
     <div id="main-content">
         <section id="users">
-            <h1>Users</h1>
-            {% if users %}
+            <h1>Telegram users</h1>
+            {% if tg_users %}
             <table border="1" cellpadding="4" cellspacing="0">
                 <thead>
                     <tr>
@@ -17,13 +17,13 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for user in users %}
+                {% for user in tg_users %}
                     <tr>
                         <td>{{ user.telegram_id }}</td>
                         <td>{{ user.username or '' }}</td>
                         <td>{{ user.first_name }}</td>
                         <td>{{ user.last_name or '' }}</td>
-                        <td>{{ UserRole(user.role).name }}</td>
+                        <td>{{ user.role }}</td>
                     </tr>
                 {% endfor %}
                 </tbody>

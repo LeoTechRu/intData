@@ -2,6 +2,10 @@ import asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
+import asyncio
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
+
 import decorators
 from core.models import UserRole
 
@@ -37,9 +41,9 @@ def test_role_required_allows(monkeypatch):
         async def __aexit__(self, exc_type, exc, tb):
             pass
         async def get_or_create_user(self, *args, **kwargs):
-            return SimpleNamespace(role=UserRole.admin.value), False
+            return SimpleNamespace(role=UserRole.admin.name), False
 
-    monkeypatch.setattr(decorators, 'UserService', lambda: FakeService())
+    monkeypatch.setattr(decorators, 'TelegramUserService', lambda: FakeService())
 
     async def run():
         wrapped = decorators.role_required(UserRole.single)(handler)
@@ -66,9 +70,9 @@ def test_role_required_denies(monkeypatch):
         async def __aexit__(self, exc_type, exc, tb):
             pass
         async def get_or_create_user(self, *args, **kwargs):
-            return SimpleNamespace(role=UserRole.single.value), False
+            return SimpleNamespace(role=UserRole.single.name), False
 
-    monkeypatch.setattr(decorators, 'UserService', lambda: FakeService())
+    monkeypatch.setattr(decorators, 'TelegramUserService', lambda: FakeService())
 
     async def run():
         wrapped = decorators.role_required(UserRole.admin)(handler)
@@ -101,7 +105,7 @@ def test_group_required_adds_user(monkeypatch):
         async def add_user_to_group(self, *args, **kwargs):
             return True, 'added'
 
-    monkeypatch.setattr(decorators, 'UserService', lambda: FakeService())
+    monkeypatch.setattr(decorators, 'TelegramUserService', lambda: FakeService())
 
     async def run():
         wrapped = await decorators.group_required(handler)
@@ -134,7 +138,7 @@ def test_group_required_add_user_fail(monkeypatch):
         async def add_user_to_group(self, *args, **kwargs):
             return False, 'error'
 
-    monkeypatch.setattr(decorators, 'UserService', lambda: FakeService())
+    monkeypatch.setattr(decorators, 'TelegramUserService', lambda: FakeService())
 
     async def run():
         wrapped = await decorators.group_required(handler)

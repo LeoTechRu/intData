@@ -6,7 +6,7 @@ from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
 
 from core.models import UserRole
-from core.services.telegram import UserService
+from core.services.telegram_user_service import TelegramUserService
 from web.config import S
 
 router = APIRouter()
@@ -27,7 +27,7 @@ async def index(request: Request):
         except ValueError:
             user_id = None
         if user_id is not None:
-            async with UserService() as service:
+            async with TelegramUserService() as service:
                 user = await service.get_user_by_telegram_id(user_id)
                 if user:
                     groups = await service.list_user_groups(user_id)
@@ -35,8 +35,8 @@ async def index(request: Request):
                         "request": request,
                         "user": user,
                         "groups": groups,
-                        "role_name": UserRole(user.role).name,
-                        "is_admin": user.is_admin,
+                        "role_name": user.role,
+                        "is_admin": UserRole[user.role] >= UserRole.admin,
                         "page_title": "Дашборд",
                     }
                     return templates.TemplateResponse("start.html", context)

@@ -83,7 +83,7 @@ async def logout() -> RedirectResponse:
     return response
 
 
-@router.post("/tg/callback")
+@router.post("/callback")
 async def telegram_callback(request: Request):
     data = dict((await request.form()).items())
     if not verify_telegram_login(data):

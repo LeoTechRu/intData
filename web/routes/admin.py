@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
-from core.models import User, UserRole
-from core.services.telegram import UserService
+from core.models import WebUser, UserRole
+from core.services.web_user_service import WebUserService
+from core.services.telegram_user_service import TelegramUserService
 from ..dependencies import role_required
 
 
@@ -11,20 +12,21 @@ router = APIRouter()
 
 @router.get("")
 async def admin_dashboard(
-    request: Request, current_user: User = Depends(role_required(UserRole.admin))
+    request: Request, current_user: WebUser = Depends(role_required(UserRole.admin))
 ):
     """Render consolidated admin landing page with users and groups."""
-    async with UserService() as service:
-        users = await service.list_users()
-        groups_with_members = await service.list_groups_with_members()
+    async with TelegramUserService() as tsvc, WebUserService() as wsvc:
+        tg_users = await tsvc.list_users()
+        groups_with_members = await tsvc.list_groups_with_members()
+        web_users = await wsvc.list_users()
 
     context = {
         "request": request,
-        "users": users,
+        "tg_users": tg_users,
+        "web_users": web_users,
         "groups": groups_with_members,
-        "UserRole": UserRole,
         "user": current_user,
-        "role_name": UserRole(current_user.role).name,
+        "role_name": current_user.role,
         "is_admin": True,
         "page_title": "Админ",
     }
@@ -35,13 +37,13 @@ async def admin_dashboard(
 async def change_user_role(
     telegram_id: int,
     role: UserRole,
-    current_user: User = Depends(role_required(UserRole.admin)),
+    current_user: WebUser = Depends(role_required(UserRole.admin)),
 ):
     """Change the role of a user.
 
     Using a simple query/body parameter avoids the ``python-multipart``
     dependency which keeps tests lightweight.
     """
-    async with UserService() as service:
+    async with TelegramUserService() as service:
         await service.update_user_role(telegram_id, role)
     return {"status": "ok"}

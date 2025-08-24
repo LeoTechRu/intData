@@ -53,6 +53,7 @@ class TgUser(Base):
     first_name = Column(String(255))
     last_name = Column(String(255))
     language_code = Column(String(10))
+    role = Column(String(20), default=UserRole.single.name)
     bot_settings = Column(JSON, default=dict)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -69,37 +70,13 @@ class WebUser(Base):
     phone = Column(String(20))
     full_name = Column(String(255))
     password_hash = Column(String(255))
-    role = Column(String(20), default="single")
+    role = Column(String(20), default=UserRole.single.name)
     privacy_settings = Column(JSON, default=dict)
     telegram_user_id = Column(Integer, ForeignKey("tg_users.id"))
     birthday = Column(Date)
     language = Column(String(10))
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-
-class User(Base):  # Пользователь
-    __tablename__ = "users"
-
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
-    telegram_id = Column(BigInteger, unique=True, nullable=False)
-    username = Column(String(32))
-    first_name = Column(String(255), nullable=False)
-    last_name = Column(String(255))
-    language_code = Column(String(10))
-    is_premium = Column(Boolean, default=False)
-    full_display_name = Column(String(255))
-    email = Column(String(255))
-    phone = Column(String(20))
-    birthday = Column(Date)
-    role = Column(Integer, default=UserRole.single.value)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    @property
-    def is_admin(self) -> bool:
-        """Return True if user has admin privileges."""
-        return self.role >= UserRole.admin.value
 
 
 class Group(Base):  # Группа
@@ -109,7 +86,7 @@ class Group(Base):  # Группа
     telegram_id = Column(BigInteger, unique=True, nullable=False)
     title = Column(String(255), nullable=False)
     type = Column(Enum(GroupType), default=GroupType.private)
-    owner_id = Column(BigInteger, ForeignKey("users.telegram_id"))
+    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
     description = Column(String(500))
     participants_count = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -123,7 +100,7 @@ class Channel(Base):  # Канал
     telegram_id = Column(BigInteger, unique=True, nullable=False)
     title = Column(String(255), nullable=False)
     type = Column(Enum(ChannelType), default=ChannelType.channel)
-    owner_id = Column(BigInteger, ForeignKey("users.telegram_id"))
+    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
     username = Column(String(32))
     participants_count = Column(Integer, default=0)
     description = Column(String(500))
@@ -134,7 +111,7 @@ class Channel(Base):  # Канал
 class UserGroup(Base):  # Связь пользователь-группа (многие ко многим)
     __tablename__ = "user_group"
 
-    user_id = Column(BigInteger, ForeignKey("users.telegram_id"), primary_key=True)
+    user_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"), primary_key=True)
     group_id = Column(BigInteger, ForeignKey("groups.telegram_id"), primary_key=True)
     is_owner = Column(Boolean, default=False)
     is_moderator = Column(Boolean, default=False)

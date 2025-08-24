@@ -7,6 +7,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from .routes import admin, auth, index, profile, settings
+from core.db import init_models
 
 app = FastAPI()
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -59,3 +60,8 @@ app.include_router(profile.router)
 app.include_router(settings.router)
 app.include_router(auth.router, prefix="/auth")
 app.include_router(admin.router, prefix="/admin")
+
+
+@app.on_event("startup")
+async def _startup() -> None:
+    await init_models()
