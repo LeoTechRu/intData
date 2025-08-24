@@ -118,28 +118,36 @@ async def cmd_birthday(message: Message, state: FSMContext):
 @user_router.message(F.text.lower().in_(["контакт", "профиль"]))
 async def cmd_contact(message: Message):
     async with UserService() as user_service:
-        user_db = await user_service.get_user_by_telegram_id(message.from_user.id)
-        if user_db:
-            contact_info = f"{message.from_user.first_name}, контактные данные:\n"
-            contact_info += f"Telegram ID: {user_db.telegram_id}\n"
-            if user_db.username:
-                contact_info += f"Username: @{user_db.username}\n"
-            if user_db.full_display_name:
-                contact_info += f"Отображаемое имя: {user_db.full_display_name}\n"
-            elif user_db.first_name or user_db.last_name:
-                contact_info += f"Имя: {user_db.first_name or ''} {user_db.last_name or ''}\n"
-            if user_db.email:
-                contact_info += f"Email: {user_db.email}\n"
-            if user_db.phone:
-                contact_info += f"Телефон: {user_db.phone}\n\n"
-            contact_info += "Команды для обновления:\n"
-            contact_info += "/setfullname - установить отображаемое имя\n"
-            contact_info += "/setemail - установить email\n"
-            contact_info += "/setphone - установить телефон\n"
-            contact_info += "/setbirthday - установить день рождения"
-            await message.answer(contact_info)
-        else:
-            await message.answer(f"{message.from_user.first_name}, произошла ошибка при получении данных")
+        info = await user_service.get_contact_info(message.from_user.id)
+
+    if not info:
+        await message.answer(
+            f"{message.from_user.first_name}, произошла ошибка при получении данных"
+        )
+        return
+
+    lines = [f"{message.from_user.first_name}, контактные данные:"]
+    lines.append(f"Telegram ID: {info['telegram_id']}")
+    if info.get("username"):
+        lines.append(f"Username: {info['username']}")
+    if info.get("full_display_name"):
+        lines.append(f"Отображаемое имя: {info['full_display_name']}")
+    elif info.get("first_name") or info.get("last_name"):
+        name = f"{info.get('first_name') or ''} {info.get('last_name') or ''}".strip()
+        if name:
+            lines.append(f"Имя: {name}")
+    if info.get("email"):
+        lines.append(f"Email: {info['email']}")
+    if info.get("phone"):
+        lines.append(f"Телефон: {info['phone']}")
+    if info.get("birthday"):
+        lines.append(f"День рождения: {info['birthday']}")
+    lines.append("\nКоманды для обновления:")
+    lines.append("/setfullname - установить отображаемое имя")
+    lines.append("/setemail - установить email")
+    lines.append("/setphone - установить телефон")
+    lines.append("/setbirthday - установить день рождения")
+    await message.answer("\n".join(lines))
 
 # -----------------------------
 # Группы

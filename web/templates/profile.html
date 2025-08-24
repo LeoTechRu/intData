@@ -2,43 +2,72 @@
 {% block title %}Профиль{% endblock %}
 {% block content %}
 <header class="top-bar">
-    <h1 class="welcome"><a href="/">Профиль</a></h1>
+    <h1 class="welcome"><a href="/">Привет, {{ current_user.first_name }}!</a></h1>
+    <div class="top-right">
+        {% if is_admin %}
+        <div class="admin-menu">
+            <div id="admin-button">Админ</div>
+            <div id="admin-dropdown" class="dropdown-menu hidden">
+                <a href="#" data-admin-endpoint="/admin/users">Пользователи</a>
+                <a href="#" data-admin-endpoint="/admin/groups">Группы</a>
+                <a href="#" data-admin-endpoint="/admin/settings">Настройки</a>
+            </div>
+        </div>
+        {% endif %}
+        <div class="profile-menu">
+            <div id="profile-button" class="profile-icon role-{{ current_role_name|lower }}">👤</div>
+            <div id="profile-dropdown" class="dropdown-menu hidden">
+                <div class="role">Роль: {{ current_role_name }}</div>
+                <a href="/profile/{{ current_user.telegram_id }}">Профиль</a>
+                <a href="/settings">Настройки</a>
+                <a href="/auth/logout" data-method="post">Выйти</a>
+            </div>
+        </div>
+    </div>
 </header>
 <div class="ui-layout">
-    {% if editing %}
-    <form class="ui-form" method="post" action="/profile/{{ user.telegram_id }}">
-        <label>Имя</label>
-        <input type="text" name="first_name" value="{{ user.first_name }}" required>
-        <label>Фамилия</label>
-        <input type="text" name="last_name" value="{{ user.last_name or '' }}">
-        <label>Username</label>
-        <input type="text" name="username" value="{{ user.username or '' }}">
-        <label>День рождения</label>
-        <input type="date" name="birthday" value="{{ user.birthday or '' }}">
-        <label>Язык</label>
-        <input type="text" name="language_code" value="{{ user.language_code or '' }}">
-        <label>Email</label>
-        <input type="email" name="email" value="{{ user.email or '' }}">
-        <label>Телефон</label>
-        <input type="text" name="phone" value="{{ user.phone or '' }}">
-        <button type="submit" class="button">Сохранить</button>
-        <button type="button" class="button" onclick="location.href='/profile/{{ user.telegram_id }}'">Отменить</button>
-    </form>
-    {% else %}
-    <h2>{{ user.first_name }} {{ user.last_name or '' }}</h2>
-    <p><strong>Username:</strong> @{{ user.username or '' }}</p>
-    <p><strong>День рождения:</strong> {{ user.birthday or 'не указано' }}</p>
-    <p><strong>Язык:</strong> {{ user.language_code or 'не указан' }}</p>
-    <p><strong>Роль:</strong> {{ role_name }}</p>
-    {% if groups %}
-    <h2>Ваши группы</h2>
-    <ul class="ui-table">
-        {% for g in groups %}<li>{{ g.title }}</li>{% endfor %}
-    </ul>
-    {% else %}
-    <p>Группы отсутствуют.</p>
-    {% endif %}
-    <button class="button" onclick="location.href='/profile/{{ user.telegram_id }}?edit=true'">Редактировать</button>
-    {% endif %}
+    <div id="main-content">
+        <h2 class="page-title">Профиль</h2>
+        {% if editing %}
+        <form class="ui-form" method="post" action="/profile/{{ user.telegram_id }}">
+            <label>Отображаемое имя</label>
+            <input type="text" name="full_display_name" value="{{ user.full_display_name or '' }}">
+            <label>Имя</label>
+            <input type="text" name="first_name" value="{{ user.first_name }}" required>
+            <label>Фамилия</label>
+            <input type="text" name="last_name" value="{{ user.last_name or '' }}">
+            <label>Username</label>
+            <input type="text" name="username" value="{{ user.username or '' }}">
+            <label>Email</label>
+            <input type="email" name="email" value="{{ user.email or '' }}">
+            <label>Телефон</label>
+            <input type="text" name="phone" value="{{ user.phone or '' }}">
+            <label>День рождения</label>
+            <input type="date" name="birthday" value="{{ user.birthday.strftime('%Y-%m-%d') if user.birthday else '' }}">
+            <label>Язык</label>
+            <input type="text" name="language_code" value="{{ user.language_code or '' }}">
+            <button type="submit" class="button">Сохранить</button>
+            <button type="button" class="button" onclick="location.href='/profile/{{ user.telegram_id }}'">Отмена</button>
+        </form>
+        {% else %}
+        <p><strong>Имя:</strong> {{ info.display_name }}</p>
+        <p><strong>Telegram ID:</strong> {{ info.telegram_id }}</p>
+        <p><strong>Username:</strong> {{ info.username or 'не указан' }}</p>
+        <p><strong>Email:</strong> {{ info.email or 'не указано' }}</p>
+        <p><strong>Телефон:</strong> {{ info.phone or 'не указан' }}</p>
+        <p><strong>День рождения:</strong> {{ info.birthday or 'не указано' }}</p>
+        <p><strong>Язык:</strong> {{ info.language_code or 'не указан' }}</p>
+        <p><strong>Роль:</strong> {{ role_name }}</p>
+        {% if groups %}
+        <h3>Группы</h3>
+        <ul class="ui-table">
+            {% for g in groups %}<li>{{ g.title }}</li>{% endfor %}
+        </ul>
+        {% else %}
+        <p>Группы отсутствуют.</p>
+        {% endif %}
+        <button class="button" onclick="location.href='/profile/{{ user.telegram_id }}?edit=true'">Редактировать профиль</button>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

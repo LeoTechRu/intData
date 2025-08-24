@@ -25,6 +25,12 @@ h1, h2, h3 {
 
 h1 { font-size: var(--font-size-xl); }
 
+.page-title {
+  padding: 0;
+  margin: 0 0 var(--spacing) 0;
+  font-size: 1.5rem;
+}
+
 .ui-layout {
   max-width: 800px;
   margin: 0 auto;
