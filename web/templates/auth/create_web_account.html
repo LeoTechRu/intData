@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Создание аккаунта{% endblock %}
+{% block content %}
+<div class="ui-layout">
+    <h2>Создание аккаунта</h2>
+    {% if message %}
+    <p>{{ message }}</p>
+    <p><a href="/auth/login">Вернуться к входу</a></p>
+    {% else %}
+    <form class="ui-form" method="post" action="/auth/create_web_account">
+        <label>Username</label>
+        <input type="text" name="username" required>
+        <label>Password</label>
+        <input type="password" name="password" required>
+        <button type="submit" name="action" value="create" class="button">Создать</button>
+        <button type="submit" name="action" value="cancel" class="button">Отказаться</button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}
+

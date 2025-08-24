@@ -1,24 +1,32 @@
-{% set header_user = current_user if current_user is defined else user %}
-{% set header_role = current_role_name if current_role_name is defined else role_name %}
+{% set header_user = (current_user if current_user is defined else user) if (current_user is defined or user is defined) else None %}
+{% set header_role = (current_role_name if current_role_name is defined else role_name) if (current_role_name is defined or role_name is defined) else '' %}
 <header class="top-bar">
     <div class="top-left">
-        <h1 class="welcome"><a href="/">Привет, {{ header_user.first_name }}!</a></h1>
+        <a href="/" class="logo">🦁</a>
+        <a href="/" class="project-name">LeonidBot</a>
     </div>
     <div class="top-center">
         <h2 class="page-title">{{ page_title }}</h2>
     </div>
     <div class="top-right">
-        {% if is_admin %}
-        <div class="admin-menu"><a href="/admin">Админ</a></div>
-        {% endif %}
-        <div class="profile-menu">
-            <div id="profile-button" class="profile-icon role-{{ header_role|lower }}">👤</div>
-            <div id="profile-dropdown" class="dropdown-menu hidden">
-                <div class="role">Роль: {{ header_role }}</div>
-                <a href="/profile/{{ header_user.telegram_id }}">Профиль</a>
-                <a href="/settings">Настройки</a>
-                <a href="/auth/logout" data-method="post">Выйти</a>
+        {% if header_user %}
+            {% if is_admin %}
+            <div class="admin-menu"><a href="/admin">Админ</a></div>
+            {% endif %}
+            <div class="profile-menu">
+                <div id="profile-button" class="profile-icon role-{{ header_role|lower }}">👤</div>
+                <div id="profile-dropdown" class="dropdown-menu hidden">
+                    <div class="role">Роль: {{ header_role }}</div>
+                    <a href="/profile/{{ header_user.telegram_id }}">Профиль</a>
+                    <a href="/settings">Настройки</a>
+                    <a href="/auth/logout" data-method="post">Выйти</a>
+                </div>
             </div>
-        </div>
+        {% else %}
+            <nav class="guest-menu">
+                <a href="/auth/login">Вход</a>
+                <a href="/auth/register">Регистрация</a>
+            </nav>
+        {% endif %}
     </div>
 </header>

@@ -37,7 +37,14 @@ def verify_telegram_login(data: Dict[str, str]) -> bool:
 
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("auth/login.html", {"request": request, "bot_username": S.TELEGRAM_BOT_USERNAME})
+    telegram_id = request.cookies.get("telegram_id")
+    context = {
+        "request": request,
+        "bot_username": S.TELEGRAM_BOT_USERNAME,
+        "telegram_id": telegram_id,
+        "page_title": "Вход",
+    }
+    return templates.TemplateResponse("auth/login.html", context)
 
 
 @router.post("/login")
@@ -60,7 +67,7 @@ async def login(username: str = Form(...), password: str = Form(...)):
 
 @router.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("auth/register.html", {"request": request})
+    return templates.TemplateResponse("auth/register.html", {"request": request, "page_title": "Регистрация"})
 
 
 @router.post("/register")
@@ -83,14 +90,14 @@ async def logout() -> RedirectResponse:
     return response
 
 
-@router.post("/callback")
+@router.post("/tg/callback")
 async def telegram_callback(request: Request):
     data = dict((await request.form()).items())
     if not verify_telegram_login(data):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Bad Telegram signature")
     telegram_id = int(data["id"])
     async with TelegramUserService() as tsvc:
-        tg_user = await tsvc.update_from_telegram(
+        await tsvc.update_from_telegram(
             telegram_id,
             username=data.get("username"),
             first_name=data.get("first_name"),
@@ -110,4 +117,63 @@ async def telegram_callback(request: Request):
             samesite="lax",
         )
         return response
-    return HTMLResponse("<p>Telegram account not linked</p>")
+    response = RedirectResponse("/auth/create_web_account", status_code=status.HTTP_303_SEE_OTHER)
+    response.set_cookie(
+        "telegram_id",
+        str(telegram_id),
+        max_age=S.SESSION_MAX_AGE,
+        path="/",
+        httponly=True,
+        samesite="lax",
+    )
+    return response
+
+
+@router.get("/create_web_account", response_class=HTMLResponse)
+async def create_web_account_page(request: Request) -> HTMLResponse:
+    telegram_id = request.cookies.get("telegram_id")
+    if not telegram_id:
+        return RedirectResponse("/auth/login", status_code=status.HTTP_303_SEE_OTHER)
+    return templates.TemplateResponse(
+        "auth/create_web_account.html",
+        {"request": request, "page_title": "Создание аккаунта"},
+    )
+
+
+@router.post("/create_web_account")
+async def create_web_account(
+    request: Request,
+    action: str = Form(...),
+    username: str = Form(""),
+    password: str = Form(""),
+):
+    telegram_id = request.cookies.get("telegram_id")
+    if not telegram_id:
+        return RedirectResponse("/auth/login", status_code=status.HTTP_303_SEE_OTHER)
+    if action == "cancel":
+        response = templates.TemplateResponse(
+            "auth/create_web_account.html",
+            {
+                "request": request,
+                "message": "Без создания аккаунта воспользоваться веб-версией нельзя",
+                "page_title": "Создание аккаунта",
+            },
+        )
+        response.delete_cookie("telegram_id", path="/")
+        return response
+    async with WebUserService() as wsvc:
+        web_user = await wsvc.register(username=username, password=password)
+        async with TelegramUserService() as tsvc:
+            tg_user = await tsvc.get_user_by_telegram_id(int(telegram_id))
+        await wsvc.link_telegram(web_user.id, tg_user.id)
+    response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
+    response.set_cookie(
+        "web_user_id",
+        str(web_user.id),
+        max_age=S.SESSION_MAX_AGE,
+        path="/",
+        httponly=True,
+        samesite="lax",
+    )
+    response.delete_cookie("telegram_id", path="/")
+    return response

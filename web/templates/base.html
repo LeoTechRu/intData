@@ -7,9 +7,8 @@
     <script type="module" src="{{ url_for('static', path='js/main.js') }}"></script>
 </head>
 <body>
-    {% if user is defined or current_user is defined %}
     {% include "header.html" %}
-    {% endif %}
     {% block content %}{% endblock %}
 </body>
 </html>
+
