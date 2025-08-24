@@ -130,10 +130,7 @@ class LogSettings(Base):
 
     id = Column(BigInteger, primary_key=True)
     chat_id = Column(BigInteger, nullable=False)  # ID группы для логов
-    level = Column(
-        Enum(LogLevel, name="loglevel", create_type=False),
-        default=LogLevel.ERROR,
-    )  # Уровень логирования
+    level = Column(Enum(LogLevel), default=LogLevel.ERROR)  # Уровень логирования
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def __repr__(self) -> str:  # pragma: no cover - debug aid
