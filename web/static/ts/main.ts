@@ -7,6 +7,39 @@ export function enableAccessibility() {
   });
 }
 
+export function initProfileMenu() {
+  const button = document.getElementById('profile-button');
+  const dropdown = document.getElementById('profile-dropdown');
+  if (!button || !dropdown) return;
+  button.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    dropdown.classList.toggle('hidden');
+  });
+  document.addEventListener('click', () => {
+    dropdown.classList.add('hidden');
+  });
+}
+
+export function initAdminPanel() {
+  const panel = document.querySelector('.admin-panel');
+  const content = document.getElementById('admin-content');
+  if (!panel || !content) return;
+  panel.addEventListener('click', async (ev) => {
+    const target = ev.target as HTMLElement | null;
+    const link = target?.closest('a') as HTMLAnchorElement | null;
+    if (!link) return;
+    ev.preventDefault();
+    const url = link.dataset.adminEndpoint;
+    if (!url) return;
+    const resp = await fetch(url);
+    if (resp.ok) {
+      content.innerHTML = await resp.text();
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   enableAccessibility();
+  initProfileMenu();
+  initAdminPanel();
 });

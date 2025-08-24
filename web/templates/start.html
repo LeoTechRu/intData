@@ -26,11 +26,12 @@
 <footer class="admin-panel">
     <nav>
         <ul>
-            <li><a href="/admin/users">Пользователи</a></li>
-            <li><a href="/admin/groups">Группы</a></li>
-            <li><a href="/admin/settings">Настройки</a></li>
+            <li><a href="#" data-admin-endpoint="/admin/users">Пользователи</a></li>
+            <li><a href="#" data-admin-endpoint="/admin/groups">Группы</a></li>
+            <li><a href="#" data-admin-endpoint="/admin/settings">Настройки</a></li>
         </ul>
     </nav>
 </footer>
+<div id="admin-content"></div>
 {% endif %}
 {% endblock %}
