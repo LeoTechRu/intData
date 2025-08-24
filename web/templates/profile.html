@@ -1,12 +1,35 @@
-<h1>Редактирование профиля</h1>
-<form id="profile-edit-form" class="ui-form" method="post">
-    <label for="first_name">Имя</label>
-    <input id="first_name" name="first_name" value="{{ user.first_name or '' }}">
-    <label for="last_name">Фамилия</label>
-    <input id="last_name" name="last_name" value="{{ user.last_name or '' }}">
-    <label for="username">Username</label>
-    <input id="username" name="username" value="{{ user.username or '' }}">
-    <label for="birth_date">Дата рождения</label>
-    <input id="birth_date" type="date" name="birth_date" value="{{ user.birth_date or '' }}">
-    <button type="submit">Сохранить</button>
-</form>
+{% extends "layout.html" %}
+{% block title %}Профиль{% endblock %}
+{% block content %}
+<div class="ui-layout">
+  {% if editing %}
+  <form id="profile-edit-form" class="ui-form" method="post" action="/profile/{{ user.telegram_id }}">
+    <label>Имя</label>
+    <input type="text" name="first_name" value="{{ user.first_name }}" required>
+    <label>Фамилия</label>
+    <input type="text" name="last_name" value="{{ user.last_name or '' }}">
+    <label>Username</label>
+    <input type="text" name="username" value="{{ user.username or '' }}">
+    <label>День рождения</label>
+    <input type="date" name="birthday" value="{{ user.birthday or '' }}">
+    <label>Язык</label>
+    <input type="text" name="language_code" value="{{ user.language_code or '' }}">
+    <button type="submit" class="button">Сохранить</button>
+    <button type="button" class="button" onclick="location.href='/profile/{{ user.telegram_id }}'">Отменить</button>
+  </form>
+  {% else %}
+  <h1>{{ user.first_name }} {{ user.last_name or '' }}</h1>
+  <p><strong>Username:</strong> @{{ user.username }}</p>
+  <p><strong>День рождения:</strong> {{ user.birthday or 'не указано' }}</p>
+  <p><strong>Язык:</strong> {{ user.language_code }}</p>
+  <p><strong>Роль:</strong> {{ role_name }}</p>
+  {% if groups %}
+    <h2>Ваши группы</h2>
+    <ul>
+      {% for g in groups %}<li>{{ g.title }}</li>{% endfor %}
+    </ul>
+  {% endif %}
+  <button class="button" onclick="location.href='/profile/{{ user.telegram_id }}?edit=true'">Редактировать профиль</button>
+  {% endif %}
+</div>
+{% endblock %}

@@ -37,9 +37,9 @@ async def index(request: Request):
                         "user": user,
                         "groups": groups,
                         "role_name": UserRole(user.role).name,
-                        "is_admin": user.is_admin,
+                        "editing": False,
                     }
-                    return templates.TemplateResponse("start.html", context)
+                    return templates.TemplateResponse("profile.html", context)
 
     bot_user = S.TELEGRAM_BOT_USERNAME
     return templates.TemplateResponse(

@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from core.models import User, UserRole
@@ -17,13 +18,22 @@ templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 
 
 async def get_current_user(request: Request) -> User:
-    """Simple dependency to extract current user from session or Authorization header."""
-    # Try to read from session if middleware is available
+    """Dependency that extracts the current user from cookie, session or Authorization header."""
     user_id: Optional[int] = None
-    if "session" in request.scope:
+
+    # 1. Try to read telegram_id from cookie set during login
+    telegram_cookie = request.cookies.get("telegram_id")
+    if telegram_cookie:
+        try:
+            user_id = int(telegram_cookie)
+        except ValueError as exc:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid telegram_id cookie") from exc
+
+    # 2. Fallback to session
+    if user_id is None and "session" in request.scope:
         user_id = request.session.get("user_id")
 
-    # Fallback to Authorization header (JWT/Bearer token)
+    # 3. Fallback to Authorization header (JWT/Bearer token)
     if user_id is None:
         auth = request.headers.get("Authorization")
         if auth and auth.startswith("Bearer "):
@@ -47,18 +57,27 @@ async def get_current_user(request: Request) -> User:
 async def get_profile(
     request: Request,
     telegram_id: int,
+    edit: bool = False,
     current_user: User = Depends(get_current_user),
 ):
-    """Render profile for a given telegram id."""
-    if telegram_id != current_user.telegram_id and current_user.role <= UserRole.single.value:
+    """Render profile page. Users may view only their own profile."""
+    if telegram_id != current_user.telegram_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
 
     async with UserService() as user_service:
         user = await user_service.get_user_by_telegram_id(telegram_id)
         if user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        groups = await user_service.list_user_groups(telegram_id)
 
-    return templates.TemplateResponse(request, "profile.html", {"user": user})
+    context = {
+        "request": request,
+        "user": user,
+        "groups": groups,
+        "editing": edit,
+        "role_name": UserRole(user.role).name,
+    }
+    return templates.TemplateResponse("profile.html", context)
 
 
 @router.post("/{telegram_id}")
@@ -86,4 +105,4 @@ async def update_profile(
             if hasattr(user, field):
                 setattr(user, field, value)
 
-    return templates.TemplateResponse(request, "profile.html", {"user": user})
+    return RedirectResponse(url=f"/profile/{telegram_id}", status_code=status.HTTP_303_SEE_OTHER)

@@ -1,17 +1,17 @@
-import types
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 from core.models import User, UserRole
 from web.routes import profile
 
 
 class FakeService:
-    def __init__(self):
-        self.users = {
-            1: User(telegram_id=1, first_name="Alice", username="alice", role=UserRole.single.value),
-            2: User(telegram_id=2, first_name="Bob", username="bob", role=UserRole.moderator.value),
-        }
+    users = {
+        1: User(telegram_id=1, first_name="Alice", username="alice", role=UserRole.single.value),
+        2: User(telegram_id=2, first_name="Bob", username="bob", role=UserRole.moderator.value),
+    }
 
     async def __aenter__(self):
         return self
@@ -22,8 +22,13 @@ class FakeService:
     async def get_user_by_telegram_id(self, telegram_id: int):
         return self.users.get(telegram_id)
 
+    async def list_user_groups(self, user_id: int):
+        return []
+
 
 app = FastAPI()
+static_dir = Path(__file__).resolve().parent.parent / "web" / "static"
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 # Patch UserService in profile module
 profile.UserService = FakeService
 app.include_router(profile.router)
@@ -45,10 +50,9 @@ def test_single_user_cannot_view_others():
     assert res.status_code == 403
 
 
-def test_higher_role_can_view_others():
+def test_higher_role_cannot_view_others():
     res = client.get("/profile/1", headers=auth_header(2))
-    assert res.status_code == 200
-    assert "Alice" in res.text
+    assert res.status_code == 403
 
 
 def test_single_user_can_update_self():
