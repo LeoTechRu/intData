@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
@@ -12,16 +12,15 @@ from core.services.telegram import UserService
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
-# Configure templates relative to this file
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 
 
 async def get_current_user(request: Request) -> User:
-    """Dependency that extracts the current user from cookie, session or Authorization header."""
+    """Extract current user from cookie, session or Authorization header."""
     user_id: Optional[int] = None
 
-    # 1. Try to read telegram_id from cookie set during login
+    # 1. Cookie set on login
     telegram_cookie = request.cookies.get("telegram_id")
     if telegram_cookie:
         try:
@@ -29,18 +28,18 @@ async def get_current_user(request: Request) -> User:
         except ValueError as exc:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid telegram_id cookie") from exc
 
-    # 2. Fallback to session
+    # 2. Session
     if user_id is None and "session" in request.scope:
         user_id = request.session.get("user_id")
 
-    # 3. Fallback to Authorization header (JWT/Bearer token)
+    # 3. Authorization header (Bearer token)
     if user_id is None:
         auth = request.headers.get("Authorization")
         if auth and auth.startswith("Bearer "):
             token = auth.split(" ", 1)[1]
             try:
                 user_id = int(token)
-            except ValueError as exc:  # invalid token format
+            except ValueError as exc:
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token") from exc
 
     if user_id is None:
@@ -54,21 +53,20 @@ async def get_current_user(request: Request) -> User:
 
 
 @router.get("/{telegram_id}")
-async def get_profile(
-    request: Request,
+async def view_profile(
     telegram_id: int,
+    request: Request,
     edit: bool = False,
     current_user: User = Depends(get_current_user),
 ):
-    """Render profile page. Users may view only their own profile."""
-    if telegram_id != current_user.telegram_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
+    """Show profile page with optional edit mode."""
+    if current_user.telegram_id != telegram_id and UserRole(current_user.role) != UserRole.admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-    async with UserService() as user_service:
-        user = await user_service.get_user_by_telegram_id(telegram_id)
+    async with UserService() as service:
+        user, groups = await service.get_user_and_groups(telegram_id)
         if user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-        groups = await user_service.list_user_groups(telegram_id)
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     context = {
         "request": request,
@@ -82,27 +80,25 @@ async def get_profile(
 
 @router.post("/{telegram_id}")
 async def update_profile(
-    request: Request,
     telegram_id: int,
+    request: Request,
     current_user: User = Depends(get_current_user),
 ):
-    """Update user profile with role-based access control."""
-    if telegram_id != current_user.telegram_id and current_user.role < UserRole.moderator.value:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
+    if current_user.telegram_id != telegram_id and UserRole(current_user.role) != UserRole.admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
-    try:
-        data: Dict[str, Any] = await request.json()
-    except Exception:
-        form = await request.form()
-        data = dict(form)
+    form = await request.form()
+    data: Dict[str, str] = {
+        "first_name": form.get("first_name"),
+        "last_name": form.get("last_name"),
+        "username": form.get("username"),
+        "birthday": form.get("birthday"),
+        "language_code": form.get("language_code"),
+        "email": form.get("email"),
+        "phone": form.get("phone"),
+    }
 
-    async with UserService() as user_service:
-        user = await user_service.get_user_by_telegram_id(telegram_id)
-        if user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-        for field, value in data.items():
-            if hasattr(user, field):
-                setattr(user, field, value)
+    async with UserService() as service:
+        await service.update_user_profile(telegram_id, data)
 
     return RedirectResponse(url=f"/profile/{telegram_id}", status_code=status.HTTP_303_SEE_OTHER)
