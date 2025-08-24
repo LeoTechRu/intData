@@ -17,10 +17,9 @@ templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 @router.get("/settings", include_in_schema=False)
 async def settings_page(request: Request, current_user: WebUser = Depends(get_current_web_user)):
     context = {
-        "request": request,
         "user": current_user,
         "role_name": current_user.role,
         "is_admin": current_user.role == "admin",
         "page_title": "Настройки",
     }
-    return templates.TemplateResponse("settings.html", context)
+    return templates.TemplateResponse(request, "settings.html", context)

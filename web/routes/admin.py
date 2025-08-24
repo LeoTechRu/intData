@@ -21,7 +21,6 @@ async def admin_dashboard(
         web_users = await wsvc.list_users()
 
     context = {
-        "request": request,
         "tg_users": tg_users,
         "web_users": web_users,
         "groups": groups_with_members,
@@ -30,7 +29,7 @@ async def admin_dashboard(
         "is_admin": True,
         "page_title": "Админ",
     }
-    return templates.TemplateResponse("admin/index.html", context)
+    return templates.TemplateResponse(request, "admin/index.html", context)
 
 
 @router.post("/role/{telegram_id}")

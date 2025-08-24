@@ -38,12 +38,11 @@ async def view_profile(
     if not current_user or (current_user.id != profile_user.id and current_user.role != "admin"):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     context = {
-        "request": request,
         "profile_user": profile_user,
         "editing": edit,
         "user": current_user,
     }
-    return templates.TemplateResponse("profile.html", context)
+    return templates.TemplateResponse(request, "profile.html", context)
 
 
 @router.post("/{username}")

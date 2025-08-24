@@ -32,18 +32,18 @@ async def index(request: Request):
                 if user:
                     groups = await service.list_user_groups(user_id)
                     context = {
-                        "request": request,
                         "user": user,
                         "groups": groups,
                         "role_name": user.role,
                         "is_admin": UserRole[user.role] >= UserRole.admin,
                         "page_title": "Дашборд",
                     }
-                    return templates.TemplateResponse("start.html", context)
+                    return templates.TemplateResponse(request, "start.html", context)
 
     bot_user = S.TELEGRAM_BOT_USERNAME
     return templates.TemplateResponse(
+        request,
         "auth/login.html",
-        {"request": request, "bot_username": bot_user, "next_query": ""},
+        {"bot_username": bot_user, "next_query": ""},
     )
 
