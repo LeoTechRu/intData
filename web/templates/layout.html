@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>{% block title %}LeonidBot{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
-    <script defer src="{{ url_for('static', path='js/main.js') }}"></script>
+    <script type="module" src="{{ url_for('static', path='js/main.js') }}"></script>
 </head>
 <body>
     {% block content %}{% endblock %}
