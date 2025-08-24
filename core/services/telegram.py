@@ -244,6 +244,31 @@ class UserService:
         groups = await self.list_user_groups(telegram_id)
         return user, groups
 
+    async def get_contact_info(self, telegram_id: int) -> Dict[str, Any]:
+        """Возвращает словарь с контактными данными пользователя."""
+        user, groups = await self.get_user_and_groups(telegram_id)
+        if not user:
+            return {}
+        display_name = (
+            user.full_display_name
+            or f"{user.first_name} {user.last_name or ''}".strip()
+        )
+        return {
+            "user": user,
+            "groups": groups,
+            "telegram_id": user.telegram_id,
+            "username": f"@{user.username}" if user.username else None,
+            "full_display_name": user.full_display_name,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "display_name": display_name,
+            "email": user.email,
+            "phone": user.phone,
+            "birthday": user.birthday.strftime("%d.%m.%Y") if user.birthday else None,
+            "language_code": user.language_code,
+            "role_name": UserRole(user.role).name,
+        }
+
     async def update_user_profile(self, telegram_id: int, data: Dict[str, Any]) -> Optional[User]:
         """Обновляет данные профиля пользователя."""
         user = await self.get_user_by_telegram_id(telegram_id)
@@ -251,6 +276,7 @@ class UserService:
             return None
 
         allowed_fields = {
+            "full_display_name",
             "first_name",
             "last_name",
             "username",

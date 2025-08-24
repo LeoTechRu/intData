@@ -22,6 +22,26 @@ class FakeService:
     async def get_user_and_groups(self, telegram_id: int):
         return self.users.get(telegram_id), []
 
+    async def get_contact_info(self, telegram_id: int):
+        user = self.users.get(telegram_id)
+        if not user:
+            return {}
+        return {
+            "user": user,
+            "groups": [],
+            "telegram_id": user.telegram_id,
+            "username": f"@{user.username}" if user.username else None,
+            "full_display_name": user.full_display_name,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "display_name": user.full_display_name or user.first_name,
+            "email": user.email,
+            "phone": user.phone,
+            "birthday": user.birthday.strftime("%d.%m.%Y") if user.birthday else None,
+            "language_code": user.language_code,
+            "role_name": UserRole(user.role).name,
+        }
+
     async def update_user_profile(self, telegram_id: int, data):
         user = self.users.get(telegram_id)
         if user:
@@ -63,7 +83,12 @@ def test_higher_role_cannot_view_others():
 
 
 def test_single_user_can_update_self():
-    res = client.post("/profile/1", headers=auth_header(1), data={"username": "alice_new"})
+    res = client.post(
+        "/profile/1",
+        headers=auth_header(1),
+        data={"username": "alice_new"},
+        follow_redirects=True,
+    )
     assert res.status_code == 200
     assert "alice_new" in res.text
 

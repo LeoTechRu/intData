@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Dict, Optional
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
@@ -64,16 +65,20 @@ async def view_profile(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     async with UserService() as service:
-        user, groups = await service.get_user_and_groups(telegram_id)
-        if user is None:
+        info = await service.get_contact_info(telegram_id)
+        if not info:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
     context = {
         "request": request,
-        "user": user,
-        "groups": groups,
+        "user": info["user"],
+        "info": info,
+        "groups": info["groups"],
         "editing": edit,
-        "role_name": UserRole(user.role).name,
+        "role_name": info["role_name"],
+        "current_user": current_user,
+        "current_role_name": UserRole(current_user.role).name,
+        "is_admin": current_user.is_admin,
     }
     return templates.TemplateResponse("profile.html", context)
 
@@ -88,17 +93,29 @@ async def update_profile(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     form = await request.form()
-    data: Dict[str, str] = {
+    birthday_str = form.get("birthday")
+    birthday = None
+    if birthday_str:
+        try:
+            birthday = datetime.strptime(birthday_str, "%Y-%m-%d").date()
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Неверный формат даты")
+
+    data = {
+        "full_display_name": form.get("full_display_name"),
         "first_name": form.get("first_name"),
         "last_name": form.get("last_name"),
         "username": form.get("username"),
-        "birthday": form.get("birthday"),
-        "language_code": form.get("language_code"),
         "email": form.get("email"),
         "phone": form.get("phone"),
+        "birthday": birthday,
+        "language_code": form.get("language_code"),
     }
 
     async with UserService() as service:
         await service.update_user_profile(telegram_id, data)
 
-    return RedirectResponse(url=f"/profile/{telegram_id}", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(
+        url=f"/profile/{telegram_id}",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
