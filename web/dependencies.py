@@ -5,14 +5,18 @@ from typing import Optional
 
 from fastapi import Request, Depends, HTTPException, status
 
-from core.models import WebUser, TgUser
+from core.models import WebUser, TgUser, UserRole
 from core.services.web_user_service import WebUserService
 from core.services.telegram_user_service import TelegramUserService
 
 
 async def get_current_web_user(request: Request) -> Optional[WebUser]:
-    """Return current web user based on signed cookie."""
+    """Return current web user based on cookie or Authorization header."""
     raw = request.cookies.get("web_user_id")
+    if not raw:
+        auth = request.headers.get("Authorization")
+        if auth and auth.startswith("Bearer "):
+            raw = auth.split(" ", 1)[1]
     if not raw:
         return None
     try:
@@ -35,13 +39,19 @@ async def get_current_tg_user(request: Request) -> Optional[TgUser]:
         return await service.get_by_telegram_id(telegram_id)
 
 
-def role_required(required_role):
+def role_required(required_role: UserRole | str):
     """Ensure current user has the required role."""
 
-    required = getattr(required_role, "name", required_role)
+    required = (
+        required_role if isinstance(required_role, UserRole) else UserRole[required_role]
+    )
 
-    async def verifier(current_user: Optional[WebUser] = Depends(get_current_web_user)) -> WebUser:
-        if not current_user or (current_user.role != required and current_user.role != "admin"):
+    async def verifier(
+        current_user: Optional[WebUser] = Depends(get_current_web_user),
+    ) -> WebUser:
+        if not current_user:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+        if UserRole[current_user.role].value < required.value:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
         return current_user
 

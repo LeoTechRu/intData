@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Any, Union
+from typing import Optional, Any, Union, List
 from datetime import datetime
 
 import bcrypt
@@ -104,6 +104,10 @@ class WebUserService:
                 setattr(user, field, data[field])
         await self.session.flush()
         return user
+
+    async def list_users(self) -> List[WebUser]:
+        result = await self.session.execute(select(WebUser))
+        return result.scalars().all()
 
     async def get_user_by_identifier(self, identifier: Union[int, str]) -> Optional[WebUser]:
         if isinstance(identifier, int) or (isinstance(identifier, str) and identifier.isdigit()):

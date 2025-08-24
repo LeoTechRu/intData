@@ -1,7 +1,7 @@
 # /sd/tg/LeonidBot/decorators.py
 from functools import wraps
 from aiogram.types import Message
-from core.services.telegram import UserService
+from core.services.telegram_user_service import TelegramUserService
 from core.models import UserRole, GroupType
 from core.logger import logger
 
@@ -12,7 +12,7 @@ def role_required(role: UserRole):
         @wraps(handler)
         async def wrapper(message: Message, *args, **kwargs):
             try:
-                async with UserService() as user_service:
+                async with TelegramUserService() as user_service:
                     user, is_new = await user_service.get_or_create_user(
                         message.from_user.id,
                         username=message.from_user.username,
@@ -21,7 +21,7 @@ def role_required(role: UserRole):
                         language_code=message.from_user.language_code,
                         is_premium=message.from_user.is_premium
                     )
-                    if user.role >= role.value:
+                    if UserRole[user.role].value >= role.value:
                         return await handler(message, *args, **kwargs)
                     await message.answer(f"Недостаточно прав. Требуется роль: {role.name}")
             except Exception as e:
@@ -34,7 +34,7 @@ def role_required(role: UserRole):
 async def group_required(handler):
     async def wrapper(message: Message, *args, **kwargs):
         try:
-            async with UserService() as user_service:
+            async with TelegramUserService() as user_service:
                 chat = message.chat
                 user_id = message.from_user.id
                 group_id = chat.id

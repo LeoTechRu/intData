@@ -37,10 +37,14 @@ class FakeService:
         return self.user
 
 
+@pytest.fixture(autouse=True)
+def _patch_service(monkeypatch):
+    monkeypatch.setattr(profile, "WebUserService", FakeService)
+
+
 app = FastAPI()
 static_dir = Path(__file__).resolve().parent.parent / "web" / "static"
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
-profile.WebUserService = FakeService  # patch service
 app.include_router(profile.router)
 client = TestClient(app)
 

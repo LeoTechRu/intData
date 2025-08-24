@@ -9,8 +9,8 @@ from aiogram.fsm.state import State, StatesGroup
 from datetime import datetime
 from typing import Callable
 from decorators import role_required, group_required
-from core.models import User, GroupType, LogLevel, UserRole
-from core.services.telegram import UserService
+from core.models import GroupType, LogLevel, UserRole
+from core.services.telegram_user_service import TelegramUserService
 
 # ==============================
 # РОУТЕРЫ
@@ -37,7 +37,7 @@ async def process_data_input(
         await message.answer(error_msg)
         return
 
-    async with UserService() as user_service:
+    async with TelegramUserService() as user_service:
         success = await update_method(user_service, message.from_user.id, data)
 
     if success:
@@ -98,7 +98,7 @@ async def cmd_cancel(message: Message, state: FSMContext):
 @user_router.message(Command("birthday"))
 @user_router.message(F.text.lower() == "день рождение")
 async def cmd_birthday(message: Message, state: FSMContext):
-    async with UserService() as user_service:
+    async with TelegramUserService() as user_service:
         user_db = await user_service.get_user_by_telegram_id(message.from_user.id)
         if user_db and user_db.birthday:
             today = datetime.today().date()
@@ -117,7 +117,7 @@ async def cmd_birthday(message: Message, state: FSMContext):
 @user_router.message(Command("contact"))
 @user_router.message(F.text.lower().in_(["контакт", "профиль"]))
 async def cmd_contact(message: Message):
-    async with UserService() as user_service:
+    async with TelegramUserService() as user_service:
         info = await user_service.get_contact_info(message.from_user.id)
 
     if not info:
@@ -162,7 +162,7 @@ async def cmd_contact(message: Message):
 @group_router.message(Command("group"))
 @group_router.message(F.text.lower().in_(["группа", "group"]))
 async def cmd_group(message: Message):
-    async with UserService() as user_service:
+    async with TelegramUserService() as user_service:
         chat = message.chat
         chat_title = chat.title or f"{message.from_user.first_name} группа"
         group = await user_service.get_group_by_telegram_id(chat.id)
@@ -202,7 +202,7 @@ async def cmd_set_log_level(message: Message):
     if level not in ["DEBUG", "INFO", "ERROR"]:
         await message.answer("Недопустимый уровень: используйте DEBUG, INFO или ERROR")
         return
-    async with UserService() as user_service:
+    async with TelegramUserService() as user_service:
         success = await user_service.update_log_level(LogLevel(level), chat_id=message.chat.id)
         if success:
             await message.answer(f"Уровень логирования установлен: {level}")
@@ -211,7 +211,7 @@ async def cmd_set_log_level(message: Message):
 
 @user_router.message(Command("getloglevel"))
 async def cmd_get_log_level(message: Message):
-    async with UserService() as user_service:
+    async with TelegramUserService() as user_service:
         log_settings = await user_service.get_log_settings()
         current_level = log_settings.level if log_settings else LogLevel.ERROR
         chat_id = log_settings.chat_id if log_settings else "не задан"

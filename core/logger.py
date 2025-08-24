@@ -131,8 +131,8 @@ class LoggerMiddleware(BaseMiddleware):
 
         # Отправляем в Telegram только если уровень соответствует настройкам
         try:
-            from core.services.telegram import UserService
-            async with UserService() as user_service:
+            from core.services.telegram_user_service import TelegramUserService
+            async with TelegramUserService() as user_service:
                 settings = await user_service.get_log_settings()
                 current_level = settings.level if settings else LogLevel.DEBUG
                 chat_id = settings.chat_id if settings else self.admin_chat_id
