@@ -66,7 +66,7 @@ async def test_telegram_login_validation(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_middleware_redirects(client: AsyncClient):
     """Unauthenticated users should be redirected to login."""
-    resp = await client.get("/admin/users", follow_redirects=False)
+    resp = await client.get("/admin", follow_redirects=False)
     assert resp.status_code in {302, 303, 307}
     assert resp.headers["location"].startswith("/auth/login?next=")
 
