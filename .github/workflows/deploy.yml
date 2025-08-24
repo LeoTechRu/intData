@@ -17,39 +17,31 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
 
-          - name: SSH: pull & restart
-          uses: appleboy/ssh-action@v1.0.0
-          with:
-            host: ${{ secrets.VPS_HOST }}
-            username: ${{ secrets.VPS_USER }}
-            key: ${{ secrets.VPS_KEY }}
-            script_stop: true
-            script: |
+      - name: "SSH: pull & restart"
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            # обновление репозитория
+            sudo -u deploy bash -lc '
               set -euo pipefail
-              # 1) работаем под 'deploy' (git не из-под root)
-              sudo -u deploy bash -lc '
-                set -euo pipefail
-                cd /sd/tg/LeonidBot
-                mkdir -p ~/.ssh && ssh-keyscan -H github.com >> ~/.ssh/known_hosts
-                # гарантируем SSH-URL (на случай, если кто-то вернёт https)
-                if git remote get-url origin | grep -q "^https://"; then
-                  git remote set-url origin git@github.com:LeoTechRu/LeonidBot.git
-                fi
-                git config --global --add safe.directory /sd/tg/LeonidBot || true
-
-                # ЛОКАЛЬНЫЕ ПРАВКИ НЕ КРИТИЧНЫ → убираем из пути:
-                git stash push -u -m "ci-autostash $(date -Iseconds)" || true
-
-                # Быстрый и предсказуемый апдейт без merge-коммитов:
-                git fetch --prune origin
-                git reset --hard origin/main
-              '
-
-            # 2) рестарт сервисов
+              cd /sd/tg/LeonidBot
+              mkdir -p ~/.ssh && ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+              if git remote get-url origin | grep -q "^https://"; then
+                git remote set-url origin git@github.com:LeoTechRu/LeonidBot.git
+              fi
+              git config --global --add safe.directory /sd/tg/LeonidBot || true
+              git stash push -u -m "ci-autostash $(date -Iseconds)" || true
+              git fetch --prune origin
+              git reset --hard origin/main
+            '
+            # рестарт сервисов
             sudo -n systemctl restart leonidbot-bot.service
             sudo -n systemctl restart leonidbot-web.service
-
-
-            # 3) (опционально) короткая проверка статуса
+            # проверка статуса
             systemctl is-active --quiet leonidbot-bot.service
             systemctl is-active --quiet leonidbot-web.service
