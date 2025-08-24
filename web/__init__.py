@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from .routes import admin, auth, index, start, profile, settings
+from .routes import admin, auth, index, profile, settings
 
 app = FastAPI()
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -27,17 +27,19 @@ async def auth_middleware(request: Request, call_next):
     # Authentication routes
     if path.startswith("/auth"):
         if telegram_id and path == "/auth/login":
-            return RedirectResponse("/start")
+            return RedirectResponse("/")
         return await call_next(request)
 
     # Skip docs and schema endpoints
     if path.startswith("/docs") or path.startswith("/openapi"):
         return await call_next(request)
 
-    # Redirect authenticated users hitting root to the dashboard
+    # Allow root path for both authenticated and guest users
+    if path == "/":
+        return await call_next(request)
+
+    # Authenticated users can access other routes directly
     if telegram_id:
-        if path == "/":
-            return RedirectResponse("/start")
         return await call_next(request)
 
     # For everything else require login, preserving original destination
@@ -48,7 +50,6 @@ async def auth_middleware(request: Request, call_next):
 
 
 app.include_router(index.router)
-app.include_router(start.router)
 app.include_router(profile.router)
 app.include_router(settings.router)
 app.include_router(auth.router, prefix="/auth")
