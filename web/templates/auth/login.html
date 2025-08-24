@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends "base.html" %}
 {% block title %}Вход{% endblock %}
 {% block content %}
   <div class="ui-layout">
@@ -10,7 +10,9 @@
       <input type="password" name="password" required>
       <button type="submit" class="button">Войти</button>
     </form>
+    <p><a href="/auth/register">Регистрация</a></p>
 
+    {% if not telegram_id %}
     <h3>Или войдите через Telegram</h3>
     <div>
       <script async src="https://telegram.org/js/telegram-widget.js?22"
@@ -21,6 +23,7 @@
               data-request-access="write">
       </script>
     </div>
+    {% endif %}
   </div>
 
   <script>

@@ -55,11 +55,11 @@ async def test_telegram_login_validation(client: AsyncClient):
         "auth_date": int(time.time()),
     }
     data["hash"] = _generate_hash(data)
-    response = await client.post("/auth/callback", data=data)
+    response = await client.post("/auth/tg/callback", data=data)
     assert response.status_code in {200, 303}
 
     data["hash"] = "invalid"
-    bad = await client.post("/auth/callback", data=data)
+    bad = await client.post("/auth/tg/callback", data=data)
     assert bad.status_code in {400, 401, 403}
 
 
