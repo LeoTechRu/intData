@@ -26,19 +26,31 @@ export function initProfileMenu() {
         if (!link)
             return;
         ev.preventDefault();
-        const resp = await fetch(link.href);
-        if (resp.ok) {
+        const method = link.dataset.method || 'GET';
+        const resp = await fetch(link.href, { method, credentials: 'include' });
+        if (resp.redirected) {
+            window.location.href = resp.url;
+        }
+        else if (resp.ok) {
             content.innerHTML = await resp.text();
         }
         dropdown.classList.add('hidden');
     });
 }
-export function initAdminPanel() {
-    const panel = document.querySelector('.admin-panel');
+export function initAdminMenu() {
+    const button = document.getElementById('admin-button');
+    const dropdown = document.getElementById('admin-dropdown');
     const content = document.getElementById('main-content');
-    if (!panel || !content)
+    if (!button || !dropdown || !content)
         return;
-    panel.addEventListener('click', async (ev) => {
+    button.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        dropdown.classList.toggle('hidden');
+    });
+    document.addEventListener('click', () => {
+        dropdown.classList.add('hidden');
+    });
+    dropdown.addEventListener('click', async (ev) => {
         const target = ev.target;
         const link = target === null || target === void 0 ? void 0 : target.closest('a');
         if (!link)
@@ -47,14 +59,15 @@ export function initAdminPanel() {
         const url = link.dataset.adminEndpoint;
         if (!url)
             return;
-        const resp = await fetch(url);
+        const resp = await fetch(url, { credentials: 'include' });
         if (resp.ok) {
             content.innerHTML = await resp.text();
         }
+        dropdown.classList.add('hidden');
     });
 }
 document.addEventListener('DOMContentLoaded', () => {
     enableAccessibility();
     initProfileMenu();
-    initAdminPanel();
+    initAdminMenu();
 });

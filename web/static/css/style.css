@@ -94,15 +94,29 @@ button, .button {
   background-color: var(--color-accent-purple);
   color: #fff;
   padding: var(--spacing);
-  border-radius: var(--radius);
+  border-radius: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing);
+  margin: 0 0 var(--spacing) 0;
+  width: 100%;
 }
 
 .top-bar .welcome {
   margin: 0;
+}
+
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.admin-menu { position: relative; }
+
+#admin-button {
+  cursor: pointer;
+  color: #fff;
 }
 
 .profile-menu {
@@ -151,6 +165,15 @@ button, .button {
 .dropdown-menu .role {
   font-weight: bold;
   margin-bottom: 0.5rem;
+}
+
+#login-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  text-align: center;
 }
 
 .hidden {

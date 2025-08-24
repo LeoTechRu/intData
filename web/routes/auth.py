@@ -3,11 +3,16 @@ import hmac, hashlib, time
 from typing import Dict
 from fastapi import APIRouter, Request, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
+from pathlib import Path
 from urllib.parse import quote
 from web.config import S
 from core.services.telegram import UserService
 
 router = APIRouter(tags=["auth"])
+
+TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
+templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 
 def verify_telegram_login(data: Dict[str, str]) -> bool:
     recv_hash = data.get("hash", "")
@@ -24,52 +29,15 @@ def verify_telegram_login(data: Dict[str, str]) -> bool:
     return auth_date > 0 and (time.time() - auth_date) <= S.SESSION_MAX_AGE
 
 @router.get("/login", response_class=HTMLResponse)
-async def login_page(next: str | None = None) -> HTMLResponse:
+async def login_page(request: Request, next: str | None = None) -> HTMLResponse:
     """Render login page with Telegram widget."""
     bot_user = S.TELEGRAM_BOT_USERNAME
     next_query = f"?next={quote(next, safe='')}" if next else ""
-    html = f"""
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="utf-8">
-  <title>Вход</title>
-</head>
-<body>
-  <h1>Вход через Telegram</h1>
-  <script src=\"https://telegram.org/js/telegram-widget.js?22\"
-          data-telegram-login=\"{bot_user}\"
-          data-size=\"medium\"
-          data-userpic=\"false\"
-          data-request-access=\"write\"
-          data-lang=\"ru\"
-          data-onauth=\"onTelegramAuth(user)\"></script>
-  <script>
-  async function onTelegramAuth(user) {{
-    const form = new URLSearchParams();
-    for (const [k, v] of Object.entries(user)) {{ form.append(k, v); }}
-    const resp = await fetch('/auth/callback{next_query}', {{
-      method: 'POST',
-      headers: {{ 'Content-Type': 'application/x-www-form-urlencoded' }},
-      body: form.toString(),
-      credentials: 'same-origin'
-    }});
-    if (resp.redirected) {{
-      window.location = resp.url;
-    }} else {{
-      let detail = 'Ошибка авторизации';
-      try {{
-        const j = await resp.json();
-        if (j && j.detail) detail = j.detail;
-      }} catch (_) {{}}
-      alert(detail);
-    }}
-  }}
-  </script>
-</body>
-</html>
-"""
-    return HTMLResponse(html)
+    return templates.TemplateResponse(
+        request,
+        "auth/login.html",
+        {"bot_username": bot_user, "next_query": next_query},
+    )
 
 @router.post("/callback")
 async def telegram_callback(request: Request, next: str | None = None):
@@ -102,4 +70,11 @@ async def telegram_callback(request: Request, next: str | None = None):
         httponly=True,
         samesite="lax",
     )
+    return response
+
+
+@router.post("/logout")
+async def logout() -> RedirectResponse:
+    response = RedirectResponse("/auth/login", status_code=303)
+    response.delete_cookie("telegram_id", path="/")
     return response

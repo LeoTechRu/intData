@@ -1,7 +1,27 @@
-<h1>{{ user.first_name }} {{ user.last_name or '' }}</h1>
-<table class="ui-table">
-    <tr><th>Username</th><td>{{ user.username }}</td></tr>
-    <tr><th>Email</th><td>{{ user.email }}</td></tr>
-    <tr><th>Phone</th><td>{{ user.phone }}</td></tr>
-    <tr><th>Role</th><td>{{ user.role }}</td></tr>
-</table>
+<h1>Редактирование профиля</h1>
+<form id="profile-edit-form" class="ui-form" method="post">
+    <label for="first_name">Имя</label>
+    <input id="first_name" name="first_name" value="{{ user.first_name or '' }}">
+    <label for="last_name">Фамилия</label>
+    <input id="last_name" name="last_name" value="{{ user.last_name or '' }}">
+    <label for="username">Username</label>
+    <input id="username" name="username" value="{{ user.username or '' }}">
+    <label for="birth_date">Дата рождения</label>
+    <input id="birth_date" type="date" name="birth_date" value="{{ user.birth_date or '' }}">
+    <button type="submit">Сохранить</button>
+</form>
+<script>
+const form = document.getElementById('profile-edit-form');
+if (form) {
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const formData = new FormData(form);
+    const resp = await fetch(window.location.pathname, {method: 'POST', body: formData, credentials: 'include'});
+    if (resp.ok) {
+      const html = await resp.text();
+      const container = document.getElementById('main-content');
+      if (container) container.innerHTML = html;
+    }
+  });
+}
+</script>

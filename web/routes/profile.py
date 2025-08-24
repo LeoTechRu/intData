@@ -65,19 +65,23 @@ async def get_profile(
 async def update_profile(
     request: Request,
     telegram_id: int,
-    data: Dict[str, Any],
     current_user: User = Depends(get_current_user),
 ):
     """Update user profile with role-based access control."""
     if telegram_id != current_user.telegram_id and current_user.role < UserRole.moderator.value:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
 
+    try:
+        data: Dict[str, Any] = await request.json()
+    except Exception:
+        form = await request.form()
+        data = dict(form)
+
     async with UserService() as user_service:
         user = await user_service.get_user_by_telegram_id(telegram_id)
         if user is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-        # Update allowed fields
         for field, value in data.items():
             if hasattr(user, field):
                 setattr(user, field, value)

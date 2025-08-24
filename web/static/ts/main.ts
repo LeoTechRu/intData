@@ -24,7 +24,37 @@ export function initProfileMenu() {
     const link = target?.closest('a') as HTMLAnchorElement | null;
     if (!link) return;
     ev.preventDefault();
-    const resp = await fetch(link.href);
+    const method = link.dataset.method || 'GET';
+    const resp = await fetch(link.href, { method, credentials: 'include' });
+    if (resp.redirected) {
+      window.location.href = resp.url;
+    } else if (resp.ok) {
+      content.innerHTML = await resp.text();
+    }
+    dropdown.classList.add('hidden');
+  });
+}
+
+export function initAdminMenu() {
+  const button = document.getElementById('admin-button');
+  const dropdown = document.getElementById('admin-dropdown');
+  const content = document.getElementById('main-content');
+  if (!button || !dropdown || !content) return;
+  button.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    dropdown.classList.toggle('hidden');
+  });
+  document.addEventListener('click', () => {
+    dropdown.classList.add('hidden');
+  });
+  dropdown.addEventListener('click', async (ev) => {
+    const target = ev.target as HTMLElement | null;
+    const link = target?.closest('a') as HTMLAnchorElement | null;
+    if (!link) return;
+    ev.preventDefault();
+    const url = link.dataset.adminEndpoint;
+    if (!url) return;
+    const resp = await fetch(url, { credentials: 'include' });
     if (resp.ok) {
       content.innerHTML = await resp.text();
     }
@@ -32,26 +62,8 @@ export function initProfileMenu() {
   });
 }
 
-export function initAdminPanel() {
-  const panel = document.querySelector('.admin-panel');
-  const content = document.getElementById('main-content');
-  if (!panel || !content) return;
-  panel.addEventListener('click', async (ev) => {
-    const target = ev.target as HTMLElement | null;
-    const link = target?.closest('a') as HTMLAnchorElement | null;
-    if (!link) return;
-    ev.preventDefault();
-    const url = link.dataset.adminEndpoint;
-    if (!url) return;
-    const resp = await fetch(url);
-    if (resp.ok) {
-      content.innerHTML = await resp.text();
-    }
-  });
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   enableAccessibility();
   initProfileMenu();
-  initAdminPanel();
+  initAdminMenu();
 });
