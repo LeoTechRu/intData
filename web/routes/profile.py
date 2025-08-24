@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Dict, Optional
-from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
@@ -10,6 +9,8 @@ from fastapi.templating import Jinja2Templates
 
 from core.models import User, UserRole
 from core.services.telegram import UserService
+from pydantic import ValidationError
+from web.schemas import ProfileUpdate
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
@@ -94,27 +95,14 @@ async def update_profile(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
     form = await request.form()
-    birthday_str = form.get("birthday")
-    birthday = None
-    if birthday_str:
-        try:
-            birthday = datetime.strptime(birthday_str, "%Y-%m-%d").date()
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Неверный формат даты")
-
-    data = {
-        "full_display_name": form.get("full_display_name"),
-        "first_name": form.get("first_name"),
-        "last_name": form.get("last_name"),
-        "username": form.get("username"),
-        "email": form.get("email"),
-        "phone": form.get("phone"),
-        "birthday": birthday,
-        "language_code": form.get("language_code"),
-    }
+    form_data = {k: v for k, v in form.items()}
+    try:
+        payload = ProfileUpdate(**form_data)
+    except ValidationError as exc:  # pragma: no cover - defensive
+        raise HTTPException(status_code=400, detail="Неверный формат даты") from exc
 
     async with UserService() as service:
-        await service.update_user_profile(telegram_id, data)
+        await service.update_user_profile(telegram_id, payload.dict(exclude_none=True))
 
     return RedirectResponse(
         url=f"/profile/{telegram_id}",
