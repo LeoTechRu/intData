@@ -38,7 +38,7 @@ async def test_profile_access_single_user(client: AsyncClient):
     resp = await client.get("/profile/1", headers={"Authorization": "Bearer 1"})
     assert resp.status_code == 200
 
-    admin = await client.get("/admin/users", headers={"Authorization": "Bearer 1"})
+    admin = await client.get("/admin", headers={"Authorization": "Bearer 1"})
     assert admin.status_code in {401, 403}
 
 
@@ -47,5 +47,5 @@ async def test_admin_access(client: AsyncClient):
     await _create_user(UserRole.admin, telegram_id=2)
     profile = await client.get("/profile/2", headers={"Authorization": "Bearer 2"})
     assert profile.status_code == 200
-    admin = await client.get("/admin/users", headers={"Authorization": "Bearer 2"})
+    admin = await client.get("/admin", headers={"Authorization": "Bearer 2"})
     assert admin.status_code == 200
