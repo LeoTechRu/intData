@@ -225,6 +225,17 @@ class UserService:
             logger.error(f"Ошибка получения участников группы: {e}")
             return []
 
+    async def list_user_groups(self, user_id: int) -> List[Group]:
+        """Возвращает список групп, в которых состоит пользователь"""
+        try:
+            result = await self.session.execute(
+                select(Group).join(UserGroup).where(UserGroup.user_id == user_id)
+            )
+            return result.scalars().all()
+        except Exception as e:
+            logger.error(f"Ошибка получения групп пользователя: {e}")
+            return []
+
     async def list_groups_with_members(self) -> List[Dict[str, Any]]:
         """Возвращает список групп с участниками"""
         try:

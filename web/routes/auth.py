@@ -3,6 +3,7 @@ import hmac, hashlib, time
 from typing import Dict
 from fastapi import APIRouter, Request, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse
+from urllib.parse import quote
 from web.config import S
 from core.services.telegram import UserService
 
@@ -23,9 +24,10 @@ def verify_telegram_login(data: Dict[str, str]) -> bool:
     return auth_date > 0 and (time.time() - auth_date) <= S.SESSION_MAX_AGE
 
 @router.get("/login", response_class=HTMLResponse)
-async def login_page() -> HTMLResponse:
+async def login_page(next: str | None = None) -> HTMLResponse:
     """Render login page with Telegram widget."""
     bot_user = S.TELEGRAM_BOT_USERNAME
+    next_query = f"?next={quote(next, safe='')}" if next else ""
     html = f"""
 <!DOCTYPE html>
 <html lang="ru">
@@ -46,7 +48,7 @@ async def login_page() -> HTMLResponse:
   async function onTelegramAuth(user) {{
     const form = new URLSearchParams();
     for (const [k, v] of Object.entries(user)) {{ form.append(k, v); }}
-    const resp = await fetch('/auth/callback', {{
+    const resp = await fetch('/auth/callback{next_query}', {{
       method: 'POST',
       headers: {{ 'Content-Type': 'application/x-www-form-urlencoded' }},
       body: form.toString(),
@@ -70,7 +72,7 @@ async def login_page() -> HTMLResponse:
     return HTMLResponse(html)
 
 @router.post("/callback")
-async def telegram_callback(request: Request):
+async def telegram_callback(request: Request, next: str | None = None):
     data = dict((await request.form()).items())
     if not verify_telegram_login(data):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Bad Telegram signature")
@@ -90,7 +92,8 @@ async def telegram_callback(request: Request):
         if not created and user and user.role != role.value:
             await service.update_user_role(telegram_id, role)
 
-    response = RedirectResponse("/admin/users", status_code=303)
+    target = next if next and next.startswith("/") else "/start"
+    response = RedirectResponse(target, status_code=303)
     response.set_cookie(
         "telegram_id",
         str(telegram_id),
