@@ -126,27 +126,33 @@ async def cmd_contact(message: Message):
         )
         return
 
-    lines = [f"{message.from_user.first_name}, контактные данные:"]
-    lines.append(f"Telegram ID: {info['telegram_id']}")
-    if info.get("username"):
-        lines.append(f"Username: {info['username']}")
-    if info.get("full_display_name"):
-        lines.append(f"Отображаемое имя: {info['full_display_name']}")
-    elif info.get("first_name") or info.get("last_name"):
-        name = f"{info.get('first_name') or ''} {info.get('last_name') or ''}".strip()
-        if name:
-            lines.append(f"Имя: {name}")
-    if info.get("email"):
-        lines.append(f"Email: {info['email']}")
-    if info.get("phone"):
-        lines.append(f"Телефон: {info['phone']}")
-    if info.get("birthday"):
-        lines.append(f"День рождения: {info['birthday']}")
-    lines.append("\nКоманды для обновления:")
+    name = (
+        info.get("full_display_name")
+        or f"{info.get('first_name') or ''} {info.get('last_name') or ''}".strip()
+        or message.from_user.first_name
+    )
+
+    fields = {
+        "Telegram ID": info["telegram_id"],
+        "Username": info.get("username"),
+        "Имя": name,
+        "Email": info.get("email"),
+        "Телефон": info.get("phone"),
+        "День рождения": info.get("birthday"),
+    }
+
+    lines = [f"{name}, контактные данные:"]
+    for label, value in fields.items():
+        if value:
+            lines.append(f"{label}: {value}")
+
+    lines.append("")
+    lines.append("Команды для обновления:")
     lines.append("/setfullname - установить отображаемое имя")
     lines.append("/setemail - установить email")
     lines.append("/setphone - установить телефон")
     lines.append("/setbirthday - установить день рождения")
+
     await message.answer("\n".join(lines))
 
 # -----------------------------
