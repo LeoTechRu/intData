@@ -236,6 +236,37 @@ class UserService:
             logger.error(f"Ошибка получения групп пользователя: {e}")
             return []
 
+    async def get_user_and_groups(self, telegram_id: int) -> Tuple[Optional[User], List[Group]]:
+        """Возвращает пользователя и список его групп."""
+        user = await self.get_user_by_telegram_id(telegram_id)
+        if not user:
+            return None, []
+        groups = await self.list_user_groups(telegram_id)
+        return user, groups
+
+    async def update_user_profile(self, telegram_id: int, data: Dict[str, Any]) -> Optional[User]:
+        """Обновляет данные профиля пользователя."""
+        user = await self.get_user_by_telegram_id(telegram_id)
+        if not user:
+            return None
+
+        allowed_fields = {
+            "first_name",
+            "last_name",
+            "username",
+            "birthday",
+            "language_code",
+            "email",
+            "phone",
+        }
+
+        for field, value in data.items():
+            if field in allowed_fields and value is not None:
+                setattr(user, field, value)
+
+        await self.session.flush()
+        return user
+
     async def list_groups_with_members(self) -> List[Dict[str, Any]]:
         """Возвращает список групп с участниками"""
         try:

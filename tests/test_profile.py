@@ -19,11 +19,18 @@ class FakeService:
     async def __aexit__(self, exc_type, exc, tb):
         pass
 
+    async def get_user_and_groups(self, telegram_id: int):
+        return self.users.get(telegram_id), []
+
+    async def update_user_profile(self, telegram_id: int, data):
+        user = self.users.get(telegram_id)
+        if user:
+            for k, v in data.items():
+                setattr(user, k, v)
+        return user
+
     async def get_user_by_telegram_id(self, telegram_id: int):
         return self.users.get(telegram_id)
-
-    async def list_user_groups(self, user_id: int):
-        return []
 
 
 app = FastAPI()
@@ -56,11 +63,11 @@ def test_higher_role_cannot_view_others():
 
 
 def test_single_user_can_update_self():
-    res = client.post("/profile/1", headers=auth_header(1), json={"username": "alice_new"})
+    res = client.post("/profile/1", headers=auth_header(1), data={"username": "alice_new"})
     assert res.status_code == 200
     assert "alice_new" in res.text
 
 
 def test_single_user_cannot_update_others():
-    res = client.post("/profile/2", headers=auth_header(1), json={"username": "bad"})
+    res = client.post("/profile/2", headers=auth_header(1), data={"username": "bad"})
     assert res.status_code == 403

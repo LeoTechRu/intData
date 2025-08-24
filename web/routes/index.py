@@ -19,7 +19,7 @@ templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 
 @router.get("/", include_in_schema=False)
 async def index(request: Request):
-    """Dashboard for authenticated users or login for guests."""
+    """Render dashboard for authorised users or login page for guests."""
     telegram_id = request.cookies.get("telegram_id")
 
     if telegram_id:
@@ -37,9 +37,9 @@ async def index(request: Request):
                         "user": user,
                         "groups": groups,
                         "role_name": UserRole(user.role).name,
-                        "editing": False,
+                        "is_admin": user.is_admin,
                     }
-                    return templates.TemplateResponse("profile.html", context)
+                    return templates.TemplateResponse("start.html", context)
 
     bot_user = S.TELEGRAM_BOT_USERNAME
     return templates.TemplateResponse(
