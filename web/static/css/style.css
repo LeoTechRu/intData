@@ -180,6 +180,8 @@ button, .button {
   align-items: center;
   min-height: 100vh;
   text-align: center;
+  transform: scale(1.5);
+  transform-origin: center;
 }
 
 .hidden {

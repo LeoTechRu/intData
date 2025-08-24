@@ -5,6 +5,7 @@ from urllib.parse import quote
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.routing import Match
 
 from .routes import admin, auth, index, profile, settings
 
@@ -17,6 +18,14 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 async def auth_middleware(request: Request, call_next):
     """Redirect unauthenticated users to login and handle dashboard routing."""
     path = request.url.path
+
+    # Redirect any request to unknown paths back to the root dashboard
+    route_exists = any(
+        route.matches(request.scope)[0] != Match.NONE
+        for route in request.app.router.routes
+    )
+    if not route_exists:
+        return RedirectResponse("/")
 
     # Allow direct access to API calls using explicit authorization headers
     if request.headers.get("Authorization"):
