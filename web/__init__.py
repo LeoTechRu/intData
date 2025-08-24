@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from .routes import admin, auth, index, start
+from .routes import admin, auth, index, start, profile, settings
 
 app = FastAPI()
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -49,5 +49,7 @@ async def auth_middleware(request: Request, call_next):
 
 app.include_router(index.router)
 app.include_router(start.router)
+app.include_router(profile.router)
+app.include_router(settings.router)
 app.include_router(auth.router, prefix="/auth")
 app.include_router(admin.router, prefix="/admin")

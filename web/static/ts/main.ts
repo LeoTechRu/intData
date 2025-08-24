@@ -10,7 +10,8 @@ export function enableAccessibility() {
 export function initProfileMenu() {
   const button = document.getElementById('profile-button');
   const dropdown = document.getElementById('profile-dropdown');
-  if (!button || !dropdown) return;
+  const content = document.getElementById('main-content');
+  if (!button || !dropdown || !content) return;
   button.addEventListener('click', (ev) => {
     ev.stopPropagation();
     dropdown.classList.toggle('hidden');
@@ -18,11 +19,22 @@ export function initProfileMenu() {
   document.addEventListener('click', () => {
     dropdown.classList.add('hidden');
   });
+  dropdown.addEventListener('click', async (ev) => {
+    const target = ev.target as HTMLElement | null;
+    const link = target?.closest('a') as HTMLAnchorElement | null;
+    if (!link) return;
+    ev.preventDefault();
+    const resp = await fetch(link.href);
+    if (resp.ok) {
+      content.innerHTML = await resp.text();
+    }
+    dropdown.classList.add('hidden');
+  });
 }
 
 export function initAdminPanel() {
   const panel = document.querySelector('.admin-panel');
-  const content = document.getElementById('admin-content');
+  const content = document.getElementById('main-content');
   if (!panel || !content) return;
   panel.addEventListener('click', async (ev) => {
     const target = ev.target as HTMLElement | null;
