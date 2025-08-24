@@ -11,6 +11,7 @@ from httpx import AsyncClient
 import time
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+from core.services.web_user_service import WebUserService
 
 BOT_TOKEN = "TEST_TOKEN"
 from base import Base
@@ -77,3 +78,21 @@ async def test_middleware_allows_authenticated(client: AsyncClient):
     client.cookies.set("telegram_id", "1")
     resp = await client.get("/", follow_redirects=False)
     assert resp.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_login_invalid_credentials_shows_error(client: AsyncClient):
+    resp = await client.post("/auth/login", data={"username": "nope", "password": "bad"})
+    assert resp.status_code == 400
+    assert "Invalid credentials" in resp.text
+
+
+@pytest.mark.asyncio
+async def test_login_internal_error_shows_detail(monkeypatch, client: AsyncClient):
+    async def broken_auth(self, username: str, password: str):
+        raise RuntimeError("DB down")
+
+    monkeypatch.setattr(WebUserService, "authenticate", broken_auth)
+    resp = await client.post("/auth/login", data={"username": "u", "password": "p"})
+    assert resp.status_code == 500
+    assert "DB down" in resp.text
