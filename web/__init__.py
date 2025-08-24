@@ -5,7 +5,6 @@ from urllib.parse import quote
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from starlette.routing import Match
 
 from .routes import admin, auth, index, profile, settings
 
@@ -16,30 +15,23 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 @app.middleware("http")
 async def auth_middleware(request: Request, call_next):
-    """Redirect unauthenticated users to login and handle dashboard routing."""
+    """Simple auth middleware using cookies for web users."""
     path = request.url.path
 
-    # Redirect any request to unknown paths back to the root dashboard
-    route_exists = any(
-        route.matches(request.scope)[0] != Match.NONE
-        for route in request.app.router.routes
-    )
-    if not route_exists:
-        return RedirectResponse("/")
-
-    # Allow serving static resources without authorization
-    if path.startswith("/static"):
+    # Allow serving static resources and favicons without auth
+    if path.startswith("/static") or path.startswith("/favicon"):
         return await call_next(request)
 
     # Allow direct access to API calls using explicit authorization headers
     if request.headers.get("Authorization"):
         return await call_next(request)
 
+    web_user_id = request.cookies.get("web_user_id")
     telegram_id = request.cookies.get("telegram_id")
 
     # Authentication routes
     if path.startswith("/auth"):
-        if telegram_id and path == "/auth/login":
+        if web_user_id and path == "/auth/login":
             return RedirectResponse("/")
         return await call_next(request)
 
@@ -52,7 +44,7 @@ async def auth_middleware(request: Request, call_next):
         return await call_next(request)
 
     # Authenticated users can access other routes directly
-    if telegram_id:
+    if web_user_id or telegram_id:
         return await call_next(request)
 
     # For everything else require login, preserving original destination

@@ -1,18 +1,24 @@
 from __future__ import annotations
-import hmac, hashlib, time
+
+import hmac
+import hashlib
+import time
+from pathlib import Path
 from typing import Dict
-from fastapi import APIRouter, Request, HTTPException, status
+
+from fastapi import APIRouter, HTTPException, Request, Form, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from pathlib import Path
-from urllib.parse import quote
+
+from core.services.web_user_service import WebUserService
+from core.services.telegram_user_service import TelegramUserService
 from web.config import S
-from core.services.telegram import UserService
 
 router = APIRouter(tags=["auth"])
 
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
+
 
 def verify_telegram_login(data: Dict[str, str]) -> bool:
     recv_hash = data.get("hash", "")
@@ -28,43 +34,22 @@ def verify_telegram_login(data: Dict[str, str]) -> bool:
         return False
     return auth_date > 0 and (time.time() - auth_date) <= S.SESSION_MAX_AGE
 
+
 @router.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request, next: str | None = None) -> HTMLResponse:
-    """Render login page with Telegram widget."""
-    bot_user = S.TELEGRAM_BOT_USERNAME
-    next_query = f"?next={quote(next, safe='')}" if next else ""
-    return templates.TemplateResponse(
-        request,
-        "auth/login.html",
-        {"bot_username": bot_user, "next_query": next_query},
-    )
+async def login_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse("auth/login.html", {"request": request, "bot_username": S.TELEGRAM_BOT_USERNAME})
 
-@router.post("/callback")
-async def telegram_callback(request: Request, next: str | None = None):
-    data = dict((await request.form()).items())
-    if not verify_telegram_login(data):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Bad Telegram signature")
-    telegram_id = int(data["id"])  # type: ignore[index]
 
-    async with UserService() as service:
-        role = service.determine_role(telegram_id)
-        user, created = await service.get_or_create_user(
-            telegram_id,
-            role=role,
-            id=telegram_id,
-            first_name=data.get("first_name"),
-            username=data.get("username"),
-            last_name=data.get("last_name"),
-            language_code=data.get("language_code"),
-        )
-        if not created and user and user.role != role.value:
-            await service.update_user_role(telegram_id, role)
-
-    target = next if next and next.startswith("/") else "/"
-    response = RedirectResponse(target, status_code=303)
+@router.post("/login")
+async def login(username: str = Form(...), password: str = Form(...)):
+    async with WebUserService() as service:
+        user = await service.authenticate(username, password)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+    response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(
-        "telegram_id",
-        str(telegram_id),
+        "web_user_id",
+        str(user.id),
         max_age=S.SESSION_MAX_AGE,
         path="/",
         httponly=True,
@@ -73,8 +58,56 @@ async def telegram_callback(request: Request, next: str | None = None):
     return response
 
 
+@router.get("/register", response_class=HTMLResponse)
+async def register_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse("auth/register.html", {"request": request})
+
+
+@router.post("/register")
+async def register(
+    username: str = Form(...),
+    password: str = Form(...),
+    email: str | None = Form(None),
+    phone: str | None = Form(None),
+):
+    async with WebUserService() as service:
+        await service.register(username=username, password=password, email=email, phone=phone)
+    return RedirectResponse("/auth/login", status_code=status.HTTP_303_SEE_OTHER)
+
+
 @router.post("/logout")
 async def logout() -> RedirectResponse:
-    response = RedirectResponse("/auth/login", status_code=303)
+    response = RedirectResponse("/auth/login", status_code=status.HTTP_303_SEE_OTHER)
+    response.delete_cookie("web_user_id", path="/")
     response.delete_cookie("telegram_id", path="/")
     return response
+
+
+@router.post("/tg/callback")
+async def telegram_callback(request: Request):
+    data = dict((await request.form()).items())
+    if not verify_telegram_login(data):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Bad Telegram signature")
+    telegram_id = int(data["id"])
+    async with TelegramUserService() as tsvc:
+        tg_user = await tsvc.update_from_telegram(
+            telegram_id,
+            username=data.get("username"),
+            first_name=data.get("first_name"),
+            last_name=data.get("last_name"),
+            language_code=data.get("language_code"),
+        )
+    async with WebUserService() as wsvc:
+        web_user = await wsvc.get_user_by_identifier(telegram_id)
+    if web_user:
+        response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
+        response.set_cookie(
+            "web_user_id",
+            str(web_user.id),
+            max_age=S.SESSION_MAX_AGE,
+            path="/",
+            httponly=True,
+            samesite="lax",
+        )
+        return response
+    return HTMLResponse("<p>Telegram account not linked</p>")
