@@ -3,13 +3,32 @@ name: Deploy
 on:
   push:
     branches: [main]
+    # не деплоим по правкам документации (при необходимости расширишь список)
+    paths:
+      - '**.py'
+      - 'bot/**'
+      - 'web/**'
+      - 'deploy/**'
+      - 'requirements*.txt'
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Copy repository to server
+        with:
+          fetch-depth: 1
+
+      - name: Add host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Copy repository to server (safe exclude)
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -17,15 +36,54 @@ jobs:
           key: ${{ secrets.VPS_KEY }}
           source: .
           target: /sd/tg/LeonidBot
-      - name: Install and restart services
+          # не возим то, что должно жить только на сервере
+          exclude: |
+            .git/*
+            .github/*
+            **/.venv/*
+            **/__pycache__/*
+            **/.pytest_cache/*
+            node_modules/*
+            *.log
+            .env
+
+      - name: Install, sanity-check and restart
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
+          script_stop: true
           script: |
+            set -euo pipefail
             cd /sd/tg/LeonidBot
-            pip install -r requirements.txt
+
+            # 1) Установка только через venv внутри install_services.sh
+            chmod +x ./deploy/install_services.sh
             ./deploy/install_services.sh
+
+            # 2) Санити-проверки, чтобы не рестартить заведомо битую сборку
+            #    (быстрое импорт-тестирование модулей и зависимостей)
+            if [ -x ".venv/bin/python" ]; then PY=.venv/bin/python; else PY=python3; fi
+            $PY - <<'PYCODE'
+            import importlib, sys
+            for m in ("uvicorn", "fastapi", "web"):
+                importlib.import_module(m)
+            print("imports-ok")
+            PYCODE
+
+            # опционально: проверь, что порт свободен (если важно)
+            # ss -lnt | grep -q ':5800' && echo "port 5800 busy (ok if running)" || true
+
+            # 3) Только сейчас — рестарт
             sudo systemctl restart leonidbot-bot.service leonidbot-web.service
 
+            # 4) Простой health-check веба (замени /healthz на свой эндпоинт)
+            for i in $(seq 1 10); do
+              sleep 1
+              if curl -fsS http://127.0.0.1:5800/healthz >/dev/null 2>&1; then
+                echo "healthz ok"; exit 0
+              fi
+              systemctl is-active --quiet leonidbot-web.service || (journalctl -u leonidbot-web -n 50 --no-pager; exit 1)
+            done
+            echo "healthz failed"; journalctl -u leonidbot-web -n 200 --no-pager; exit 1
