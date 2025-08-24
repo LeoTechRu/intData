@@ -1,27 +1,33 @@
 from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
-from core.models import UserRole
+from core.models import User, UserRole
 from core.services.telegram import UserService
 from ..dependencies import role_required
 
 
 templates = Jinja2Templates(directory="web/templates")
-router = APIRouter(dependencies=[Depends(role_required(UserRole.admin))])
+router = APIRouter()
 
 
 @router.get("/users")
-async def list_users(request: Request):
+async def list_users(request: Request, current_user: User = Depends(role_required(UserRole.admin))):
     """Render a page with all registered users."""
     async with UserService() as service:
         users = await service.list_users()
-    return templates.TemplateResponse(
-        "admin/users.html",
-        {"request": request, "users": users, "UserRole": UserRole},
-    )
+    context = {
+        "request": request,
+        "users": users,
+        "UserRole": UserRole,
+        "user": current_user,
+        "role_name": UserRole(current_user.role).name,
+        "is_admin": True,
+        "page_title": "Админ: Пользователи",
+    }
+    return templates.TemplateResponse("admin/users.html", context)
 
 
 @router.post("/users/{telegram_id}/role")
-async def change_user_role(telegram_id: int, role: UserRole):
+async def change_user_role(telegram_id: int, role: UserRole, current_user: User = Depends(role_required(UserRole.admin))):
     """Change the role of a user.
 
     Using a simple query/body parameter avoids the ``python-multipart``
@@ -33,16 +39,29 @@ async def change_user_role(telegram_id: int, role: UserRole):
 
 
 @router.get("/groups")
-async def list_groups(request: Request):
+async def list_groups(request: Request, current_user: User = Depends(role_required(UserRole.admin))):
     """Render a page with all groups and their members."""
     async with UserService() as service:
         groups_with_members = await service.list_groups_with_members()
-    return templates.TemplateResponse(
-        "admin/groups.html", {"request": request, "groups": groups_with_members}
-    )
+    context = {
+        "request": request,
+        "groups": groups_with_members,
+        "user": current_user,
+        "role_name": UserRole(current_user.role).name,
+        "is_admin": True,
+        "page_title": "Админ: Группы",
+    }
+    return templates.TemplateResponse("admin/groups.html", context)
 
 
 @router.get("/settings")
-async def admin_settings(request: Request):
+async def admin_settings(request: Request, current_user: User = Depends(role_required(UserRole.admin))):
     """Placeholder for admin settings page."""
-    return templates.TemplateResponse("admin/settings.html", {"request": request})
+    context = {
+        "request": request,
+        "user": current_user,
+        "role_name": UserRole(current_user.role).name,
+        "is_admin": True,
+        "page_title": "Админ: Настройки",
+    }
+    return templates.TemplateResponse("admin/settings.html", context)

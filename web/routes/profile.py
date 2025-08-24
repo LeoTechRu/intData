@@ -71,13 +71,13 @@ async def view_profile(
 
     context = {
         "request": request,
-        "user": info["user"],
+        "profile_user": info["user"],
         "info": info,
         "groups": info["groups"],
         "editing": edit,
         "role_name": info["role_name"],
-        "current_user": current_user,
         "current_role_name": UserRole(current_user.role).name,
+        "user": current_user,
         "is_admin": current_user.is_admin,
         "page_title": "Профиль",
     }
