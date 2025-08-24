@@ -46,7 +46,9 @@ jobs:
             '
 
             # 2) рестарт сервисов
-            sudo systemctl restart leonidbot-bot.service leonidbot-web.service
+            sudo -n systemctl restart leonidbot-bot.service
+            sudo -n systemctl restart leonidbot-web.service
+
 
             # 3) (опционально) короткая проверка статуса
             systemctl is-active --quiet leonidbot-bot.service
