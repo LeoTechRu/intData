@@ -36,6 +36,6 @@ async def start_dashboard(request: Request):
         "user": user,
         "groups": groups,
         "role_name": UserRole(user.role).name,
-        "is_admin": user.role >= UserRole.admin.value,
+        "is_admin": user.is_admin,
     }
     return templates.TemplateResponse("start.html", context)
