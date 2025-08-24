@@ -40,3 +40,9 @@ async def list_groups(request: Request):
     return templates.TemplateResponse(
         "admin/groups.html", {"request": request, "groups": groups_with_members}
     )
+
+
+@router.get("/settings")
+async def admin_settings(request: Request):
+    """Placeholder for admin settings page."""
+    return templates.TemplateResponse("admin/settings.html", {"request": request})

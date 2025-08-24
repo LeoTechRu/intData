@@ -12,6 +12,7 @@
         </div>
     </div>
     </header>
+<div id="main-content">
 {% if groups %}
 <h2>Ваши группы</h2>
 <ul class="ui-table">
@@ -22,6 +23,7 @@
 {% else %}
 <p>Вы не состоите ни в одной группе.</p>
 {% endif %}
+</div>
 {% if is_admin %}
 <footer class="admin-panel">
     <nav>
@@ -32,6 +34,5 @@
         </ul>
     </nav>
 </footer>
-<div id="admin-content"></div>
 {% endif %}
 {% endblock %}
