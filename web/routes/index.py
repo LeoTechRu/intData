@@ -38,6 +38,7 @@ async def index(request: Request):
                         "groups": groups,
                         "role_name": UserRole(user.role).name,
                         "is_admin": user.is_admin,
+                        "page_title": "Дашборд",
                     }
                     return templates.TemplateResponse("start.html", context)
 
