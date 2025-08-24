@@ -20,7 +20,28 @@ export function initProfileMenu() {
         dropdown.classList.add('hidden');
     });
 }
+export function initAdminPanel() {
+    const panel = document.querySelector('.admin-panel');
+    const content = document.getElementById('admin-content');
+    if (!panel || !content)
+        return;
+    panel.addEventListener('click', async (ev) => {
+        const target = ev.target;
+        const link = target === null || target === void 0 ? void 0 : target.closest('a');
+        if (!link)
+            return;
+        ev.preventDefault();
+        const url = link.dataset.adminEndpoint;
+        if (!url)
+            return;
+        const resp = await fetch(url);
+        if (resp.ok) {
+            content.innerHTML = await resp.text();
+        }
+    });
+}
 document.addEventListener('DOMContentLoaded', () => {
     enableAccessibility();
     initProfileMenu();
+    initAdminPanel();
 });
