@@ -1,0 +1,30 @@
+name: Ping SSH
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add host key (optional, но полезно)
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      - name: SSH ping
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          # port: ${{ secrets.VPS_PORT }}   # если не 22
+          script_stop: true
+          script: |
+            set -e
+            whoami
+            hostname
+            echo "FROM_GITHUB_SHA=${GITHUB_SHA}"
+            mkdir -p /sd/tg/LeonidBot
+            touch /sd/tg/LeonidBot/.gh-ok-${GITHUB_SHA}
+            ls -l /sd/tg/LeonidBot/.gh-ok-${GITHUB_SHA}
