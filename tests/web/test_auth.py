@@ -61,3 +61,20 @@ async def test_telegram_login_validation(client: AsyncClient):
     data["hash"] = "invalid"
     bad = await client.post("/auth/callback", data=data)
     assert bad.status_code in {400, 401, 403}
+
+
+@pytest.mark.asyncio
+async def test_middleware_redirects(client: AsyncClient):
+    """Unauthenticated users should be redirected to login."""
+    resp = await client.get("/admin/users", follow_redirects=False)
+    assert resp.status_code in {302, 303, 307}
+    assert resp.headers["location"].startswith("/auth/login?next=")
+
+
+@pytest.mark.asyncio
+async def test_middleware_allows_authenticated(client: AsyncClient):
+    """Authenticated users hitting root are sent to the dashboard."""
+    client.cookies.set("telegram_id", "1")
+    resp = await client.get("/", follow_redirects=False)
+    assert resp.status_code in {302, 303, 307}
+    assert resp.headers["location"] == "/start"
