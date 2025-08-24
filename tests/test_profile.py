@@ -70,6 +70,7 @@ def test_user_can_view_own_profile():
     res = client.get("/profile/1", headers=auth_header(1))
     assert res.status_code == 200
     assert "Alice" in res.text
+    assert res.text.count("<header") == 1
 
 
 def test_single_user_cannot_view_others():
@@ -86,11 +87,23 @@ def test_single_user_can_update_self():
     res = client.post(
         "/profile/1",
         headers=auth_header(1),
-        data={"username": "alice_new"},
+        data={"username": "alice_new", "birthday": "31.12.2000"},
         follow_redirects=True,
     )
     assert res.status_code == 200
     assert "alice_new" in res.text
+    assert "31.12.2000" in res.text
+
+
+def test_profile_accepts_iso_date_format():
+    res = client.post(
+        "/profile/1",
+        headers=auth_header(1),
+        data={"birthday": "2001-01-02"},
+        follow_redirects=True,
+    )
+    assert res.status_code == 200
+    assert "02.01.2001" in res.text
 
 
 def test_single_user_cannot_update_others():
