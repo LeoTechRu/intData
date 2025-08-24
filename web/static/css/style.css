@@ -176,12 +176,8 @@ button, .button {
 #login-page {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  min-height: 100vh;
   text-align: center;
-  transform: scale(1.5);
-  transform-origin: center;
 }
 
 .hidden {
