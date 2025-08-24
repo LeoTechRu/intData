@@ -1,19 +1,15 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
-# Копируем unit-файлы в systemd
-sudo cp deploy/systemd/leonidbot-bot.service /etc/systemd/system/
-sudo cp deploy/systemd/leonidbot-web.service /etc/systemd/system/
+PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
-# Перезапускаем systemd
+set -a
+. "$PROJECT_ROOT/.env"
+set +a
+
+sudo cp "$PROJECT_ROOT/deploy/systemd/leonidbot-bot.service" /etc/systemd/system/
+sudo cp "$PROJECT_ROOT/deploy/systemd/leonidbot-web.service" /etc/systemd/system/
+
 sudo systemctl daemon-reload
-
-# Включаем автозапуск
-sudo systemctl enable leonidbot-bot.service
-sudo systemctl enable leonidbot-web.service
-
-# Перезапускаем службы
-sudo systemctl restart leonidbot-bot.service
-sudo systemctl restart leonidbot-web.service
-
-echo "Установлено."
+sudo systemctl enable leonidbot-bot.service leonidbot-web.service
+sudo systemctl restart leonidbot-bot.service leonidbot-web.service
