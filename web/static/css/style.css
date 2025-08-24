@@ -109,6 +109,12 @@ button, .button {
   box-sizing: border-box;
 }
 
+.top-left,
+.top-center,
+.top-right {
+  flex: 1;
+}
+
 .top-bar .welcome {
   margin: 0;
 }
@@ -118,8 +124,13 @@ button, .button {
   text-decoration: none;
 }
 
+.top-center {
+  text-align: center;
+}
+
 .top-right {
   display: flex;
+  justify-content: flex-end;
   align-items: center;
   gap: 1rem;
 }

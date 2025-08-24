@@ -2,7 +2,12 @@
 {% block title %}Профиль{% endblock %}
 {% block content %}
 <header class="top-bar">
-    <h1 class="welcome"><a href="/">Привет, {{ current_user.first_name }}!</a></h1>
+    <div class="top-left">
+        <h1 class="welcome"><a href="/">Привет, {{ current_user.first_name }}!</a></h1>
+    </div>
+    <div class="top-center">
+        <h2 class="page-title">{{ page_title }}</h2>
+    </div>
     <div class="top-right">
         {% if is_admin %}
         <div class="admin-menu">
@@ -27,7 +32,6 @@
 </header>
 <div class="ui-layout">
     <div id="main-content">
-        <h2 class="page-title">Профиль</h2>
         {% if editing %}
         <form class="ui-form" method="post" action="/profile/{{ user.telegram_id }}">
             <label>Отображаемое имя</label>

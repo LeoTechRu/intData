@@ -79,6 +79,7 @@ async def view_profile(
         "current_user": current_user,
         "current_role_name": UserRole(current_user.role).name,
         "is_admin": current_user.is_admin,
+        "page_title": "Профиль",
     }
     return templates.TemplateResponse("profile.html", context)
 
