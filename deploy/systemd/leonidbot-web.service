@@ -3,11 +3,18 @@ Description=LeonidBot Web Service (FastAPI)
 After=network.target
 
 [Service]
-WorkingDirectory=${LEONIDBOT_WORKDIR}
-Environment="PATH=${LEONIDBOT_VENV}/bin"
-EnvironmentFile=${LEONIDBOT_WORKDIR}/.env
-ExecStart=${LEONIDBOT_VENV}/bin/uvicorn web:app --host 0.0.0.0 --port 5800
-Restart=always
+User=deploy
+Group=devs
+WorkingDirectory=%E{LEONIDBOT_WORKDIR}
+EnvironmentFile=%E{LEONIDBOT_WORKDIR}/.env
+Environment=PATH=%E{LEONIDBOT_VENV}/bin
+ExecStart=%E{LEONIDBOT_VENV}/bin/uvicorn web:app --host 0.0.0.0 --port 5800
+
+Restart=on-failure
+RestartSec=3s
+UMask=0002
+StandardOutput=journal
+StandardError=inherit
 
 [Install]
 WantedBy=multi-user.target
