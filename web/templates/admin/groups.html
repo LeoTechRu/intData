@@ -1,13 +1,22 @@
-<h1>Groups</h1>
-<ul>
-    {% for item in groups %}
-    <li>
-        {{ item.group.title }} ({{ item.group.participants_count }} members)
+{% extends "layout.html" %}
+{% block title %}Админ - Группы{% endblock %}
+{% block content %}
+{% include "header.html" %}
+<div class="ui-layout">
+    <div id="main-content">
+        <h1>Groups</h1>
         <ul>
-            {% for member in item.members %}
-            <li>{{ member.first_name }}</li>
+            {% for item in groups %}
+            <li>
+                {{ item.group.title }} ({{ item.group.participants_count }} members)
+                <ul>
+                    {% for member in item.members %}
+                    <li>{{ member.first_name }}</li>
+                    {% endfor %}
+                </ul>
+            </li>
             {% endfor %}
         </ul>
-    </li>
-    {% endfor %}
-</ul>
+    </div>
+</div>
+{% endblock %}

@@ -1,35 +1,7 @@
 {% extends "layout.html" %}
 {% block title %}Дашборд{% endblock %}
 {% block content %}
-<header class="top-bar">
-    <div class="top-left">
-        <h1 class="welcome"><a href="/">Привет, {{ user.first_name }}!</a></h1>
-    </div>
-    <div class="top-center">
-        <h2 class="page-title">{{ page_title }}</h2>
-    </div>
-    <div class="top-right">
-        {% if is_admin %}
-        <div class="admin-menu">
-            <div id="admin-button">Админ</div>
-            <div id="admin-dropdown" class="dropdown-menu hidden">
-                <a href="#" data-admin-endpoint="/admin/users">Пользователи</a>
-                <a href="#" data-admin-endpoint="/admin/groups">Группы</a>
-                <a href="#" data-admin-endpoint="/admin/settings">Настройки</a>
-            </div>
-        </div>
-        {% endif %}
-        <div class="profile-menu">
-            <div id="profile-button" class="profile-icon role-{{ role_name|lower }}">👤</div>
-            <div id="profile-dropdown" class="dropdown-menu hidden">
-                <div class="role">Роль: {{ role_name }}</div>
-                <a href="/profile/{{ user.telegram_id }}">Профиль</a>
-                <a href="/settings">Настройки</a>
-                <a href="/auth/logout" data-method="post">Выйти</a>
-            </div>
-        </div>
-    </div>
-</header>
+{% include "header.html" %}
 <div class="ui-layout">
     <div id="main-content">
     {% if groups %}
