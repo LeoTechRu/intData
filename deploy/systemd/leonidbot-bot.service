@@ -3,18 +3,11 @@ Description=LeonidBot Telegram Bot Service
 After=network.target
 
 [Service]
-# Рабочая папка проекта
-WorkingDirectory=/sd/tg/LeonidBot # изменить при установке
-# Используем Python из виртуального окружения
-Environment="PATH=/sd/tg/LeonidBot/venv/bin"
-# Если есть .env, его можно перечислить:
-EnvironmentFile=/sd/tg/LeonidBot/.env # изменить при установке
-ExecStart=/sd/tg/LeonidBot/venv/bin/python -m bot.main
-# Перезапускать при падении
+WorkingDirectory=${LEONIDBOT_WORKDIR}
+Environment="PATH=${LEONIDBOT_VENV}/bin"
+EnvironmentFile=${LEONIDBOT_WORKDIR}/.env
+ExecStart=${LEONIDBOT_VENV}/bin/python -m bot.main
 Restart=always
-# Пользователь, от имени которого работает сервис (по умолчанию root)
-# User=www-data
-# Group=www-data
 
 [Install]
 WantedBy=multi-user.target
