@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from aiogram import Bot
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core import db
 from core.logger import logger
@@ -60,7 +61,9 @@ class TelegramUserService:
         ]
         return UserRole.admin if telegram_id in admin_ids else UserRole.single
 
-    async def get_user_by_telegram_id(self, telegram_id: int) -> Optional[TgUser]:
+    async def get_user_by_telegram_id(
+        self, telegram_id: int
+    ) -> Optional[TgUser]:
         result = await self.session.execute(
             select(TgUser).where(TgUser.telegram_id == telegram_id)
         )
@@ -109,7 +112,9 @@ class TelegramUserService:
         user = await self.create_user(**{**required_fields, **optional_fields})
         return user, True
 
-    async def update_from_telegram(self, telegram_id: int, **data: Any) -> TgUser:
+    async def update_from_telegram(
+        self, telegram_id: int, **data: Any
+    ) -> TgUser:
         """Create or update a telegram user from Telegram login data."""
 
         user = await self.get_user_by_telegram_id(telegram_id)
@@ -123,7 +128,9 @@ class TelegramUserService:
         await self.session.flush()
         return user
 
-    async def update_user_role(self, telegram_id: int, new_role: UserRole) -> bool:
+    async def update_user_role(
+        self, telegram_id: int, new_role: UserRole
+    ) -> bool:
         user = await self.get_user_by_telegram_id(telegram_id)
         if not user:
             return False
@@ -142,7 +149,9 @@ class TelegramUserService:
     # ------------------------------------------------------------------
     # Group helpers
     # ------------------------------------------------------------------
-    async def get_group_by_telegram_id(self, telegram_id: int) -> Optional[Group]:
+    async def get_group_by_telegram_id(
+        self, telegram_id: int
+    ) -> Optional[Group]:
         result = await self.session.execute(
             select(Group).where(Group.telegram_id == telegram_id)
         )
@@ -208,7 +217,9 @@ class TelegramUserService:
 
     async def get_group_members(self, group_id: int) -> List[TgUser]:
         result = await self.session.execute(
-            select(TgUser).join(UserGroup).where(UserGroup.group_id == group_id)
+            select(TgUser)
+            .join(UserGroup)
+            .where(UserGroup.group_id == group_id)
         )
         return result.scalars().all()
 
@@ -245,9 +256,21 @@ class TelegramUserService:
             "first_name": user.first_name,
             "last_name": user.last_name,
             "display_name": display_name,
-            "email": user.bot_settings.get("email") if isinstance(user.bot_settings, dict) else None,
-            "phone": user.bot_settings.get("phone") if isinstance(user.bot_settings, dict) else None,
-            "birthday": user.bot_settings.get("birthday") if isinstance(user.bot_settings, dict) else None,
+            "email": (
+                user.bot_settings.get("email")
+                if isinstance(user.bot_settings, dict)
+                else None
+            ),
+            "phone": (
+                user.bot_settings.get("phone")
+                if isinstance(user.bot_settings, dict)
+                else None
+            ),
+            "birthday": (
+                user.bot_settings.get("birthday")
+                if isinstance(user.bot_settings, dict)
+                else None
+            ),
             "language_code": user.language_code,
             "role_name": user.role,
         }
@@ -314,7 +337,9 @@ class TelegramUserService:
             logger.error(f"Ошибка обновления уровня логирования: {e}")
             return False
 
-    async def send_log_to_telegram(self, level: LogLevel, message: str) -> bool:
+    async def send_log_to_telegram(
+        self, level: LogLevel, message: str
+    ) -> bool:
         try:
             settings = await self.get_log_settings()
             if not settings or level.value < settings.level.value:
@@ -329,4 +354,3 @@ class TelegramUserService:
         except Exception as e:  # pragma: no cover - defensive
             logger.error(f"Ошибка отправки лога в Telegram: {e}")
             return False
-

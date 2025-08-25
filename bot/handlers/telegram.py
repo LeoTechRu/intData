@@ -203,7 +203,11 @@ async def cmd_set_log_level(message: Message):
         await message.answer("Недопустимый уровень: используйте DEBUG, INFO или ERROR")
         return
     async with TelegramUserService() as user_service:
-        success = await user_service.update_log_level(LogLevel(level), chat_id=message.chat.id)
+        # ``LogLevel`` теперь основан на ``IntEnum``, поэтому преобразуем
+        # строковое имя уровня через обращение по ключу.
+        success = await user_service.update_log_level(
+            LogLevel[level], chat_id=message.chat.id
+        )
         if success:
             await message.answer(f"Уровень логирования установлен: {level}")
         else:

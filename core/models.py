@@ -120,10 +120,16 @@ class UserGroup(Base):  # Связь пользователь-группа (мн
 
 
 # Модели для логгера:
-class LogLevel(PyEnum):
-    DEBUG = "DEBUG"
-    INFO = "INFO"
-    ERROR = "ERROR"
+class LogLevel(IntEnum):
+    """Уровни логирования по аналогии со стандартным ``logging``.
+
+    Значения указаны численно, чтобы корректно сравнивать уровни
+    между собой (``DEBUG`` < ``INFO`` < ``ERROR``).
+    """
+
+    DEBUG = 10
+    INFO = 20
+    ERROR = 40
 
 
 class LogSettings(Base):
