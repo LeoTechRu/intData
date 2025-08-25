@@ -8,7 +8,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core import db
-from core.models import Task, TaskStatus, Reminder
+from core.models import (
+    Task,
+    TaskStatus,
+    Reminder,
+    TaskCheckpoint,
+    ScheduleException,
+)
 from core.services.reminder_service import ReminderService
 
 
@@ -39,6 +45,12 @@ class TaskService:
         description: str | None = None,
         due_date=None,
         status: TaskStatus = TaskStatus.todo,
+        cognitive_cost: int | None = None,
+        repeat_config: dict | None = None,
+        recurrence: str | None = None,
+        excluded_dates: list | None = None,
+        custom_properties: dict | None = None,
+        schedule_type: str | None = None,
     ) -> Task:
         """Create a new task for the given owner."""
 
@@ -48,7 +60,15 @@ class TaskService:
             description=description,
             due_date=due_date,
             status=status,
+            cognitive_cost=cognitive_cost,
+            repeat_config=repeat_config or {},
+            recurrence=recurrence,
+            excluded_dates=excluded_dates or [],
+            custom_properties=custom_properties or {},
+            schedule_type=schedule_type,
         )
+        if cognitive_cost:
+            task.neural_priority = 1 / cognitive_cost
         self.session.add(task)
         await self.session.flush()
         return task
@@ -77,3 +97,27 @@ class TaskService:
             remind_at=remind_at,
             task_id=task.id,
         )
+
+    async def add_checkpoint(
+        self, task_id: int, name: str, completed: bool = False
+    ) -> TaskCheckpoint | None:
+        task = await self.session.get(Task, task_id)
+        if task is None:
+            return None
+        checkpoint = TaskCheckpoint(
+            task_id=task_id, name=name, completed=completed
+        )
+        self.session.add(checkpoint)
+        await self.session.flush()
+        return checkpoint
+
+    async def add_schedule_exception(
+        self, task_id: int, date, reason: str | None = None
+    ) -> ScheduleException | None:
+        task = await self.session.get(Task, task_id)
+        if task is None:
+            return None
+        exc = ScheduleException(task_id=task_id, date=date, reason=reason)
+        self.session.add(exc)
+        await self.session.flush()
+        return exc

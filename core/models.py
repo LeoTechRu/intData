@@ -12,9 +12,11 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     Integer,
+    Float,
     String,
     JSON,
 )
+from sqlalchemy.orm import relationship
 
 from base import Base
 
@@ -148,6 +150,18 @@ class Task(Base):
     description = Column(String(500))
     due_date = Column(DateTime)
     status = Column(Enum(TaskStatus), default=TaskStatus.todo)
+    cognitive_cost = Column(Integer)
+    neural_priority = Column(Float)
+    repeat_config = Column(JSON, default=dict)
+    recurrence = Column(String(50))
+    excluded_dates = Column(JSON, default=list)
+    custom_properties = Column(JSON, default=dict)
+    schedule_type = Column(String(50))
+    reschedule_count = Column(Integer, default=0)
+    checkpoints = relationship("TaskCheckpoint", backref="task", cascade="all, delete-orphan")
+    exceptions = relationship(
+        "ScheduleException", backref="task", cascade="all, delete-orphan"
+    )
     created_at = Column(DateTime, default=utcnow)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
@@ -189,6 +203,222 @@ class TimeEntry(Base):
     description = Column(String(500))
     created_at = Column(DateTime, default=utcnow)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+
+
+# ---------------------------------------------------------------------------
+# Extended NexusCore-inspired models
+# ---------------------------------------------------------------------------
+
+
+class AreaType(PyEnum):
+    career = "CAREER"
+    health = "HEALTH"
+    education = "EDUCATION"
+    finance = "FINANCE"
+    personal = "PERSONAL"
+
+
+class Area(Base):
+    __tablename__ = "areas"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    name = Column(String(255), nullable=False)
+    type = Column(Enum(AreaType))
+    color = Column(String(7))
+    context_map = Column(JSON, default=dict)
+    review_interval = Column(Integer)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+
+
+class Project(Base):
+    __tablename__ = "projects"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    area_id = Column(Integer, ForeignKey("areas.id"))
+    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    name = Column(String(255), nullable=False)
+    description = Column(String(500))
+    cognitive_cost = Column(Integer)
+    neural_priority = Column(Float)
+    schedule = Column(JSON, default=dict)
+    metrics = Column(JSON, default=dict)
+    start_date = Column(DateTime)
+    end_date = Column(DateTime)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+
+
+class Habit(Base):
+    __tablename__ = "habits"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    name = Column(String(255), nullable=False)
+    description = Column(String(500))
+    schedule = Column(JSON, default=dict)
+    metrics = Column(JSON, default=dict)
+    start_date = Column(DateTime)
+    end_date = Column(DateTime)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+
+
+class Resource(Base):
+    __tablename__ = "resources"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    title = Column(String(255), nullable=False)
+    content = Column(String(2000))
+    type = Column(String(50))
+    meta = Column(JSON, default=dict)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+
+
+class Archive(Base):
+    __tablename__ = "archives"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    source_type = Column(String(50))
+    source_id = Column(Integer)
+    archived_at = Column(DateTime, default=utcnow)
+
+
+class TaskCheckpoint(Base):
+    __tablename__ = "task_checkpoints"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    task_id = Column(Integer, ForeignKey("tasks.id"))
+    name = Column(String(255))
+    completed = Column(Boolean, default=False)
+    completed_at = Column(DateTime)
+
+
+class ScheduleException(Base):
+    __tablename__ = "schedule_exceptions"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    task_id = Column(Integer, ForeignKey("tasks.id"))
+    date = Column(Date)
+    reason = Column(String(255))
+
+
+class OKRStatus(PyEnum):
+    pending = "pending"
+    active = "active"
+    completed = "completed"
+
+
+class OKR(Base):
+    __tablename__ = "okrs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    objective = Column(String(255), nullable=False)
+    description = Column(String(500))
+    status = Column(Enum(OKRStatus), default=OKRStatus.pending)
+    period_start = Column(Date)
+    period_end = Column(Date)
+    confidence = Column(Integer, default=0)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+    key_results = relationship(
+        "KeyResult", backref="okr", cascade="all, delete-orphan"
+    )
+
+
+class MetricType(PyEnum):
+    count = "count"
+    binary = "binary"
+    percent = "percent"
+
+
+class KeyResult(Base):
+    __tablename__ = "key_results"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    okr_id = Column(Integer, ForeignKey("okrs.id"))
+    description = Column(String(255), nullable=False)
+    metric_type = Column(Enum(MetricType))
+    weight = Column(Float, default=1.0)
+    target_value = Column(Float)
+    current_value = Column(Float, default=0.0)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+
+
+class Interface(Base):
+    __tablename__ = "interfaces"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    name = Column(String(255), nullable=False)
+    config = Column(JSON, default=dict)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+
+
+class Limit(Base):
+    __tablename__ = "limits"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    resource = Column(String(50), nullable=False)
+    value = Column(Integer, nullable=False)
+    expires_at = Column(DateTime)
+
+
+class Role(Base):
+    __tablename__ = "roles"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(50), unique=True, nullable=False)
+    level = Column(Integer, default=0)
+    description = Column(String(255))
+
+
+class Perm(Base):
+    __tablename__ = "perms"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(50), unique=True, nullable=False)
+    description = Column(String(255))
+
+
+class UserRoleLink(Base):
+    __tablename__ = "user_roles"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("web_users.id"))
+    role_id = Column(Integer, ForeignKey("roles.id"))
+    expires_at = Column(DateTime)
+
+
+class LinkType(PyEnum):
+    hierarchy = "hierarchy"
+    reference = "reference"
+    dependency = "dependency"
+    attachment = "attachment"
+    temporal = "temporal"
+    metadata = "metadata"
+
+
+class Link(Base):
+    __tablename__ = "links"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    source_type = Column(String(50))
+    source_id = Column(Integer)
+    target_type = Column(String(50))
+    target_id = Column(Integer)
+    link_type = Column(Enum(LinkType))
+    weight = Column(Float, default=1.0)
+    decay = Column(Float, default=1.0)
+    created_at = Column(DateTime, default=utcnow)
 
 
 # Модели для логгера:
