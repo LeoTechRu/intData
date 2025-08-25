@@ -59,8 +59,10 @@ class TgUser(Base):
     language_code = Column(String(10))
     role = Column(String(20), default=UserRole.single.name)
     bot_settings = Column(JSON, default=dict)
-    created_at = Column(DateTime, default=utcnow)
-    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
 
 
 class WebUser(Base):
@@ -79,8 +81,10 @@ class WebUser(Base):
     telegram_user_id = Column(Integer, ForeignKey("tg_users.id"))
     birthday = Column(Date)
     language = Column(String(10))
-    created_at = Column(DateTime, default=utcnow)
-    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
 
 
 class Group(Base):  # Группа
@@ -93,8 +97,10 @@ class Group(Base):  # Группа
     owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
     description = Column(String(500))
     participants_count = Column(Integer, default=0)
-    created_at = Column(DateTime, default=utcnow)
-    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
 
 
 class Channel(Base):  # Канал
@@ -108,8 +114,10 @@ class Channel(Base):  # Канал
     username = Column(String(32))
     participants_count = Column(Integer, default=0)
     description = Column(String(500))
-    created_at = Column(DateTime, default=utcnow)
-    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
 
 
 class UserGroup(Base):  # Связь пользователь-группа (многие ко многим)
@@ -123,7 +131,7 @@ class UserGroup(Base):  # Связь пользователь-группа (мн
     )
     is_owner = Column(Boolean, default=False)
     is_moderator = Column(Boolean, default=False)
-    joined_at = Column(DateTime, default=utcnow)
+    joined_at = Column(DateTime(timezone=True), default=utcnow)
 
 
 # ---------------------------------------------------------------------------
@@ -146,7 +154,7 @@ class Task(Base):
     owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
     title = Column(String(255), nullable=False)
     description = Column(String(500))
-    due_date = Column(DateTime)
+    due_date = Column(DateTime(timezone=True))
     status = Column(Enum(TaskStatus), default=TaskStatus.todo)
 
     # NexusCore-inspired поля
@@ -166,8 +174,10 @@ class Task(Base):
         "ScheduleException", backref="task", cascade="all, delete-orphan"
     )
 
-    created_at = Column(DateTime, default=utcnow)
-    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -183,10 +193,12 @@ class Reminder(Base):
     owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
     task_id = Column(Integer, ForeignKey("tasks.id"))
     message = Column(String(500), nullable=False)
-    remind_at = Column(DateTime, nullable=False)
+    remind_at = Column(DateTime(timezone=True), nullable=False)
     is_done = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=utcnow)
-    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -201,11 +213,13 @@ class CalendarEvent(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
     title = Column(String(255), nullable=False)
-    start_at = Column(DateTime, default=utcnow, nullable=False)
-    end_at = Column(DateTime)
+    start_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    end_at = Column(DateTime(timezone=True))
     description = Column(String(500))
-    created_at = Column(DateTime, default=utcnow)
-    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -219,11 +233,15 @@ class TimeEntry(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
-    start_time = Column(DateTime, default=utcnow, nullable=False)
-    end_time = Column(DateTime)
+    start_time = Column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+    end_time = Column(DateTime(timezone=True))
     description = Column(String(500))
-    created_at = Column(DateTime, default=utcnow)
-    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -310,8 +328,10 @@ class Note(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
     content = Column(String(1000), nullable=False)
-    created_at = Column(DateTime, default=utcnow)
-    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
 
 
 class Archive(Base):
@@ -478,8 +498,11 @@ class LogSettings(Base):
 
     id = Column(BigInteger, primary_key=True)
     chat_id = Column(BigInteger, nullable=False)  # ID группы для логов
-    level = Column(Enum(LogLevel), default=LogLevel.ERROR)  # Уровень логирования
-    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
-
+    level = Column(
+        Enum(LogLevel), default=LogLevel.ERROR
+    )  # Уровень логирования
+    updated_at = Column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
     def __repr__(self) -> str:  # pragma: no cover - debug aid
         return f"<LogSettings(level='{self.level}', chat_id='{self.chat_id}')>"
