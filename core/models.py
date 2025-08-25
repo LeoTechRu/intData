@@ -173,6 +173,26 @@ class Reminder(Base):
 
 
 # ---------------------------------------------------------------------------
+# CalendarEvent model
+# ---------------------------------------------------------------------------
+
+
+class CalendarEvent(Base):
+    """Calendar event item owned by a telegram user."""
+
+    __tablename__ = "calendar_events"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    title = Column(String(255), nullable=False)
+    start_at = Column(DateTime, default=utcnow, nullable=False)
+    end_at = Column(DateTime)
+    description = Column(String(500))
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+
+
+# ---------------------------------------------------------------------------
 # TimeEntry model
 # ---------------------------------------------------------------------------
 
@@ -187,6 +207,23 @@ class TimeEntry(Base):
     start_time = Column(DateTime, default=utcnow, nullable=False)
     end_time = Column(DateTime)
     description = Column(String(500))
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+
+
+# ---------------------------------------------------------------------------
+# Note model
+# ---------------------------------------------------------------------------
+
+
+class Note(Base):
+    """Simple note item owned by a telegram user."""
+
+    __tablename__ = "notes"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    content = Column(String(1000), nullable=False)
     created_at = Column(DateTime, default=utcnow)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
