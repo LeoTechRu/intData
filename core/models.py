@@ -34,6 +34,7 @@ class UserRole(IntEnum):  # Числовая иерархия ролей
 class GroupType(PyEnum):  # Типы групп и каналов
     private = "private"
     public = "public"
+    group = "group"
     supergroup = "supergroup"
     channel = "channel"
 
