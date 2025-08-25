@@ -63,6 +63,18 @@ async def test_telegram_login_validation(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_telegram_login_validation_get(client: AsyncClient):
+    data = {
+        "id": 124,
+        "first_name": "Test",
+        "auth_date": int(time.time()),
+    }
+    data["hash"] = _generate_hash(data)
+    response = await client.get("/auth/tg/callback", params=data)
+    assert response.status_code in {200, 303}
+
+
+@pytest.mark.asyncio
 async def test_middleware_redirects(client: AsyncClient):
     """Unauthenticated users should be redirected to login."""
     resp = await client.get("/admin", follow_redirects=False)
