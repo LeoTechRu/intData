@@ -66,6 +66,7 @@
 - [x] Исправлена команда `/birthday`, дата рождения берётся из `bot_settings`, что устранило `AttributeError`.
 - [x] Добавлены методы совместимости Flask-Login в `WebUser` (`is_authenticated`, `is_active`, `is_anonymous`, `get_id`, `check_password`).
 - [x] Команда `/birthday` показывает количество дней до события, запрашивая дату только при её отсутствии.
+- [x] Таблицы пользователей переименованы в `users_tg` и `users_web`, правило префикса `users_` зафиксировано в `AGENTS.md`.
 
 ### Следующие шаги
 - [ ] Реализовать CRUD задач и напоминаний: команды бота и веб-API, связь с `TaskService` и `ReminderService`.

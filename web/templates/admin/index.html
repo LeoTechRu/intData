@@ -5,7 +5,7 @@
     <div id="main-content">
         <section id="users">
             <h1>Telegram users</h1>
-            {% if tg_users %}
+            {% if users_tg %}
             <table border="1" cellpadding="4" cellspacing="0">
                 <thead>
                     <tr>
@@ -17,7 +17,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for user in tg_users %}
+                {% for user in users_tg %}
                     <tr>
                         <td>{{ user.telegram_id }}</td>
                         <td>{{ user.username or '' }}</td>
