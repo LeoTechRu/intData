@@ -191,6 +191,23 @@ class TimeEntry(Base):
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
 
+# ---------------------------------------------------------------------------
+# Note model
+# ---------------------------------------------------------------------------
+
+
+class Note(Base):
+    """Simple note item owned by a telegram user."""
+
+    __tablename__ = "notes"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    content = Column(String(1000), nullable=False)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+
+
 # Модели для логгера:
 class LogLevel(IntEnum):
     """Уровни логирования по аналогии со стандартным ``logging``.
