@@ -22,6 +22,9 @@ from core.models import (
     UserRoleLink,
     Link,
 )
+from datetime import date
+
+from ..utils.habit_utils import generate_calendar
 
 T = TypeVar("T", bound=db.Base)
 
@@ -93,6 +96,30 @@ class ProjectService(CRUDService[Project]):
 class HabitService(CRUDService[Habit]):
     def __init__(self, session: Optional[AsyncSession] = None) -> None:
         super().__init__(Habit, session)
+
+    async def create_habit(
+        self, owner_id: int, name: str, frequency: str = "daily"
+    ) -> Habit:
+        if frequency not in {"daily", "weekly", "monthly"}:
+            raise ValueError("Invalid frequency")
+        return await self.create(owner_id=owner_id, name=name, frequency=frequency)
+
+    async def list_habits(self, owner_id: int) -> List[Habit]:
+        return await self.list(owner_id=owner_id)
+
+    async def toggle_progress(self, habit_id: int, day: date) -> Habit | None:
+        habit = await self.get(habit_id)
+        if habit is None:
+            return None
+        habit.toggle_progress(day)
+        await self.session.flush()
+        return habit
+
+    async def get_calendar(self, habit_id: int):
+        habit = await self.get(habit_id)
+        if habit is None:
+            return []
+        return generate_calendar(habit, None)
 
 
 class ResourceService(CRUDService[Resource]):
