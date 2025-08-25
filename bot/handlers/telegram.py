@@ -66,6 +66,9 @@ def validate_birthday(date_str: str) -> bool:
 def validate_group_description(desc: str) -> bool:
     return len(desc) <= 500
 
+def validate_fullname(name: str) -> bool:
+    return 0 < len(name) <= 255
+
 # -----------------------------
 # Состояния FSM
 # -----------------------------
@@ -155,6 +158,78 @@ async def cmd_contact(message: Message):
 
     await message.answer("\n".join(lines))
 
+
+@user_router.message(Command("setfullname"))
+async def cmd_set_fullname(message: Message, state: FSMContext):
+    await message.answer("Введите отображаемое имя:")
+    await state.set_state(UpdateDataStates.waiting_for_fullname)
+
+
+@user_router.message(UpdateDataStates.waiting_for_fullname)
+async def process_fullname(message: Message, state: FSMContext):
+    await process_data_input(
+        message,
+        state,
+        validate_fullname,
+        lambda svc, user_id, data: svc.update_bot_setting(user_id, "full_display_name", data),
+        "Имя обновлено: {data}",
+        "Имя не должно быть пустым и длиннее 255 символов",
+    )
+
+
+@user_router.message(Command("setemail"))
+async def cmd_set_email(message: Message, state: FSMContext):
+    await message.answer("Введите email:")
+    await state.set_state(UpdateDataStates.waiting_for_email)
+
+
+@user_router.message(UpdateDataStates.waiting_for_email)
+async def process_email(message: Message, state: FSMContext):
+    await process_data_input(
+        message,
+        state,
+        validate_email,
+        lambda svc, user_id, data: svc.update_bot_setting(user_id, "email", data),
+        "Email обновлён: {data}",
+        "Некорректный email",
+    )
+
+
+@user_router.message(Command("setphone"))
+async def cmd_set_phone(message: Message, state: FSMContext):
+    await message.answer("Введите телефон в формате +1234567890:")
+    await state.set_state(UpdateDataStates.waiting_for_phone)
+
+
+@user_router.message(UpdateDataStates.waiting_for_phone)
+async def process_phone(message: Message, state: FSMContext):
+    await process_data_input(
+        message,
+        state,
+        validate_phone,
+        lambda svc, user_id, data: svc.update_bot_setting(user_id, "phone", data),
+        "Телефон обновлён: {data}",
+        "Некорректный номер телефона",
+    )
+
+
+@user_router.message(Command("setbirthday"))
+async def cmd_set_birthday(message: Message, state: FSMContext):
+    await message.answer("Введите ваш день рождения в формате ДД.ММ.ГГГГ:")
+    await state.set_state(UpdateDataStates.waiting_for_birthday)
+
+
+@user_router.message(UpdateDataStates.waiting_for_birthday)
+async def process_birthday_input(message: Message, state: FSMContext):
+    await process_data_input(
+        message,
+        state,
+        validate_birthday,
+        lambda svc, user_id, data: svc.update_bot_setting(user_id, "birthday", data),
+        "День рождения сохранён: {data}",
+        "Некорректная дата. Используйте формат ДД.ММ.ГГГГ",
+    )
+
 # -----------------------------
 # Группы
 # -----------------------------
@@ -186,6 +261,38 @@ async def cmd_group(message: Message):
             await message.answer(f"Участники группы '{chat_title}':\n{member_list}")
         else:
             await message.answer("Группа пока пуста.")
+
+
+@group_router.message(Command("setgroupdesc"))
+async def cmd_set_group_desc(message: Message, state: FSMContext):
+    if message.chat.type not in {"group", "supergroup"}:
+        await message.answer("Команда доступна только в группах")
+        return
+    async with TelegramUserService() as user_service:
+        await user_service.get_or_create_group(
+            message.chat.id,
+            title=message.chat.title,
+            type=GroupType(message.chat.type.lower()),
+            owner_id=message.from_user.id,
+        )
+    await message.answer("Введите описание группы (до 500 символов):")
+    await state.set_state(UpdateDataStates.waiting_for_group_description)
+
+
+@group_router.message(UpdateDataStates.waiting_for_group_description)
+async def process_group_desc(message: Message, state: FSMContext):
+    if message.chat.type not in {"group", "supergroup"}:
+        await message.answer("Команда доступна только в группах")
+        await state.clear()
+        return
+    await process_data_input(
+        message,
+        state,
+        validate_group_description,
+        lambda svc, _uid, data: svc.update_group_description(message.chat.id, data),
+        "Описание группы обновлено: {data}",
+        "Описание должно быть не длиннее 500 символов",
+    )
 
 # -----------------------------
 # Логирование

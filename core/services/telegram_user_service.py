@@ -223,6 +223,20 @@ class TelegramUserService:
         )
         return result.scalars().all()
 
+    async def update_group_description(self, group_id: int, description: str) -> bool:
+        """Update group's description."""
+        group = await self.get_group_by_telegram_id(group_id)
+        if not group:
+            return False
+        try:
+            group.description = description
+            group.updated_at = utcnow()
+            await self.session.flush()
+            return True
+        except Exception as e:  # pragma: no cover - defensive
+            logger.error(f"Ошибка обновления описания группы: {e}")
+            return False
+
     async def list_user_groups(self, user_id: int) -> List[Group]:
         result = await self.session.execute(
             select(Group).join(UserGroup).where(UserGroup.user_id == user_id)
@@ -294,6 +308,22 @@ class TelegramUserService:
         user.updated_at = utcnow()
         await self.session.flush()
         return user
+
+    async def update_bot_setting(self, telegram_id: int, key: str, value: Any) -> bool:
+        """Update a single field inside ``bot_settings``."""
+        user = await self.get_user_by_telegram_id(telegram_id)
+        if not user:
+            return False
+        try:
+            settings = user.bot_settings or {}
+            settings[key] = value
+            user.bot_settings = settings
+            user.updated_at = utcnow()
+            await self.session.flush()
+            return True
+        except Exception as e:  # pragma: no cover - defensive
+            logger.error(f"Ошибка обновления поля {key}: {e}")
+            return False
 
     async def list_groups_with_members(self) -> List[Dict[str, Any]]:
         result = await self.session.execute(select(Group))
