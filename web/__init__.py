@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from .routes import admin, auth, index, profile, settings
+from .routes import admin, auth, index, profile, settings, habits
 from core.db import init_models
 
 
@@ -66,5 +66,6 @@ async def auth_middleware(request: Request, call_next):
 app.include_router(index.router)
 app.include_router(profile.router)
 app.include_router(settings.router)
+app.include_router(habits.router)
 app.include_router(auth.router, prefix="/auth")
 app.include_router(admin.router, prefix="/admin")
