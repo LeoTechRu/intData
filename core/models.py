@@ -144,6 +144,25 @@ class Task(Base):
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
 
+# ---------------------------------------------------------------------------
+# TimeEntry model
+# ---------------------------------------------------------------------------
+
+
+class TimeEntry(Base):
+    """Time tracking entry for a telegram user."""
+
+    __tablename__ = "time_entries"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    start_time = Column(DateTime, default=utcnow, nullable=False)
+    end_time = Column(DateTime)
+    description = Column(String(500))
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+
+
 # Модели для логгера:
 class LogLevel(IntEnum):
     """Уровни логирования по аналогии со стандартным ``logging``.
