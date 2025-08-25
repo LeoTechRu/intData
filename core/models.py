@@ -1,5 +1,6 @@
 """Database models used by the application."""
 from enum import IntEnum, Enum as PyEnum
+from datetime import date
 
 from .db import bcrypt
 
@@ -321,10 +322,20 @@ class Habit(Base):
     description = Column(String(500))
     schedule = Column(JSON, default=dict)
     metrics = Column(JSON, default=dict)
+    frequency = Column(String(20), default="daily")
+    progress = Column(JSON, default=dict)
     start_date = Column(DateTime)
     end_date = Column(DateTime)
     created_at = Column(DateTime, default=utcnow)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+
+    def toggle_progress(self, day: date) -> None:
+        today = date.today()
+        if day != today:
+            raise ValueError("Can only toggle progress for today")
+        key = day.isoformat()
+        self.progress = self.progress or {}
+        self.progress[key] = not self.progress.get(key, False)
 
 
 class Resource(Base):
