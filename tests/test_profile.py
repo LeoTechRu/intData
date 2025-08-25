@@ -57,7 +57,7 @@ app.dependency_overrides[get_current_web_user] = override_current
 
 
 def test_profile_redirect():
-    res = client.get("/profile", allow_redirects=False)
+    res = client.get("/profile", follow_redirects=False)
     assert res.status_code == 302
     assert res.headers["location"] == "/profile/alice"
 
