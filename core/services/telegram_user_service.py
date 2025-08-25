@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 from aiogram import Bot
@@ -20,6 +19,7 @@ from core.models import (
     LogLevel,
     GroupType,
 )
+from core.utils import utcnow
 
 
 class TelegramUserService:
@@ -119,7 +119,7 @@ class TelegramUserService:
         for field in ["username", "first_name", "last_name", "language_code"]:
             if field in data and data[field] is not None:
                 setattr(user, field, data[field])
-        user.updated_at = datetime.utcnow()
+        user.updated_at = utcnow()
         await self.session.flush()
         return user
 
@@ -268,7 +268,7 @@ class TelegramUserService:
         for field, value in data.items():
             if field in allowed and value is not None:
                 setattr(user, field, value)
-        user.updated_at = datetime.utcnow()
+        user.updated_at = utcnow()
         await self.session.flush()
         return user
 
@@ -297,14 +297,14 @@ class TelegramUserService:
             settings = await self.get_log_settings()
             if settings:
                 settings.level = level
-                settings.updated_at = datetime.utcnow()
+                settings.updated_at = utcnow()
                 await self.session.flush()
                 return True
             settings = LogSettings(
                 id=1,
                 level=level,
                 chat_id=chat_id or self.admin_chat_id,
-                updated_at=datetime.utcnow(),
+                updated_at=utcnow(),
             )
             self.session.add(settings)
             await self.session.flush()

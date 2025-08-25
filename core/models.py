@@ -1,6 +1,7 @@
 """Database models used by the application."""
-from datetime import datetime
 from enum import IntEnum, Enum as PyEnum
+
+from .utils import utcnow
 
 from sqlalchemy import (
     BigInteger,
@@ -55,8 +56,8 @@ class TgUser(Base):
     language_code = Column(String(10))
     role = Column(String(20), default=UserRole.single.name)
     bot_settings = Column(JSON, default=dict)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
 
 class WebUser(Base):
@@ -75,8 +76,8 @@ class WebUser(Base):
     telegram_user_id = Column(Integer, ForeignKey("tg_users.id"))
     birthday = Column(Date)
     language = Column(String(10))
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
 
 class Group(Base):  # Группа
@@ -89,8 +90,8 @@ class Group(Base):  # Группа
     owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
     description = Column(String(500))
     participants_count = Column(Integer, default=0)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
 
 class Channel(Base):  # Канал
@@ -104,8 +105,8 @@ class Channel(Base):  # Канал
     username = Column(String(32))
     participants_count = Column(Integer, default=0)
     description = Column(String(500))
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
 
 class UserGroup(Base):  # Связь пользователь-группа (многие ко многим)
@@ -115,7 +116,7 @@ class UserGroup(Base):  # Связь пользователь-группа (мн
     group_id = Column(BigInteger, ForeignKey("groups.telegram_id"), primary_key=True)
     is_owner = Column(Boolean, default=False)
     is_moderator = Column(Boolean, default=False)
-    joined_at = Column(DateTime, default=datetime.utcnow)
+    joined_at = Column(DateTime, default=utcnow)
 
 
 # Модели для логгера:
@@ -131,7 +132,7 @@ class LogSettings(Base):
     id = Column(BigInteger, primary_key=True)
     chat_id = Column(BigInteger, nullable=False)  # ID группы для логов
     level = Column(Enum(LogLevel), default=LogLevel.ERROR)  # Уровень логирования
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
     def __repr__(self) -> str:  # pragma: no cover - debug aid
         return f"<LogSettings(level='{self.level}', chat_id='{self.chat_id}')>"
