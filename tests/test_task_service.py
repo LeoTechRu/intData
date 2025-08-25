@@ -6,6 +6,8 @@ from sqlalchemy.orm import sessionmaker
 from base import Base
 from core.services.task_service import TaskService
 from core.models import TaskStatus
+from core.services.reminder_service import ReminderService
+from core.utils import utcnow
 
 
 @pytest_asyncio.fixture
@@ -38,3 +40,17 @@ async def test_task_custom_status(session):
         owner_id=1, title="In progress", status=TaskStatus.in_progress
     )
     assert task.status == TaskStatus.in_progress
+
+
+@pytest.mark.asyncio
+async def test_add_reminder_to_task(session):
+    service = TaskService(session)
+    task = await service.create_task(owner_id=1, title="Task")
+    remind_at = utcnow()
+    reminder = await service.add_reminder(
+        task.id, "Do it", remind_at
+    )
+    assert reminder is not None
+    assert reminder.task_id == task.id
+    reminders = await ReminderService(session).list_reminders(task_id=task.id)
+    assert len(reminders) == 1
