@@ -18,13 +18,15 @@
     {% if not telegram_id %}
     <h3>Или войдите через Telegram</h3>
     <div>
-      <script async src="https://telegram.org/js/telegram-widget.js?22"
-              data-telegram-login="{{ bot_username }}"
-              data-size="large"
-              data-userpic="false"
-              data-onauth="onTelegramAuth(user)"
-              data-request-access="write">
-      </script>
+      <script
+        async
+        src="https://telegram.org/js/telegram-widget.js?22"
+        data-telegram-login="{{ bot_username }}"
+        data-size="large"
+        data-userpic="false"
+        data-auth-url="/auth/tg/callback"
+        data-request-access="write"
+      ></script>
     </div>
     {% endif %}
     <!-- Disclaimer: тестовое демо -->
@@ -82,21 +84,10 @@
   </div>
 
   <script>
-  async function onTelegramAuth(user) {
-    const form = new URLSearchParams();
-    for (const [k,v] of Object.entries(user)) { form.append(k, v); }
-    const resp = await fetch('/auth/tg/callback', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: form.toString(),
-      credentials: 'same-origin'
-    });
-    if (resp.redirected) {
-      window.location = resp.url;
-    } else {
-      alert('Telegram account not linked');
-    }
-  }
+    // Функциональность авторизации через Telegram
+    // реализуется встроенным редиректом виджета по адресу
+    // `/auth/tg/callback`, поэтому дополнительный JavaScript
+    // здесь не требуется.
   </script>
 {% endblock %}
 

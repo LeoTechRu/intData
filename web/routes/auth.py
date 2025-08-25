@@ -107,9 +107,13 @@ async def logout() -> RedirectResponse:
     return response
 
 
-@router.post("/tg/callback")
+@router.api_route("/tg/callback", methods=["GET", "POST"])
 async def telegram_callback(request: Request):
-    data = dict((await request.form()).items())
+    """Handle Telegram login callback from widget."""
+    if request.method == "POST":
+        data = dict((await request.form()).items())
+    else:
+        data = dict(request.query_params.items())
     if not verify_telegram_login(data):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Bad Telegram signature")
     telegram_id = int(data["id"])
