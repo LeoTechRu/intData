@@ -1,25 +1,23 @@
 import hmac
 import hashlib
-
-import hmac
-import hashlib
-
 import os
+import time
+
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
-import time
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+
+import core.db as db
+from base import Base
+from core.services.telegram_user_service import TelegramUserService
 from core.services.web_user_service import WebUserService
 
 BOT_TOKEN = "TEST_TOKEN"
-from base import Base
-import core.db
-
 os.environ.setdefault("BOT_TOKEN", BOT_TOKEN)
 os.environ.setdefault("TELEGRAM_BOT_USERNAME", "testbot")
-from web.config import S
+from web.config import S  # noqa: E402
 
 try:
     from core.main import app  # type: ignore
@@ -96,3 +94,55 @@ async def test_login_internal_error_shows_detail(monkeypatch, client: AsyncClien
     resp = await client.post("/auth/login", data={"username": "u", "password": "p"})
     assert resp.status_code == 500
     assert "DB down" in resp.text
+
+
+@pytest.mark.asyncio
+async def test_telegram_registration_flow(client: AsyncClient):
+    data = {
+        "id": 999,
+        "first_name": "Reg",
+        "auth_date": int(time.time()),
+    }
+    data["hash"] = _generate_hash(data)
+    resp = await client.post("/auth/tg/callback", data=data)
+    assert resp.status_code == 303
+    assert resp.headers["location"] == "/auth/create_web_account"
+    assert client.cookies.get("telegram_id") == "999"
+    async with TelegramUserService() as tsvc:
+        assert await tsvc.get_user_by_telegram_id(999) is not None
+
+    resp2 = await client.post(
+        "/auth/create_web_account",
+        data={"action": "create", "username": "reguser", "password": "pass"},
+    )
+    assert resp2.status_code == 303
+    assert resp2.headers["location"] == "/"
+    assert client.cookies.get("web_user_id") is not None
+    assert client.cookies.get("telegram_id") == "999"
+
+    resp3 = await client.get("/")
+    assert resp3.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_telegram_login_existing_user(client: AsyncClient):
+    async with TelegramUserService() as tsvc:
+        tg_user, _ = await tsvc.get_or_create_user(telegram_id=321, first_name="Foo")
+    async with WebUserService() as wsvc:
+        web_user = await wsvc.register(username="foo", password="bar")
+        await wsvc.link_telegram(web_user.id, tg_user.id)
+
+    data = {
+        "id": 321,
+        "first_name": "Foo",
+        "auth_date": int(time.time()),
+    }
+    data["hash"] = _generate_hash(data)
+    resp = await client.post("/auth/tg/callback", data=data)
+    assert resp.status_code == 303
+    assert resp.headers["location"] == "/"
+    assert client.cookies.get("telegram_id") == "321"
+    assert client.cookies.get("web_user_id") == str(web_user.id)
+
+    resp2 = await client.get("/")
+    assert resp2.status_code == 200

@@ -130,10 +130,8 @@ class UserGroup(Base):  # Связь пользователь-группа (мн
 # Task model
 # ---------------------------------------------------------------------------
 
-
 class TaskStatus(PyEnum):
     """Possible statuses for :class:`Task`."""
-
     todo = "todo"
     in_progress = "in_progress"
     done = "done"
@@ -150,6 +148,8 @@ class Task(Base):
     description = Column(String(500))
     due_date = Column(DateTime)
     status = Column(Enum(TaskStatus), default=TaskStatus.todo)
+
+    # NexusCore-inspired поля
     cognitive_cost = Column(Integer)
     neural_priority = Column(Float)
     repeat_config = Column(JSON, default=dict)
@@ -158,10 +158,14 @@ class Task(Base):
     custom_properties = Column(JSON, default=dict)
     schedule_type = Column(String(50))
     reschedule_count = Column(Integer, default=0)
-    checkpoints = relationship("TaskCheckpoint", backref="task", cascade="all, delete-orphan")
+
+    checkpoints = relationship(
+        "TaskCheckpoint", backref="task", cascade="all, delete-orphan"
+    )
     exceptions = relationship(
         "ScheduleException", backref="task", cascade="all, delete-orphan"
     )
+
     created_at = Column(DateTime, default=utcnow)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
@@ -169,7 +173,6 @@ class Task(Base):
 # ---------------------------------------------------------------------------
 # Reminder model
 # ---------------------------------------------------------------------------
-
 
 class Reminder(Base):
     """Simple reminder item owned by a telegram user."""
@@ -187,9 +190,27 @@ class Reminder(Base):
 
 
 # ---------------------------------------------------------------------------
-# TimeEntry model
+# CalendarEvent model
 # ---------------------------------------------------------------------------
 
+class CalendarEvent(Base):
+    """Calendar event item owned by a telegram user."""
+
+    __tablename__ = "calendar_events"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    title = Column(String(255), nullable=False)
+    start_at = Column(DateTime, default=utcnow, nullable=False)
+    end_at = Column(DateTime)
+    description = Column(String(500))
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+
+
+# ---------------------------------------------------------------------------
+# TimeEntry model
+# ---------------------------------------------------------------------------
 
 class TimeEntry(Base):
     """Time tracking entry for a telegram user."""
@@ -206,9 +227,8 @@ class TimeEntry(Base):
 
 
 # ---------------------------------------------------------------------------
-# Extended NexusCore-inspired models
+# Extended NexusCore-inspired models (сохранены целиком)
 # ---------------------------------------------------------------------------
-
 
 class AreaType(PyEnum):
     career = "CAREER"
@@ -274,6 +294,22 @@ class Resource(Base):
     content = Column(String(2000))
     type = Column(String(50))
     meta = Column(JSON, default=dict)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+
+
+# ---------------------------------------------------------------------------
+# Note model (сохранено из ветки main)
+# ---------------------------------------------------------------------------
+
+class Note(Base):
+    """Simple note item owned by a telegram user."""
+
+    __tablename__ = "notes"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    content = Column(String(1000), nullable=False)
     created_at = Column(DateTime, default=utcnow)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
@@ -421,7 +457,10 @@ class Link(Base):
     created_at = Column(DateTime, default=utcnow)
 
 
-# Модели для логгера:
+# ---------------------------------------------------------------------------
+# Модели для логгера
+# ---------------------------------------------------------------------------
+
 class LogLevel(IntEnum):
     """Уровни логирования по аналогии со стандартным ``logging``.
 
@@ -439,9 +478,7 @@ class LogSettings(Base):
 
     id = Column(BigInteger, primary_key=True)
     chat_id = Column(BigInteger, nullable=False)  # ID группы для логов
-    level = Column(
-        Enum(LogLevel), default=LogLevel.ERROR
-    )  # Уровень логирования
+    level = Column(Enum(LogLevel), default=LogLevel.ERROR)  # Уровень логирования
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
     def __repr__(self) -> str:  # pragma: no cover - debug aid
