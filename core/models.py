@@ -113,11 +113,35 @@ class Channel(Base):  # Канал
 class UserGroup(Base):  # Связь пользователь-группа (многие ко многим)
     __tablename__ = "user_group"
 
-    user_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"), primary_key=True)
-    group_id = Column(BigInteger, ForeignKey("groups.telegram_id"), primary_key=True)
+    user_id = Column(
+        BigInteger, ForeignKey("tg_users.telegram_id"), primary_key=True
+    )
+    group_id = Column(
+        BigInteger, ForeignKey("groups.telegram_id"), primary_key=True
+    )
     is_owner = Column(Boolean, default=False)
     is_moderator = Column(Boolean, default=False)
     joined_at = Column(DateTime, default=utcnow)
+
+
+# ---------------------------------------------------------------------------
+# Task model
+# ---------------------------------------------------------------------------
+
+
+class Task(Base):
+    """Basic task item owned by a telegram user."""
+
+    __tablename__ = "tasks"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    title = Column(String(255), nullable=False)
+    description = Column(String(500))
+    due_date = Column(DateTime)
+    is_done = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=utcnow)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
 
 # Модели для логгера:
@@ -138,7 +162,9 @@ class LogSettings(Base):
 
     id = Column(BigInteger, primary_key=True)
     chat_id = Column(BigInteger, nullable=False)  # ID группы для логов
-    level = Column(Enum(LogLevel), default=LogLevel.ERROR)  # Уровень логирования
+    level = Column(
+        Enum(LogLevel), default=LogLevel.ERROR
+    )  # Уровень логирования
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
     def __repr__(self) -> str:  # pragma: no cover - debug aid
