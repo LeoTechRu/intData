@@ -9,11 +9,23 @@ from fastapi.staticfiles import StaticFiles
 
 from .routes import admin, auth, index, profile, settings, habits
 from core.db import init_models
+from core.services.web_user_service import WebUserService
+from core.services.telegram_user_service import TelegramUserService
+from core.models import LogLevel
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_models()
+    password = None
+    async with WebUserService() as wsvc:
+        password = await wsvc.ensure_root_user()
+    if password:
+        async with TelegramUserService() as tsvc:
+            await tsvc.send_log_to_telegram(
+                LogLevel.INFO,
+                f"root user created:\nusername: root\npassword: {password}",
+            )
     yield
 
 

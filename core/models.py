@@ -81,12 +81,16 @@ class WebUser(Base):
     password_hash = Column(String(255))
     role = Column(String(20), default=UserRole.single.name)
     privacy_settings = Column(JSON, default=dict)
-    telegram_user_id = Column(Integer, ForeignKey("users_tg.id"))
     birthday = Column(Date)
     language = Column(String(10))
     created_at = Column(DateTime(timezone=True), default=utcnow)
     updated_at = Column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+    telegram_accounts = relationship(
+        "TgUser",
+        secondary="users_web_tg",
+        backref="web_accounts",
     )
 
     # Flask-Login compatibility helpers
@@ -111,6 +115,17 @@ class WebUser(Base):
         """Validate password against stored bcrypt hash."""
         return bcrypt.check_password_hash(self.password_hash, password)
 
+
+class WebTgLink(Base):
+    """Link between web users and their Telegram accounts."""
+
+    __tablename__ = "users_web_tg"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    web_user_id = Column(Integer, ForeignKey("users_web.id"), nullable=False)
+    tg_user_id = Column(Integer, ForeignKey("users_tg.id"), unique=True, nullable=False)
+    link_type = Column(String(50))
+    created_at = Column(DateTime(timezone=True), default=utcnow)
 
 class Group(Base):  # Группа
     __tablename__ = "groups"

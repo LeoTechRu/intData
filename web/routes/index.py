@@ -26,10 +26,9 @@ async def index(
         async with TelegramUserService() as service:
             tg_user: TgUser | None = None
             groups = []
-            if current_user.telegram_user_id:
-                tg_user = await service.session.get(TgUser, current_user.telegram_user_id)
-                if tg_user:
-                    groups = await service.list_user_groups(tg_user.telegram_id)
+            if current_user.telegram_accounts:
+                tg_user = current_user.telegram_accounts[0]
+                groups = await service.list_user_groups(tg_user.telegram_id)
             context = {
                 "user": tg_user,
                 "groups": groups,

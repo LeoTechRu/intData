@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from typing import Optional, Any, Union, List
 from datetime import datetime
+import secrets
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core import db
-from core.models import WebUser, TgUser
+from core.models import WebUser, TgUser, WebTgLink, UserRole
 from core.db import bcrypt
 
 
@@ -65,25 +66,62 @@ class WebUserService:
             return user
         return None
 
-    async def link_telegram(self, web_user_id: int, tg_user_id: int) -> WebUser:
+    async def ensure_root_user(self) -> Optional[str]:
+        """Create root user with random password if missing.
+
+        Returns the generated password if a new user was created, otherwise
+        ``None``.
+        """
+        result = await self.session.execute(
+            select(WebUser).where(WebUser.username == "root")
+        )
+        if result.scalar_one_or_none():
+            return None
+        password = secrets.token_urlsafe(12)
+        hashed = bcrypt.generate_password_hash(password)
+        user = WebUser(
+            username="root",
+            password_hash=hashed,
+            role=UserRole.admin.name,
+        )
+        self.session.add(user)
+        await self.session.flush()
+        return password
+
+    async def link_telegram(
+        self, web_user_id: int, tg_user_id: int, link_type: str | None = None
+    ) -> WebUser:
         web_user = await self.get_by_id(web_user_id)
         tg_user = await self.session.get(TgUser, tg_user_id)
         if web_user is None or tg_user is None:
             raise ValueError("user not found")
-        if web_user.telegram_user_id:
-            raise ValueError("web user already linked")
-        result = await self.session.execute(select(WebUser).where(WebUser.telegram_user_id == tg_user_id))
+        result = await self.session.execute(
+            select(WebTgLink).where(WebTgLink.tg_user_id == tg_user_id)
+        )
         if result.scalar_one_or_none():
             raise ValueError("telegram user already linked")
-        web_user.telegram_user_id = tg_user_id
+        link = WebTgLink(
+            web_user_id=web_user_id,
+            tg_user_id=tg_user_id,
+            link_type=link_type,
+        )
+        self.session.add(link)
         await self.session.flush()
         return web_user
 
-    async def unlink_telegram(self, web_user_id: int) -> WebUser:
+    async def unlink_telegram(self, web_user_id: int, tg_user_id: int) -> WebUser:
         web_user = await self.get_by_id(web_user_id)
         if web_user is None:
             raise ValueError("user not found")
-        web_user.telegram_user_id = None
+        result = await self.session.execute(
+            select(WebTgLink).where(
+                WebTgLink.web_user_id == web_user_id,
+                WebTgLink.tg_user_id == tg_user_id,
+            )
+        )
+        link = result.scalar_one_or_none()
+        if link:
+            await self.session.delete(link)
         await self.session.flush()
         return web_user
 
@@ -107,10 +145,15 @@ class WebUserService:
         return result.scalars().all()
 
     async def get_user_by_identifier(self, identifier: Union[int, str]) -> Optional[WebUser]:
-        if isinstance(identifier, int) or (isinstance(identifier, str) and identifier.isdigit()):
+        if isinstance(identifier, int) or (
+            isinstance(identifier, str) and identifier.isdigit()
+        ):
             telegram_id = int(identifier)
             result = await self.session.execute(
-                select(WebUser).join(TgUser, WebUser.telegram_user_id == TgUser.id).where(TgUser.telegram_id == telegram_id)
+                select(WebUser)
+                .join(WebTgLink, WebTgLink.web_user_id == WebUser.id)
+                .join(TgUser, WebTgLink.tg_user_id == TgUser.id)
+                .where(TgUser.telegram_id == telegram_id)
             )
             return result.scalar_one_or_none()
         else:
