@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Depends
 from fastapi.templating import Jinja2Templates
 
-from core.models import UserRole
+from core.models import UserRole, WebUser, TgUser
 from core.services.telegram_user_service import TelegramUserService
+from web.dependencies import get_current_web_user
 from web.config import S
 
 router = APIRouter()
@@ -17,33 +18,34 @@ templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 
 
 @router.get("/", include_in_schema=False)
-async def index(request: Request):
+async def index(
+    request: Request, current_user: WebUser | None = Depends(get_current_web_user)
+):
     """Render dashboard for authorised users or login page for guests."""
-    telegram_id = request.cookies.get("telegram_id")
-
-    if telegram_id:
-        try:
-            user_id = int(telegram_id)
-        except ValueError:
-            user_id = None
-        if user_id is not None:
-            async with TelegramUserService() as service:
-                user = await service.get_user_by_telegram_id(user_id)
-                if user:
-                    groups = await service.list_user_groups(user_id)
-                    context = {
-                        "user": user,
-                        "groups": groups,
-                        "role_name": user.role,
-                        "is_admin": UserRole[user.role] >= UserRole.admin,
-                        "page_title": "Дашборд",
-                    }
-                    return templates.TemplateResponse(request, "start.html", context)
+    if current_user:
+        async with TelegramUserService() as service:
+            tg_user: TgUser | None = None
+            groups = []
+            if current_user.telegram_user_id:
+                tg_user = await service.session.get(TgUser, current_user.telegram_user_id)
+                if tg_user:
+                    groups = await service.list_user_groups(tg_user.telegram_id)
+            context = {
+                "user": tg_user,
+                "groups": groups,
+                "role_name": tg_user.role if tg_user else None,
+                "is_admin": UserRole[tg_user.role] >= UserRole.admin if tg_user else False,
+                "page_title": "Дашборд",
+            }
+            return templates.TemplateResponse(request, "start.html", context)
 
     bot_user = S.TELEGRAM_BOT_USERNAME
     return templates.TemplateResponse(
         request,
         "auth/login.html",
-        {"bot_username": bot_user, "next_query": ""},
+        {
+            "bot_username": bot_user,
+            "telegram_id": request.cookies.get("telegram_id"),
+            "page_title": "Вход",
+        },
     )
-

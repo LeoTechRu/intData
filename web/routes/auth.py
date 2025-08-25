@@ -133,6 +133,14 @@ async def telegram_callback(request: Request):
             httponly=True,
             samesite="lax",
         )
+        response.set_cookie(
+            "telegram_id",
+            str(telegram_id),
+            max_age=S.SESSION_MAX_AGE,
+            path="/",
+            httponly=True,
+            samesite="lax",
+        )
         return response
     response = RedirectResponse("/auth/create_web_account", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(
@@ -196,5 +204,12 @@ async def create_web_account(
         httponly=True,
         samesite="lax",
     )
-    response.delete_cookie("telegram_id", path="/")
+    response.set_cookie(
+        "telegram_id",
+        str(telegram_id),
+        max_age=S.SESSION_MAX_AGE,
+        path="/",
+        httponly=True,
+        samesite="lax",
+    )
     return response
