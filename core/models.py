@@ -51,7 +51,7 @@ class ChannelType(PyEnum):
 class TgUser(Base):
     """Telegram user data stored separately from web accounts."""
 
-    __tablename__ = "tg_users"
+    __tablename__ = "users_tg"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     telegram_id = Column(BigInteger, unique=True, nullable=False)
@@ -70,7 +70,7 @@ class TgUser(Base):
 class WebUser(Base):
     """User registered via web interface."""
 
-    __tablename__ = "web_users"
+    __tablename__ = "users_web"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(64), unique=True, nullable=False)
@@ -80,7 +80,7 @@ class WebUser(Base):
     password_hash = Column(String(255))
     role = Column(String(20), default=UserRole.single.name)
     privacy_settings = Column(JSON, default=dict)
-    telegram_user_id = Column(Integer, ForeignKey("tg_users.id"))
+    telegram_user_id = Column(Integer, ForeignKey("users_tg.id"))
     birthday = Column(Date)
     language = Column(String(10))
     created_at = Column(DateTime(timezone=True), default=utcnow)
@@ -118,7 +118,7 @@ class Group(Base):  # Группа
     telegram_id = Column(BigInteger, unique=True, nullable=False)
     title = Column(String(255), nullable=False)
     type = Column(Enum(GroupType), default=GroupType.private)
-    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
     description = Column(String(500))
     participants_count = Column(Integer, default=0)
     created_at = Column(DateTime(timezone=True), default=utcnow)
@@ -134,7 +134,7 @@ class Channel(Base):  # Канал
     telegram_id = Column(BigInteger, unique=True, nullable=False)
     title = Column(String(255), nullable=False)
     type = Column(Enum(ChannelType), default=ChannelType.channel)
-    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
     username = Column(String(32))
     participants_count = Column(Integer, default=0)
     description = Column(String(500))
@@ -148,7 +148,7 @@ class UserGroup(Base):  # Связь пользователь-группа (мн
     __tablename__ = "user_group"
 
     user_id = Column(
-        BigInteger, ForeignKey("tg_users.telegram_id"), primary_key=True
+        BigInteger, ForeignKey("users_tg.telegram_id"), primary_key=True
     )
     group_id = Column(
         BigInteger, ForeignKey("groups.telegram_id"), primary_key=True
@@ -175,7 +175,7 @@ class Task(Base):
     __tablename__ = "tasks"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
     title = Column(String(255), nullable=False)
     description = Column(String(500))
     due_date = Column(DateTime(timezone=True))
@@ -214,7 +214,7 @@ class Reminder(Base):
     __tablename__ = "reminders"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
     task_id = Column(Integer, ForeignKey("tasks.id"))
     message = Column(String(500), nullable=False)
     remind_at = Column(DateTime(timezone=True), nullable=False)
@@ -235,7 +235,7 @@ class CalendarEvent(Base):
     __tablename__ = "calendar_events"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
     title = Column(String(255), nullable=False)
     start_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
     end_at = Column(DateTime(timezone=True))
@@ -256,7 +256,7 @@ class TimeEntry(Base):
     __tablename__ = "time_entries"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
     start_time = Column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )
@@ -284,7 +284,7 @@ class Area(Base):
     __tablename__ = "areas"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
     name = Column(String(255), nullable=False)
     type = Column(Enum(AreaType))
     color = Column(String(7))
@@ -299,7 +299,7 @@ class Project(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     area_id = Column(Integer, ForeignKey("areas.id"))
-    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
     name = Column(String(255), nullable=False)
     description = Column(String(500))
     cognitive_cost = Column(Integer)
@@ -316,7 +316,7 @@ class Habit(Base):
     __tablename__ = "habits"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
     name = Column(String(255), nullable=False)
     description = Column(String(500))
     schedule = Column(JSON, default=dict)
@@ -331,7 +331,7 @@ class Resource(Base):
     __tablename__ = "resources"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
     title = Column(String(255), nullable=False)
     content = Column(String(2000))
     type = Column(String(50))
@@ -350,7 +350,7 @@ class Note(Base):
     __tablename__ = "notes"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
     content = Column(String(1000), nullable=False)
     created_at = Column(DateTime(timezone=True), default=utcnow)
     updated_at = Column(
@@ -362,7 +362,7 @@ class Archive(Base):
     __tablename__ = "archives"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
     source_type = Column(String(50))
     source_id = Column(Integer)
     archived_at = Column(DateTime, default=utcnow)
@@ -397,7 +397,7 @@ class OKR(Base):
     __tablename__ = "okrs"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
     objective = Column(String(255), nullable=False)
     description = Column(String(500))
     status = Column(Enum(OKRStatus), default=OKRStatus.pending)
@@ -435,7 +435,7 @@ class Interface(Base):
     __tablename__ = "interfaces"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
     name = Column(String(255), nullable=False)
     config = Column(JSON, default=dict)
     created_at = Column(DateTime, default=utcnow)
@@ -446,7 +446,7 @@ class Limit(Base):
     __tablename__ = "limits"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    owner_id = Column(BigInteger, ForeignKey("tg_users.telegram_id"))
+    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
     resource = Column(String(50), nullable=False)
     value = Column(Integer, nullable=False)
     expires_at = Column(DateTime)
@@ -473,7 +473,7 @@ class UserRoleLink(Base):
     __tablename__ = "user_roles"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("web_users.id"))
+    user_id = Column(Integer, ForeignKey("users_web.id"))
     role_id = Column(Integer, ForeignKey("roles.id"))
     expires_at = Column(DateTime)
 

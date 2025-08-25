@@ -16,13 +16,13 @@ async def admin_dashboard(
 ):
     """Render consolidated admin landing page with users and groups."""
     async with TelegramUserService() as tsvc, WebUserService() as wsvc:
-        tg_users = await tsvc.list_users()
+        users_tg = await tsvc.list_users()
         groups_with_members = await tsvc.list_groups_with_members()
-        web_users = await wsvc.list_users()
+        users_web = await wsvc.list_users()
 
     context = {
-        "tg_users": tg_users,
-        "web_users": web_users,
+        "users_tg": users_tg,
+        "users_web": users_web,
         "groups": groups_with_members,
         "user": current_user,
         "role_name": current_user.role,

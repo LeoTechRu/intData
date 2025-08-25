@@ -14,5 +14,5 @@ async def test_init_models_creates_tables():
     await db.init_models()
     async with engine.begin() as conn:
         tables = await conn.run_sync(lambda s: inspect(s).get_table_names())
-    assert "tg_users" in tables
-    assert "web_users" in tables
+    assert "users_tg" in tables
+    assert "users_web" in tables
