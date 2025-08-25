@@ -6,6 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from base import Base
 from core.services.reminder_service import ReminderService
 from core.utils import utcnow
+from core.models import Task
 
 
 @pytest_asyncio.fixture
@@ -31,6 +32,22 @@ async def test_create_and_list_reminders(session):
     reminders = await service.list_reminders(owner_id=1)
     assert len(reminders) == 1
     assert reminders[0].message == "Ping"
+
+
+@pytest.mark.asyncio
+async def test_create_reminder_with_task(session):
+    task = Task(owner_id=1, title="T")
+    session.add(task)
+    await session.flush()
+    service = ReminderService(session)
+    remind_at = utcnow()
+    reminder = await service.create_reminder(
+        owner_id=1, message="For task", remind_at=remind_at, task_id=task.id
+    )
+    assert reminder.task_id == task.id
+    reminders = await service.list_reminders(task_id=task.id)
+    assert len(reminders) == 1
+    assert reminders[0].task_id == task.id
 
 
 @pytest.mark.asyncio

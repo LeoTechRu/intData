@@ -8,7 +8,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core import db
-from core.models import Task, TaskStatus
+from core.models import Task, TaskStatus, Reminder
+from core.services.reminder_service import ReminderService
 
 
 class TaskService:
@@ -60,3 +61,19 @@ class TaskService:
             stmt = stmt.where(Task.owner_id == owner_id)
         result = await self.session.execute(stmt)
         return result.scalars().all()
+
+    async def add_reminder(
+        self, task_id: int, message: str, remind_at
+    ) -> Reminder | None:
+        """Attach a reminder to the specified task."""
+
+        task = await self.session.get(Task, task_id)
+        if task is None:
+            return None
+        reminder_service = ReminderService(self.session)
+        return await reminder_service.create_reminder(
+            owner_id=task.owner_id,
+            message=message,
+            remind_at=remind_at,
+            task_id=task.id,
+        )
