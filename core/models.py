@@ -1,6 +1,8 @@
 """Database models used by the application."""
 from enum import IntEnum, Enum as PyEnum
 
+from .db import bcrypt
+
 from .utils import utcnow
 
 from sqlalchemy import (
@@ -85,6 +87,28 @@ class WebUser(Base):
     updated_at = Column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
+
+    # Flask-Login compatibility helpers
+    @property
+    def is_authenticated(self) -> bool:
+        """All persisted web users are considered authenticated."""
+        return True
+
+    @property
+    def is_active(self) -> bool:
+        """User is active unless explicitly banned."""
+        return self.role != UserRole.ban.name
+
+    @property
+    def is_anonymous(self) -> bool:
+        return False
+
+    def get_id(self) -> str:
+        return str(self.id)
+
+    def check_password(self, password: str) -> bool:
+        """Validate password against stored bcrypt hash."""
+        return bcrypt.check_password_hash(self.password_hash, password)
 
 
 class Group(Base):  # Группа

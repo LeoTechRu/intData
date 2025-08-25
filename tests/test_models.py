@@ -1,9 +1,10 @@
+import bcrypt
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from base import Base
-from core.models import TgUser, WebUser
+from core.models import TgUser, WebUser, UserRole
 
 
 @pytest.fixture()
@@ -34,3 +35,19 @@ def test_web_user_unique_username(session):
     session.add(WebUser(username="webalice", password_hash="y"))
     with pytest.raises(Exception):
         session.flush()
+
+
+def test_web_user_flask_login_helpers(session):
+    hashed = bcrypt.hashpw(b"secret", bcrypt.gensalt()).decode()
+    user = WebUser(username="bob", password_hash=hashed)
+    session.add(user)
+    session.flush()
+
+    assert user.is_authenticated
+    assert user.is_active
+    assert not user.is_anonymous
+    assert user.get_id() == str(user.id)
+    assert user.check_password("secret")
+
+    user.role = UserRole.ban.name
+    assert not user.is_active
