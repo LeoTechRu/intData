@@ -6,7 +6,7 @@ from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from datetime import datetime
+from datetime import datetime, date
 from typing import Callable
 from decorators import role_required, group_required
 from core.models import GroupType, LogLevel, UserRole
@@ -101,35 +101,42 @@ async def cmd_cancel(message: Message, state: FSMContext):
 @user_router.message(Command("birthday"))
 @user_router.message(F.text.lower() == "день рождение")
 async def cmd_birthday(message: Message, state: FSMContext):
+    birthday = None
     async with TelegramUserService() as user_service:
         user_db = await user_service.get_user_by_telegram_id(message.from_user.id)
-        birthday_str = None
-        if user_db and isinstance(user_db.bot_settings, dict):
-            birthday_str = user_db.bot_settings.get("birthday")
-        if birthday_str:
+        birthday_raw = (
+            user_db.bot_settings.get("birthday")
+            if user_db and isinstance(user_db.bot_settings, dict)
+            else None
+        )
+        if isinstance(birthday_raw, str):
             try:
-                birthday = datetime.strptime(birthday_str, "%d.%m.%Y").date()
+                birthday = datetime.strptime(birthday_raw, "%d.%m.%Y").date()
             except ValueError:
                 birthday = None
+        elif isinstance(birthday_raw, date):
+            birthday = birthday_raw
+
+    if birthday:
+        today = datetime.today().date()
+        this_year_birthday = birthday.replace(year=today.year)
+        if this_year_birthday < today:
+            this_year_birthday = this_year_birthday.replace(year=today.year + 1)
+        days_left = (this_year_birthday - today).days
+        if days_left == 0:
+            await message.answer(
+                f"{message.from_user.first_name}, сегодня ваш день рождения! 🎉 ({birthday.strftime('%d.%m.%Y')})"
+            )
         else:
-            birthday = None
-        if birthday:
-            today = datetime.today().date()
-            this_year_birthday = birthday.replace(year=today.year)
-            if this_year_birthday < today:
-                this_year_birthday = this_year_birthday.replace(year=today.year + 1)
-            days_left = (this_year_birthday - today).days
-            if days_left == 0:
-                await message.answer(
-                    f"{message.from_user.first_name}, сегодня ваш день рождения! 🎉 ({birthday.strftime('%d.%m.%Y')})"
-                )
-            else:
-                await message.answer(
-                    f"{message.from_user.first_name}, до дня рождения осталось {days_left} дней ({birthday.strftime('%d.%m.%Y')})"
-                )
-        else:
-            await message.answer(f"{message.from_user.first_name}, введите ваш день рождения в формате ДД.ММ.ГГГГ:")
-            await state.set_state(UpdateDataStates.waiting_for_birthday)
+            await message.answer(
+                f"{message.from_user.first_name}, до дня рождения осталось {days_left} дней ({birthday.strftime('%d.%m.%Y')})"
+            )
+        return
+
+    await message.answer(
+        f"{message.from_user.first_name}, введите ваш день рождения в формате ДД.ММ.ГГГГ:"
+    )
+    await state.set_state(UpdateDataStates.waiting_for_birthday)
 
 @user_router.message(Command("contact"))
 @user_router.message(F.text.lower().in_(["контакт", "профиль"]))

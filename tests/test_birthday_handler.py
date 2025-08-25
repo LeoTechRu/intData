@@ -1,5 +1,5 @@
 import types
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -60,3 +60,30 @@ async def test_cmd_birthday_reads_from_bot_settings(monkeypatch):
     assert any(
         "сегодня ваш день рождения" in text for text in message.answers
     )
+
+
+@pytest.mark.asyncio
+async def test_cmd_birthday_prompts_only_when_missing(monkeypatch):
+    user = types.SimpleNamespace(bot_settings={})
+    monkeypatch.setattr(
+        tg_handlers,
+        "TelegramUserService",
+        lambda: DummyService(user),
+    )
+    message = DummyMessage(1, "Test")
+    state = DummyState()
+    await tg_handlers.cmd_birthday(message, state)
+    assert any(
+        "введите ваш день рождения" in text.lower() for text in message.answers
+    )
+    assert await state.get_state() == tg_handlers.UpdateDataStates.waiting_for_birthday
+
+    message.answers.clear()
+    await state.clear()
+    tomorrow = (datetime.today().date() + timedelta(days=1)).strftime("%d.%m.%Y")
+    user.bot_settings["birthday"] = tomorrow
+    await tg_handlers.cmd_birthday(message, state)
+    assert any(
+        "до дня рождения осталось" in text for text in message.answers
+    )
+    assert await state.get_state() is None
