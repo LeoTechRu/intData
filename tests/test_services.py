@@ -59,8 +59,8 @@ async def test_binding_flow(session):
     other = await wsvc.register(username="bob", password="x")
     with pytest.raises(ValueError):
         await wsvc.link_telegram(other.id, tg_user.id)
-    await wsvc.unlink_telegram(web_user.id)
-    assert web_user.telegram_user_id is None
+    await wsvc.unlink_telegram(web_user.id, tg_user.id)
+    assert await wsvc.get_user_by_identifier(123) is None
 
 
 @pytest.mark.asyncio
@@ -78,3 +78,12 @@ async def test_update_profile_and_lookup(session):
     assert by_id.id == user.id
     by_tg = await wsvc.get_user_by_identifier(555)
     assert by_tg.id == user.id
+
+
+@pytest.mark.asyncio
+async def test_ensure_root_user(session):
+    wsvc = WebUserService(session)
+    pwd = await wsvc.ensure_root_user()
+    assert pwd is not None
+    again = await wsvc.ensure_root_user()
+    assert again is None

@@ -5,6 +5,9 @@ from typing import Optional
 
 from fastapi import Request, Depends, HTTPException, status
 
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+
 from core.models import WebUser, TgUser, UserRole
 from core.services.web_user_service import WebUserService
 from core.services.telegram_user_service import TelegramUserService
@@ -24,7 +27,12 @@ async def get_current_web_user(request: Request) -> Optional[WebUser]:
     except ValueError:
         return None
     async with WebUserService() as service:
-        return await service.get_by_id(user_id)
+        result = await service.session.execute(
+            select(WebUser)
+                .options(selectinload(WebUser.telegram_accounts))
+                .where(WebUser.id == user_id)
+        )
+        return result.scalar_one_or_none()
 
 
 async def get_current_tg_user(request: Request) -> Optional[TgUser]:
