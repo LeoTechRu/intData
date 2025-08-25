@@ -1,14 +1,12 @@
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-import pytest
-import pytest_asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from base import Base
 from core.services.telegram_user_service import TelegramUserService
 from core.services.web_user_service import WebUserService
+from core.models import WebUser
 
 
 @pytest_asyncio.fixture
@@ -29,6 +27,24 @@ async def test_registration_and_auth(session):
     auth = await service.authenticate("alice", "secret")
     assert auth is not None
     assert await service.authenticate("alice", "bad") is None
+
+
+@pytest.mark.asyncio
+async def test_authenticate_uses_check_password(monkeypatch, session):
+    service = WebUserService(session)
+    user = await service.register(username="alice", password="secret")
+
+    called = False
+
+    def fake_check(self, password):  # pragma: no cover - dummy function
+        nonlocal called
+        called = True
+        return True
+
+    monkeypatch.setattr(WebUser, "check_password", fake_check)
+    auth = await service.authenticate("alice", "secret")
+    assert auth == user
+    assert called
 
 
 @pytest.mark.asyncio

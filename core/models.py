@@ -1,7 +1,7 @@
 """Database models used by the application."""
 from enum import IntEnum, Enum as PyEnum
 
-import bcrypt
+from .db import bcrypt
 
 from .utils import utcnow
 
@@ -108,9 +108,7 @@ class WebUser(Base):
 
     def check_password(self, password: str) -> bool:
         """Validate password against stored bcrypt hash."""
-        if not self.password_hash:
-            return False
-        return bcrypt.checkpw(password.encode(), self.password_hash.encode())
+        return bcrypt.check_password_hash(self.password_hash, password)
 
 
 class Group(Base):  # Группа

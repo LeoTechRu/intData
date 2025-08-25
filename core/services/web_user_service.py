@@ -2,13 +2,12 @@ from __future__ import annotations
 
 from typing import Optional, Any, Union, List
 from datetime import datetime
-
-import bcrypt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core import db
 from core.models import WebUser, TgUser
+from core.db import bcrypt
 
 
 def _parse_birthday(value: Optional[str]):
@@ -52,7 +51,7 @@ class WebUserService:
     async def register(self, *, username: str, password: str, email: Optional[str] = None, phone: Optional[str] = None) -> WebUser:
         if await self.get_by_username(username):
             raise ValueError("username taken")
-        hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+        hashed = bcrypt.generate_password_hash(password)
         user = WebUser(username=username, password_hash=hashed, email=email, phone=phone)
         self.session.add(user)
         await self.session.flush()
@@ -60,11 +59,9 @@ class WebUserService:
 
     async def authenticate(self, username: str, password: str) -> Optional[WebUser]:
         user = await self.get_by_username(username)
-        if not user:
+        if not user or not user.password_hash:
             return None
-        if not user.password_hash:
-            return None
-        if bcrypt.checkpw(password.encode(), user.password_hash.encode()):
+        if user.check_password(password):
             return user
         return None
 
