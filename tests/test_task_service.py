@@ -5,6 +5,7 @@ from sqlalchemy.orm import sessionmaker
 
 from base import Base
 from core.services.task_service import TaskService
+from core.models import TaskStatus
 
 
 @pytest_asyncio.fixture
@@ -24,6 +25,16 @@ async def test_task_creation_and_listing(session):
     service = TaskService(session)
     task = await service.create_task(owner_id=1, title="Test task")
     assert task.id is not None
+    assert task.status == TaskStatus.todo
     tasks = await service.list_tasks(owner_id=1)
     assert len(tasks) == 1
     assert tasks[0].title == "Test task"
+
+
+@pytest.mark.asyncio
+async def test_task_custom_status(session):
+    service = TaskService(session)
+    task = await service.create_task(
+        owner_id=1, title="In progress", status=TaskStatus.in_progress
+    )
+    assert task.status == TaskStatus.in_progress

@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core import db
-from core.models import Task
+from core.models import Task, TaskStatus
 
 
 class TaskService:
@@ -37,6 +37,7 @@ class TaskService:
         title: str,
         description: str | None = None,
         due_date=None,
+        status: TaskStatus = TaskStatus.todo,
     ) -> Task:
         """Create a new task for the given owner."""
 
@@ -45,6 +46,7 @@ class TaskService:
             title=title,
             description=description,
             due_date=due_date,
+            status=status,
         )
         self.session.add(task)
         await self.session.flush()
