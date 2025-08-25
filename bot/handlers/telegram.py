@@ -103,16 +103,30 @@ async def cmd_cancel(message: Message, state: FSMContext):
 async def cmd_birthday(message: Message, state: FSMContext):
     async with TelegramUserService() as user_service:
         user_db = await user_service.get_user_by_telegram_id(message.from_user.id)
-        if user_db and user_db.birthday:
+        birthday_str = None
+        if user_db and isinstance(user_db.bot_settings, dict):
+            birthday_str = user_db.bot_settings.get("birthday")
+        if birthday_str:
+            try:
+                birthday = datetime.strptime(birthday_str, "%d.%m.%Y").date()
+            except ValueError:
+                birthday = None
+        else:
+            birthday = None
+        if birthday:
             today = datetime.today().date()
-            this_year_birthday = user_db.birthday.replace(year=today.year)
+            this_year_birthday = birthday.replace(year=today.year)
             if this_year_birthday < today:
                 this_year_birthday = this_year_birthday.replace(year=today.year + 1)
             days_left = (this_year_birthday - today).days
             if days_left == 0:
-                await message.answer(f"{message.from_user.first_name}, сегодня ваш день рождения! 🎉 ({user_db.birthday.strftime('%d.%m.%Y')})")
+                await message.answer(
+                    f"{message.from_user.first_name}, сегодня ваш день рождения! 🎉 ({birthday.strftime('%d.%m.%Y')})"
+                )
             else:
-                await message.answer(f"{message.from_user.first_name}, до дня рождения осталось {days_left} дней ({user_db.birthday.strftime('%d.%m.%Y')})")
+                await message.answer(
+                    f"{message.from_user.first_name}, до дня рождения осталось {days_left} дней ({birthday.strftime('%d.%m.%Y')})"
+                )
         else:
             await message.answer(f"{message.from_user.first_name}, введите ваш день рождения в формате ДД.ММ.ГГГГ:")
             await state.set_state(UpdateDataStates.waiting_for_birthday)
