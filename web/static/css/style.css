@@ -347,3 +347,33 @@ button,
   .sparkline, .chart-placeholder { background: rgba(255,255,255,0.08); }
   .data-section { background-color: #374151; border-color: #4b5563; }
 }
+
+/* Timeline */
+.timeline {
+  position: relative;
+  border-left: 2px solid #e5e7eb;
+  padding-left: 1rem;
+  margin-left: 0.5rem;
+}
+
+.timeline-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  position: relative;
+}
+
+.timeline-row .time {
+  width: 60px;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.timeline-row .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-accent-purple);
+  margin: 0 1rem;
+}
+
