@@ -204,7 +204,7 @@ button, .button {
 /* Dashboard layout */
 .dashboard {
   display: grid;
-  grid-template-columns: 1fr 2fr;
+  grid-template-columns: auto 1fr;
   gap: var(--spacing);
 }
 
@@ -213,6 +213,8 @@ button, .button {
   color: #fff;
   padding: var(--spacing);
   border-radius: var(--radius);
+  max-width: 350px;
+  width: 100%;
 }
 
 .data-grid {
@@ -225,8 +227,20 @@ button, .button {
   background-color: #f3f4f6;
   padding: var(--spacing);
   border-radius: var(--radius);
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .data-section h3 {
   margin-top: 0;
+}
+
+@media (max-width: 600px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-card {
+    max-width: 100%;
+  }
 }
