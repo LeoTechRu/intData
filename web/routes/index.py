@@ -29,11 +29,14 @@ async def index(
             if current_user.telegram_accounts:
                 tg_user = current_user.telegram_accounts[0]
                 groups = await service.list_user_groups(tg_user.telegram_id)
+            role_name = tg_user.role if tg_user else current_user.role
             context = {
                 "user": tg_user,
+                "current_user": current_user,
                 "groups": groups,
-                "role_name": tg_user.role if tg_user else None,
-                "is_admin": UserRole[tg_user.role] >= UserRole.admin if tg_user else False,
+                "role_name": role_name,
+                "current_role_name": current_user.role,
+                "is_admin": UserRole[role_name] >= UserRole.admin,
                 "page_title": "Дашборд",
             }
             return templates.TemplateResponse(request, "start.html", context)
