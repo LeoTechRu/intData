@@ -24,6 +24,19 @@ templates.env.globals.update(
 )
 
 
+@router.get("/bot", include_in_schema=False)
+async def bot_landing(request: Request):
+    page_title = (
+        "@LeonidBot — Telegram бот проекта "
+        f"{templates.env.globals['APP_BRAND_NAME']}"
+    )
+    return templates.TemplateResponse(
+        request,
+        "bot_landing.html",
+        {"page_title": page_title},
+    )
+
+
 @router.get("/ban", include_in_schema=False)
 async def ban_page(request: Request):
     from fastapi.responses import HTMLResponse  # noqa: F401
