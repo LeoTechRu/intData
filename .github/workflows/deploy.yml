@@ -29,12 +29,12 @@ jobs:
             # обновление репозитория
             sudo -u deploy bash -lc '
               set -euo pipefail
-              cd /sd/tg/LeonidBot
+              cd /sd/leonidpro
               mkdir -p ~/.ssh && ssh-keyscan -H github.com >> ~/.ssh/known_hosts
               if git remote get-url origin | grep -q "^https://"; then
                 git remote set-url origin git@github.com:LeoTechRu/LeonidBot.git
               fi
-              git config --global --add safe.directory /sd/tg/LeonidBot || true
+              git config --global --add safe.directory /sd/leonidpro || true
               git stash push -u -m "ci-autostash $(date -Iseconds)" || true
               git fetch --prune origin
               git reset --hard origin/main
