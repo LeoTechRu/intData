@@ -14,6 +14,12 @@ router = APIRouter(prefix="/profile", tags=["profile"])
 
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
+templates.env.globals.update(
+    APP_BRAND_NAME="LeonidPro",
+    APP_BASE_URL="https://leonid.pro",
+    BOT_USERNAME="@LeonidBot",
+    BOT_LANDING_URL="https://bot.leonid.pro",
+)
 
 
 @router.get("")
