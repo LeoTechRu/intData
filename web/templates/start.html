@@ -19,14 +19,31 @@
         </div>
       </section>
 
+      {# — Таймлайн дня #}
+      {% set events = day_timeline or [] %}
+      <section class="card span-2">
+        <div class="card-title">Сегодня</div>
+        <div class="timeline">
+          {% for event in events %}
+          <div class="timeline-row">
+            <div class="time">{{ event.time }}</div>
+            <div class="dot"></div>
+            <div class="text">{{ event.text }}</div>
+          </div>
+          {% else %}
+          <div class="text-muted">Нет событий</div>
+          {% endfor %}
+        </div>
+      </section>
+
       {# — KPI ряд: примеры (могут прийти из контекста) #}
-      {% set delta = kpi_hours_delta or 0 %}
-      <section class="card card--accent span-2">
+      {% set delta = kpi_focus_week_delta or 0 %}
+      <section class="card">
         <div class="card-title">Фокус за неделю</div>
         <div class="kpi">
           <div>
-            <div class="label text-muted">Сфокусированные часы</div>
-            <div class="value">{{ kpi_hours or "0ч" }}</div>
+            <div class="label text-muted">Часы</div>
+            <div class="value">{{ kpi_focus_week or "0ч" }}</div>
           </div>
           {% if delta is defined %}
           <div class="delta {% if delta >= 0 %}up{% else %}down{% endif %}">
@@ -43,6 +60,22 @@
           <div>
             <div class="label text-muted">Выполнено целей</div>
             <div class="value">{{ kpi_goals or "0" }}</div>
+          </div>
+          {% if delta is defined %}
+          <div class="delta {% if delta >= 0 %}up{% else %}down{% endif %}">
+            {{ delta|round(2) }}%
+          </div>
+          {% endif %}
+        </div>
+      </section>
+
+      {% set delta = kpi_focused_hours_delta or 0 %}
+      <section class="card">
+        <div class="card-title">Сфокусированные часы</div>
+        <div class="kpi">
+          <div>
+            <div class="label text-muted">Всего</div>
+            <div class="value">{{ kpi_focused_hours or "0ч" }}</div>
           </div>
           {% if delta is defined %}
           <div class="delta {% if delta >= 0 %}up{% else %}down{% endif %}">
@@ -141,19 +174,63 @@
         </div>
       </section>
 
-      {# — Таймлайн дня #}
-      {% set events = day_timeline or [] %}
+      {# — Виджеты следующих этапов разработки #}
+      {% set items = upcoming_tasks or [] %}
       <section class="card">
-        <div class="card-title">Сегодня</div>
-        <div class="timeline">
-          {% for event in events %}
-          <div class="timeline-row">
-            <div class="time">{{ event.time }}</div>
-            <div class="dot"></div>
-            <div class="text">{{ event.text }}</div>
+        <div class="card-title">Предстоящие задачи</div>
+        <div class="list">
+          {% for item in items %}
+          <div class="list-item">
+            <div class="title">{{ item.title }}</div>
+            {% if item.subtitle %}<div class="subtitle text-muted">{{ item.subtitle }}</div>{% endif %}
+          </div>
+          {% else %}
+          <div class="text-muted">Нет задач</div>
+          {% endfor %}
+        </div>
+      </section>
+
+      {% set items = upcoming_reminders or [] %}
+      <section class="card">
+        <div class="card-title">Напоминания</div>
+        <div class="list">
+          {% for item in items %}
+          <div class="list-item">
+            <div class="title">{{ item.title }}</div>
+            {% if item.subtitle %}<div class="subtitle text-muted">{{ item.subtitle }}</div>{% endif %}
+          </div>
+          {% else %}
+          <div class="text-muted">Нет напоминаний</div>
+          {% endfor %}
+        </div>
+      </section>
+
+      {% set items = upcoming_events or [] %}
+      <section class="card">
+        <div class="card-title">Ближайшие события</div>
+        <div class="list">
+          {% for item in items %}
+          <div class="list-item">
+            <div class="title">{{ item.title }}</div>
+            {% if item.subtitle %}<div class="subtitle text-muted">{{ item.subtitle }}</div>{% endif %}
           </div>
           {% else %}
           <div class="text-muted">Нет событий</div>
+          {% endfor %}
+        </div>
+      </section>
+
+      {% set items = habit_list or [] %}
+      <section class="card">
+        <div class="card-title">Привычки</div>
+        <div class="list">
+          {% for item in items %}
+          <div class="list-item">
+            <div class="title">{{ item.title }}</div>
+            {% if item.subtitle %}<div class="subtitle text-muted">{{ item.subtitle }}</div>{% endif %}
+          </div>
+          {% else %}
+          <div class="text-muted">Нет данных</div>
           {% endfor %}
         </div>
       </section>
