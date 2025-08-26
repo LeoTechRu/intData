@@ -2,64 +2,162 @@
 {% block title %}Дашборд{% endblock %}
 
 {% block content %}
-  <div class="dashboard">
+  <div class="has-dashboard">
+    <div class="dashboard">
 
-    {# — Профиль #}
-    {% set profile_body %}
-      <div class="grid grid-2 gap-md">
-        <div><div class="text-muted">Full name</div><div>{{ profile_user.full_name or '—' }}</div></div>
-        <div><div class="text-muted">Username</div><div>{{ profile_user.username }}</div></div>
-        <div><div class="text-muted">Email</div><div>{{ profile_user.email or 'не указано' }}</div></div>
-        <div><div class="text-muted">Телефон</div><div>{{ profile_user.phone or 'не указан' }}</div></div>
-        <div><div class="text-muted">День рождения</div><div>{{ profile_user.birthday.strftime('%d.%m.%Y') if profile_user.birthday else 'не указано' }}</div></div>
-        <div><div class="text-muted">Язык</div><div>{{ profile_user.language or 'не указан' }}</div></div>
-        <div><div class="text-muted">Роль</div><div class="badge">{{ profile_user.role }}</div></div>
-      </div>
-    {% endset %}
-    {% with title="Профиль", body=profile_body, classes="card--muted", span=2 %}
-      {% include "widgets/_card.html" %}
-    {% endwith %}
+      {# — Профиль #}
+      <section class="card card--muted span-2">
+        <div class="card-title">Профиль</div>
+        <div class="grid grid-2 gap-md">
+          <div><div class="text-muted">Full name</div><div>{{ profile_user.full_name or '—' }}</div></div>
+          <div><div class="text-muted">Username</div><div>{{ profile_user.username }}</div></div>
+          <div><div class="text-muted">Email</div><div>{{ profile_user.email or 'не указано' }}</div></div>
+          <div><div class="text-muted">Телефон</div><div>{{ profile_user.phone or 'не указан' }}</div></div>
+          <div><div class="text-muted">День рождения</div><div>{{ profile_user.birthday.strftime('%d.%m.%Y') if profile_user.birthday else 'не указано' }}</div></div>
+          <div><div class="text-muted">Язык</div><div>{{ profile_user.language or 'не указан' }}</div></div>
+          <div><div class="text-muted">Роль</div><div class="badge">{{ profile_user.role }}</div></div>
+        </div>
+      </section>
 
-    {# — KPI ряд: примеры (могут прийти из контекста) #}
-    {% with title="Фокус за неделю", label="Сфокусированные часы", value=kpi_hours or "0ч", delta=kpi_hours_delta or 0, classes="card--accent" %}
-      {% include "widgets/_kpi.html" %}
-    {% endwith %}
-    {% with title="Достижения", label="Выполнено целей", value=kpi_goals or "0", delta=kpi_goals_delta or 0 %}
-      {% include "widgets/_kpi.html" %}
-    {% endwith %}
-    {% with title="Здоровье", label="Health score", value=kpi_health or "—", delta=kpi_health_delta or 0 %}
-      {% include "widgets/_kpi.html" %}
-    {% endwith %}
+      {# — KPI ряд: примеры (могут прийти из контекста) #}
+      {% set delta = kpi_hours_delta or 0 %}
+      <section class="card card--accent">
+        <div class="card-title">Фокус за неделю</div>
+        <div class="kpi">
+          <div>
+            <div class="label text-muted">Сфокусированные часы</div>
+            <div class="value">{{ kpi_hours or "0ч" }}</div>
+          </div>
+          {% if delta is defined %}
+          <div class="delta {% if delta >= 0 %}up{% else %}down{% endif %}">
+            {{ delta|round(2) }}%
+          </div>
+          {% endif %}
+        </div>
+      </section>
 
-    {# — Графики/плейсхолдеры #}
-    {% with title="Активность по дням", span=2 %}
-      {% include "widgets/_chart_placeholder.html" %}
-    {% endwith %}
-    {% with title="Сон / энергия" %}
-      {% include "widgets/_chart_placeholder.html" %}
-    {% endwith %}
+      {% set delta = kpi_goals_delta or 0 %}
+      <section class="card">
+        <div class="card-title">Достижения</div>
+        <div class="kpi">
+          <div>
+            <div class="label text-muted">Выполнено целей</div>
+            <div class="value">{{ kpi_goals or "0" }}</div>
+          </div>
+          {% if delta is defined %}
+          <div class="delta {% if delta >= 0 %}up{% else %}down{% endif %}">
+            {{ delta|round(2) }}%
+          </div>
+          {% endif %}
+        </div>
+      </section>
 
-    {# — Группы и проекты #}
-    {% set groups_owned = owned_groups|map(attribute='title')|list %}
-    {% set groups_items = groups_owned|map('string')|list %}
-    {% with title="Руководите группами", items=owned_groups or [] %}
-      {% include "widgets/_list.html" %}
-    {% endwith %}
+      {% set delta = kpi_health_delta or 0 %}
+      <section class="card">
+        <div class="card-title">Здоровье</div>
+        <div class="kpi">
+          <div>
+            <div class="label text-muted">Health score</div>
+            <div class="value">{{ kpi_health or "—" }}</div>
+          </div>
+          {% if delta is defined %}
+          <div class="delta {% if delta >= 0 %}up{% else %}down{% endif %}">
+            {{ delta|round(2) }}%
+          </div>
+          {% endif %}
+        </div>
+      </section>
 
-    {% with title="Состоите в группах", items=member_groups or [] %}
-      {% include "widgets/_list.html" %}
-    {% endwith %}
-    {% with title="Ваши проекты", items=owned_projects or [] %}
-      {% include "widgets/_list.html" %}
-    {% endwith %}
-    {% with title="Участвуете в проектах", items=member_projects or [] %}
-      {% include "widgets/_list.html" %}
-    {% endwith %}
+      {# — Графики/плейсхолдеры #}
+      <section class="card span-2">
+        <div class="card-title">Активность по дням</div>
+        <div class="chart-placeholder"></div>
+      </section>
+      <section class="card">
+        <div class="card-title">Сон / энергия</div>
+        <div class="chart-placeholder"></div>
+      </section>
 
-    {# — Таймлайн дня #}
-    {% with title="Сегодня", events=day_timeline or [] %}
-      {% include "widgets/_timeline.html" %}
-    {% endwith %}
+      {# — Группы и проекты #}
+      {% set groups_owned = owned_groups|map(attribute='title')|list %}
+      {% set groups_items = groups_owned|map('string')|list %}
+      {% set items = owned_groups or [] %}
+      <section class="card">
+        <div class="card-title">Руководите группами</div>
+        <div class="list">
+          {% for item in items %}
+          <div class="list-item">
+            <div class="title">{{ item.title }}</div>
+            {% if item.subtitle %}<div class="subtitle text-muted">{{ item.subtitle }}</div>{% endif %}
+          </div>
+          {% else %}
+          <div class="text-muted">Пока пусто</div>
+          {% endfor %}
+        </div>
+      </section>
 
+      {% set items = member_groups or [] %}
+      <section class="card">
+        <div class="card-title">Состоите в группах</div>
+        <div class="list">
+          {% for item in items %}
+          <div class="list-item">
+            <div class="title">{{ item.title }}</div>
+            {% if item.subtitle %}<div class="subtitle text-muted">{{ item.subtitle }}</div>{% endif %}
+          </div>
+          {% else %}
+          <div class="text-muted">Пока пусто</div>
+          {% endfor %}
+        </div>
+      </section>
+
+      {% set items = owned_projects or [] %}
+      <section class="card">
+        <div class="card-title">Ваши проекты</div>
+        <div class="list">
+          {% for item in items %}
+          <div class="list-item">
+            <div class="title">{{ item.title }}</div>
+            {% if item.subtitle %}<div class="subtitle text-muted">{{ item.subtitle }}</div>{% endif %}
+          </div>
+          {% else %}
+          <div class="text-muted">Пока пусто</div>
+          {% endfor %}
+        </div>
+      </section>
+
+      {% set items = member_projects or [] %}
+      <section class="card">
+        <div class="card-title">Участвуете в проектах</div>
+        <div class="list">
+          {% for item in items %}
+          <div class="list-item">
+            <div class="title">{{ item.title }}</div>
+            {% if item.subtitle %}<div class="subtitle text-muted">{{ item.subtitle }}</div>{% endif %}
+          </div>
+          {% else %}
+          <div class="text-muted">Пока пусто</div>
+          {% endfor %}
+        </div>
+      </section>
+
+      {# — Таймлайн дня #}
+      {% set events = day_timeline or [] %}
+      <section class="card">
+        <div class="card-title">Сегодня</div>
+        <div class="timeline">
+          {% for event in events %}
+          <div class="timeline-row">
+            <div class="time">{{ event.time }}</div>
+            <div class="dot"></div>
+            <div class="text">{{ event.text }}</div>
+          </div>
+          {% else %}
+          <div class="text-muted">Нет событий</div>
+          {% endfor %}
+        </div>
+      </section>
+
+    </div>
   </div>
 {% endblock %}
