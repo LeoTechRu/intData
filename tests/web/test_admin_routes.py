@@ -5,7 +5,8 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from base import Base
-from core.models import WebUser, UserRole
+from core.models import WebUser, UserRole, TgUser, WebTgLink
+from sqlalchemy import select
 import core.db as db
 
 try:
@@ -52,3 +53,62 @@ async def test_admin_access(client: AsyncClient):
     assert profile.status_code == 200
     admin = await client.get("/admin", headers={"Authorization": f"Bearer {uid}"})
     assert admin.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_role_and_link_operations(client: AsyncClient):
+    admin_id = await _create_user(UserRole.admin, username="boss")
+    user_id = await _create_user(UserRole.single, username="web")
+    async with db.async_session() as session:  # type: ignore
+        async with session.begin():
+            tg = TgUser(telegram_id=123, first_name="tg")
+            session.add(tg)
+        tg_id = tg.id
+        telegram_id = tg.telegram_id
+
+    headers = {"Authorization": f"Bearer {admin_id}"}
+
+    resp = await client.post(
+        f"/admin/web/link?web_user_id={user_id}&tg_user_id={tg_id}",
+        headers=headers,
+    )
+    assert resp.status_code == 200
+
+    resp = await client.post(
+        f"/admin/role/{telegram_id}?role=moderator",
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    async with db.async_session() as session:  # type: ignore
+        tuser = await session.get(TgUser, tg_id)
+        assert tuser.role == UserRole.moderator.name
+
+    resp = await client.post(
+        f"/admin/web/role/{user_id}?role=moderator",
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    async with db.async_session() as session:  # type: ignore
+        wuser = await session.get(WebUser, user_id)
+        assert wuser.role == UserRole.moderator.name
+        res = await session.execute(
+            select(WebTgLink).where(
+                WebTgLink.web_user_id == user_id,
+                WebTgLink.tg_user_id == tg_id,
+            )
+        )
+        assert res.scalar_one_or_none() is not None
+
+    resp = await client.post(
+        f"/admin/web/unlink?web_user_id={user_id}&tg_user_id={tg_id}",
+        headers=headers,
+    )
+    assert resp.status_code == 200
+    async with db.async_session() as session:  # type: ignore
+        res = await session.execute(
+            select(WebTgLink).where(
+                WebTgLink.web_user_id == user_id,
+                WebTgLink.tg_user_id == tg_id,
+            )
+        )
+        assert res.scalar_one_or_none() is None
