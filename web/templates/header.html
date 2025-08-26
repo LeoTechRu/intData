@@ -1,5 +1,5 @@
-{% set header_user = (current_user if current_user is defined else user) if (current_user is defined or user is defined) else None %}
-{% set header_role = (current_role_name if current_role_name is defined else role_name) if (current_role_name is defined or role_name is defined) else '' %}
+{% set header_user = current_user if (current_user is defined and current_user) else (user if user is defined else None) %}
+{% set header_role = current_role_name if current_role_name is defined else (role_name if role_name is defined else '') %}
 <header class="top-bar">
     <div class="top-left">
         <a href="/" class="logo">🦁</a>
@@ -17,7 +17,11 @@
                 <div id="profile-button" class="profile-icon role-{{ header_role|lower }}">👤</div>
                 <div id="profile-dropdown" class="dropdown-menu hidden">
                     <div class="role">Роль: {{ header_role }}</div>
+                    {% if header_user.telegram_id is defined %}
                     <a href="/profile/{{ header_user.telegram_id }}">Профиль</a>
+                    {% else %}
+                    <a href="/profile/{{ header_user.username }}">Профиль</a>
+                    {% endif %}
                     <a href="/settings">Настройки</a>
                     <a href="/auth/logout" data-method="post">Выйти</a>
                 </div>
