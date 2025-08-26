@@ -7,7 +7,19 @@ from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from .routes import admin, auth, index, profile, settings, habits
+from .routes import (
+    admin,
+    auth,
+    index,
+    profile,
+    settings,
+    habits,
+    tasks,
+    reminders,
+    notes,
+    calendar,
+    time_entries,
+)
 from core.db import init_models
 from core.services.web_user_service import WebUserService
 from core.services.telegram_user_service import TelegramUserService
@@ -79,5 +91,10 @@ app.include_router(index.router)
 app.include_router(profile.router)
 app.include_router(settings.router)
 app.include_router(habits.router)
+app.include_router(tasks.router)
+app.include_router(reminders.router)
+app.include_router(notes.router)
+app.include_router(calendar.router)
+app.include_router(time_entries.router)
 app.include_router(auth.router, prefix="/auth")
 app.include_router(admin.router, prefix="/admin")
