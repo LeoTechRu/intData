@@ -16,8 +16,10 @@ export function initProfileMenu() {
     ev.stopPropagation();
     dropdown.classList.toggle('hidden');
   });
-  document.addEventListener('click', () => {
-    dropdown.classList.add('hidden');
+  document.addEventListener('click', (ev) => {
+    if (!dropdown.contains(ev.target as Node) && ev.target !== button) {
+      dropdown.classList.add('hidden');
+    }
   });
   dropdown.addEventListener('click', async (ev) => {
     const target = ev.target as HTMLElement | null;
@@ -33,6 +35,22 @@ export function initProfileMenu() {
       initProfileEditForm();
     }
     dropdown.classList.add('hidden');
+  });
+}
+
+export function initDashboardCompact() {
+  const button = document.getElementById('compact-toggle');
+  if (!button) return;
+  const body = document.body;
+  const apply = (enabled: boolean) => {
+    body.classList.toggle('compact', enabled);
+  };
+  let compact = localStorage.getItem('dashboardCompact') === 'true';
+  apply(compact);
+  button.addEventListener('click', () => {
+    compact = !compact;
+    localStorage.setItem('dashboardCompact', String(compact));
+    apply(compact);
   });
 }
 
@@ -91,4 +109,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initProfileMenu();
   initAdminMenu();
   initProfileEditForm();
+  initDashboardCompact();
 });
