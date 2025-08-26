@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import APIRouter, Request, Depends
+from fastapi import APIRouter, Request, Depends, status
 from fastapi.templating import Jinja2Templates
 
 from core.models import UserRole, WebUser, TgUser
@@ -18,12 +18,24 @@ TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 
 
+@router.get("/ban", include_in_schema=False)
+async def ban_page(request: Request):
+    from fastapi.responses import HTMLResponse  # noqa: F401
+    # отрендерим бан-страницу как шаблон без шапки
+    return templates.TemplateResponse(request, "ban.html", {})
+
+
 @router.get("/", include_in_schema=False)
 async def index(
     request: Request,
     current_user: WebUser | None = Depends(get_current_web_user),
 ):
     """Render dashboard for authorised users or login page for guests."""
+    if current_user and current_user.role == "ban":
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(
+            "/ban", status_code=status.HTTP_307_TEMPORARY_REDIRECT
+        )
     if current_user:
         async with TelegramUserService() as service, \
                 ProjectService() as project_service:
