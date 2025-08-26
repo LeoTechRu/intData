@@ -2,10 +2,6 @@ import asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
-import asyncio
-from types import SimpleNamespace
-from unittest.mock import AsyncMock
-
 import decorators
 from core.models import UserRole
 
@@ -40,6 +36,8 @@ def test_role_required_allows(monkeypatch):
             return self
         async def __aexit__(self, exc_type, exc, tb):
             pass
+        async def get_log_settings(self):
+            return SimpleNamespace(chat_id=42)
         async def get_or_create_user(self, *args, **kwargs):
             return SimpleNamespace(role=UserRole.admin.name), False
 
@@ -69,6 +67,8 @@ def test_role_required_denies(monkeypatch):
             return self
         async def __aexit__(self, exc_type, exc, tb):
             pass
+        async def get_log_settings(self):
+            return SimpleNamespace(chat_id=42)
         async def get_or_create_user(self, *args, **kwargs):
             return SimpleNamespace(role=UserRole.single.name), False
 
@@ -81,6 +81,38 @@ def test_role_required_denies(monkeypatch):
     asyncio.run(run())
     assert not called
     message.answer.assert_called_once()
+
+
+def test_role_required_allows_in_log_chat(monkeypatch):
+    called = False
+
+    async def handler(message):
+        nonlocal called
+        called = True
+        return "ok"
+
+    message = make_message()
+    message.chat.id = 42  # log chat id
+
+    class FakeService:
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, exc_type, exc, tb):
+            pass
+        async def get_log_settings(self):
+            return SimpleNamespace(chat_id=42)
+        async def get_or_create_user(self, *args, **kwargs):
+            return SimpleNamespace(role=UserRole.single.name), False
+
+    monkeypatch.setattr(decorators, 'TelegramUserService', lambda: FakeService())
+
+    async def run():
+        wrapped = decorators.role_required(UserRole.admin)(handler)
+        await wrapped(message)
+
+    asyncio.run(run())
+    assert called
+    message.answer.assert_not_called()
 
 
 def test_group_required_adds_user(monkeypatch):
