@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="utf-8">
-    <title>{% block title %}LeonidBot{% endblock %}</title>
+    <title>{% block title %}{{ APP_BRAND_NAME }}{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
     <script type="module" src="{{ url_for('static', path='js/main.js') }}"></script>
 </head>
