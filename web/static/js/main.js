@@ -84,3 +84,20 @@ document.addEventListener('DOMContentLoaded', () => {
     initProfileEditForm();
     initDashboardCompact();
 });
+(function(){
+  function applyNoGridIfNeeded(){
+    try {
+      if (!('CSS' in window && CSS.supports && CSS.supports('display', 'grid'))) {
+        document.body.classList.add('no-grid');
+      }
+    } catch(e) {
+      // на всякий случай при ошибке фичи — тоже fallback
+      document.body.classList.add('no-grid');
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyNoGridIfNeeded);
+  } else {
+    applyNoGridIfNeeded();
+  }
+})();
