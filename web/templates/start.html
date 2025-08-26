@@ -1,68 +1,66 @@
 {% extends "base.html" %}
 {% block title %}Дашборд{% endblock %}
 {% block content %}
-<div class="ui-layout">
-    <div class="dashboard">
-        <aside class="profile-card">
-            <h2>Профиль</h2>
-            <p><strong>Full name:</strong> {{ profile_user.full_name or '' }}</p>
-            <p><strong>Username:</strong> {{ profile_user.username }}</p>
-            <p><strong>Email:</strong> {{ profile_user.email or 'не указано' }}</p>
-            <p><strong>Телефон:</strong> {{ profile_user.phone or 'не указан' }}</p>
-            <p><strong>День рождения:</strong> {{ profile_user.birthday.strftime('%d.%m.%Y') if profile_user.birthday else 'не указано' }}</p>
-            <p><strong>Язык:</strong> {{ profile_user.language or 'не указан' }}</p>
-            <p><strong>Роль:</strong> {{ profile_user.role }}</p>
-            <a href="/profile/{{ profile_user.username }}" class="button">Подробнее</a>
-        </aside>
-        <section class="data-grid">
-            <div class="data-section">
-                <h3>Руководите группами</h3>
-                {% if owned_groups %}
-                <ul class="ui-table">
-                {% for g in owned_groups %}
-                    <li>{{ g.title }}</li>
-                {% endfor %}
-                </ul>
-                {% else %}
-                <p>Нет</p>
-                {% endif %}
-            </div>
-            <div class="data-section">
-                <h3>Состоите в группах</h3>
-                {% if member_groups %}
-                <ul class="ui-table">
-                {% for g in member_groups %}
-                    <li>{{ g.title }}</li>
-                {% endfor %}
-                </ul>
-                {% else %}
-                <p>Нет</p>
-                {% endif %}
-            </div>
-            <div class="data-section">
-                <h3>Ваши проекты</h3>
-                {% if owned_projects %}
-                <ul class="ui-table">
-                {% for p in owned_projects %}
-                    <li>{{ p.name }}</li>
-                {% endfor %}
-                </ul>
-                {% else %}
-                <p>Проекты отсутствуют</p>
-                {% endif %}
-            </div>
-            <div class="data-section">
-                <h3>Участвуете в проектах</h3>
-                {% if member_projects %}
-                <ul class="ui-table">
-                {% for p in member_projects %}
-                    <li>{{ p.name }}</li>
-                {% endfor %}
-                </ul>
-                {% else %}
-                <p>Нет</p>
-                {% endif %}
-            </div>
+<div class="dashboard">
+    <div class="profile-card">
+        <h2>Профиль</h2>
+        <p><strong>Full name:</strong> {{ profile_user.full_name or '' }}</p>
+        <p><strong>Username:</strong> {{ profile_user.username }}</p>
+        <p><strong>Email:</strong> {{ profile_user.email or 'не указано' }}</p>
+        <p><strong>Телефон:</strong> {{ profile_user.phone or 'не указан' }}</p>
+        <p><strong>День рождения:</strong> {{ profile_user.birthday.strftime('%d.%m.%Y') if profile_user.birthday else 'не указано' }}</p>
+        <p><strong>Язык:</strong> {{ profile_user.language or 'не указан' }}</p>
+        <p><strong>Роль:</strong> {{ profile_user.role }}</p>
+        <a href="/profile/{{ profile_user.username }}" class="button">Подробнее</a>
+    </div>
+    <div class="data-grid">
+        <section class="data-section">
+            <h3>Руководите группами</h3>
+            {% if owned_groups %}
+            <ul class="ui-table">
+            {% for g in owned_groups %}
+                <li>{{ g.title }}</li>
+            {% endfor %}
+            </ul>
+            {% else %}
+            <p>Нет</p>
+            {% endif %}
+        </section>
+        <section class="data-section">
+            <h3>Состоите в группах</h3>
+            {% if member_groups %}
+            <ul class="ui-table">
+            {% for g in member_groups %}
+                <li>{{ g.title }}</li>
+            {% endfor %}
+            </ul>
+            {% else %}
+            <p>Нет</p>
+            {% endif %}
+        </section>
+        <section class="data-section">
+            <h3>Ваши проекты</h3>
+            {% if owned_projects %}
+            <ul class="ui-table">
+            {% for p in owned_projects %}
+                <li>{{ p.name }}</li>
+            {% endfor %}
+            </ul>
+            {% else %}
+            <p>Проекты отсутствуют</p>
+            {% endif %}
+        </section>
+        <section class="data-section">
+            <h3>Участвуете в проектах</h3>
+            {% if member_projects %}
+            <ul class="ui-table">
+            {% for p in member_projects %}
+                <li>{{ p.name }}</li>
+            {% endfor %}
+            </ul>
+            {% else %}
+            <p>Нет</p>
+            {% endif %}
         </section>
     </div>
 </div>
