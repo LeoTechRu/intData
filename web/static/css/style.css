@@ -416,3 +416,50 @@ body.compact .admin-panel {
   box-shadow: none;
 }
 
+/* === ui2: dashboard with safe fallback === */
+
+/* Базовый fallback: если Grid недоступен или отключён, всё выглядит столбцом */
+.dashboard { display: block; }
+.card { display: block; width: 100%; box-sizing: border-box; }
+
+/* no-grid принудительно выключает grid даже при поддержке браузером */
+.no-grid .dashboard { display: block !important; }
+.no-grid .card { display: block !important; }
+
+/* Для страниц с дашбордом убираем возможные ограничители ширины контейнера */
+.has-dashboard .ui-layout { max-width: 100%; }
+
+/* Grid-вариант только при поддержке и если НЕТ класса .no-grid */
+@supports (display: grid) {
+  body:not(.no-grid) .dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    grid-auto-flow: dense;
+    align-items: stretch;
+  }
+
+  /* Карточка в grid-режиме */
+  body:not(.no-grid) .card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,.08);
+    padding: 16px 18px;
+  }
+
+  body:not(.no-grid) .card .card-title {
+    font-weight: 600;
+    margin: 0 0 8px 0;
+  }
+
+  /* Спаны только в grid-режиме; на узких — автоматом схлопываются */
+  body:not(.no-grid) .span-2 { grid-column: span 2; }
+  body:not(.no-grid) .span-3 { grid-column: span 3; }
+
+  @media (max-width: 640px) {
+    body:not(.no-grid) .span-2,
+    body:not(.no-grid) .span-3 { grid-column: span 1; }
+  }
+}
+/* === /ui2 === */
+
