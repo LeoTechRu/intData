@@ -67,6 +67,11 @@ async def login(request: Request, username: str = Form(...), password: str = For
             "error": "Invalid credentials",
         }
         return templates.TemplateResponse(request, "auth/login.html", context, status_code=400)
+    if user.role == "ban":
+        response = RedirectResponse("/ban", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+        response.delete_cookie("web_user_id", path="/")
+        response.delete_cookie("telegram_id", path="/")
+        return response
     response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(
         "web_user_id",
@@ -128,6 +133,11 @@ async def telegram_callback(request: Request):
     async with WebUserService() as wsvc:
         web_user = await wsvc.get_user_by_identifier(telegram_id)
     if web_user:
+        if web_user.role == "ban":
+            response = RedirectResponse("/ban", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+            response.delete_cookie("web_user_id", path="/")
+            response.delete_cookie("telegram_id", path="/")
+            return response
         response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
         response.set_cookie(
             "web_user_id",
