@@ -12,7 +12,8 @@ router = APIRouter()
 
 @router.get("")
 async def admin_dashboard(
-    request: Request, current_user: WebUser = Depends(role_required(UserRole.admin))
+    request: Request,
+    current_user: WebUser = Depends(role_required(UserRole.admin)),
 ):
     """Render consolidated admin landing page with users and groups."""
     async with TelegramUserService() as tsvc, WebUserService() as wsvc:
