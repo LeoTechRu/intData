@@ -47,19 +47,32 @@ class WebUserService:
         return await self.session.get(WebUser, user_id)
 
     async def get_by_username(self, username: str) -> Optional[WebUser]:
-        result = await self.session.execute(select(WebUser).where(WebUser.username == username))
+        result = await self.session.execute(
+            select(WebUser).where(WebUser.username == username)
+        )
         return result.scalar_one_or_none()
 
-    async def register(self, *, username: str, password: str, email: Optional[str] = None, phone: Optional[str] = None) -> WebUser:
+    async def register(
+        self,
+        *,
+        username: str,
+        password: str,
+        email: Optional[str] = None,
+        phone: Optional[str] = None,
+    ) -> WebUser:
         if await self.get_by_username(username):
             raise ValueError("username taken")
         hashed = bcrypt.generate_password_hash(password)
-        user = WebUser(username=username, password_hash=hashed, email=email, phone=phone)
+        user = WebUser(
+            username=username, password_hash=hashed, email=email, phone=phone
+        )
         self.session.add(user)
         await self.session.flush()
         return user
 
-    async def authenticate(self, username: str, password: str) -> Optional[WebUser]:
+    async def authenticate(
+        self, username: str, password: str
+    ) -> Optional[WebUser]:
         user = await self.get_by_username(username)
         if not user or not user.password_hash:
             return None
@@ -99,8 +112,11 @@ class WebUserService:
         result = await self.session.execute(
             select(WebTgLink).where(WebTgLink.tg_user_id == tg_user_id)
         )
-        if result.scalar_one_or_none():
-            raise ValueError("telegram user already linked")
+        existing = result.scalar_one_or_none()
+        if existing:
+            if existing.web_user_id == web_user_id:
+                return web_user
+            raise ValueError("telegram user already linked to another account")
         link = WebTgLink(
             web_user_id=web_user_id,
             tg_user_id=tg_user_id,
@@ -110,7 +126,9 @@ class WebUserService:
         await self.session.flush()
         return web_user
 
-    async def unlink_telegram(self, web_user_id: int, tg_user_id: int) -> WebUser:
+    async def unlink_telegram(
+        self, web_user_id: int, tg_user_id: int
+    ) -> WebUser:
         web_user = await self.get_by_id(web_user_id)
         if web_user is None:
             raise ValueError("user not found")
@@ -134,7 +152,9 @@ class WebUserService:
         await self.session.flush()
         return True
 
-    async def update_profile(self, web_user_id: int, data: dict[str, Any]) -> Optional[WebUser]:
+    async def update_profile(
+        self, web_user_id: int, data: dict[str, Any]
+    ) -> Optional[WebUser]:
         user = await self.get_by_id(web_user_id)
         if not user:
             return None
@@ -143,7 +163,13 @@ class WebUserService:
             if isinstance(birthday, str):
                 birthday = _parse_birthday(birthday)
             user.birthday = birthday
-        for field in ["full_name", "email", "phone", "language", "privacy_settings"]:
+        for field in [
+            "full_name",
+            "email",
+            "phone",
+            "language",
+            "privacy_settings",
+        ]:
             if field in data and data[field] is not None:
                 setattr(user, field, data[field])
         await self.session.flush()
@@ -155,7 +181,9 @@ class WebUserService:
         )
         return result.scalars().all()
 
-    async def get_user_by_identifier(self, identifier: Union[int, str]) -> Optional[WebUser]:
+    async def get_user_by_identifier(
+        self, identifier: Union[int, str]
+    ) -> Optional[WebUser]:
         if isinstance(identifier, int) or (
             isinstance(identifier, str) and identifier.isdigit()
         ):
