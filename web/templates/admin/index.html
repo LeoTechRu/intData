@@ -13,7 +13,6 @@
                         <th>username</th>
                         <th>telegram accounts</th>
                         <th>role</th>
-                        <th>link telegram</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -23,9 +22,16 @@
                         <td>{{ user.username }}</td>
                         <td>
                             {% for tg in user.telegram_accounts %}
-                                {{ tg.telegram_id }}
+                                {{ tg.username or tg.telegram_id }}
                                 <button class="unlink-btn" data-web="{{ user.id }}" data-tg="{{ tg.id }}">x</button><br/>
                             {% endfor %}
+                            <select id="link-select-{{ user.id }}">
+                                <option value="">--</option>
+                                {% for tg in users_tg %}
+                                    <option value="{{ tg.id }}">{{ tg.username or tg.telegram_id }}</option>
+                                {% endfor %}
+                            </select>
+                            <button class="link-btn" data-web="{{ user.id }}">link</button>
                         </td>
                         <td>
                             <select class="web-role" data-user-id="{{ user.id }}">
@@ -33,15 +39,6 @@
                                     <option value="{{ r }}" {% if user.role == r %}selected{% endif %}>{{ r }}</option>
                                 {% endfor %}
                             </select>
-                        </td>
-                        <td>
-                            <select id="link-select-{{ user.id }}">
-                                <option value="">--</option>
-                                {% for tg in users_tg %}
-                                    <option value="{{ tg.id }}">{{ tg.telegram_id }}</option>
-                                {% endfor %}
-                            </select>
-                            <button class="link-btn" data-web="{{ user.id }}">link</button>
                         </td>
                     </tr>
                 {% endfor %}

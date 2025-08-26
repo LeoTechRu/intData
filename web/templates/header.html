@@ -2,12 +2,13 @@
 {% set header_role = current_role_name if current_role_name is defined else (role_name if role_name is defined else '') %}
 <div class="top-left">
     <a href="/" class="logo">🦁</a>
-    <a href="/" class="project-name">LeonidPro</a>
+    <a href="{{ APP_BASE_URL }}" class="project-name">{{ APP_BRAND_NAME }}</a>
 </div>
 <div class="top-center">
     <h2 class="page-title">{{ page_title }}</h2>
 </div>
 <div class="top-right">
+    <div class="bot-menu"><a href="{{ BOT_LANDING_URL }}" target="_blank">Bot</a></div>
     {% if header_user %}
         <div id="compact-toggle" class="profile-icon">🗜</div>
         {% if is_admin %}
