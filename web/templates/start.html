@@ -8,14 +8,14 @@
       {# — Профиль #}
       <section class="card card--muted span-2">
         <div class="card-title">Профиль</div>
-        <div class="grid grid-2 gap-md">
-          <div><div class="text-muted">Full name</div><div>{{ profile_user.full_name or '—' }}</div></div>
-          <div><div class="text-muted">Username</div><div>{{ profile_user.username }}</div></div>
-          <div><div class="text-muted">Email</div><div>{{ profile_user.email or 'не указано' }}</div></div>
-          <div><div class="text-muted">Телефон</div><div>{{ profile_user.phone or 'не указан' }}</div></div>
-          <div><div class="text-muted">День рождения</div><div>{{ profile_user.birthday.strftime('%d.%m.%Y') if profile_user.birthday else 'не указано' }}</div></div>
-          <div><div class="text-muted">Язык</div><div>{{ profile_user.language or 'не указан' }}</div></div>
-          <div><div class="text-muted">Роль</div><div class="badge">{{ profile_user.role }}</div></div>
+        <div style="display:grid;grid-template-columns:1fr 2fr;gap:6px 12px">
+          <div class="ui2-muted">Полное имя</div><div>{{ profile_user.full_name or '—' }}</div>
+          <div class="ui2-muted">Username</div><div>{{ profile_user.username }}</div>
+          <div class="ui2-muted">Email</div><div>{{ profile_user.email or 'не указано' }}</div>
+          <div class="ui2-muted">Телефон</div><div>{{ profile_user.phone or 'не указан' }}</div>
+          <div class="ui2-muted">День рождения</div><div>{{ profile_user.birthday.strftime('%d.%m.%Y') if profile_user.birthday else 'не указано' }}</div>
+          <div class="ui2-muted">Язык</div><div>{{ profile_user.language or 'не указан' }}</div>
+          <div class="ui2-muted">Роль</div><div>{{ profile_user.role }}</div>
         </div>
       </section>
 
