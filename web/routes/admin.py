@@ -24,6 +24,7 @@ async def admin_dashboard(
         "users_tg": users_tg,
         "users_web": users_web,
         "groups": groups_with_members,
+        "roles": [r.name for r in UserRole],
         "user": current_user,
         "role_name": current_user.role,
         "is_admin": True,
@@ -35,14 +36,43 @@ async def admin_dashboard(
 @router.post("/role/{telegram_id}")
 async def change_user_role(
     telegram_id: int,
-    role: UserRole,
+    role: str,
     current_user: WebUser = Depends(role_required(UserRole.admin)),
 ):
-    """Change the role of a user.
-
-    Using a simple query/body parameter avoids the ``python-multipart``
-    dependency which keeps tests lightweight.
-    """
+    """Change the role of a telegram user."""
     async with TelegramUserService() as service:
-        await service.update_user_role(telegram_id, role)
+        await service.update_user_role(telegram_id, UserRole[role])
+    return {"status": "ok"}
+
+
+@router.post("/web/role/{user_id}")
+async def change_web_user_role(
+    user_id: int,
+    role: str,
+    current_user: WebUser = Depends(role_required(UserRole.admin)),
+):
+    async with WebUserService() as service:
+        await service.update_user_role(user_id, UserRole[role])
+    return {"status": "ok"}
+
+
+@router.post("/web/link")
+async def link_web_user(
+    web_user_id: int,
+    tg_user_id: int,
+    current_user: WebUser = Depends(role_required(UserRole.admin)),
+):
+    async with WebUserService() as service:
+        await service.link_telegram(web_user_id, tg_user_id)
+    return {"status": "ok"}
+
+
+@router.post("/web/unlink")
+async def unlink_web_user(
+    web_user_id: int,
+    tg_user_id: int,
+    current_user: WebUser = Depends(role_required(UserRole.admin)),
+):
+    async with WebUserService() as service:
+        await service.unlink_telegram(web_user_id, tg_user_id)
     return {"status": "ok"}

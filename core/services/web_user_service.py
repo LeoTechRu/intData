@@ -4,6 +4,7 @@ from typing import Optional, Any, Union, List
 from datetime import datetime
 import secrets
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core import db
@@ -125,6 +126,14 @@ class WebUserService:
         await self.session.flush()
         return web_user
 
+    async def update_user_role(self, user_id: int, new_role: UserRole) -> bool:
+        user = await self.get_by_id(user_id)
+        if not user:
+            return False
+        user.role = new_role.name
+        await self.session.flush()
+        return True
+
     async def update_profile(self, web_user_id: int, data: dict[str, Any]) -> Optional[WebUser]:
         user = await self.get_by_id(web_user_id)
         if not user:
@@ -141,7 +150,9 @@ class WebUserService:
         return user
 
     async def list_users(self) -> List[WebUser]:
-        result = await self.session.execute(select(WebUser))
+        result = await self.session.execute(
+            select(WebUser).options(selectinload(WebUser.telegram_accounts))
+        )
         return result.scalars().all()
 
     async def get_user_by_identifier(self, identifier: Union[int, str]) -> Optional[WebUser]:

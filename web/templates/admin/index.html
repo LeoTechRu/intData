@@ -3,6 +3,55 @@
 {% block content %}
 <div class="ui-layout">
     <div id="main-content">
+        <section id="users-web">
+            <h1>Web users</h1>
+            {% if users_web %}
+            <table border="1" cellpadding="4" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>username</th>
+                        <th>telegram accounts</th>
+                        <th>role</th>
+                        <th>link telegram</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for user in users_web %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>
+                            {% for tg in user.telegram_accounts %}
+                                {{ tg.telegram_id }}
+                                <button class="unlink-btn" data-web="{{ user.id }}" data-tg="{{ tg.id }}">x</button><br/>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <select class="web-role" data-user-id="{{ user.id }}">
+                                {% for r in roles %}
+                                    <option value="{{ r }}" {% if user.role == r %}selected{% endif %}>{{ r }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td>
+                            <select id="link-select-{{ user.id }}">
+                                <option value="">--</option>
+                                {% for tg in users_tg %}
+                                    <option value="{{ tg.id }}">{{ tg.telegram_id }}</option>
+                                {% endfor %}
+                            </select>
+                            <button class="link-btn" data-web="{{ user.id }}">link</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>нет пользователей</p>
+            {% endif %}
+        </section>
+
         <section id="users">
             <h1>Telegram users</h1>
             {% if users_tg %}
@@ -23,7 +72,13 @@
                         <td>{{ user.username or '' }}</td>
                         <td>{{ user.first_name }}</td>
                         <td>{{ user.last_name or '' }}</td>
-                        <td>{{ user.role }}</td>
+                        <td>
+                            <select class="tg-role" data-tg-id="{{ user.telegram_id }}">
+                                {% for r in roles %}
+                                    <option value="{{ r }}" {% if user.role == r %}selected{% endif %}>{{ r }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
                     </tr>
                 {% endfor %}
                 </tbody>
@@ -55,5 +110,43 @@
         </section>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.tg-role').forEach(sel => {
+        sel.addEventListener('change', async e => {
+            const id = e.target.dataset.tgId;
+            const role = e.target.value;
+            await fetch(`/admin/role/${id}?role=${role}`, {method: 'POST'});
+            location.reload();
+        });
+    });
+    document.querySelectorAll('.web-role').forEach(sel => {
+        sel.addEventListener('change', async e => {
+            const id = e.target.dataset.userId;
+            const role = e.target.value;
+            await fetch(`/admin/web/role/${id}?role=${role}`, {method: 'POST'});
+            location.reload();
+        });
+    });
+    document.querySelectorAll('.unlink-btn').forEach(btn => {
+        btn.addEventListener('click', async e => {
+            const webId = e.target.dataset.web;
+            const tgId = e.target.dataset.tg;
+            await fetch(`/admin/web/unlink?web_user_id=${webId}&tg_user_id=${tgId}`, {method: 'POST'});
+            location.reload();
+        });
+    });
+    document.querySelectorAll('.link-btn').forEach(btn => {
+        btn.addEventListener('click', async e => {
+            const webId = e.target.dataset.web;
+            const select = document.getElementById(`link-select-${webId}`);
+            const tgId = select.value;
+            if (!tgId) return;
+            await fetch(`/admin/web/link?web_user_id=${webId}&tg_user_id=${tgId}`, {method: 'POST'});
+            location.reload();
+        });
+    });
+});
+</script>
 {% endblock %}
 
