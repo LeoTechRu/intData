@@ -403,3 +403,16 @@ button,
   margin: 0 1rem;
 }
 
+/* Compact dashboard mode */
+body.compact .grid,
+body.compact .data-grid {
+  gap: var(--spacing-sm);
+}
+
+body.compact .data-section,
+body.compact .card,
+body.compact .profile-card,
+body.compact .admin-panel {
+  box-shadow: none;
+}
+
