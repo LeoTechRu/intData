@@ -7,6 +7,12 @@ from ..dependencies import role_required
 
 
 templates = Jinja2Templates(directory="web/templates")
+templates.env.globals.update(
+    APP_BRAND_NAME="LeonidPro",
+    APP_BASE_URL="https://leonid.pro",
+    BOT_USERNAME="@LeonidBot",
+    BOT_LANDING_URL="https://bot.leonid.pro",
+)
 router = APIRouter()
 
 
