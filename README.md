@@ -88,6 +88,7 @@
 - [x] Добавлена отдельная страница заглушки `ban.html` для заблокированных пользователей.
 - [x] В админ‑панели объединены привязка и отвязка Telegram‑аккаунтов в одном столбце и отображаются username вместо ID.
 - [x] Зафиксированы правила нейминга LeonidPro и @LeonidBot в `docs/agents.md`.
+- [x] Добавлен лендинг бота @LeonidBot и маршрут `/bot`.
 
 - [x] Добавлен раздел Branding в `.env.example` с переменными `APP_BRAND_NAME`, `APP_BASE_URL`, `BOT_USERNAME`, `BOT_LANDING_URL`.
 
