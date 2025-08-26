@@ -37,6 +37,18 @@ async def index(
                 member_groups = [g for g in all_groups if g.owner_id != tg_user.telegram_id]
                 owned_projects = await project_service.list(owner_id=tg_user.telegram_id)
             role_name = tg_user.role if tg_user else current_user.role
+
+            kpi_hours = 12
+            kpi_hours_delta = 4.5
+            kpi_goals = 3
+            kpi_goals_delta = 33.3
+            kpi_health = 72
+            kpi_health_delta = -1.2
+            day_timeline = [
+                {"time": "08:30", "text": "Утренняя зарядка"},
+                {"time": "09:30", "text": "Планирование дня"},
+                {"time": "19:00", "text": "Чтение / самообразование"},
+            ]
             context = {
                 "user": tg_user,
                 "current_user": current_user,
@@ -48,6 +60,13 @@ async def index(
                 "role_name": role_name,
                 "current_role_name": current_user.role,
                 "is_admin": UserRole[role_name] >= UserRole.admin,
+                "kpi_hours": kpi_hours,
+                "kpi_hours_delta": kpi_hours_delta,
+                "kpi_goals": kpi_goals,
+                "kpi_goals_delta": kpi_goals_delta,
+                "kpi_health": kpi_health,
+                "kpi_health_delta": kpi_health_delta,
+                "day_timeline": day_timeline,
                 "page_title": "Дашборд",
             }
             return templates.TemplateResponse(request, "start.html", context)
