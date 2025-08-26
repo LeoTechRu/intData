@@ -463,3 +463,24 @@ body.compact .admin-panel {
 }
 /* === /ui2 === */
 
+/* ui2: role badge + modal */
+.role-badge{
+  display:inline-block; border:none; cursor:pointer;
+  padding:4px 10px; border-radius:12px; font:inherit;
+  background: var(--color-accent-purple); color:#fff;
+}
+.role-badge:hover{ filter:brightness(0.95); }
+
+.role-help-modal.hidden{ display:none; }
+.role-help-modal{
+  position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+  background: rgba(17,24,39,.45); z-index:1000;
+}
+.role-help-card{
+  background:#fff; border-radius:12px; padding:18px 20px; width:min(560px, 92vw);
+  box-shadow:0 10px 30px rgba(0,0,0,.18);
+}
+.role-help-card .title{ font-weight:700; margin-bottom:8px; }
+.role-help-card .text{ color:#4b5563; }
+.role-help-card .actions{ text-align:right; margin-top:14px; }
+

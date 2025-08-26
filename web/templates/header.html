@@ -16,7 +16,10 @@
         <div class="profile-menu">
             <div id="profile-button" class="profile-icon role-{{ header_role|lower }}">👤</div>
             <div id="profile-dropdown" class="dropdown-menu hidden">
-                <div class="role">Роль: {{ header_role }}</div>
+                <div class="role">
+                    Роль:
+                    <button type="button" class="role-badge" data-role="{{ header_role }}">{{ header_role }}</button>
+                </div>
                 {% if header_user.telegram_id is defined %}
                 <a href="/profile/{{ header_user.telegram_id }}">Профиль</a>
                 {% else %}
