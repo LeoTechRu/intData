@@ -7,7 +7,9 @@
     <script type="module" src="{{ url_for('static', path='js/main.js') }}"></script>
 </head>
 <body>
-    {% include "header.html" %}
+    <header class="top-bar">
+        {% include "header.html" %}
+    </header>
     {% block content %}{% endblock %}
 </body>
 </html>
