@@ -31,12 +31,12 @@ async def lifespan(app: FastAPI):
     await init_models()
     password = None
     async with WebUserService() as wsvc:
-        password = await wsvc.ensure_root_user()
+        password = await wsvc.ensure_test_user()
     if password:
         async with TelegramUserService() as tsvc:
             await tsvc.send_log_to_telegram(
                 LogLevel.INFO,
-                f"root user created:\nusername: root\npassword: {password}",
+                f"test user created:\nusername: test\npassword: {password}",
             )
     yield
 

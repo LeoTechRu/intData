@@ -66,21 +66,21 @@ class WebUserService:
             return user
         return None
 
-    async def ensure_root_user(self) -> Optional[str]:
-        """Create root user with random password if missing.
+    async def ensure_test_user(self) -> Optional[str]:
+        """Create ``test`` user with random password if missing.
 
         Returns the generated password if a new user was created, otherwise
         ``None``.
         """
         result = await self.session.execute(
-            select(WebUser).where(WebUser.username == "root")
+            select(WebUser).where(WebUser.username == "test")
         )
         if result.scalar_one_or_none():
             return None
         password = secrets.token_urlsafe(12)
         hashed = bcrypt.generate_password_hash(password)
         user = WebUser(
-            username="root",
+            username="test",
             password_hash=hashed,
             role=UserRole.admin.name,
         )

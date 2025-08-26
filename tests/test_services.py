@@ -81,9 +81,9 @@ async def test_update_profile_and_lookup(session):
 
 
 @pytest.mark.asyncio
-async def test_ensure_root_user(session):
+async def test_ensure_test_user(session):
     wsvc = WebUserService(session)
-    pwd = await wsvc.ensure_root_user()
+    pwd = await wsvc.ensure_test_user()
     assert pwd is not None
-    again = await wsvc.ensure_root_user()
+    again = await wsvc.ensure_test_user()
     assert again is None
