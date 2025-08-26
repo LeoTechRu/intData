@@ -25,6 +25,6 @@ jobs:
             whoami
             hostname
             echo "FROM_GITHUB_SHA=${GITHUB_SHA}"
-            mkdir -p /sd/tg/LeonidBot
-            touch /sd/tg/LeonidBot/.gh-ok-${GITHUB_SHA}
-            ls -l /sd/tg/LeonidBot/.gh-ok-${GITHUB_SHA}
+            mkdir -p /sd/leonidpro
+            touch /sd/leonidpro/.gh-ok-${GITHUB_SHA}
+            ls -l /sd/leonidpro/.gh-ok-${GITHUB_SHA}

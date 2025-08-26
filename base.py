@@ -1,4 +1,4 @@
-# /sd/tg/LeonidBot/base.py
+# /sd/leonidpro/base.py
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()

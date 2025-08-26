@@ -1,4 +1,4 @@
-# /sd/tg/LeonidBot/bot/handlers/telegram.py
+# /sd/leonidpro/bot/handlers/telegram.py
 import re
 
 from aiogram import Router, F

@@ -1,4 +1,4 @@
-# /sd/tg/LeonidBot/core/db.py
+# /sd/leonidpro/core/db.py
 from aiogram import Dispatcher, Bot
 from aiogram.fsm.storage.memory import MemoryStorage
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
