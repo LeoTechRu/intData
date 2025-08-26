@@ -114,7 +114,7 @@ button,
 .top-bar {
   background-color: var(--color-accent-purple);
   color: #fff;
-  padding: var(--spacing);
+  padding: calc(var(--spacing) * 1.25) var(--spacing);
   border-radius: 0;
   display: flex;
   justify-content: space-between;
@@ -125,13 +125,27 @@ button,
   position: sticky;
   top: 0;
   z-index: 50;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .top-left,
 .top-center,
 .top-right {
   flex: 1;
+  display: flex;
+  align-items: center;
 }
+
+.top-left { justify-content: flex-start; }
+
+.top-center { justify-content: center; text-align: center; }
+
+.top-right {
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.top-bar .page-title { margin: 0; }
 
 .top-bar .welcome {
   margin: 0;
@@ -142,15 +156,20 @@ button,
   text-decoration: none;
 }
 
-.top-center {
-  text-align: center;
+.guest-menu {
+  display: flex;
+  gap: 1rem;
 }
 
-.top-right {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 1rem;
+.guest-menu a,
+.admin-menu a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.guest-menu a:hover,
+.admin-menu a:hover {
+  text-decoration: underline;
 }
 
 .admin-menu { position: relative; }
@@ -201,11 +220,18 @@ button,
   text-decoration: none;
   color: #333;
   margin-top: 0.5rem;
+  padding: 0.25rem 0;
+  border-radius: var(--radius);
+  transition: background-color 0.2s;
 }
 
 .dropdown-menu .role {
   font-weight: bold;
   margin-bottom: 0.5rem;
+}
+
+.dropdown-menu a:hover {
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 #login-page {
