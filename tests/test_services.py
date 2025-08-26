@@ -14,7 +14,9 @@ async def session():
     engine = create_async_engine("sqlite+aiosqlite:///:memory:")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+    async_session = sessionmaker(
+        engine, expire_on_commit=False, class_=AsyncSession
+    )
     async with async_session() as sess:
         yield sess
 
@@ -51,11 +53,15 @@ async def test_authenticate_uses_check_password(monkeypatch, session):
 async def test_binding_flow(session):
     tsvc = TelegramUserService(session)
     tg_user = await tsvc.update_from_telegram(telegram_id=123, username="tg")
+    tg_user2 = await tsvc.update_from_telegram(telegram_id=456, username="tg2")
     wsvc = WebUserService(session)
     web_user = await wsvc.register(username="alice", password="secret")
     await wsvc.link_telegram(web_user.id, tg_user.id)
-    with pytest.raises(ValueError):
-        await wsvc.link_telegram(web_user.id, tg_user.id)
+    await wsvc.link_telegram(web_user.id, tg_user.id)
+    await wsvc.link_telegram(web_user.id, tg_user2.id)
+    users = await wsvc.list_users()
+    loaded = next(u for u in users if u.id == web_user.id)
+    assert {u.telegram_id for u in loaded.telegram_accounts} == {123, 456}
     other = await wsvc.register(username="bob", password="x")
     with pytest.raises(ValueError):
         await wsvc.link_telegram(other.id, tg_user.id)
