@@ -87,7 +87,7 @@
 - [x] В админ‑панели объединены привязка и отвязка Telegram‑аккаунтов в одном столбце и отображаются username вместо ID.
 - [x] Зафиксированы правила нейминга LeonidPro и @LeonidBot в `docs/agents.md`.
 - [x] Добавлен лендинг бота @LeonidBot и маршрут `/bot`.
-- [x] Добавлен раздел Branding в `.env.example` с переменными `APP_BRAND_NAME`, `APP_BASE_URL`, `BOT_USERNAME`, `BOT_LANDING_URL`.
+- [x] Добавлен раздел Branding в `.env.example` с переменными `APP_BRAND_NAME`, `WEB_PUBLIC_URL`, `BOT_USERNAME`, `BOT_LANDING_URL`.
 - [x] Переработан виджет профиля дашборда: убран заголовок и добавлены иконки с подсказками.
 - [x] Виджет профиля использует единый спрайт SVG-иконок и щиток роли.
 - [x] Добавлен базовый шаблон для страниц авторизации с отдельной шапкой и героем.
@@ -150,15 +150,15 @@
 
 ```dotenv
 BOT_TOKEN=123456789:AA...your...token
-TELEGRAM_BOT_USERNAME=YourBotName   # БЕЗ @; можно оставить BOT_USERNAME — тоже подхватится
-PUBLIC_BASE_URL=http://109.196.99.158:5800  # можно указать домен или IP с портом
+BOT_USERNAME=YourBotName   # БЕЗ @; можно оставить BOT_USERNAME — тоже подхватится
+WEB_PUBLIC_URL=http://109.196.99.158:5800  # можно указать домен или IP с портом
 SESSION_MAX_AGE=86400
 ADMIN_TELEGRAM_IDS=123,456  # список Telegram-ID администраторов через запятую
 ```
 
 ### Telegram Login Widget
 1. В @BotFather сделайте `/setdomain` и укажите домен или IP, где открывается `/auth` (без схемы).
-2. `TELEGRAM_BOT_USERNAME` — без `@`.
+2. `BOT_USERNAME` — без `@`.
 3. Если видите «Bot domain invalid», домен страницы не совпадает с заданным у бота или указан username с `@`.
 
 ### Запуск
@@ -180,7 +180,7 @@ uvicorn web:app --host 0.0.0.0 --port 5800
 
 ### Траблшутинг
 - «ValidationError / Extra inputs…» → теперь игнорируются (`extra='ignore'`).
-- «Field required: TELEGRAM_BOT_USERNAME» → используйте `TELEGRAM_BOT_USERNAME` или `BOT_USERNAME`.
+- «Field required: BOT_USERNAME» → используйте `BOT_USERNAME` или `BOT_USERNAME`.
 - «Bot domain invalid» → проверьте `/setdomain` и username без `@`.
 
 ## Изменение схемы базы данных

@@ -16,7 +16,7 @@ from core.services.web_user_service import WebUserService
 
 BOT_TOKEN = "TEST_TOKEN"
 os.environ.setdefault("BOT_TOKEN", BOT_TOKEN)
-os.environ.setdefault("TELEGRAM_BOT_USERNAME", "testbot")
+os.environ.setdefault("BOT_USERNAME", "testbot")
 from web.config import S  # noqa: E402
 
 try:

@@ -13,15 +13,15 @@ if ROOT_ENV:
 class Settings(BaseSettings):
     # Основные переменные для веб-морды
     BOT_TOKEN: str = Field(..., description="Telegram Bot API token")
-    TELEGRAM_BOT_USERNAME: str = Field(
+    BOT_USERNAME: str = Field(
         ...,
         description="Bot username без @",
-        validation_alias=AliasChoices("TELEGRAM_BOT_USERNAME", "BOT_USERNAME"),
+        validation_alias=AliasChoices("BOT_USERNAME", "BOT_USERNAME"),
     )
-    PUBLIC_BASE_URL: AnyHttpUrl | None = Field(
+    WEB_PUBLIC_URL: AnyHttpUrl | None = Field(
         default=None,
         description="Публичный базовый URL веб-морды",
-        validation_alias=AliasChoices("PUBLIC_BASE_URL", "WEB_APP_URL"),
+        validation_alias=AliasChoices("WEB_PUBLIC_URL", "WEB_APP_URL"),
     )
     SESSION_MAX_AGE: int = 86400
     ADMIN_IDS: str | None = Field(
@@ -30,7 +30,7 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("ADMIN_TELEGRAM_IDS", "ADMIN_IDS"),
     )
 
-    @field_validator("TELEGRAM_BOT_USERNAME")
+    @field_validator("BOT_USERNAME")
     @classmethod
     def strip_at(cls, v: str) -> str:
         return v.lstrip("@").strip()

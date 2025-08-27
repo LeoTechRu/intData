@@ -9,4 +9,4 @@
 - Бренд и заголовки страниц должны использовать **LeonidPro**.
 - Все новые ссылки на продукт по умолчанию ведут на **https://leonid.pro/**,
   а ссылки, связанные именно с ботом — на **https://leonid.pro/bot** или @LeonidBot.
-- При необходимости указывать base URL в конфиге: `APP_BASE_URL=https://leonid.pro`.
+- При необходимости указывать base URL в конфиге: `WEB_PUBLIC_URL=https://leonid.pro`.
