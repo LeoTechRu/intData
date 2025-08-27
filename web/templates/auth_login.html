@@ -1,0 +1,49 @@
+{% extends "auth_base.html" %}
+{% block title %}Вход — LeonidPro{% endblock %}
+{% block content %}
+  {% include "auth/_tabs.html" with context %}{% set active = 'login' %}
+  <form action="/login" method="post" class="auth-form" novalidate>
+    {{ csrf_input|safe if csrf_input is defined }}
+    <label class="field">
+      <span class="label">Username</span>
+      <input class="control" type="text" name="username" autocomplete="username" required placeholder="Ваш логин">
+    </label>
+
+    <label class="field">
+      <span class="label">Пароль</span>
+      <div class="control-with-action">
+        <input class="control" type="password" name="password" autocomplete="current-password" required placeholder="Введите пароль">
+        <button type="button" class="link tiny toggle-password" aria-label="Показать/скрыть пароль">👁</button>
+      </div>
+    </label>
+
+    <label class="checkbox">
+      <input type="checkbox" name="remember_me" value="1">
+      <span>Запомнить меня</span>
+      <a class="link small right" href="/restore">напомнить</a>
+    </label>
+
+    <button class="btn primary full" type="submit">Войти</button>
+
+    <div class="or">или</div>
+
+    <a class="btn telegram full" href="{{ telegram_login_url or '/login/telegram' }}">
+      <svg class="icon"><use href="#i-paper-plane"/></svg>
+      Войти через Telegram
+    </a>
+
+    {% if social_login %}
+    <div class="social-row">
+      {# примеры, если подключишь соцсети: #}
+      <a class="social vk"   href="/oauth/vk"   aria-label="VK"></a>
+      <a class="social fb"   href="/oauth/fb"   aria-label="Facebook"></a>
+      <a class="social ok"   href="/oauth/ok"   aria-label="OK"></a>
+      <a class="social google" href="/oauth/google" aria-label="Google"></a>
+    </div>
+    {% endif %}
+
+    {% if flash %}
+      <div class="auth-alert">{{ flash }}</div>
+    {% endif %}
+  </form>
+{% endblock %}
