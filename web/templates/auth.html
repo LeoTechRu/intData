@@ -1,5 +1,10 @@
 {% extends "auth_base.html" %}
 {% block title %}Авторизация — LeonidPro{% endblock %}
+{% block head_scripts %}
+  {% if RECAPTCHA_SITE_KEY %}
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  {% endif %}
+{% endblock %}
 {% block content %}
   <nav class="auth-tabs" role="tablist">
     <a href="#login"     class="tab is-active" data-tab="login"     role="tab" aria-selected="true">Вход</a>
