@@ -82,6 +82,16 @@ class TaskService:
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
+    async def mark_done(self, task_id: int) -> Task | None:
+        """Mark task as done."""
+
+        task = await self.session.get(Task, task_id)
+        if task is None:
+            return None
+        task.status = TaskStatus.done
+        await self.session.flush()
+        return task
+
     async def add_reminder(
         self, task_id: int, message: str, remind_at
     ) -> Reminder | None:

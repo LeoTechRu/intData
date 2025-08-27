@@ -29,8 +29,8 @@ async def get_current_web_user(request: Request) -> Optional[WebUser]:
     async with WebUserService() as service:
         result = await service.session.execute(
             select(WebUser)
-                .options(selectinload(WebUser.telegram_accounts))
-                .where(WebUser.id == user_id)
+            .options(selectinload(WebUser.telegram_accounts))
+            .where(WebUser.id == user_id)
         )
         return result.scalar_one_or_none()
 
@@ -44,23 +44,31 @@ async def get_current_tg_user(request: Request) -> Optional[TgUser]:
     except ValueError:
         return None
     async with TelegramUserService() as service:
-        return await service.get_by_telegram_id(telegram_id)
+        return await service.get_user_by_telegram_id(telegram_id)
 
 
 def role_required(required_role: UserRole | str):
     """Ensure current user has the required role."""
 
     required = (
-        required_role if isinstance(required_role, UserRole) else UserRole[required_role]
+        required_role
+        if isinstance(required_role, UserRole)
+        else UserRole[required_role]
     )
 
     async def verifier(
         current_user: Optional[WebUser] = Depends(get_current_web_user),
     ) -> WebUser:
         if not current_user:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions",
+            )
         if UserRole[current_user.role].value < required.value:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions",
+            )
         return current_user
 
     return verifier

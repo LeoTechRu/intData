@@ -54,3 +54,12 @@ async def test_add_reminder_to_task(session):
     assert reminder.task_id == task.id
     reminders = await ReminderService(session).list_reminders(task_id=task.id)
     assert len(reminders) == 1
+
+
+@pytest.mark.asyncio
+async def test_mark_task_done(session):
+    service = TaskService(session)
+    task = await service.create_task(owner_id=1, title="Task")
+    done = await service.mark_done(task.id)
+    assert done is not None
+    assert done.status == TaskStatus.done
