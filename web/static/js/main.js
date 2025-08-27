@@ -150,3 +150,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.addEventListener('click', onClick);
 })();
+
+// auth: toggle password
+(function(){
+  function onClick(e){
+    const btn = e.target.closest('.toggle-password');
+    if (!btn) return;
+    const input = btn.parentElement.querySelector('input.control[type="password"], input.control[type="text"]');
+    if (!input) return;
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+  document.addEventListener('click', onClick);
+})();

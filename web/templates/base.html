@@ -9,7 +9,7 @@
 <body>
     {% include "_icons.html" %}
     <header class="top-bar">
-        {% include "header.html" %}
+        {% if not auth_page %}{% include "header.html" %}{% endif %}
     </header>
     {% block content %}{% endblock %}
 </body>
