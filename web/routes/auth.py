@@ -89,10 +89,46 @@ async def upsert_user_from_email(email: str) -> WebUser:
         return user
 
 
-async def send_magic_email(email: str, link: str) -> None:  # pragma: no cover - stub
-    """Send magic link email. Replace with real mailer if available."""
-    # TODO: integrate with your email provider
-    print(f"[magic] send to {email}: {link}")
+async def send_magic_email(email: str, link: str) -> None:  # pragma: no cover - network
+    """Send magic link email via SMTP using environment settings.
+
+    Falls back to stdout if SMTP is not configured. Expected environment variables:
+
+    - ``SMTP_HOST`` – SMTP server hostname
+    - ``SMTP_PORT`` – SMTP port (defaults to ``587``)
+    - ``SMTP_USER`` – username for authentication
+    - ``SMTP_PASSWORD`` – password for authentication
+    - ``EMAIL_FROM`` – sender address
+    """
+    host = os.getenv("SMTP_HOST")
+    user = os.getenv("SMTP_USER")
+    password = os.getenv("SMTP_PASSWORD")
+    sender = os.getenv("EMAIL_FROM", user)
+    port = int(os.getenv("SMTP_PORT", "587"))
+
+    if not all([host, port, user, password, sender]):
+        # No SMTP configuration; emulate sending
+        print(f"[magic] send to {email}: {link}")
+        return
+
+    from email.message import EmailMessage
+    import asyncio, smtplib
+
+    def _send() -> None:
+        msg = EmailMessage()
+        msg["Subject"] = "Magic login link"
+        msg["From"] = sender
+        msg["To"] = email
+        msg.set_content(f"Click the link to sign in: {link}")
+        with smtplib.SMTP(host, port) as smtp:
+            try:
+                smtp.starttls()
+            except Exception:
+                pass
+            smtp.login(user, password)
+            smtp.send_message(msg)
+
+    await asyncio.to_thread(_send)
 
 
 def verify_telegram_auth(data: dict) -> dict:
@@ -363,14 +399,29 @@ async def telegram_callback(request: Request):
 # Magic link flow
 @router.post("/auth/magic/request")
 async def magic_request(request: Request, email: str = Form(...), form_ts: str = Form("0"), hp_url: str = Form("")):
-    # TODO: вставь свои антибот-проверки, если есть
+    """Request a magic login link via email with basic anti-bot checks."""
+    # Honeypot field filled or submission too fast => treat as spam
+    if hp_url:
+        return render_auth(request, active="restore", form_values={"email": email})
+    try:
+        ts = int(form_ts)
+    except ValueError:
+        ts = 0
+    if ts and time.time() - ts < 3:  # submitted too quickly after form render
+        return render_auth(request, active="restore", form_values={"email": email})
+
     token = serializer.dumps({"email": email, "kind": "magic"})
     magic_url = f"{os.getenv('APP_BASE_URL','https://leonid.pro')}/auth/magic?token={token}"
     try:
         await send_magic_email(email, magic_url)  # если есть почтовик
     except Exception:
         print("MAGIC:", magic_url)
-    return render_auth(request, active="restore", form_values={"email": email}, flash="Если email существует — отправили ссылку для входа.")
+    return render_auth(
+        request,
+        active="restore",
+        form_values={"email": email},
+        flash="Если email существует — отправили ссылку для входа.",
+    )
 
 
 @router.get("/auth/magic")
