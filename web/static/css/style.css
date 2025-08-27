@@ -548,3 +548,15 @@ body.compact .admin-panel {
   .profile-grid { grid-template-columns: 1fr; }
 }
 /* === /ui2: profile widget === */
+
+/* === ui2: tiny icons === */
+.icon{ width:18px; height:18px; display:inline-block; vertical-align:-3px; color: currentColor; }
+.icon-lg{ width:24px; height:24px; vertical-align:-4px; }
+.icon-muted{ color:#6b7280; opacity:.9; }
+.profile-grid .label-with-icon{ display:flex; align-items:center; gap:8px; }
+/* Подсветка кликабельных значений */
+.profile-link{ color:#0ea5e9; text-decoration:none; }
+.profile-link:hover{ text-decoration:underline; }
+/* Аватар: используем иконку вместо эмодзи (если захочешь) */
+.profile-avatar svg{ width:28px; height:28px; }
+/* === /ui2 === */
