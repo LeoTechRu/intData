@@ -1,109 +1,126 @@
-{% extends "auth_base.html" %}
-{% block title %}Авторизация — LeonidPro{% endblock %}
-{% block head_scripts %}
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Авторизация — LeonidPro</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
   {% if RECAPTCHA_SITE_KEY %}
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
   {% endif %}
-{% endblock %}
-{% block content %}
-  <nav class="auth-tabs" role="tablist">
-    <a href="#login"     class="tab is-active" data-tab="login"     role="tab" aria-selected="true">Вход</a>
-    <a href="#register"  class="tab"           data-tab="register"  role="tab" aria-selected="false">Регистрация</a>
-    <a href="#restore"   class="tab"           data-tab="restore"   role="tab" aria-selected="false">Напомнить</a>
-  </nav>
+  {% if EXTRA_HEAD %}{{ EXTRA_HEAD|safe }}{% endif %}
+  {% if head_scripts %}{{ head_scripts|safe }}{% endif %}
+</head>
+<body class="auth-page">
+  {% include "_icons.html" %}
 
-  <section class="auth-forms">
+  <header class="auth-header">
+    <a class="brand" href="{{ WEB_PUBLIC_URL or '/' }}">LeonidPro</a>
+  </header>
 
-    <!-- LOGIN -->
-    <form action="/login" method="post" class="auth-form form-login" data-validate="login" novalidate>
-      {{ csrf_input|safe if csrf_input is defined }}
-      <label class="field">
-        <span class="label">Username</span>
-        <input class="control" type="text" name="username" autocomplete="username" required placeholder="Ваш логин">
-        <div class="error-text" data-for="username"></div>
-      </label>
+  <main class="auth-hero">
+    <div class="auth-card">
 
-      <label class="field">
-        <span class="label">Пароль</span>
-        <div class="control-with-action">
-          <input class="control" type="password" name="password" autocomplete="current-password" required placeholder="Введите пароль">
-          <button type="button" class="link tiny toggle-password" aria-label="Показать/скрыть пароль">👁</button>
-        </div>
-        <div class="error-text" data-for="password"></div>
-      </label>
+      <nav class="auth-tabs" role="tablist">
+        <a href="#login"     class="tab is-active" data-tab="login"     role="tab" aria-selected="true">Вход</a>
+        <a href="#register"  class="tab"           data-tab="register"  role="tab" aria-selected="false">Регистрация</a>
+        <a href="#restore"   class="tab"           data-tab="restore"   role="tab" aria-selected="false">Напомнить</a>
+      </nav>
 
-      <label class="checkbox">
-        <input type="checkbox" name="remember_me" value="1">
-        <span>Запомнить меня</span>
-        <a class="link small right" href="#restore" data-tab-jump="restore">напомнить</a>
-      </label>
+      <section class="auth-forms">
 
-      <button class="btn primary full" type="submit">Войти</button>
+        <!-- LOGIN -->
+        <form action="/login" method="post" class="auth-form form-login" data-validate="login" novalidate>
+          {{ csrf_input|safe if csrf_input is defined }}
+          <label class="field">
+            <span class="label">Username</span>
+            <input class="control" type="text" name="username" autocomplete="username" required placeholder="Ваш логин">
+            <div class="error-text" data-for="username"></div>
+          </label>
 
-      <div class="or">или</div>
+          <label class="field">
+            <span class="label">Пароль</span>
+            <div class="control-with-action">
+              <input class="control" type="password" name="password" autocomplete="current-password" required placeholder="Введите пароль">
+              <button type="button" class="link tiny toggle-password" aria-label="Показать/скрыть пароль">👁</button>
+            </div>
+            <div class="error-text" data-for="password"></div>
+          </label>
 
-      {% if TG_LOGIN_ENABLED %}
-        <div class="tg-login">
-          <script async src="https://telegram.org/js/telegram-widget.js?22"
-                  data-telegram-login="{{ TG_BOT_USERNAME or 'LeonidBot' }}"
-                  data-size="large"
-                  data-userpic="false"
-                  data-request-access="write"
-                  data-auth-url="/auth/telegram"
-                  data-lang="ru"></script>
-          <div class="muted small">Если виджет не загрузился — <a class="link" target="_blank" rel="noopener" href="https://t.me/{{ (TG_BOT_USERNAME or 'LeonidBot')|replace('@','') }}?start=login">откройте бота в Telegram</a>.</div>
-        </div>
-      {% endif %}
+          <label class="checkbox">
+            <input type="checkbox" name="remember_me" value="1">
+            <span>Запомнить меня</span>
+            <a class="link small right" href="#restore" data-tab-jump="restore">напомнить</a>
+          </label>
 
-      {% if flash %}
-        <div class="auth-alert">{{ flash }}</div>
-      {% endif %}
-    </form>
+          <button class="btn primary full" type="submit">Войти</button>
 
-    <!-- REGISTER -->
-    <form action="/register" method="post" class="auth-form form-register is-hidden" data-validate="register" novalidate>
-      {{ csrf_input|safe if csrf_input is defined }}
+          <div class="or">или</div>
 
-      <label class="field">
-        <span class="label">Email</span>
-        <input class="control" type="email" name="email" autocomplete="email" required placeholder="Введите Email">
-        <div class="error-text" data-for="email"></div>
-      </label>
+          {% if TG_LOGIN_ENABLED %}
+            <div class="tg-login">
+              <script async src="https://telegram.org/js/telegram-widget.js?22"
+                      data-telegram-login="{{ TG_BOT_USERNAME or 'LeonidBot' }}"
+                      data-size="large"
+                      data-userpic="false"
+                      data-request-access="write"
+                      data-auth-url="/auth/telegram"
+                      data-lang="ru"></script>
+              <div class="muted small">Если виджет не загрузился — <a class="link" target="_blank" rel="noopener" href="https://t.me/{{ (TG_BOT_USERNAME or 'LeonidBot')|replace('@','') }}?start=login">откройте бота в Telegram</a>.</div>
+            </div>
+          {% endif %}
 
-      <label class="field">
-        <span class="label">Пароль</span>
-        <div class="control-with-action">
-          <input class="control" type="password" name="password" autocomplete="new-password" required placeholder="Создайте пароль">
-          <button type="button" class="link tiny toggle-password" aria-label="Показать/скрыть пароль">👁</button>
-        </div>
-        <div class="error-text" data-for="password"></div>
-      </label>
+          {% if flash %}
+            <div class="auth-alert">{{ flash }}</div>
+          {% endif %}
+        </form>
 
-      <label class="field">
-        <span class="label">Повторите пароль</span>
-        <input class="control" type="password" name="password2" autocomplete="new-password" required placeholder="Повторите пароль">
-        <div class="error-text" data-for="password2"></div>
-      </label>
+        <!-- REGISTER -->
+        <form action="/register" method="post" class="auth-form form-register is-hidden" data-validate="register" novalidate>
+          {{ csrf_input|safe if csrf_input is defined }}
 
-      <button class="btn primary full" type="submit">Регистрация</button>
-    </form>
+          <label class="field">
+            <span class="label">Email</span>
+            <input class="control" type="email" name="email" autocomplete="email" required placeholder="Введите Email">
+            <div class="error-text" data-for="email"></div>
+          </label>
 
-    <!-- RESTORE -->
-    <form action="/restore" method="post" class="auth-form form-restore is-hidden" data-validate="restore" novalidate>
-      {{ csrf_input|safe if csrf_input is defined }}
-      <input type="hidden" name="form_ts" value="{{ now_ts }}">
-      <div class="hp-wrap" aria-hidden="true"><input type="text" name="hp_url" tabindex="-1" autocomplete="off"></div>
+          <label class="field">
+            <span class="label">Пароль</span>
+            <div class="control-with-action">
+              <input class="control" type="password" name="password" autocomplete="new-password" required placeholder="Создайте пароль">
+              <button type="button" class="link tiny toggle-password" aria-label="Показать/скрыть пароль">👁</button>
+            </div>
+            <div class="error-text" data-for="password"></div>
+          </label>
 
-      <label class="field">
-        <span class="label">Email</span>
-        <input class="control" type="email" name="email" required placeholder="Введите Email">
-        <div class="error-text" data-for="email"></div>
-      </label>
+          <label class="field">
+            <span class="label">Повторите пароль</span>
+            <input class="control" type="password" name="password2" autocomplete="new-password" required placeholder="Повторите пароль">
+            <div class="error-text" data-for="password2"></div>
+          </label>
 
-      <button class="btn primary full" type="submit">Отправить ссылку</button>
-      <p class="muted small" style="margin-top:10px">Мы пришлём письмо со ссылкой для смены пароля (если такой аккаунт существует).</p>
-    </form>
+          <button class="btn primary full" type="submit">Регистрация</button>
+        </form>
 
-  </section>
-{% endblock %}
+        <!-- RESTORE -->
+        <form action="/restore" method="post" class="auth-form form-restore is-hidden" data-validate="restore" novalidate>
+          {{ csrf_input|safe if csrf_input is defined }}
+          <input type="hidden" name="form_ts" value="{{ now_ts }}">
+          <div class="hp-wrap" aria-hidden="true"><input type="text" name="hp_url" tabindex="-1" autocomplete="off"></div>
 
+          <label class="field">
+            <span class="label">Email</span>
+            <input class="control" type="email" name="email" required placeholder="Введите Email">
+            <div class="error-text" data-for="email"></div>
+          </label>
+
+          <button class="btn primary full" type="submit">Отправить ссылку</button>
+          <p class="muted small" style="margin-top:10px">Мы пришлём письмо со ссылкой для смены пароля (если такой аккаунт существует).</p>
+        </form>
+
+      </section>
+    </div>
+  </main>
+</body>
+</html>

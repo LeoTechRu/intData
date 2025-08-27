@@ -253,11 +253,8 @@ async def create_web_account_page(request: Request) -> HTMLResponse:
     telegram_id = request.cookies.get("telegram_id")
     if not telegram_id:
         return RedirectResponse("/auth", status_code=status.HTTP_303_SEE_OTHER)
-    return templates.TemplateResponse(
-        request,
-        "auth/create_web_account.html",
-        {"page_title": "Создание аккаунта"},
-    )
+    # Unified auth page: open the register tab
+    return RedirectResponse("/auth#register", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.post("/create_web_account")
@@ -271,14 +268,7 @@ async def create_web_account(
     if not telegram_id:
         return RedirectResponse("/auth", status_code=status.HTTP_303_SEE_OTHER)
     if action == "cancel":
-        response = templates.TemplateResponse(
-            request,
-            "auth/create_web_account.html",
-            {
-                "message": "Без создания аккаунта воспользоваться веб-версией нельзя",
-                "page_title": "Создание аккаунта",
-            },
-        )
+        response = RedirectResponse("/auth", status_code=status.HTTP_303_SEE_OTHER)
         response.delete_cookie("telegram_id", path="/")
         return response
     async with WebUserService() as wsvc:
