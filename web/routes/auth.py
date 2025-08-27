@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import hmac, hashlib, os, time, json
-from pathlib import Path
 from typing import Dict
 
 from fastapi import APIRouter, HTTPException, Request, Form, status
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
+from ..template_env import templates
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from sqlalchemy import select
 
@@ -18,17 +17,6 @@ from web.config import S
 from web.security.authlog import log_event
 
 router = APIRouter(tags=["auth"])
-
-TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
-templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
-templates.env.globals.update(
-    APP_BRAND_NAME="LeonidPro",
-    WEB_PUBLIC_URL="https://leonid.pro",
-    BOT_USERNAME="@LeonidBot",
-    BOT_LANDING_URL="https://leonid.pro/bot",
-    TG_LOGIN_ENABLED=bool(os.getenv("TG_LOGIN_ENABLED")),
-    TG_BOT_USERNAME=os.getenv("TG_BOT_USERNAME", S.BOT_USERNAME),
-)
 
 # itsdangerous serializer for magic links and short-lived tokens
 serializer = URLSafeTimedSerializer(os.getenv("SECRET_KEY", S.BOT_TOKEN))

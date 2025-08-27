@@ -510,6 +510,7 @@ body.compact .admin-panel {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: nowrap;
 }
 
 .profile-avatar {
@@ -546,6 +547,8 @@ body.compact .admin-panel {
 /* small screens: одна колонка */
 @media (max-width: 640px) {
   .profile-grid { grid-template-columns: 1fr; }
+  .profile-header { flex-wrap: wrap; }
+  .profile-role { position: static; margin-left: auto; margin-top: 8px; }
 }
 /* === /ui2: profile widget === */
 

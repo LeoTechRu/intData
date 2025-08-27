@@ -23,6 +23,14 @@ class Settings(BaseSettings):
         description="Публичный базовый URL веб-морды",
         validation_alias=AliasChoices("WEB_PUBLIC_URL", "WEB_APP_URL"),
     )
+    APP_BRAND_NAME: str = Field(
+        default="LeonidPro",
+        description="Application brand name для шаблонов",
+    )
+    BOT_LANDING_URL: AnyHttpUrl | None = Field(
+        default=None,
+        description="Публичный URL лендинга бота",
+    )
     SESSION_MAX_AGE: int = 86400
     ADMIN_IDS: str | None = Field(
         default=None,
