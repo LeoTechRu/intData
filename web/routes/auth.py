@@ -51,11 +51,24 @@ def verify_telegram_login(data: Dict[str, str]) -> bool:
     return auth_date > 0 and (time.time() - auth_date) <= S.SESSION_MAX_AGE
 
 
-@router.get("", response_class=HTMLResponse)
-async def auth_page(request: Request) -> HTMLResponse:
-    context = base_context()
-    context.update({"telegram_id": request.cookies.get("telegram_id")})
-    return templates.TemplateResponse(request, "auth.html", context)
+@router.get("/auth")
+async def auth_get(request: Request):
+    return templates.TemplateResponse(request, "auth.html", {"now_ts": int(time.time())})
+
+
+@router.get("/login", include_in_schema=False)
+async def login_redirect():
+    return RedirectResponse("/auth#login", status_code=302)
+
+
+@router.get("/register", include_in_schema=False)
+async def register_redirect():
+    return RedirectResponse("/auth#register", status_code=302)
+
+
+@router.get("/restore", include_in_schema=False)
+async def restore_redirect():
+    return RedirectResponse("/auth#restore", status_code=302)
 
 
 @router.post("/login")
