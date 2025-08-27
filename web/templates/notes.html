@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Заметки{% endblock %}
+{% block content %}
+<div class="ui-layout">
+  <div id="main-content">
+    <div class="ui-notice">Создавайте заметки и удаляйте ненужные.</div>
+
+    <section class="card" style="margin-bottom:1rem;">
+      <div class="card-title">Новая заметка</div>
+      <form id="note-form" class="ui-form">
+        <label>
+          <div>Текст</div>
+          <textarea name="content" rows="3" required placeholder="Введите заметку"></textarea>
+        </label>
+        <button class="button" type="submit">Добавить</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="card-title">Мои заметки</div>
+      <table class="ui-table">
+        <thead><tr><th>ID</th><th>Содержимое</th><th></th></tr></thead>
+        <tbody id="note-list"></tbody>
+      </table>
+      <div id="note-empty" class="text-muted" style="display:none; padding:8px;">Заметок пока нет</div>
+    </section>
+  </div>
+</div>
+
+<script>
+async function fetchNotes(){
+  const resp = await fetch('/notes', {credentials:'include'});
+  if (!resp.ok){
+    document.getElementById('note-empty').textContent = 'Требуется вход и связанный Telegram-аккаунт';
+    document.getElementById('note-empty').style.display = 'block';
+    return;
+  }
+  const data = await resp.json();
+  const list = document.getElementById('note-list');
+  list.innerHTML = '';
+  if (!data.length){
+    document.getElementById('note-empty').style.display='block';
+    return;
+  }
+  document.getElementById('note-empty').style.display='none';
+  for (const n of data){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${n.id}</td><td>${n.content}</td><td><button class="button" data-id="${n.id}">Удалить</button></td>`;
+    list.appendChild(tr);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  const form = document.getElementById('note-form');
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const fd = new FormData(form);
+    const payload = {content: fd.get('content')};
+    const resp = await fetch('/notes', {
+      method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload)
+    });
+    if (resp.ok){ form.reset(); fetchNotes(); }
+  });
+  fetchNotes();
+});
+
+document.addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button[data-id]');
+  if (!btn) return;
+  const id = btn.getAttribute('data-id');
+  const resp = await fetch(`/notes/${id}`, {method:'DELETE', credentials:'include'});
+  if (resp.ok){ fetchNotes(); }
+});
+</script>
+{% endblock %}
