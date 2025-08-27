@@ -44,35 +44,52 @@ def verify_telegram_login(data: Dict[str, str]) -> bool:
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request) -> HTMLResponse:
     telegram_id = request.cookies.get("telegram_id")
+    origin = S.PUBLIC_BASE_URL or ""
+    telegram_login_url = (
+        "https://oauth.telegram.org/auth"
+        f"?bot_id={S.BOT_TOKEN.split(':')[0]}"
+        f"&origin={origin}"
+        f"&redirect_url={origin}/auth/tg/callback&request_access=write"
+    )
     context = {
-        "bot_username": S.TELEGRAM_BOT_USERNAME,
+        "telegram_login_url": telegram_login_url,
         "telegram_id": telegram_id,
         "page_title": "Вход",
+        "active": "login",
     }
-    return templates.TemplateResponse(request, "auth/login.html", context)
+    return templates.TemplateResponse(request, "auth_login.html", context)
 
 
 @router.post("/login")
 async def login(request: Request, username: str = Form(...), password: str = Form(...)):
+    origin = S.PUBLIC_BASE_URL or ""
+    telegram_login_url = (
+        "https://oauth.telegram.org/auth"
+        f"?bot_id={S.BOT_TOKEN.split(':')[0]}"
+        f"&origin={origin}"
+        f"&redirect_url={origin}/auth/tg/callback&request_access=write"
+    )
     try:
         async with WebUserService() as service:
             user = await service.authenticate(username, password)
     except Exception as exc:  # pragma: no cover - defensive
         context = {
-            "bot_username": S.TELEGRAM_BOT_USERNAME,
+            "telegram_login_url": telegram_login_url,
             "telegram_id": request.cookies.get("telegram_id"),
             "page_title": "Вход",
-            "error": f"Technical error: {exc}",
+            "flash": f"Technical error: {exc}",
+            "active": "login",
         }
-        return templates.TemplateResponse(request, "auth/login.html", context, status_code=500)
+        return templates.TemplateResponse(request, "auth_login.html", context, status_code=500)
     if not user:
         context = {
-            "bot_username": S.TELEGRAM_BOT_USERNAME,
+            "telegram_login_url": telegram_login_url,
             "telegram_id": request.cookies.get("telegram_id"),
             "page_title": "Вход",
-            "error": "Invalid credentials",
+            "flash": "Invalid credentials",
+            "active": "login",
         }
-        return templates.TemplateResponse(request, "auth/login.html", context, status_code=400)
+        return templates.TemplateResponse(request, "auth_login.html", context, status_code=400)
     if user.role == "ban":
         response = RedirectResponse("/ban", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
         response.delete_cookie("web_user_id", path="/")
@@ -92,7 +109,22 @@ async def login(request: Request, username: str = Form(...), password: str = For
 
 @router.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse(request, "auth/register.html", {"page_title": "Регистрация"})
+    origin = S.PUBLIC_BASE_URL or ""
+    telegram_login_url = (
+        "https://oauth.telegram.org/auth"
+        f"?bot_id={S.BOT_TOKEN.split(':')[0]}"
+        f"&origin={origin}"
+        f"&redirect_url={origin}/auth/tg/callback&request_access=write"
+    )
+    return templates.TemplateResponse(
+        request,
+        "auth_register.html",
+        {
+            "page_title": "Регистрация",
+            "telegram_login_url": telegram_login_url,
+            "active": "register",
+        },
+    )
 
 
 @router.post("/register")
