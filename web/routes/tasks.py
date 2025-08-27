@@ -3,12 +3,13 @@ from __future__ import annotations
 from datetime import datetime
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
 from core.models import Task, TaskStatus, TgUser
 from core.services.task_service import TaskService
 from web.dependencies import get_current_tg_user
+from ..template_env import templates
 
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -98,3 +99,10 @@ async def mark_task_done(
         if task is None or task.owner_id != current_user.telegram_id:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return TaskResponse.from_model(task)
+
+
+@router.get("/ui", include_in_schema=False)
+async def tasks_page(request: Request):
+    """Render simple UI for tasks."""
+
+    return templates.TemplateResponse(request, "tasks.html", {})

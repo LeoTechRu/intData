@@ -43,3 +43,18 @@ class NoteService:
             stmt = stmt.where(Note.owner_id == owner_id)
         result = await self.session.execute(stmt)
         return result.scalars().all()
+
+    async def get_note(self, note_id: int) -> Note | None:
+        """Fetch a single note by its identifier."""
+
+        return await self.session.get(Note, note_id)
+
+    async def delete_note(self, note_id: int) -> bool:
+        """Delete note by id. Returns ``True`` if deleted."""
+
+        note = await self.session.get(Note, note_id)
+        if note is None:
+            return False
+        await self.session.delete(note)
+        await self.session.flush()
+        return True

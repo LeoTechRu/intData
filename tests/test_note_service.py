@@ -37,3 +37,12 @@ async def test_list_notes_filters_by_owner(session):
     notes_owner1 = await service.list_notes(owner_id=1)
     assert len(notes_owner1) == 1
     assert notes_owner1[0].content == "A"
+
+
+@pytest.mark.asyncio
+async def test_delete_note(session):
+    service = NoteService(session)
+    note = await service.create_note(owner_id=1, content="Temp")
+    deleted = await service.delete_note(note.id)
+    assert deleted is True
+    assert await service.list_notes(owner_id=1) == []

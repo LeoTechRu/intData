@@ -3,12 +3,13 @@ from __future__ import annotations
 from datetime import datetime
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
 from core.models import Reminder, TgUser
 from core.services.reminder_service import ReminderService
 from web.dependencies import get_current_tg_user
+from ..template_env import templates
 
 
 router = APIRouter(prefix="/reminders", tags=["reminders"])
@@ -94,3 +95,10 @@ async def mark_reminder_done(
         if reminder is None or reminder.owner_id != current_user.telegram_id:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return ReminderResponse.from_model(reminder)
+
+
+@router.get("/ui", include_in_schema=False)
+async def reminders_page(request: Request):
+    """Render simple UI for reminders."""
+
+    return templates.TemplateResponse(request, "reminders.html", {})
