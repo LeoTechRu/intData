@@ -82,6 +82,33 @@ class TaskService:
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
+    async def update_task(self, task_id: int, **fields) -> Task | None:
+        """Update task fields and return the task."""
+
+        task = await self.session.get(Task, task_id)
+        if task is None:
+            return None
+
+        for key, value in fields.items():
+            if not hasattr(task, key) or value is None:
+                continue
+            setattr(task, key, value)
+            if key == "cognitive_cost" and value:
+                task.neural_priority = 1 / value
+
+        await self.session.flush()
+        return task
+
+    async def delete_task(self, task_id: int) -> bool:
+        """Delete a task by id."""
+
+        task = await self.session.get(Task, task_id)
+        if task is None:
+            return False
+        await self.session.delete(task)
+        await self.session.flush()
+        return True
+
     async def mark_done(self, task_id: int) -> Task | None:
         """Mark task as done."""
 

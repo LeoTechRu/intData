@@ -63,6 +63,29 @@ class ReminderService:
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
+    async def update_reminder(self, reminder_id: int, **fields) -> Reminder | None:
+        """Update reminder fields and return the reminder."""
+
+        reminder = await self.session.get(Reminder, reminder_id)
+        if reminder is None:
+            return None
+        for key, value in fields.items():
+            if not hasattr(reminder, key) or value is None:
+                continue
+            setattr(reminder, key, value)
+        await self.session.flush()
+        return reminder
+
+    async def delete_reminder(self, reminder_id: int) -> bool:
+        """Delete reminder by id."""
+
+        reminder = await self.session.get(Reminder, reminder_id)
+        if reminder is None:
+            return False
+        await self.session.delete(reminder)
+        await self.session.flush()
+        return True
+
     async def mark_done(self, reminder_id: int) -> Reminder | None:
         """Mark reminder as done."""
 

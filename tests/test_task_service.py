@@ -63,3 +63,16 @@ async def test_mark_task_done(session):
     done = await service.mark_done(task.id)
     assert done is not None
     assert done.status == TaskStatus.done
+
+
+@pytest.mark.asyncio
+async def test_update_and_delete_task(session):
+    service = TaskService(session)
+    task = await service.create_task(owner_id=1, title="Old")
+    updated = await service.update_task(task.id, title="New", cognitive_cost=2)
+    assert updated.title == "New"
+    assert updated.neural_priority == 0.5
+    deleted = await service.delete_task(task.id)
+    assert deleted is True
+    tasks = await service.list_tasks(owner_id=1)
+    assert tasks == []
