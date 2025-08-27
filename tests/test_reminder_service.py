@@ -60,3 +60,18 @@ async def test_mark_done(session):
     assert reminder.is_done is False
     updated = await service.mark_done(reminder.id)
     assert updated.is_done is True
+
+
+@pytest.mark.asyncio
+async def test_update_and_delete_reminder(session):
+    service = ReminderService(session)
+    remind_at = utcnow()
+    reminder = await service.create_reminder(
+        owner_id=1, message="Old", remind_at=remind_at
+    )
+    updated = await service.update_reminder(reminder.id, message="New")
+    assert updated.message == "New"
+    deleted = await service.delete_reminder(reminder.id)
+    assert deleted is True
+    reminders = await service.list_reminders(owner_id=1)
+    assert reminders == []
