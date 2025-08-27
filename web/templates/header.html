@@ -41,3 +41,102 @@
     {% endif %}
 </div>
 
+<script>
+// Admin users: inject search and role filters (idempotent)
+(function(){
+  function create(tag, attrs, ...children){
+    const el = document.createElement(tag);
+    if (attrs) Object.entries(attrs).forEach(([k,v])=>{
+      if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
+      else if (k in el) el[k] = v; else el.setAttribute(k, v);
+    });
+    children.forEach(ch=> el.appendChild(typeof ch === 'string' ? document.createTextNode(ch) : ch));
+    return el;
+  }
+
+  function setupWebFilters(section){
+    if (!section || section.querySelector('#web-search')) return;
+    const roles = Array.from(document.querySelectorAll('#users-web select.web-role option'))
+      .map(o=>o.value).filter((v,i,arr)=> arr.indexOf(v)===i);
+    const controls = create('div', {style: {margin: '8px 0', display: 'flex', gap: '8px', alignItems: 'center'}},
+      create('input', {id: 'web-search', type: 'text', placeholder: 'Поиск по username, связанным TG', style: {flex: '1', padding: '6px 8px'}}),
+      create('label', {htmlFor: 'web-role-filter'}, 'Роль:'),
+      (function(){
+        const sel = create('select', {id: 'web-role-filter', style: {padding: '6px 8px'}});
+        sel.appendChild(create('option', {value: ''}, 'Все'));
+        roles.forEach(r=> sel.appendChild(create('option', {value: r}, r)));
+        return sel;
+      })()
+    );
+    const h1 = section.querySelector('h1');
+    if (h1) h1.insertAdjacentElement('afterend', controls); else section.prepend(controls);
+
+    function apply(){
+      const q = (section.querySelector('#web-search').value || '').trim().toLowerCase();
+      const role = section.querySelector('#web-role-filter').value || '';
+      section.querySelectorAll('table tbody tr').forEach(row=>{
+        const cells = row.querySelectorAll('td');
+        if (!cells.length) return;
+        const username = (cells[1]?.textContent || '').toLowerCase();
+        const tg = (cells[2]?.textContent || '').toLowerCase();
+        const rsel = row.querySelector('select.web-role');
+        const r = (rsel?.value || '').toLowerCase();
+        const matchText = !q || username.includes(q) || tg.includes(q);
+        const matchRole = !role || r === role.toLowerCase();
+        row.style.display = (matchText && matchRole) ? '' : 'none';
+      });
+    }
+    section.querySelector('#web-search').addEventListener('input', apply);
+    section.querySelector('#web-role-filter').addEventListener('change', apply);
+    apply();
+  }
+
+  function setupTgFilters(section){
+    if (!section || section.querySelector('#tg-search')) return;
+    const roles = Array.from(document.querySelectorAll('#users select.tg-role option'))
+      .map(o=>o.value).filter((v,i,arr)=> arr.indexOf(v)===i);
+    const controls = create('div', {style: {margin: '8px 0', display: 'flex', gap: '8px', alignItems: 'center'}},
+      create('input', {id: 'tg-search', type: 'text', placeholder: 'Поиск по ID, username, имени', style: {flex: '1', padding: '6px 8px'}}),
+      create('label', {htmlFor: 'tg-role-filter'}, 'Роль:'),
+      (function(){
+        const sel = create('select', {id: 'tg-role-filter', style: {padding: '6px 8px'}});
+        sel.appendChild(create('option', {value: ''}, 'Все'));
+        roles.forEach(r=> sel.appendChild(create('option', {value: r}, r)));
+        return sel;
+      })()
+    );
+    const h1 = section.querySelector('h1');
+    if (h1) h1.insertAdjacentElement('afterend', controls); else section.prepend(controls);
+
+    function apply(){
+      const q = (section.querySelector('#tg-search').value || '').trim().toLowerCase();
+      const role = section.querySelector('#tg-role-filter').value || '';
+      section.querySelectorAll('table tbody tr').forEach(row=>{
+        const cells = row.querySelectorAll('td');
+        if (!cells.length) return;
+        const id = (cells[0]?.textContent || '').toLowerCase();
+        const username = (cells[1]?.textContent || '').toLowerCase();
+        const first = (cells[2]?.textContent || '').toLowerCase();
+        const last = (cells[3]?.textContent || '').toLowerCase();
+        const rsel = row.querySelector('select.tg-role');
+        const r = (rsel?.value || '').toLowerCase();
+        const matchText = !q || id.includes(q) || username.includes(q) || first.includes(q) || last.includes(q);
+        const matchRole = !role || r === role.toLowerCase();
+        row.style.display = (matchText && matchRole) ? '' : 'none';
+      });
+    }
+    section.querySelector('#tg-search').addEventListener('input', apply);
+    section.querySelector('#tg-role-filter').addEventListener('change', apply);
+    apply();
+  }
+
+  function init(){
+    const web = document.getElementById('users-web');
+    const tg = document.getElementById('users');
+    if (web) setupWebFilters(web);
+    if (tg) setupTgFilters(tg);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>

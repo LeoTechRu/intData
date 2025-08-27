@@ -55,12 +55,32 @@ async def auth_middleware(request: Request, call_next):
     if path.startswith("/static") or path.startswith("/favicon"):
         return await call_next(request)
 
+    # Always allow the ban page itself
+    if path == "/ban":
+        return await call_next(request)
+
     # Allow direct access to API calls using explicit authorization headers
     if request.headers.get("Authorization"):
         return await call_next(request)
 
     web_user_id = request.cookies.get("web_user_id")
     telegram_id = request.cookies.get("telegram_id")
+
+    # Redirect banned users to /ban (but allow logout)
+    try:
+        if web_user_id and path != "/auth/logout":
+            async with WebUserService() as wsvc:
+                user = await wsvc.get_by_id(int(web_user_id))
+            if user and getattr(user, "role", None) == "ban":
+                return RedirectResponse("/ban", status_code=307)
+        if not web_user_id and telegram_id and path != "/auth/logout":
+            async with TelegramUserService() as tsvc:
+                tg_user = await tsvc.get_user_by_telegram_id(int(telegram_id))
+            if tg_user and getattr(tg_user, "role", None) == "ban":
+                return RedirectResponse("/ban", status_code=307)
+    except Exception:
+        # Fail-open to avoid blocking on middleware errors
+        pass
 
     # Authentication routes
     if path.startswith("/auth"):
@@ -98,3 +118,4 @@ app.include_router(calendar.router)
 app.include_router(time_entries.router)
 app.include_router(auth.router)
 app.include_router(admin.router, prefix="/admin")
+

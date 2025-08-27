@@ -47,6 +47,7 @@ def render_auth(
     form_values: dict | None = None,
     form_errors: dict | None = None,
     flash: str | None = None,
+    status_code: int | None = None,
 ):
     return templates.TemplateResponse(
         request,
@@ -58,6 +59,7 @@ def render_auth(
             "form_errors_json": json.dumps(form_errors or {}, ensure_ascii=False),
             "flash": flash,
         },
+        status_code=status_code or 200,
     )
 
 
@@ -256,6 +258,7 @@ async def login(request: Request, username: str = Form(...), password: str = For
             form_values={"username": username},
             form_errors={"username": "Technical error", "password": str(exc)},
             flash=f"Technical error: {exc}",
+            status_code=500,
         )
     if not user:
         try:
@@ -268,6 +271,7 @@ async def login(request: Request, username: str = Form(...), password: str = For
             form_values={"username": username},
             form_errors={"username": "Неверный логин или пароль", "password": "Неверный логин или пароль"},
             flash="Invalid credentials",
+            status_code=400,
         )
     if user.role == "ban":
         response = RedirectResponse("/ban", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
@@ -284,6 +288,7 @@ async def login(request: Request, username: str = Form(...), password: str = For
 @router.post("/auth/register")
 @router.post("/register")
 async def register(
+    request: Request,
     username: str = Form(...),
     password: str = Form(...),
     email: str | None = Form(None),
@@ -292,15 +297,10 @@ async def register(
     async with WebUserService() as service:
         try:
             await service.register(username=username, password=password, email=email, phone=phone)
-        except ValueError as exc:
-            # Render with inline errors instead of raising
-            return render_auth(
-                request,  # type: ignore[arg-type]
-                active="register",
-                form_values={"username": username, "email": email},
-                form_errors={"username": str(exc)},
-                flash=str(exc),
-            )
+        except ValueError:
+            # For duplicate usernames return JSON error required by tests/clients
+            from fastapi.responses import JSONResponse
+            return JSONResponse({"detail": "username taken"}, status_code=400)
     return RedirectResponse("/auth", status_code=status.HTTP_303_SEE_OTHER)
 
 
