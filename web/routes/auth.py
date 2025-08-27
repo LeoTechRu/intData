@@ -35,9 +35,9 @@ def base_context() -> Dict[str, object]:
 
 def verify_telegram_auth(data: dict) -> dict:
     """Validate Telegram Login Widget signature."""
-    token = os.getenv("TG_BOT_TOKEN")
+    token = os.getenv("BOT_TOKEN")
     if not token:
-        raise HTTPException(status_code=500, detail="TG_BOT_TOKEN is not configured")
+        raise HTTPException(status_code=500, detail="BOT_TOKEN is not configured")
 
     recv_hash = data.get("hash", "")
     check_data = "\n".join(
