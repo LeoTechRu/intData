@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-import hmac
-import hashlib
-import os
-import time
+import hmac, hashlib, os, time
 from pathlib import Path
 from typing import Dict
 
@@ -34,6 +31,77 @@ def base_context() -> Dict[str, object]:
         "page_title": "Авторизация",
         "now_ts": int(time.time()),
     }
+
+
+def verify_telegram_auth(data: dict) -> dict:
+    """Validate Telegram Login Widget signature."""
+    token = os.getenv("TG_BOT_TOKEN")
+    if not token:
+        raise HTTPException(status_code=500, detail="TG_BOT_TOKEN is not configured")
+
+    recv_hash = data.get("hash", "")
+    check_data = "\n".join(
+        f"{k}={data[k]}" for k in sorted([k for k in data.keys() if k != "hash"])
+    )
+    secret = hashlib.sha256(token.encode()).digest()
+    calc_hash = hmac.new(secret, check_data.encode(), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(calc_hash, recv_hash):
+        raise HTTPException(status_code=400, detail="Invalid Telegram signature")
+
+    try:
+        if time.time() - int(data.get("auth_date", "0")) > 86400:
+            raise HTTPException(status_code=400, detail="Telegram auth expired")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid auth_date")
+
+    return data
+
+
+async def upsert_user_from_telegram(info: dict):
+    telegram_id = int(info["id"])
+    async with TelegramUserService() as tsvc:
+        tg_user = await tsvc.update_from_telegram(
+            telegram_id,
+            username=info.get("username"),
+            first_name=info.get("first_name"),
+            last_name=info.get("last_name"),
+            language_code=info.get("language_code"),
+        )
+    async with WebUserService() as wsvc:
+        web_user = await wsvc.get_user_by_identifier(telegram_id)
+        if not web_user:
+            username = info.get("username") or f"tg{telegram_id}"
+            password = os.urandom(16).hex()
+            web_user = await wsvc.register(username=username, password=password)
+            await wsvc.link_telegram(web_user.id, tg_user.id)
+        return web_user
+
+
+@router.get("/auth/telegram")
+async def auth_telegram(request: Request):
+    params = dict(request.query_params)
+    info = verify_telegram_auth(params)
+    user = await upsert_user_from_telegram(info)
+    if getattr(user, "role", "") == "ban":
+        return RedirectResponse("/ban", status_code=307)
+    response = RedirectResponse("/", status_code=302)
+    response.set_cookie(
+        "web_user_id",
+        str(user.id),
+        max_age=S.SESSION_MAX_AGE,
+        path="/",
+        httponly=True,
+        samesite="lax",
+    )
+    response.set_cookie(
+        "telegram_id",
+        str(info["id"]),
+        max_age=S.SESSION_MAX_AGE,
+        path="/",
+        httponly=True,
+        samesite="lax",
+    )
+    return response
 
 
 def verify_telegram_login(data: Dict[str, str]) -> bool:
