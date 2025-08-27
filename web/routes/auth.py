@@ -41,8 +41,8 @@ def verify_telegram_login(data: Dict[str, str]) -> bool:
     return auth_date > 0 and (time.time() - auth_date) <= S.SESSION_MAX_AGE
 
 
-@router.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request) -> HTMLResponse:
+@router.get("", response_class=HTMLResponse)
+async def auth_page(request: Request, tab: str = "login") -> HTMLResponse:
     telegram_id = request.cookies.get("telegram_id")
     origin = S.PUBLIC_BASE_URL or ""
     telegram_login_url = (
@@ -51,13 +51,14 @@ async def login_page(request: Request) -> HTMLResponse:
         f"&origin={origin}"
         f"&redirect_url={origin}/auth/tg/callback&request_access=write"
     )
+    active = tab if tab in {"login", "register"} else "login"
     context = {
         "telegram_login_url": telegram_login_url,
         "telegram_id": telegram_id,
-        "page_title": "Вход",
-        "active": "login",
+        "page_title": "Авторизация",
+        "active": active,
     }
-    return templates.TemplateResponse(request, "auth_login.html", context)
+    return templates.TemplateResponse(request, "auth.html", context)
 
 
 @router.post("/login")
@@ -76,20 +77,20 @@ async def login(request: Request, username: str = Form(...), password: str = For
         context = {
             "telegram_login_url": telegram_login_url,
             "telegram_id": request.cookies.get("telegram_id"),
-            "page_title": "Вход",
+            "page_title": "Авторизация",
             "flash": f"Technical error: {exc}",
             "active": "login",
         }
-        return templates.TemplateResponse(request, "auth_login.html", context, status_code=500)
+        return templates.TemplateResponse(request, "auth.html", context, status_code=500)
     if not user:
         context = {
             "telegram_login_url": telegram_login_url,
             "telegram_id": request.cookies.get("telegram_id"),
-            "page_title": "Вход",
+            "page_title": "Авторизация",
             "flash": "Invalid credentials",
             "active": "login",
         }
-        return templates.TemplateResponse(request, "auth_login.html", context, status_code=400)
+        return templates.TemplateResponse(request, "auth.html", context, status_code=400)
     if user.role == "ban":
         response = RedirectResponse("/ban", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
         response.delete_cookie("web_user_id", path="/")
@@ -107,26 +108,6 @@ async def login(request: Request, username: str = Form(...), password: str = For
     return response
 
 
-@router.get("/register", response_class=HTMLResponse)
-async def register_page(request: Request) -> HTMLResponse:
-    origin = S.PUBLIC_BASE_URL or ""
-    telegram_login_url = (
-        "https://oauth.telegram.org/auth"
-        f"?bot_id={S.BOT_TOKEN.split(':')[0]}"
-        f"&origin={origin}"
-        f"&redirect_url={origin}/auth/tg/callback&request_access=write"
-    )
-    return templates.TemplateResponse(
-        request,
-        "auth_register.html",
-        {
-            "page_title": "Регистрация",
-            "telegram_login_url": telegram_login_url,
-            "active": "register",
-        },
-    )
-
-
 @router.post("/register")
 async def register(
     username: str = Form(...),
@@ -139,12 +120,12 @@ async def register(
             await service.register(username=username, password=password, email=email, phone=phone)
         except ValueError as exc:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
-    return RedirectResponse("/auth/login", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse("/auth", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.post("/logout")
 async def logout() -> RedirectResponse:
-    response = RedirectResponse("/auth/login", status_code=status.HTTP_303_SEE_OTHER)
+    response = RedirectResponse("/auth", status_code=status.HTTP_303_SEE_OTHER)
     response.delete_cookie("web_user_id", path="/")
     response.delete_cookie("telegram_id", path="/")
     return response
@@ -210,7 +191,7 @@ async def telegram_callback(request: Request):
 async def create_web_account_page(request: Request) -> HTMLResponse:
     telegram_id = request.cookies.get("telegram_id")
     if not telegram_id:
-        return RedirectResponse("/auth/login", status_code=status.HTTP_303_SEE_OTHER)
+        return RedirectResponse("/auth", status_code=status.HTTP_303_SEE_OTHER)
     return templates.TemplateResponse(
         request,
         "auth/create_web_account.html",
@@ -227,7 +208,7 @@ async def create_web_account(
 ):
     telegram_id = request.cookies.get("telegram_id")
     if not telegram_id:
-        return RedirectResponse("/auth/login", status_code=status.HTTP_303_SEE_OTHER)
+        return RedirectResponse("/auth", status_code=status.HTTP_303_SEE_OTHER)
     if action == "cancel":
         response = templates.TemplateResponse(
             request,

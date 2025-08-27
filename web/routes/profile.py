@@ -35,7 +35,7 @@ async def profile_root(
         )
     if not current_user:
         return RedirectResponse(
-            "/auth/login", status_code=status.HTTP_302_FOUND
+            "/auth", status_code=status.HTTP_302_FOUND
         )
     return RedirectResponse(
         f"/profile/{current_user.username}",
