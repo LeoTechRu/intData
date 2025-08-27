@@ -23,6 +23,7 @@ templates.env.globals.update(
     BOT_LANDING_URL=os.getenv("BOT_LANDING_URL", f"{_web_url}/bot"),
     TG_LOGIN_ENABLED=os.getenv("TG_LOGIN_ENABLED", "1") == "1",
     TG_BOT_USERNAME=os.getenv("TG_BOT_USERNAME", _bot_username_with_at),
+    RECAPTCHA_SITE_KEY=os.getenv("RECAPTCHA_SITE_KEY"),
 )
 
 __all__ = ["templates"]

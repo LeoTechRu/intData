@@ -81,6 +81,24 @@ async def delete_note(
         await service.delete_note(note_id)
 
 
+@router.put("/{note_id}", response_model=NoteResponse)
+async def update_note(
+    note_id: int,
+    payload: NoteCreate,
+    current_user: TgUser | None = Depends(get_current_tg_user),
+):
+    """Update a note owned by the current user."""
+
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    async with NoteService() as service:
+        note = await service.get_note(note_id)
+        if note is None or note.owner_id != current_user.telegram_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        note = await service.update_note(note_id, payload.content)
+    return NoteResponse.from_model(note)
+
+
 @router.get("/ui", include_in_schema=False)
 async def notes_page(request: Request):
     """Render simple UI for notes."""

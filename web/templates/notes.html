@@ -45,7 +45,10 @@ async function fetchNotes(){
   document.getElementById('note-empty').style.display='none';
   for (const n of data){
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${n.id}</td><td>${n.content}</td><td><button class="button" data-id="${n.id}">Удалить</button></td>`;
+    tr.innerHTML = `<td>${n.id}</td><td>${n.content}</td><td>
+      <button class="button" data-action="edit" data-id="${n.id}">Редактировать</button>
+      <button class="button" data-action="delete" data-id="${n.id}">Удалить</button>
+    </td>`;
     list.appendChild(tr);
   }
 }
@@ -65,11 +68,24 @@ document.addEventListener('DOMContentLoaded', ()=>{
 });
 
 document.addEventListener('click', async (e)=>{
-  const btn = e.target.closest('button[data-id]');
+  const btn = e.target.closest('button[data-action][data-id]');
   if (!btn) return;
-  const id = btn.getAttribute('data-id');
-  const resp = await fetch(`/notes/${id}`, {method:'DELETE', credentials:'include'});
-  if (resp.ok){ fetchNotes(); }
+  const id = btn.dataset.id;
+  if (btn.dataset.action === 'delete'){
+    const resp = await fetch(`/notes/${id}`, {method:'DELETE', credentials:'include'});
+    if (resp.ok){ fetchNotes(); }
+  } else if (btn.dataset.action === 'edit'){
+    const current = btn.closest('tr').children[1].textContent;
+    const content = prompt('Изменить заметку', current);
+    if (content === null) return;
+    const resp = await fetch(`/notes/${id}`, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body: JSON.stringify({content})
+    });
+    if (resp.ok){ fetchNotes(); }
+  }
 });
 </script>
 {% endblock %}

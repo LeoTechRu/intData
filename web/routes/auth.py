@@ -3,6 +3,8 @@ from __future__ import annotations
 import hmac, hashlib, os, time, json
 from typing import Dict
 
+import httpx
+
 from fastapi import APIRouter, HTTPException, Request, Form, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from ..template_env import templates
@@ -11,8 +13,7 @@ from sqlalchemy import select
 
 from core.services.web_user_service import WebUserService
 from core.services.telegram_user_service import TelegramUserService
-from core.models import LogLevel, WebUser
-from core.logger import escape_markdown_v2
+from core.models import WebUser
 from web.config import S
 from web.security.authlog import log_event
 
@@ -20,6 +21,26 @@ router = APIRouter(tags=["auth"])
 
 # itsdangerous serializer for magic links and short-lived tokens
 serializer = URLSafeTimedSerializer(os.getenv("SECRET_KEY", S.BOT_TOKEN))
+
+
+async def verify_recaptcha_token(token: str | None) -> bool:
+    """Validate reCAPTCHA token if configured."""
+
+    if not S.RECAPTCHA_SECRET_KEY:
+        return True
+    if not token:
+        return False
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                "https://www.google.com/recaptcha/api/siteverify",
+                data={"secret": S.RECAPTCHA_SECRET_KEY, "response": token},
+                timeout=10,
+            )
+            data = resp.json()
+            return data.get("success", False)
+    except Exception:  # pragma: no cover - network failure
+        return False
 
 
 def base_context() -> Dict[str, object]:
@@ -271,7 +292,20 @@ async def restore_password(
 
 @router.post("/auth/login")
 @router.post("/login")
-async def login(request: Request, username: str = Form(...), password: str = Form(...)):
+async def login(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    g_recaptcha_response: str | None = Form(None, alias="g-recaptcha-response"),
+):
+    if not await verify_recaptcha_token(g_recaptcha_response):
+        return render_auth(
+            request,
+            active="login",
+            form_values={"username": username},
+            flash="reCAPTCHA validation failed",
+            status_code=400,
+        )
     try:
         async with WebUserService() as service:
             user = await service.authenticate(username, password)
@@ -317,12 +351,20 @@ async def register(
     password: str = Form(...),
     email: str | None = Form(None),
     phone: str | None = Form(None),
+    g_recaptcha_response: str | None = Form(None, alias="g-recaptcha-response"),
 ):
+    if not await verify_recaptcha_token(g_recaptcha_response):
+        return render_auth(
+            request,
+            active="register",
+            form_values={"username": username, "email": email},
+            flash="reCAPTCHA validation failed",
+            status_code=400,
+        )
     async with WebUserService() as service:
         try:
             await service.register(username=username, password=password, email=email, phone=phone)
         except ValueError:
-            # For duplicate usernames return JSON error required by tests/clients
             from fastapi.responses import JSONResponse
             return JSONResponse({"detail": "username taken"}, status_code=400)
     return RedirectResponse("/auth", status_code=status.HTTP_303_SEE_OTHER)

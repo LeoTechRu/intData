@@ -46,3 +46,12 @@ async def test_delete_note(session):
     deleted = await service.delete_note(note.id)
     assert deleted is True
     assert await service.list_notes(owner_id=1) == []
+
+
+@pytest.mark.asyncio
+async def test_update_note(session):
+    service = NoteService(session)
+    note = await service.create_note(owner_id=1, content="Old")
+    updated = await service.update_note(note.id, "New")
+    assert updated is not None
+    assert updated.content == "New"
