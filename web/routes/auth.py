@@ -139,6 +139,7 @@ async def restore_redirect():
     return RedirectResponse("/auth#restore", status_code=302)
 
 
+@router.post("/auth/login")
 @router.post("/login")
 async def login(request: Request, username: str = Form(...), password: str = Form(...)):
     try:
@@ -169,6 +170,7 @@ async def login(request: Request, username: str = Form(...), password: str = For
     return response
 
 
+@router.post("/auth/register")
 @router.post("/register")
 async def register(
     username: str = Form(...),
@@ -184,7 +186,7 @@ async def register(
     return RedirectResponse("/auth", status_code=status.HTTP_303_SEE_OTHER)
 
 
-@router.post("/logout")
+@router.post("/auth/logout")
 async def logout() -> RedirectResponse:
     response = RedirectResponse("/auth", status_code=status.HTTP_303_SEE_OTHER)
     response.delete_cookie("web_user_id", path="/")
@@ -192,7 +194,7 @@ async def logout() -> RedirectResponse:
     return response
 
 
-@router.api_route("/tg/callback", methods=["GET", "POST"])
+@router.api_route("/auth/tg/callback", methods=["GET", "POST"])
 async def telegram_callback(request: Request):
     """Handle Telegram login callback from widget."""
     if request.method == "POST":
@@ -248,7 +250,7 @@ async def telegram_callback(request: Request):
     return response
 
 
-@router.get("/create_web_account", response_class=HTMLResponse)
+@router.get("/auth/create_web_account", response_class=HTMLResponse)
 async def create_web_account_page(request: Request) -> HTMLResponse:
     telegram_id = request.cookies.get("telegram_id")
     if not telegram_id:
@@ -257,7 +259,7 @@ async def create_web_account_page(request: Request) -> HTMLResponse:
     return RedirectResponse("/auth#register", status_code=status.HTTP_303_SEE_OTHER)
 
 
-@router.post("/create_web_account")
+@router.post("/auth/create_web_account")
 async def create_web_account(
     request: Request,
     action: str = Form(...),
