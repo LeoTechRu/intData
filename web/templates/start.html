@@ -7,56 +7,72 @@
 
       {# — Профиль #}
       <section class="card span-2 profile-widget" id="card-profile">
-        <div class="profile-header">
-          <div class="profile-avatar" aria-hidden="true">👤</div>
-          <div class="profile-name">
-            <div class="title">{{ profile_user.full_name or profile_user.username }}</div>
-            <div class="muted">@{{ profile_user.username }}</div>
+          <div class="profile-header">
+            <div class="profile-avatar" aria-hidden="true">
+              <svg class="icon-lg"><use href="#i-user"/></svg>
+            </div>
+            <div class="profile-name">
+              <div class="title">{{ profile_user.full_name or profile_user.username }}</div>
+              <div class="muted">@{{ profile_user.username }}</div>
+            </div>
+            <button type="button"
+                    class="role-badge profile-role"
+                    data-role="{{ profile_user.role }}">
+              <svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg>&nbsp;{{ profile_user.role }}
+            </button>
           </div>
-          <button type="button"
-                  class="role-badge profile-role"
-                  data-role="{{ profile_user.role }}">{{ profile_user.role }}</button>
-        </div>
 
         <div class="profile-grid">
-          <div class="item">
-            <div class="label">Email</div>
-            <div class="value">
-              {% if profile_user.email %}
-                <a class="profile-link" href="mailto:{{ profile_user.email }}">{{ profile_user.email }}</a>
-              {% else %}
-                <span class="ui2-muted">не указано</span>
-              {% endif %}
+            <div class="item">
+              <div class="label label-with-icon">
+                <svg class="icon icon-muted"><use href="#i-mail"/></svg>
+                <span>Email</span>
+              </div>
+              <div class="value">
+                {% if profile_user.email %}
+                  <a class="profile-link" href="mailto:{{ profile_user.email }}">{{ profile_user.email }}</a>
+                {% else %}
+                  <span class="ui2-muted">не указано</span>
+                {% endif %}
+              </div>
             </div>
-          </div>
 
-          <div class="item">
-            <div class="label">Телефон</div>
-            <div class="value">
-              {% if profile_user.phone %}
-                {% set tel_clean = profile_user.phone
-                    |replace(' ', '')
-                    |replace('(', '')
-                    |replace(')', '')
-                    |replace('-', '') %}
-                <a class="profile-link" href="tel:{{ tel_clean }}">{{ profile_user.phone }}</a>
-              {% else %}
-                <span class="ui2-muted">не указан</span>
-              {% endif %}
+            <div class="item">
+              <div class="label label-with-icon">
+                <svg class="icon icon-muted"><use href="#i-phone"/></svg>
+                <span>Телефон</span>
+              </div>
+              <div class="value">
+                {% if profile_user.phone %}
+                  {% set tel_clean = profile_user.phone
+                      |replace(' ', '')
+                      |replace('(', '')
+                      |replace(')', '')
+                      |replace('-', '') %}
+                  <a class="profile-link" href="tel:{{ tel_clean }}">{{ profile_user.phone }}</a>
+                {% else %}
+                  <span class="ui2-muted">не указан</span>
+                {% endif %}
+              </div>
             </div>
-          </div>
 
-          <div class="item">
-            <div class="label">День рождения</div>
-            <div class="value">
-              {{ profile_user.birthday.strftime('%d.%m.%Y') if profile_user.birthday else 'не указано' }}
+            <div class="item">
+              <div class="label label-with-icon">
+                <svg class="icon icon-muted"><use href="#i-cake"/></svg>
+                <span>День рождения</span>
+              </div>
+              <div class="value">
+                {{ profile_user.birthday.strftime('%d.%m.%Y') if profile_user.birthday else 'не указано' }}
+              </div>
             </div>
-          </div>
 
-          <div class="item">
-            <div class="label">Язык</div>
-            <div class="value">{{ profile_user.language or 'не указан' }}</div>
-          </div>
+            <div class="item">
+              <div class="label label-with-icon">
+                <svg class="icon icon-muted"><use href="#i-globe"/></svg>
+                <span>Язык</span>
+              </div>
+              <div class="value">{{ profile_user.language or 'не указан' }}</div>
+            </div>
         </div>
 
         <div class="profile-actions">
