@@ -32,7 +32,7 @@ jobs:
               cd /sd/leonidpro
               mkdir -p ~/.ssh && ssh-keyscan -H github.com >> ~/.ssh/known_hosts
               if git remote get-url origin | grep -q "^https://"; then
-                git remote set-url origin git@github.com:LeoTechRu/LeonidBot.git
+                git remote set-url origin git@github.com:LeoTechRu/LeonidPro.git
               fi
               git config --global --add safe.directory /sd/leonidpro || true
               git stash push -u -m "ci-autostash $(date -Iseconds)" || true
@@ -40,8 +40,8 @@ jobs:
               git reset --hard origin/main
             '
             # рестарт сервисов
-            sudo -n systemctl restart leonidbot-bot.service
-            sudo -n systemctl restart leonidbot-web.service
+            sudo -n systemctl restart leonidpro-bot
+            sudo -n systemctl restart leonidpro-web
             # проверка статуса
-            systemctl is-active --quiet leonidbot-bot.service
-            systemctl is-active --quiet leonidbot-web.service
+            systemctl is-active --quiet leonidpro-bot
+            systemctl is-active --quiet leonidpro-web
