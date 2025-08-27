@@ -7,16 +7,14 @@
 
       {# — Профиль #}
       <section class="card span-2" id="card-profile">
-        <div class="card-title">Профиль</div>
-        <div style="display:grid;grid-template-columns:1fr 2fr;gap:6px 12px">
-          <div class="ui2-muted">Full name</div><div>{{ profile_user.full_name or '—' }}</div>
-          <div class="ui2-muted">Username</div><div>{{ profile_user.username }}</div>
-          <div class="ui2-muted">Email</div><div>{{ profile_user.email or 'не указано' }}</div>
-          <div class="ui2-muted">Телефон</div><div>{{ profile_user.phone or 'не указан' }}</div>
-          <div class="ui2-muted">День рождения</div><div>{{ profile_user.birthday.strftime('%d.%m.%Y') if profile_user.birthday else 'не указано' }}</div>
-          <div class="ui2-muted">Язык</div><div>{{ profile_user.language or 'не указан' }}</div>
-          <div class="ui2-muted">Роль</div>
-          <div>
+        <div class="profile-info">
+          <div class="profile-item"><span class="profile-icon" title="Full name">👤</span><span>{{ profile_user.full_name or '—' }}</span></div>
+          <div class="profile-item"><span class="profile-icon" title="Username">🔖</span><span>{{ profile_user.username }}</span></div>
+          <div class="profile-item"><span class="profile-icon" title="Email">✉️</span><span>{{ profile_user.email or 'не указано' }}</span></div>
+          <div class="profile-item"><span class="profile-icon" title="Телефон">📞</span><span>{{ profile_user.phone or 'не указан' }}</span></div>
+          <div class="profile-item"><span class="profile-icon" title="День рождения">🎂</span><span>{{ profile_user.birthday.strftime('%d.%m.%Y') if profile_user.birthday else 'не указано' }}</span></div>
+          <div class="profile-item"><span class="profile-icon" title="Язык">🌐</span><span>{{ profile_user.language or 'не указан' }}</span></div>
+          <div class="profile-item"><span class="profile-icon" title="Роль">🎭</span>
             <button type="button" class="role-badge" data-role="{{ profile_user.role }}">{{ profile_user.role }}</button>
           </div>
         </div>

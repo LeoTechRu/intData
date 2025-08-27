@@ -471,6 +471,24 @@ body.compact .admin-panel {
 }
 .role-badge:hover{ filter:brightness(0.95); }
 
+/* Profile widget */
+#card-profile .profile-info{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+#card-profile .profile-item{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+#card-profile .profile-icon{
+  font-size:1.2rem;
+  line-height:1;
+}
+
 .role-help-modal.hidden{ display:none; }
 .role-help-modal{
   position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
