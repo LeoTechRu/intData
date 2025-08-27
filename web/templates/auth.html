@@ -71,7 +71,12 @@
                       data-request-access="write"
                       data-auth-url="/auth/telegram"
                       data-lang="ru"></script>
-              <div class="muted small">Если виджет не загрузился — <a class="link" target="_blank" rel="noopener" href="https://t.me/{{ (TG_BOT_USERNAME or 'LeonidBot')|replace('@','') }}?start=login">откройте бота в Telegram</a>.</div>
+              <a class="btn telegram full" target="_blank" rel="noopener"
+                 href="https://t.me/{{ (TG_BOT_USERNAME or '@LeonidBot')|replace('@','') }}?start=login">
+                <svg class="icon"><use href="#i-paper-plane" /></svg>
+                Открыть {{ TG_BOT_USERNAME or '@LeonidBot' }}
+              </a>
+              <div class="muted small">Если виджет не загрузился, нажмите кнопку выше.</div>
             </div>
           {% endif %}
 
