@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Напоминания{% endblock %}
+{% block content %}
+<div class="ui-layout">
+  <div id="main-content">
+    <div class="ui-notice">Создавайте напоминания и отмечайте выполненными.</div>
+
+    <section class="card" style="margin-bottom:1rem;">
+      <div class="card-title">Новое напоминание</div>
+      <form id="reminder-form" class="ui-form">
+        <label>
+          <div>Текст</div>
+          <input type="text" name="message" required placeholder="О чём напомнить?">
+        </label>
+        <label>
+          <div>Время</div>
+          <input type="datetime-local" name="remind_at" required>
+        </label>
+        <label>
+          <div>ID задачи (необязательно)</div>
+          <input type="number" name="task_id" min="1" step="1">
+        </label>
+        <button class="button" type="submit">Добавить</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="card-title">Мои напоминания</div>
+      <table class="ui-table">
+        <thead><tr><th>ID</th><th>Сообщение</th><th>Когда</th><th>Задача</th><th>Статус</th><th></th></tr></thead>
+        <tbody id="reminder-list"></tbody>
+      </table>
+      <div id="reminder-empty" class="text-muted" style="display:none; padding:8px;">Напоминаний пока нет</div>
+    </section>
+  </div>
+</div>
+
+<script>
+async function fetchReminders(){
+  const resp = await fetch('/reminders', {credentials:'include'});
+  if (!resp.ok) { document.getElementById('reminder-empty').textContent = 'Требуется вход и связанный Telegram-аккаунт'; document.getElementById('reminder-empty').style.display='block'; return; }
+  const data = await resp.json();
+  const list = document.getElementById('reminder-list');
+  list.innerHTML = '';
+  if (!data.length){ document.getElementById('reminder-empty').style.display='block'; return; }
+  document.getElementById('reminder-empty').style.display='none';
+  for (const r of data){
+    const tr = document.createElement('tr');
+    const when = r.remind_at ? new Date(r.remind_at).toLocaleString() : '';
+    const status = r.is_done ? 'выполнено' : 'активно';
+    tr.innerHTML = `<td>${r.id}</td><td>${r.message}</td><td>${when}</td><td>${r.task_id||''}</td><td>${status}</td><td>${r.is_done?'' : '<button class="button" data-id="'+r.id+'">Готово</button>'}</td>`;
+    list.appendChild(tr);
+  }
+}
+
+document.addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button[data-id]');
+  if (!btn) return;
+  const id = btn.getAttribute('data-id');
+  const resp = await fetch(`/reminders/${id}/done`, {method:'POST', credentials:'include'});
+  if (resp.ok) fetchReminders();
+});
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  const form = document.getElementById('reminder-form');
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const fd = new FormData(form);
+    const payload = {
+      message: fd.get('message'),
+      remind_at: new Date(fd.get('remind_at')).toISOString(),
+      task_id: fd.get('task_id') ? Number(fd.get('task_id')) : null,
+    };
+    const resp = await fetch('/reminders', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify(payload)});
+    if (resp.ok){ form.reset(); fetchReminders(); }
+  });
+  fetchReminders();
+});
+</script>
+{% endblock %}
+

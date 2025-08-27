@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Авторизация — LeonidPro</title>
   <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+  <script type="module" src="{{ url_for('static', path='js/main.js') }}"></script>
+  <script src="{{ url_for('static', path='js/auth_extra.js') }}"></script>
   {% if RECAPTCHA_SITE_KEY %}
   <script src="https://www.google.com/recaptcha/api.js" async defer></script>
   {% endif %}
@@ -22,19 +24,22 @@
     <div class="auth-card">
 
       <nav class="auth-tabs" role="tablist">
-        <a href="#login"     class="tab is-active" data-tab="login"     role="tab" aria-selected="true">Вход</a>
-        <a href="#register"  class="tab"           data-tab="register"  role="tab" aria-selected="false">Регистрация</a>
-        <a href="#restore"   class="tab"           data-tab="restore"   role="tab" aria-selected="false">Напомнить</a>
+        <a href="#login"     class="tab {% if active_tab=='login' %}is-active{% endif %}" data-tab="login"     role="tab" aria-selected="{{ 'true' if active_tab=='login' else 'false' }}">Вход</a>
+        <a href="#register"  class="tab {% if active_tab=='register' %}is-active{% endif %}" data-tab="register"  role="tab" aria-selected="{{ 'true' if active_tab=='register' else 'false' }}">Регистрация</a>
+        <a href="#restore"   class="tab {% if active_tab=='restore' %}is-active{% endif %}" data-tab="restore"   role="tab" aria-selected="{{ 'true' if active_tab=='restore' else 'false' }}">Напомнить</a>
       </nav>
 
       <section class="auth-forms">
+        {% if form_errors_json %}
+          <script>window.AUTH_ERRORS={{ form_errors_json|safe }};</script>
+        {% endif %}
 
         <!-- LOGIN -->
-        <form action="/login" method="post" class="auth-form form-login" data-validate="login" novalidate>
+        <form action="/login" method="post" class="auth-form form-login{% if active_tab!='login' %} is-hidden{% endif %}" data-validate="login" novalidate>
           {{ csrf_input|safe if csrf_input is defined }}
           <label class="field">
             <span class="label">Username</span>
-            <input class="control" type="text" name="username" autocomplete="username" required placeholder="Ваш логин">
+            <input class="control" type="text" name="username" autocomplete="username" required placeholder="Ваш логин" value="{{ form_values.username or '' }}">
             <div class="error-text" data-for="username"></div>
           </label>
 
@@ -76,12 +81,18 @@
         </form>
 
         <!-- REGISTER -->
-        <form action="/register" method="post" class="auth-form form-register is-hidden" data-validate="register" novalidate>
+        <form action="/register" method="post" class="auth-form form-register{% if active_tab!='register' %} is-hidden{% endif %}" data-validate="register" novalidate>
           {{ csrf_input|safe if csrf_input is defined }}
 
           <label class="field">
+            <span class="label">Username</span>
+            <input class="control" type="text" name="username" autocomplete="username" required placeholder="Придумайте логин" value="{{ form_values.username or '' }}">
+            <div class="error-text" data-for="username"></div>
+          </label>
+
+          <label class="field">
             <span class="label">Email</span>
-            <input class="control" type="email" name="email" autocomplete="email" required placeholder="Введите Email">
+            <input class="control" type="email" name="email" autocomplete="email" required placeholder="Введите Email" value="{{ form_values.email or '' }}">
             <div class="error-text" data-for="email"></div>
           </label>
 
@@ -92,6 +103,8 @@
               <button type="button" class="link tiny toggle-password" aria-label="Показать/скрыть пароль">👁</button>
             </div>
             <div class="error-text" data-for="password"></div>
+            <div class="pwd-meter" aria-hidden="true"><i></i></div>
+            <div class="pwd-hint">Минимум 8 символов. Лучше: буквы в разных регистрах, цифры и символы.</div>
           </label>
 
           <label class="field">
@@ -104,18 +117,20 @@
         </form>
 
         <!-- RESTORE -->
-        <form action="/restore" method="post" class="auth-form form-restore is-hidden" data-validate="restore" novalidate>
+        <form action="/restore" method="post" class="auth-form form-restore{% if active_tab!='restore' %} is-hidden{% endif %}" data-validate="restore" novalidate>
           {{ csrf_input|safe if csrf_input is defined }}
           <input type="hidden" name="form_ts" value="{{ now_ts }}">
           <div class="hp-wrap" aria-hidden="true"><input type="text" name="hp_url" tabindex="-1" autocomplete="off"></div>
 
           <label class="field">
             <span class="label">Email</span>
-            <input class="control" type="email" name="email" required placeholder="Введите Email">
+            <input class="control" type="email" name="email" required placeholder="Введите Email" value="{{ form_values.email or '' }}">
             <div class="error-text" data-for="email"></div>
           </label>
 
           <button class="btn primary full" type="submit">Отправить ссылку</button>
+          <div class="or">или</div>
+          <button class="btn full" type="submit" formaction="/auth/magic/request">Войти по магической ссылке</button>
           <p class="muted small" style="margin-top:10px">Мы пришлём письмо со ссылкой для смены пароля (если такой аккаунт существует).</p>
         </form>
 

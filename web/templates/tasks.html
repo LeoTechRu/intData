@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Задачи{% endblock %}
+{% block content %}
+<div class="ui-layout">
+  <div id="main-content">
+    <div class="ui-notice">Создавайте задачи и следите за статусом.</div>
+
+    <section class="card" style="margin-bottom:1rem;">
+      <div class="card-title">Новая задача</div>
+      <form id="task-form" class="ui-form">
+        <label>
+          <div>Название</div>
+          <input type="text" name="title" required placeholder="Что нужно сделать?">
+        </label>
+        <label>
+          <div>Описание</div>
+          <textarea name="description" rows="3" placeholder="Кратко опишите задачу"></textarea>
+        </label>
+        <label>
+          <div>Срок</div>
+          <input type="datetime-local" name="due_date">
+        </label>
+        <button class="button" type="submit">Добавить</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="card-title">Мои задачи</div>
+      <table class="ui-table">
+        <thead>
+          <tr><th>ID</th><th>Название</th><th>Статус</th><th>Срок</th></tr>
+        </thead>
+        <tbody id="task-list"></tbody>
+      </table>
+      <div id="task-empty" class="text-muted" style="display:none; padding:8px;">Задач пока нет</div>
+    </section>
+  </div>
+</div>
+
+<script>
+async function fetchTasks(){
+  const resp = await fetch('/tasks', {credentials:'include'});
+  if (!resp.ok) { document.getElementById('task-empty').textContent = 'Требуется вход и связанный Telegram-аккаунт'; document.getElementById('task-empty').style.display='block'; return; }
+  const data = await resp.json();
+  const list = document.getElementById('task-list');
+  list.innerHTML = '';
+  if (!data.length){ document.getElementById('task-empty').style.display='block'; return; }
+  document.getElementById('task-empty').style.display='none';
+  for (const t of data){
+    const tr = document.createElement('tr');
+    const due = t.due_date ? new Date(t.due_date).toLocaleString() : '';
+    tr.innerHTML = `<td>${t.id}</td><td>${t.title}</td><td>${t.status}</td><td>${due}</td>`;
+    list.appendChild(tr);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  const form = document.getElementById('task-form');
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const fd = new FormData(form);
+    const payload = {
+      title: fd.get('title'),
+      description: fd.get('description') || null,
+      due_date: fd.get('due_date') ? new Date(fd.get('due_date')).toISOString() : null,
+    };
+    const resp = await fetch('/tasks', {
+      method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload)
+    });
+    if (resp.ok){ form.reset(); fetchTasks(); }
+  });
+  fetchTasks();
+});
+</script>
+{% endblock %}
+

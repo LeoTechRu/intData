@@ -1,16 +1,21 @@
 from __future__ import annotations
 
-import hmac, hashlib, os, time
+import hmac, hashlib, os, time, json
 from pathlib import Path
 from typing import Dict
 
 from fastapi import APIRouter, HTTPException, Request, Form, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+from sqlalchemy import select
 
 from core.services.web_user_service import WebUserService
 from core.services.telegram_user_service import TelegramUserService
+from core.models import LogLevel, WebUser
+from core.logger import escape_markdown_v2
 from web.config import S
+from web.security.authlog import log_event
 
 router = APIRouter(tags=["auth"])
 
@@ -25,12 +30,79 @@ templates.env.globals.update(
     TG_BOT_USERNAME=os.getenv("TG_BOT_USERNAME", S.BOT_USERNAME),
 )
 
+# itsdangerous serializer for magic links and short-lived tokens
+serializer = URLSafeTimedSerializer(os.getenv("SECRET_KEY", S.BOT_TOKEN))
+
 
 def base_context() -> Dict[str, object]:
     return {
         "page_title": "Авторизация",
         "now_ts": int(time.time()),
     }
+
+
+def render_auth(
+    request: Request,
+    active: str = "login",
+    form_values: dict | None = None,
+    form_errors: dict | None = None,
+    flash: str | None = None,
+):
+    return templates.TemplateResponse(
+        request,
+        "auth.html",
+        {
+            "now_ts": int(time.time()),
+            "active_tab": active,
+            "form_values": form_values or {},
+            "form_errors_json": json.dumps(form_errors or {}, ensure_ascii=False),
+            "flash": flash,
+        },
+    )
+
+
+def login_user(request: Request, user: WebUser) -> RedirectResponse:
+    """Set cookies for authenticated user and redirect home."""
+    response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
+    response.set_cookie(
+        "web_user_id",
+        str(user.id),
+        max_age=S.SESSION_MAX_AGE,
+        path="/",
+        httponly=True,
+        samesite="lax",
+    )
+    return response
+
+
+async def upsert_user_from_email(email: str) -> WebUser:
+    """Get or create a web user by email.
+
+    Username is derived from email local-part with a fallback suffix.
+    """
+    async with WebUserService() as wsvc:
+        result = await wsvc.session.execute(select(WebUser).where(WebUser.email == email))
+        user = result.scalar_one_or_none()
+        if user:
+            return user
+        # Create a new user with a random password; user may change later via profile
+        base_username = (email.split("@", 1)[0] or "user").strip().replace(" ", "_")
+        candidate = base_username
+        attempt = 1
+        existing = await wsvc.get_by_username(candidate)
+        while existing:
+            attempt += 1
+            candidate = f"{base_username}{attempt}"
+            existing = await wsvc.get_by_username(candidate)
+        password = os.urandom(16).hex()
+        user = await wsvc.register(username=candidate, password=password, email=email)
+        return user
+
+
+async def send_magic_email(email: str, link: str) -> None:  # pragma: no cover - stub
+    """Send magic link email. Replace with real mailer if available."""
+    # TODO: integrate with your email provider
+    print(f"[magic] send to {email}: {link}")
 
 
 def verify_telegram_auth(data: dict) -> dict:
@@ -101,6 +173,10 @@ async def auth_telegram(request: Request):
         httponly=True,
         samesite="lax",
     )
+    try:
+        log_event(request, "tg_ok", user, {"tg_id": info.get("id")})
+    except Exception:
+        pass
     return response
 
 
@@ -121,7 +197,7 @@ def verify_telegram_login(data: Dict[str, str]) -> bool:
 
 @router.get("/auth")
 async def auth_get(request: Request):
-    return templates.TemplateResponse(request, "auth.html", {"now_ts": int(time.time())})
+    return render_auth(request, active=request.query_params.get("tab", "login"))
 
 
 @router.get("/login", include_in_schema=False)
@@ -139,6 +215,34 @@ async def restore_redirect():
     return RedirectResponse("/auth#restore", status_code=302)
 
 
+@router.post("/auth/restore")
+@router.post("/restore")
+async def restore_password(
+    request: Request,
+    email: str = Form(...),
+    form_ts: str = Form(""),
+    hp_url: str = Form(""),
+):
+    """Password recovery request (stub).
+
+    Logs the request and renders the restore tab with a flash message.
+    """
+    # Basic honeypot/anti-spam: ignore if hidden field is filled
+    if hp_url:
+        return render_auth(request, active="restore", form_values={"email": email})
+
+    try:
+        log_event(request, "restore_req", None, {"email": email})
+    except Exception:
+        pass
+    return render_auth(
+        request,
+        active="restore",
+        form_values={"email": email},
+        flash="Если email существует — отправили ссылку для восстановления.",
+    )
+
+
 @router.post("/auth/login")
 @router.post("/login")
 async def login(request: Request, username: str = Form(...), password: str = Form(...)):
@@ -146,28 +250,35 @@ async def login(request: Request, username: str = Form(...), password: str = For
         async with WebUserService() as service:
             user = await service.authenticate(username, password)
     except Exception as exc:  # pragma: no cover - defensive
-        context = base_context()
-        context.update({"telegram_id": request.cookies.get("telegram_id"), "flash": f"Technical error: {exc}"})
-        return templates.TemplateResponse(request, "auth.html", context, status_code=500)
+        return render_auth(
+            request,
+            active="login",
+            form_values={"username": username},
+            form_errors={"username": "Technical error", "password": str(exc)},
+            flash=f"Technical error: {exc}",
+        )
     if not user:
-        context = base_context()
-        context.update({"telegram_id": request.cookies.get("telegram_id"), "flash": "Invalid credentials"})
-        return templates.TemplateResponse(request, "auth.html", context, status_code=400)
+        try:
+            log_event(request, "login_fail", None, {"username": username})
+        except Exception:
+            pass
+        return render_auth(
+            request,
+            active="login",
+            form_values={"username": username},
+            form_errors={"username": "Неверный логин или пароль", "password": "Неверный логин или пароль"},
+            flash="Invalid credentials",
+        )
     if user.role == "ban":
         response = RedirectResponse("/ban", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
         response.delete_cookie("web_user_id", path="/")
         response.delete_cookie("telegram_id", path="/")
         return response
-    response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
-    response.set_cookie(
-        "web_user_id",
-        str(user.id),
-        max_age=S.SESSION_MAX_AGE,
-        path="/",
-        httponly=True,
-        samesite="lax",
-    )
-    return response
+    try:
+        log_event(request, "login_ok", user)
+    except Exception:
+        pass
+    return login_user(request, user)
 
 
 @router.post("/auth/register")
@@ -182,7 +293,14 @@ async def register(
         try:
             await service.register(username=username, password=password, email=email, phone=phone)
         except ValueError as exc:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+            # Render with inline errors instead of raising
+            return render_auth(
+                request,  # type: ignore[arg-type]
+                active="register",
+                form_values={"username": username, "email": email},
+                form_errors={"username": str(exc)},
+                flash=str(exc),
+            )
     return RedirectResponse("/auth", status_code=status.HTTP_303_SEE_OTHER)
 
 
@@ -237,6 +355,10 @@ async def telegram_callback(request: Request):
             httponly=True,
             samesite="lax",
         )
+        try:
+            log_event(request, "tg_ok", web_user, {"tg_id": telegram_id})
+        except Exception:
+            pass
         return response
     response = RedirectResponse("/auth/create_web_account", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(
@@ -248,6 +370,40 @@ async def telegram_callback(request: Request):
         samesite="lax",
     )
     return response
+
+
+# Magic link flow
+@router.post("/auth/magic/request")
+async def magic_request(request: Request, email: str = Form(...), form_ts: str = Form("0"), hp_url: str = Form("")):
+    # TODO: вставь свои антибот-проверки, если есть
+    token = serializer.dumps({"email": email, "kind": "magic"})
+    magic_url = f"{os.getenv('APP_BASE_URL','https://leonid.pro')}/auth/magic?token={token}"
+    try:
+        await send_magic_email(email, magic_url)  # если есть почтовик
+    except Exception:
+        print("MAGIC:", magic_url)
+    return render_auth(request, active="restore", form_values={"email": email}, flash="Если email существует — отправили ссылку для входа.")
+
+
+@router.get("/auth/magic")
+async def magic_consume(request: Request, token: str):
+    try:
+        data = serializer.loads(token, max_age=60 * 30)  # 30 минут
+        if data.get("kind") != "magic":
+            raise BadSignature("kind")
+        email = data["email"]
+    except (BadSignature, SignatureExpired):
+        return render_auth(request, active="login", flash="Ссылка недействительна или устарела.")
+
+    # Найти/создать пользователя по email и залогинить
+    user = await upsert_user_from_email(email)  # подменить на вашу реализацию
+    if getattr(user, "role", "") == "ban":
+        return RedirectResponse("/ban", status_code=307)
+    try:
+        log_event(request, "magic_ok", user, {"email": email})
+    except Exception:
+        pass
+    return login_user(request, user)
 
 
 @router.get("/auth/create_web_account", response_class=HTMLResponse)
