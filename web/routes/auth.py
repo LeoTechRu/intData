@@ -18,11 +18,11 @@ TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 templates.env.globals.update(
     APP_BRAND_NAME="LeonidPro",
-    APP_BASE_URL="https://leonid.pro",
+    WEB_PUBLIC_URL="https://leonid.pro",
     BOT_USERNAME="@LeonidBot",
     BOT_LANDING_URL="https://leonid.pro/bot",
     TG_LOGIN_ENABLED=bool(os.getenv("TG_LOGIN_ENABLED")),
-    TG_BOT_USERNAME=os.getenv("TG_BOT_USERNAME", S.TELEGRAM_BOT_USERNAME),
+    TG_BOT_USERNAME=os.getenv("TG_BOT_USERNAME", S.BOT_USERNAME),
 )
 
 

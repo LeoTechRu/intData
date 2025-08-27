@@ -18,10 +18,10 @@ router = APIRouter()
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 templates.env.globals.update(
-    APP_BRAND_NAME="LeonidPro",
-    APP_BASE_URL=os.getenv("APP_BASE_URL", "https://leonid.pro"),
-    BOT_USERNAME="@LeonidBot",
-    BOT_LANDING_URL="https://leonid.pro/bot",
+    APP_BRAND_NAME=os.getenv("APP_BRAND_NAME", "LeonidPro"), 
+    WEB_PUBLIC_URL=os.getenv("WEB_PUBLIC_URL", "https://leonid.pro"),
+    BOT_USERNAME=os.getenv("BOT_USERNAME", "@LeonidBot"),
+    BOT_LANDING_URL=os.getenv("BOT_LANDING_URL", "https://leonid.pro/bot"),
     TG_LOGIN_ENABLED=os.getenv("TG_LOGIN_ENABLED", "1") == "1",
     TG_BOT_USERNAME=os.getenv("TG_BOT_USERNAME", "@LeonidBot"),
 )

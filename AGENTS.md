@@ -19,7 +19,7 @@ pip install --quiet -r requirements.txt
 
 Если вы добавляете новые зависимости, фиксируйте их в `requirements.txt` и повторно запускайте установку.
 
-Используйте файл `.env` (или `.env.example` как шаблон) для переменных окружения. Убедитесь, что параметры `BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `PUBLIC_BASE_URL`, `SESSION_MAX_AGE`, `ADMIN_TELEGRAM_IDS` и другие заданы перед запуском бота или веб-приложения.
+Используйте файл `.env` (или `.env.example` как шаблон) для переменных окружения. Убедитесь, что параметры `BOT_TOKEN`, `BOT_USERNAME`, `WEB_PUBLIC_URL`, `SESSION_MAX_AGE`, `ADMIN_TELEGRAM_IDS` и другие заданы перед запуском бота или веб-приложения.
 
 ### Тестовая база данных PostgreSQL
 

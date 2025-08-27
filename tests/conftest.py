@@ -8,4 +8,4 @@ if str(ROOT) not in sys.path:
 
 # Ensure required env vars for tests
 os.environ.setdefault("BOT_TOKEN", "TEST_TOKEN")
-os.environ.setdefault("TELEGRAM_BOT_USERNAME", "testbot")
+os.environ.setdefault("BOT_USERNAME", "testbot")

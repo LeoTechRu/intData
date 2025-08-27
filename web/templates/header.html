@@ -2,7 +2,7 @@
 {% set header_role = current_role_name if current_role_name is defined else (role_name if role_name is defined else '') %}
 <div class="top-left">
     <a href="/" class="logo">🦁</a>
-    <a href="{{ APP_BASE_URL }}" class="project-name">{{ APP_BRAND_NAME }}</a>
+    <a href="{{ WEB_PUBLIC_URL }}" class="project-name">{{ APP_BRAND_NAME }}</a>
 </div>
 <div class="top-center">
     <h2 class="page-title">{{ page_title }}</h2>
