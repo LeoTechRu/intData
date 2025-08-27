@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from core.utils import utcnow
+
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
@@ -113,7 +115,7 @@ async def cmd_time_list(message: Message) -> None:
         await message.answer("Записей пока нет.")
         return
     lines = ["Последние записи времени:"]
-    now = datetime.utcnow()
+    now = utcnow()
     for e in entries:
         end = e.end_time or now
         delta = end - (e.start_time or end)
@@ -124,4 +126,3 @@ async def cmd_time_list(message: Message) -> None:
             f" • {mins} мин • {e.description or '—'}"
         )
     await message.answer("\n".join(lines))
-

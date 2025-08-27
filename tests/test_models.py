@@ -51,3 +51,10 @@ def test_web_user_flask_login_helpers(session):
 
     user.role = UserRole.ban.name
     assert not user.is_active
+
+
+def test_group_type_enum_complete():
+    from core.models import GroupType
+
+    expected = {"private", "public", "group", "supergroup", "channel"}
+    assert {g.value for g in GroupType} == expected
