@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Авторизация — LeonidPro{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+  {% block head_scripts %}{% endblock %}
 </head>
 <body class="auth-page">
-  {% include "_icons.html" ignore missing %}
+  {% include "_icons.html" %}
 
   <header class="auth-header">
     <a class="brand" href="{{ WEB_PUBLIC_URL or '/' }}">LeonidPro</a>
