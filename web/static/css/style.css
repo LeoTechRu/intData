@@ -611,3 +611,7 @@ body.compact .admin-panel {
 .icon{ width:18px; height:18px; }
 {% comment %} добавь в _icons.html paper-plane при желании {% endcomment %}
 /* === /auth pages === */
+
+/* === auth (single page) === */
+.auth-form.is-hidden{ display:none; }
+.auth-tabs .tab{ cursor:pointer; }
