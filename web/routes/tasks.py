@@ -82,3 +82,19 @@ async def create_task(
             due_date=payload.due_date,
         )
     return TaskResponse.from_model(task)
+
+
+@router.post("/{task_id}/done", response_model=TaskResponse)
+async def mark_task_done(
+    task_id: int,
+    current_user: TgUser | None = Depends(get_current_tg_user),
+):
+    """Mark the given task as done."""
+
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    async with TaskService() as service:
+        task = await service.mark_done(task_id)
+        if task is None or task.owner_id != current_user.telegram_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return TaskResponse.from_model(task)
