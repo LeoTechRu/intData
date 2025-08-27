@@ -502,3 +502,49 @@ body.compact .admin-panel {
 .role-help-card .text{ color:#4b5563; }
 .role-help-card .actions{ text-align:right; margin-top:14px; }
 
+/* === ui2: profile widget === */
+.profile-widget { position: relative; }
+
+.profile-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-avatar {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 28px;
+  background: var(--color-accent-purple, #e9d5ff);
+  color: #4b5563;
+}
+
+.profile-name .title { font-weight: 700; font-size: 18px; line-height: 1.2; }
+.profile-name .muted { color: #6b7280; font-size: 14px; }
+
+.profile-role {
+  position: absolute; top: 8px; right: 8px;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+  margin-top: 12px;
+}
+
+.profile-grid .label  { color: #6b7280; font-size: 14px; }
+.profile-grid .value  { font-weight: 500; }
+
+.profile-link { color: #0ea5e9; text-decoration: none; }
+.profile-link:hover { text-decoration: underline; }
+
+.profile-actions { display: flex; justify-content: flex-end; margin-top: 12px; }
+
+/* small screens: одна колонка */
+@media (max-width: 640px) {
+  .profile-grid { grid-template-columns: 1fr; }
+}
+/* === /ui2: profile widget === */
