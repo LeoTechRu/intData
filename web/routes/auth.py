@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hmac
 import hashlib
+import os
 import time
 from pathlib import Path
 from typing import Dict
@@ -23,7 +24,16 @@ templates.env.globals.update(
     APP_BASE_URL="https://leonid.pro",
     BOT_USERNAME="@LeonidBot",
     BOT_LANDING_URL="https://leonid.pro/bot",
+    TG_LOGIN_ENABLED=bool(os.getenv("TG_LOGIN_ENABLED")),
+    TG_BOT_USERNAME=os.getenv("TG_BOT_USERNAME", S.TELEGRAM_BOT_USERNAME),
 )
+
+
+def base_context() -> Dict[str, object]:
+    return {
+        "page_title": "Авторизация",
+        "now_ts": int(time.time()),
+    }
 
 
 def verify_telegram_login(data: Dict[str, str]) -> bool:
@@ -42,54 +52,24 @@ def verify_telegram_login(data: Dict[str, str]) -> bool:
 
 
 @router.get("", response_class=HTMLResponse)
-async def auth_page(request: Request, tab: str = "login") -> HTMLResponse:
-    telegram_id = request.cookies.get("telegram_id")
-    origin = S.PUBLIC_BASE_URL or ""
-    telegram_login_url = (
-        "https://oauth.telegram.org/auth"
-        f"?bot_id={S.BOT_TOKEN.split(':')[0]}"
-        f"&origin={origin}"
-        f"&redirect_url={origin}/auth/tg/callback&request_access=write"
-    )
-    active = tab if tab in {"login", "register"} else "login"
-    context = {
-        "telegram_login_url": telegram_login_url,
-        "telegram_id": telegram_id,
-        "page_title": "Авторизация",
-        "active": active,
-    }
+async def auth_page(request: Request) -> HTMLResponse:
+    context = base_context()
+    context.update({"telegram_id": request.cookies.get("telegram_id")})
     return templates.TemplateResponse(request, "auth.html", context)
 
 
 @router.post("/login")
 async def login(request: Request, username: str = Form(...), password: str = Form(...)):
-    origin = S.PUBLIC_BASE_URL or ""
-    telegram_login_url = (
-        "https://oauth.telegram.org/auth"
-        f"?bot_id={S.BOT_TOKEN.split(':')[0]}"
-        f"&origin={origin}"
-        f"&redirect_url={origin}/auth/tg/callback&request_access=write"
-    )
     try:
         async with WebUserService() as service:
             user = await service.authenticate(username, password)
     except Exception as exc:  # pragma: no cover - defensive
-        context = {
-            "telegram_login_url": telegram_login_url,
-            "telegram_id": request.cookies.get("telegram_id"),
-            "page_title": "Авторизация",
-            "flash": f"Technical error: {exc}",
-            "active": "login",
-        }
+        context = base_context()
+        context.update({"telegram_id": request.cookies.get("telegram_id"), "flash": f"Technical error: {exc}"})
         return templates.TemplateResponse(request, "auth.html", context, status_code=500)
     if not user:
-        context = {
-            "telegram_login_url": telegram_login_url,
-            "telegram_id": request.cookies.get("telegram_id"),
-            "page_title": "Авторизация",
-            "flash": "Invalid credentials",
-            "active": "login",
-        }
+        context = base_context()
+        context.update({"telegram_id": request.cookies.get("telegram_id"), "flash": "Invalid credentials"})
         return templates.TemplateResponse(request, "auth.html", context, status_code=400)
     if user.role == "ban":
         response = RedirectResponse("/ban", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
