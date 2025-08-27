@@ -6,7 +6,7 @@
     <h2>Создание аккаунта</h2>
     {% if message %}
     <p>{{ message }}</p>
-    <p><a href="/auth/login">Вернуться к входу</a></p>
+    <p><a href="/auth">Вернуться к входу</a></p>
     {% else %}
     <form class="ui-form" method="post" action="/auth/create_web_account">
         <label>Username</label>

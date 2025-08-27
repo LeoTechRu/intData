@@ -64,7 +64,7 @@ async def auth_middleware(request: Request, call_next):
 
     # Authentication routes
     if path.startswith("/auth"):
-        if web_user_id and path == "/auth/login":
+        if web_user_id and path == "/auth":
             return RedirectResponse("/")
         return await call_next(request)
 
@@ -84,7 +84,7 @@ async def auth_middleware(request: Request, call_next):
     next_url = request.url.path
     if request.url.query:
         next_url += "?" + request.url.query
-    return RedirectResponse(f"/auth/login?next={quote(next_url, safe='')}")
+    return RedirectResponse(f"/auth?next={quote(next_url, safe='')}")
 
 
 app.include_router(index.router)

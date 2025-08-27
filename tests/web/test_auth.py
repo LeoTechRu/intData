@@ -79,13 +79,15 @@ async def test_middleware_redirects(client: AsyncClient):
     """Unauthenticated users should be redirected to login."""
     resp = await client.get("/admin", follow_redirects=False)
     assert resp.status_code in {302, 303, 307}
-    assert resp.headers["location"].startswith("/auth/login?next=")
+    assert resp.headers["location"].startswith("/auth?next=")
 
 
 @pytest.mark.asyncio
 async def test_middleware_allows_authenticated(client: AsyncClient):
     """Authenticated users should see the dashboard at root."""
-    client.cookies.set("telegram_id", "1")
+    async with WebUserService() as wsvc:
+        user = await wsvc.register(username="u1", password="p1")
+    client.cookies.set("web_user_id", str(user.id))
     resp = await client.get("/", follow_redirects=False)
     assert resp.status_code == 200
 

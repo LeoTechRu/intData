@@ -136,13 +136,6 @@ async def index(
             }
             return templates.TemplateResponse(request, "start.html", context)
 
-    bot_user = S.TELEGRAM_BOT_USERNAME
-    return templates.TemplateResponse(
-        request,
-        "auth/login.html",
-        {
-            "bot_username": bot_user,
-            "telegram_id": request.cookies.get("telegram_id"),
-            "page_title": "Вход",
-        },
-    )
+    from fastapi.responses import RedirectResponse
+
+    return RedirectResponse("/auth", status_code=status.HTTP_302_FOUND)
