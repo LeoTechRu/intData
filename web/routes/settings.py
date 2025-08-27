@@ -1,23 +1,12 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 from fastapi import APIRouter, Request, Depends
-from fastapi.templating import Jinja2Templates
 
 from core.models import WebUser
 from ..dependencies import get_current_web_user
+from ..template_env import templates
 
 router = APIRouter()
-
-TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates"
-templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
-templates.env.globals.update(
-    APP_BRAND_NAME="LeonidPro",
-    WEB_PUBLIC_URL="https://leonid.pro",
-    BOT_USERNAME="@LeonidBot",
-    BOT_LANDING_URL="https://leonid.pro/bot",
-)
 
 
 @router.get("/settings", include_in_schema=False)

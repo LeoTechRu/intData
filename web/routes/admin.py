@@ -1,18 +1,11 @@
 from fastapi import APIRouter, Depends, Request
-from fastapi.templating import Jinja2Templates
+
 from core.models import WebUser, UserRole
 from core.services.web_user_service import WebUserService
 from core.services.telegram_user_service import TelegramUserService
 from ..dependencies import role_required
+from ..template_env import templates
 
-
-templates = Jinja2Templates(directory="web/templates")
-templates.env.globals.update(
-    APP_BRAND_NAME="LeonidPro",
-    WEB_PUBLIC_URL="https://leonid.pro",
-    BOT_USERNAME="@LeonidBot",
-    BOT_LANDING_URL="https://leonid.pro/bot",
-)
 router = APIRouter()
 
 
