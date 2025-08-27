@@ -49,6 +49,16 @@ class NoteService:
 
         return await self.session.get(Note, note_id)
 
+    async def update_note(self, note_id: int, content: str) -> Note | None:
+        """Update note content and return the updated note."""
+
+        note = await self.session.get(Note, note_id)
+        if note is None:
+            return None
+        note.content = content
+        await self.session.flush()
+        return note
+
     async def delete_note(self, note_id: int) -> bool:
         """Delete note by id. Returns ``True`` if deleted."""
 

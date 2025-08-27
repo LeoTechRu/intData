@@ -58,6 +58,10 @@
             <a class="link small right" href="#restore" data-tab-jump="restore">напомнить</a>
           </label>
 
+          {% if RECAPTCHA_SITE_KEY %}
+          <div class="g-recaptcha" data-sitekey="{{ RECAPTCHA_SITE_KEY }}"></div>
+          {% endif %}
+
           <button class="btn primary full" type="submit">Войти</button>
 
           <div class="or">или</div>
@@ -117,6 +121,10 @@
             <input class="control" type="password" name="password2" autocomplete="new-password" required placeholder="Повторите пароль">
             <div class="error-text" data-for="password2"></div>
           </label>
+
+          {% if RECAPTCHA_SITE_KEY %}
+          <div class="g-recaptcha" data-sitekey="{{ RECAPTCHA_SITE_KEY }}"></div>
+          {% endif %}
 
           <button class="btn primary full" type="submit">Регистрация</button>
         </form>
