@@ -5,10 +5,10 @@ After=network.target
 [Service]
 User=deploy
 Group=devs
-WorkingDirectory=%E{LEONIDBOT_WORKDIR}
-EnvironmentFile=%E{LEONIDBOT_WORKDIR}/.env
-Environment=PATH=%E{LEONIDBOT_VENV}/bin
-ExecStart=%E{LEONIDBOT_VENV}/bin/python -m bot.main
+WorkingDirectory=%E{LEONIDPRO_WORKDIR}
+EnvironmentFile=%E{LEONIDPRO_WORKDIR}/.env
+Environment=PATH=%E{LEONIDPRO_VENV}/bin
+ExecStart=%E{LEONIDPRO_VENV}/bin/python -m bot.main
 
 Restart=on-failure
 RestartSec=3s
