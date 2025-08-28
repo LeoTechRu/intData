@@ -85,7 +85,19 @@ async def auth_middleware(request: Request, call_next):
         return await call_next(request)
 
     # Allow direct access to API calls using explicit authorization headers
-    if request.headers.get("Authorization"):
+    # Но при этом соблюдаем блокировку для забаненных пользователей
+    auth = request.headers.get("Authorization")
+    if auth:
+        try:
+            scheme, token = auth.split(" ", 1)
+            if scheme.lower() == "bearer" and token.isdigit() and path != "/auth/logout":
+                async with WebUserService() as wsvc:
+                    u = await wsvc.get_by_id(int(token))
+                if u and getattr(u, "role", None) == "ban":
+                    return RedirectResponse("/ban", status_code=307)
+        except Exception:
+            # Fail-open для нестандартных токенов
+            pass
         return await call_next(request)
 
     web_user_id = request.cookies.get("web_user_id")

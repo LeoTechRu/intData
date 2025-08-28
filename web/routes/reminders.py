@@ -8,7 +8,8 @@ from pydantic import BaseModel
 
 from core.models import Reminder, TgUser
 from core.services.reminder_service import ReminderService
-from web.dependencies import get_current_tg_user
+from web.dependencies import get_current_tg_user, get_current_web_user
+from core.models import WebUser
 from ..template_env import templates
 
 
@@ -103,7 +104,16 @@ async def mark_reminder_done(
 
 
 @ui_router.get("")
-async def reminders_page(request: Request):
-    """Render simple UI for reminders."""
+async def reminders_page(
+    request: Request,
+    current_user: WebUser | None = Depends(get_current_web_user),
+):
+    """Render simple UI for reminders with role-aware header."""
 
-    return templates.TemplateResponse(request, "reminders.html", {})
+    context = {
+        "current_user": current_user,
+        "current_role_name": getattr(current_user, "role", ""),
+        "is_admin": getattr(current_user, "role", "") == "admin",
+        "page_title": "Напоминания",
+    }
+    return templates.TemplateResponse(request, "reminders.html", context)

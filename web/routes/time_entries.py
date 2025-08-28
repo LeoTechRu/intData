@@ -7,7 +7,8 @@ from pydantic import BaseModel
 
 from core.models import TimeEntry, TgUser
 from core.services.time_service import TimeService
-from web.dependencies import get_current_tg_user
+from web.dependencies import get_current_tg_user, get_current_web_user
+from core.models import WebUser
 from ..template_env import templates
 
 
@@ -92,7 +93,16 @@ async def list_entries(
 
 
 @ui_router.get("")
-async def time_page(request: Request):
-    """Render simple UI for time tracking."""
+async def time_page(
+    request: Request,
+    current_user: WebUser | None = Depends(get_current_web_user),
+):
+    """Render simple UI for time tracking with role-aware header."""
 
-    return templates.TemplateResponse(request, "time.html", {})
+    context = {
+        "current_user": current_user,
+        "current_role_name": getattr(current_user, "role", ""),
+        "is_admin": getattr(current_user, "role", "") == "admin",
+        "page_title": "Учёт времени",
+    }
+    return templates.TemplateResponse(request, "time.html", context)

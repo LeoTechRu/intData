@@ -7,7 +7,8 @@ from pydantic import BaseModel
 
 from core.models import Note, TgUser
 from core.services.note_service import NoteService
-from web.dependencies import get_current_tg_user
+from web.dependencies import get_current_tg_user, get_current_web_user
+from core.models import WebUser
 from ..template_env import templates
 
 
@@ -101,7 +102,16 @@ async def update_note(
 
 
 @ui_router.get("")
-async def notes_page(request: Request):
-    """Render simple UI for notes."""
+async def notes_page(
+    request: Request,
+    current_user: WebUser | None = Depends(get_current_web_user),
+):
+    """Render simple UI for notes with role-aware header."""
 
-    return templates.TemplateResponse(request, "notes.html", {})
+    context = {
+        "current_user": current_user,
+        "current_role_name": getattr(current_user, "role", ""),
+        "is_admin": getattr(current_user, "role", "") == "admin",
+        "page_title": "Заметки",
+    }
+    return templates.TemplateResponse(request, "notes.html", context)

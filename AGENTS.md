@@ -8,7 +8,7 @@
 - `deploy/systemd/`: systemd unit files; `./deploy/install_services.sh` installs/restarts services.
 
 ## Build, Test, and Development Commands
-- Create venv: `python -m venv venv && source venv/bin/activate`
+- Create venv: `python -m venv venv && source ./venv/bin/activate`
 - Install deps: `pip install --quiet -r requirements.txt`
 - Run tests: `pytest -q` (requires local PostgreSQL on `127.0.0.1:5432`)
 - Lint: `flake8` (if configured)
@@ -46,4 +46,4 @@
 
 ## Agent-Specific Instructions
 - Work from repo root, activate venv, install deps, then implement.
-- Keep changes minimal and aligned with existing style. Always finish with: `source venv/bin/activate && pip install --quiet -r requirements.txt && pytest -q`.
+- Keep changes minimal and aligned with existing style. Always finish with: `source ./venv/bin/activate && pip install --quiet -r requirements.txt && pytest -q`.

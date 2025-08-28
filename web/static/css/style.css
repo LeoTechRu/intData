@@ -234,6 +234,19 @@ button,
   background-color: rgba(0, 0, 0, 0.05);
 }
 
+/* Основная навигация */
+.main-nav{
+  display:flex; align-items:center; gap:12px;
+  background: #f8f7fb; color:#333; padding: 8px 12px;
+  border-bottom:1px solid #e5e7eb;
+}
+.main-nav a{
+  color:#333; text-decoration:none; padding:6px 10px; border-radius:8px;
+}
+.main-nav a.active{ background:#e9e4f6; color:#4b5563; }
+.main-nav a:hover{ background:#eee7fb; }
+.main-nav .nav-fill{ flex:1; }
+
 #login-page {
   display: flex;
   flex-direction: column;

@@ -8,7 +8,8 @@ from pydantic import BaseModel
 
 from core.models import Task, TaskStatus, TgUser
 from core.services.task_service import TaskService
-from web.dependencies import get_current_tg_user
+from web.dependencies import get_current_tg_user, get_current_web_user
+from core.models import WebUser
 from ..template_env import templates
 
 
@@ -103,7 +104,16 @@ async def mark_task_done(
 
 
 @ui_router.get("")
-async def tasks_page(request: Request):
-    """Render simple UI for tasks."""
+async def tasks_page(
+    request: Request,
+    current_user: WebUser | None = Depends(get_current_web_user),
+):
+    """Render simple UI for tasks with role-aware header."""
 
-    return templates.TemplateResponse(request, "tasks.html", {})
+    context = {
+        "current_user": current_user,
+        "current_role_name": getattr(current_user, "role", ""),
+        "is_admin": getattr(current_user, "role", "") == "admin",
+        "page_title": "Задачи",
+    }
+    return templates.TemplateResponse(request, "tasks.html", context)

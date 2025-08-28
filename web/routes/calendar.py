@@ -8,7 +8,8 @@ from pydantic import BaseModel
 
 from core.models import CalendarEvent, TgUser
 from core.services.calendar_service import CalendarService
-from web.dependencies import get_current_tg_user
+from web.dependencies import get_current_tg_user, get_current_web_user
+from core.models import WebUser
 from ..template_env import templates
 
 
@@ -87,7 +88,16 @@ async def create_event(
 
 
 @ui_router.get("")
-async def calendar_page(request: Request):
-    """Render simple UI for calendar events."""
+async def calendar_page(
+    request: Request,
+    current_user: WebUser | None = Depends(get_current_web_user),
+):
+    """Render simple UI for calendar events with role-aware header."""
 
-    return templates.TemplateResponse(request, "calendar.html", {})
+    context = {
+        "current_user": current_user,
+        "current_role_name": getattr(current_user, "role", ""),
+        "is_admin": getattr(current_user, "role", "") == "admin",
+        "page_title": "Календарь",
+    }
+    return templates.TemplateResponse(request, "calendar.html", context)
