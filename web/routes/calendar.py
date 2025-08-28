@@ -12,7 +12,12 @@ from web.dependencies import get_current_tg_user
 from ..template_env import templates
 
 
-router = APIRouter(prefix="/calendar", tags=["calendar"])
+router = APIRouter(prefix="/api/calendar", tags=["calendar"])
+ui_router = APIRouter(
+    prefix="/calendar",
+    tags=["calendar"],
+    include_in_schema=False,
+)
 
 
 class EventCreate(BaseModel):
@@ -81,7 +86,7 @@ async def create_event(
     return EventResponse.from_model(event)
 
 
-@router.get("/ui", include_in_schema=False)
+@ui_router.get("")
 async def calendar_page(request: Request):
     """Render simple UI for calendar events."""
 

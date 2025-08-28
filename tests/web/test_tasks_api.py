@@ -42,15 +42,19 @@ async def test_create_and_complete_task(client: AsyncClient):
     telegram_id = await _create_tg_user(telegram_id=10)
     cookies = {"telegram_id": str(telegram_id)}
 
-    resp = await client.post("/tasks", json={"title": "Test"}, cookies=cookies)
+    resp = await client.post(
+        "/api/tasks",
+        json={"title": "Test"},
+        cookies=cookies,
+    )
     assert resp.status_code == 201
     task_id = resp.json()["id"]
 
-    resp = await client.post(f"/tasks/{task_id}/done", cookies=cookies)
+    resp = await client.post(f"/api/tasks/{task_id}/done", cookies=cookies)
     assert resp.status_code == 200
     assert resp.json()["status"] == "done"
 
-    resp = await client.get("/tasks", cookies=cookies)
+    resp = await client.get("/api/tasks", cookies=cookies)
     assert resp.status_code == 200
     tasks = resp.json()
     assert len(tasks) == 1

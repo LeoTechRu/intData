@@ -12,7 +12,8 @@ from web.dependencies import get_current_tg_user
 from ..template_env import templates
 
 
-router = APIRouter(prefix="/tasks", tags=["tasks"])
+router = APIRouter(prefix="/api/tasks", tags=["tasks"])
+ui_router = APIRouter(prefix="/tasks", tags=["tasks"], include_in_schema=False)
 
 
 class TaskCreate(BaseModel):
@@ -101,7 +102,7 @@ async def mark_task_done(
     return TaskResponse.from_model(task)
 
 
-@router.get("/ui", include_in_schema=False)
+@ui_router.get("")
 async def tasks_page(request: Request):
     """Render simple UI for tasks."""
 
