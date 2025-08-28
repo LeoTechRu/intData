@@ -44,7 +44,7 @@ class TimeEntryResponse(BaseModel):
     "/start",
     response_model=TimeEntryResponse,
     status_code=status.HTTP_201_CREATED,
-    name="timer_start",
+    name="api:time_start",
 )
 async def start_timer(
     payload: StartPayload,
@@ -62,7 +62,7 @@ async def start_timer(
     return TimeEntryResponse.from_model(entry)
 
 
-@router.post("/{entry_id}/stop", response_model=TimeEntryResponse, name="timer_stop")
+@router.post("/{entry_id}/stop", response_model=TimeEntryResponse, name="api:time_stop")
 async def stop_timer(
     entry_id: int,
     current_user: TgUser | None = Depends(get_current_tg_user),
@@ -78,7 +78,7 @@ async def stop_timer(
     return TimeEntryResponse.from_model(entry)
 
 
-@router.get("", response_model=List[TimeEntryResponse], name="timer_status")
+@router.get("", response_model=List[TimeEntryResponse], name="api:time_status")
 async def list_entries(
     current_user: TgUser | None = Depends(get_current_tg_user),
 ):

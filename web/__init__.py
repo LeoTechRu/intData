@@ -67,12 +67,22 @@ async def lifespan(app: FastAPI):
                 pass
 
 
+tags_metadata = [
+    {"name": "tasks", "description": "Task management API"},
+    {"name": "reminders", "description": "Reminders scheduling API"},
+    {"name": "calendar", "description": "Calendar events API"},
+    {"name": "notes", "description": "Notes CRUD API"},
+    {"name": "time", "description": "Time tracking API"},
+    {"name": "admin", "description": "Admin operations (requires admin role)"},
+]
+
 app = FastAPI(
     lifespan=lifespan,
     title="LeonidPro API",
     docs_url="/api",                 # Swagger UI -> /api
     redoc_url=None,                   # ReDoc off for now
     openapi_url="/api/openapi.json", # Spec -> /api/openapi.json
+    openapi_tags=tags_metadata,
 )
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
