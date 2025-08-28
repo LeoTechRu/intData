@@ -1,56 +1,49 @@
 {% set header_user = current_user if (current_user is defined and current_user) else (user if user is defined else None) %}
-{% set header_role = current_role_name if current_role_name is defined else (role_name if role_name is defined else '') %}
 <header class="app-header" role="banner">
-  <div class="brand-wrap">
-    <a class="brand" href="/">
-      <img class="brand-mark" src="{{ url_for('static', path='img/brand/leonidpro-mark.svg') }}" alt="LeonidPro" width="22" height="22" loading="lazy">
-      <span class="brand-type">LeonidPro</span>
+  <div class="brand">
+    <a href="/" class="brand-box" aria-label="{{ APP_BRAND_NAME }}">
+      <img src="{{ url_for('static', path='img/brand/leonidpro-mark.svg') }}" alt="" />
     </a>
+    <a class="brand-title" href="/">{{ APP_BRAND_NAME }}</a>
   </div>
 
-  <nav class="app-nav" aria-label="Модули">
-    <ul class="nav-list">
-      <li><button type="button" class="nav-pill" data-widget="tasks" aria-haspopup="dialog">Задачи</button></li>
-      <li><button type="button" class="nav-pill" data-widget="rc" aria-haspopup="dialog">Напоминания/Календарь</button></li>
-      <li><button type="button" class="nav-pill" data-widget="notes" aria-haspopup="dialog">Заметки</button></li>
-    </ul>
-  </nav>
+  {# центр больше не используем #}
+  <div class="header-spacer"></div>
 
-  <div class="actions">
-    <a class="icon-btn" href="{{ BOT_LANDING_URL }}" aria-label="Bot"><svg class="icon-24"><use href="#i-telegram"/></svg></a>
-    <button class="icon-btn timer-btn" id="timerToggle" aria-label="Таймер"><svg class="icon-24"><use href="#i-clock"/></svg><span class="timer-dot" hidden></span></button>
-    <button class="icon-btn hamburger" id="navHamburger" aria-label="Меню" hidden><svg class="icon-24"><use href="#i-menu"/></svg></button>
-    {# профиль и настройки #}
+  <div class="header-actions">
+    <a class="icon-btn" href="{{ BOT_LANDING_URL }}" title="Бот" aria-label="Бот">
+      <svg class="icon-24"><use href="#i-telegram"/></svg>
+    </a>
+
+    {# таймер, если есть #}
+    <button class="icon-btn timer-btn" id="timerToggle" title="Таймер" aria-label="Таймер">
+      <svg class="icon-24"><use href="#i-clock"/></svg>
+      <span class="timer-dot" hidden></span>
+    </button>
+
     <div class="profile-menu">
-      <div id="profile-button" class="profile-icon role-{{ header_role|lower }}">👤</div>
-      <div id="profile-dropdown" class="dropdown-menu hidden">
-        <div class="role">
-          Роль:
-          <button type="button" class="role-badge" data-role="{{ header_role }}">{{ header_role }}</button>
-        </div>
-        {% if header_user and header_user.telegram_id is defined %}
-        <a href="/profile/{{ header_user.telegram_id }}">Профиль</a>
-        {% elif header_user %}
-        <a href="/profile/{{ header_user.username }}">Профиль</a>
-        {% else %}
-        <a href="/auth">Вход</a>
-        {% endif %}
-        <a href="/settings">Настройки</a>
+      <button class="avatar-btn" id="profileMenuBtn" aria-haspopup="menu" aria-expanded="false">
+        <img class="avatar" src="{{ current_user.avatar_url if current_user else url_for('static', path='img/brand/leonidpro-mask.svg') }}" alt="" />
+      </button>
+      <div class="menu" id="profileMenu" role="menu" hidden>
+        <a role="menuitem" href="/profile/{{ current_user.username if current_user else '' }}">Профиль</a>
+        <a role="menuitem" href="/settings">Настройки</a>
+        <hr/>
+        <a role="menuitem" href="/">Дашборд</a>
+        <a role="menuitem" href="/tasks">Задачи</a>
+        <a role="menuitem" href="/reminders">Напоминания</a>
+        <a role="menuitem" href="/calendar">Календарь</a>
+        <a role="menuitem" href="/notes">Заметки</a>
         {% if is_admin %}
-        <a href="/admin">Админ</a>
+          <hr/>
+          <a role="menuitem" href="/admin">Админка</a>
         {% endif %}
-        {% if header_user %}
-        <a href="/auth/logout" data-method="post">Выйти</a>
-        {% endif %}
+        <hr/>
+        <a role="menuitem" href="/auth/logout" data-method="post">Выход</a>
       </div>
     </div>
   </div>
-
-  <div class="hamburger-menu" id="navDrawer" hidden></div>
 </header>
 
-{# подключаем поповеры-виджеты и таймер, если ещё не подключены #}
-{% include "_widget_tasks_today.html" %}
-{% include "_widget_rc_today.html" %}
-{% include "_widget_notes_quick.html" %}
+{# таймер оставляем подключённым #}
 {% include "_timer_widget.html" %}

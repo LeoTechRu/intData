@@ -97,6 +97,18 @@
         </div>
       </section>
 
+      <section class="card">
+        <div class="card-title">Заметки</div>
+        <form id="quick-note-form" class="stack gap-2">
+          <textarea name="content" rows="3" placeholder="Быстрая заметка..." required></textarea>
+          <div class="row gap-2">
+            <button class="btn btn-primary" type="submit">Сохранить</button>
+            <a class="btn btn-ghost" href="/notes">Все заметки</a>
+          </div>
+        </form>
+        <div id="quick-note-result" class="muted" hidden>Сохранено</div>
+      </section>
+
       {# — KPI ряд: примеры (могут прийти из контекста) #}
       {% set delta = kpi_focus_week_delta or 0 %}
       <section class="card">
@@ -249,6 +261,9 @@
           <div class="text-muted">Нет задач</div>
           {% endfor %}
         </div>
+        <div class="row end">
+          <a class="btn btn-ghost" href="/tasks">Все задачи</a>
+        </div>
       </section>
 
       {% set items = upcoming_reminders or [] %}
@@ -264,6 +279,9 @@
           <div class="text-muted">Нет напоминаний</div>
           {% endfor %}
         </div>
+        <div class="row end">
+          <a class="btn btn-ghost" href="/reminders">Все напоминания</a>
+        </div>
       </section>
 
       {% set items = upcoming_events or [] %}
@@ -278,6 +296,9 @@
           {% else %}
           <div class="text-muted">Нет событий</div>
           {% endfor %}
+        </div>
+        <div class="row end">
+          <a class="btn btn-ghost" href="/calendar">Календарь</a>
         </div>
       </section>
 

@@ -102,40 +102,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })();
 
-// ===== Header responsive (2/3 rule) =====
-(function(){
-  const header = document.querySelector('.app-header');
-  const nav = document.querySelector('.app-nav');
-  const hamb = document.getElementById('navHamburger');
-  const drawer = document.getElementById('navDrawer');
-  if (!header || !nav || !hamb || !drawer) return;
-
-  function collapseCheck(){
-    const avail = header.clientWidth;
-    const navW  = nav.scrollWidth;
-    const limit = avail * 2/3;
-    const needCollapse = navW > limit;
-    header.classList.toggle('header-collapsed', needCollapse);
-    hamb.hidden = !needCollapse;
-    if (!needCollapse){ drawer.hidden = true; }
-  }
-  try { new ResizeObserver(collapseCheck).observe(header); } catch(e) { window.addEventListener('resize', collapseCheck); }
-  window.addEventListener('load', collapseCheck);
-
-  hamb.addEventListener('click', ()=>{
-    const list = nav.querySelector('.nav-list');
-    if (!list) return;
-    drawer.innerHTML = '';
-    const clone = list.cloneNode(true);
-    clone.querySelectorAll('a').forEach(a=>a.classList.remove('is-active'));
-    drawer.appendChild(clone);
-    drawer.hidden = !drawer.hidden;
-  });
-  document.addEventListener('click', (e)=>{
-    if (drawer.hidden) return;
-    if (!drawer.contains(e.target) && !hamb.contains(e.target)) drawer.hidden = true;
-  });
-})();
+// ===== Header responsive (2/3 rule) — deprecated =====
+// (removed by design: navigation moved into profile menu)
+// (function(){
+//   const header = document.querySelector('.app-header');
+//   const nav = document.querySelector('.app-nav');
+//   const hamb = document.getElementById('navHamburger');
+//   const drawer = document.getElementById('navDrawer');
+//   if (!header || !nav || !hamb || !drawer) return;
+//   function collapseCheck(){ /* no-op */ }
+// })();
 
 // ===== Убрать случайные ссылки 'Подробнее' из хедера (подстраховка) =====
 (function(){
@@ -259,6 +235,70 @@ document.addEventListener('DOMContentLoaded', () => {
     input.type = input.type === 'password' ? 'text' : 'password';
   }
   document.addEventListener('click', onClick);
+})();
+
+// профиль-меню (новое меню в аватаре)
+(function(){
+  const btn = document.getElementById('profileMenuBtn');
+  const menu = document.getElementById('profileMenu');
+  if (!btn || !menu) return;
+
+  const close = () => { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
+  const open  = () => { menu.hidden = false; btn.setAttribute('aria-expanded', 'true'); };
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menu.hidden ? open() : close();
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!menu.hidden && !menu.contains(e.target) && e.target !== btn) close();
+  });
+
+  // Esc to close
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  // Intercept non-GET links inside menu (e.g., logout)
+  menu.addEventListener('click', async (ev) => {
+    const a = ev.target && ev.target.closest && ev.target.closest('a');
+    if (!a) return;
+    const method = (a.dataset && a.dataset.method || '').toUpperCase();
+    if (method && method !== 'GET') {
+      ev.preventDefault();
+      try{
+        const resp = await fetch(a.href, { method, credentials: 'include' });
+        if (resp.redirected) { window.location.href = resp.url; }
+        else if (resp.ok) { window.location.reload(); }
+      } catch {}
+    }
+    close();
+  });
+})();
+
+// Быстрая заметка на дашборде
+(function(){
+  const form = document.getElementById('quick-note-form');
+  if (!form) return;
+  const result = document.getElementById('quick-note-result');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const content = (fd.get('content') || '').toString().trim();
+    if (!content) return;
+
+    const r = await fetch('/api/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ content })
+    });
+    if (r.ok) {
+      form.reset();
+      if (result) { result.hidden = false; setTimeout(()=> result.hidden = true, 1500); }
+    } else {
+      alert('Не удалось сохранить заметку');
+    }
+  });
 })();
 
 // auth: tab switcher on /auth
