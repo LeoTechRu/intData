@@ -11,6 +11,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message
 
 from core.services.nexus_service import HabitService
+from core.utils.habit_utils import calc_progress
 
 
 router = Router()
@@ -29,16 +30,6 @@ class HabitDoneStates(StatesGroup):
     waiting_for_id = State()
 
 
-def _calc_progress(progress: dict | None) -> int:
-    """Return completion percentage based on progress dict."""
-
-    if not progress:
-        return 0
-    total = len(progress)
-    done = sum(1 for v in progress.values() if v)
-    return int(done / total * 100)
-
-
 @router.message(Command("habit_list"))
 async def cmd_habit_list(message: Message) -> None:
     """Send list of user's habits with progress percentage."""
@@ -50,7 +41,7 @@ async def cmd_habit_list(message: Message) -> None:
         return
     lines = []
     for habit in habits:
-        percent = _calc_progress(habit.progress)
+        percent = calc_progress(habit.progress)
         lines.append(f"{habit.id}: {habit.name} — {percent}%")
     await message.answer("\n".join(lines))
 
@@ -94,8 +85,12 @@ async def _create_habit(message: Message, name: str, frequency: str) -> None:
         await message.answer("Частота должна быть: daily, weekly или monthly.")
         return
     async with HabitService() as service:
-        habit = await service.create_habit(message.from_user.id, name, frequency)
-    await message.answer(f"Привычка '{habit.name}' создана с ID {habit.id}.")
+        habit = await service.create_habit(
+            message.from_user.id, name, frequency
+        )
+    await message.answer(
+        f"Привычка '{habit.name}' создана с ID {habit.id}."
+    )
 
 
 @router.message(Command("habit_done"))
@@ -126,6 +121,5 @@ async def _toggle_habit_progress(message: Message, habit_id: int) -> None:
             await message.answer("Привычка не найдена.")
             return
         updated = await service.toggle_progress(habit_id, date.today())
-    percent = _calc_progress(updated.progress)
+    percent = calc_progress(updated.progress)
     await message.answer(f"Прогресс '{updated.name}': {percent}%")
-
