@@ -5,7 +5,6 @@ set -Eeuo pipefail
 cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
 # 1) Python & venv
-PY="python3.11"
 command -v $PY >/dev/null 2>&1 || PY="python3"
 if [[ ! -d venv ]]; then
   echo "[i] creating venv..."

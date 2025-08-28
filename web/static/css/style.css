@@ -247,6 +247,15 @@ button,
 .main-nav a:hover{ background:#eee7fb; }
 .main-nav .nav-fill{ flex:1; }
 
+/* Mobile adjustments: avoid overflow and duplication */
+@media (max-width: 640px) {
+  .top-center { display: none; }
+  .bot-menu { display: none; }
+  .main-nav { overflow-x: auto; white-space: nowrap; gap: 8px; }
+  .main-nav a { flex: 0 0 auto; font-size: 0.95rem; padding: 6px 8px; }
+  .main-nav::-webkit-scrollbar { display: none; }
+}
+
 #login-page {
   display: flex;
   flex-direction: column;

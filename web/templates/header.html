@@ -15,9 +15,6 @@
     <div class="bot-menu"><a href="{{ BOT_LANDING_URL }}" target="_blank">Bot</a></div>
     {% if header_user %}
         <div id="compact-toggle" class="profile-icon">🗜</div>
-        {% if is_admin %}
-        <div class="admin-menu"><a href="/admin">Админ</a></div>
-        {% endif %}
         <div class="profile-menu">
             <div id="profile-button" class="profile-icon role-{{ header_role|lower }}">👤</div>
             <div id="profile-dropdown" class="dropdown-menu hidden">
@@ -31,6 +28,9 @@
                 <a href="/profile/{{ header_user.username }}">Профиль</a>
                 {% endif %}
                 <a href="/settings">Настройки</a>
+                {% if is_admin %}
+                <a href="/admin">Админ</a>
+                {% endif %}
                 <a href="/auth/logout" data-method="post">Выйти</a>
             </div>
         </div>
@@ -64,9 +64,6 @@
   {# {% if _is_multi %}<a href="/projects" class="{{ 'active' if _path.startswith('/projects') else '' }}">Проекты</a>{% endif %} #}
   {% if _is_admin %}
     <a href="/admin" class="{{ 'active' if _path.startswith('/admin') else '' }}">Админ</a>
-  {% endif %}
-  {% if not header_user %}
-    <a href="/auth" class="{{ 'active' if _path.startswith('/auth') else '' }}">Вход</a>
   {% endif %}
   <span class="nav-fill"></span>
 </nav>
