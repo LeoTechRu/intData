@@ -24,6 +24,10 @@ from core.db import init_models
 from core.services.web_user_service import WebUserService
 from core.services.telegram_user_service import TelegramUserService
 from core.models import LogLevel
+from core.services.notification_service import (
+    run_reminder_dispatcher,
+    is_scheduler_enabled,
+)
 
 
 @asynccontextmanager
@@ -38,7 +42,28 @@ async def lifespan(app: FastAPI):
                 LogLevel.INFO,
                 f"test user created:\nusername: test\npassword: {password}",
             )
-    yield
+
+    # Запускаем фоновый диспетчер напоминаний при включённом флаге
+    stop_event = None
+    task = None
+    if is_scheduler_enabled():
+        import asyncio
+
+        stop_event = asyncio.Event()
+        task = asyncio.create_task(
+            run_reminder_dispatcher(poll_interval=60.0, stop_event=stop_event)
+        )
+
+    try:
+        yield
+    finally:
+        if stop_event:
+            stop_event.set()
+        if task:
+            try:
+                await task
+            except Exception:
+                pass
 
 
 app = FastAPI(lifespan=lifespan)
