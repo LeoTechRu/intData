@@ -653,3 +653,54 @@ body.compact .admin-panel {
 /* === auth (single page) === */
 .auth-form.is-hidden{ display:none; }
 .auth-tabs .tab{ cursor:pointer; }
+
+/* === app header === */
+.app-header{
+  display:grid; grid-template-columns:auto 1fr auto; align-items:center;
+  gap:12px; padding:10px 12px;
+}
+.app-nav{ min-width:0; }
+.nav-list{ display:flex; gap:12px; flex-wrap:nowrap; overflow:hidden; }
+.nav-list a{ display:inline-flex; align-items:center; padding:8px 10px; border-radius:8px; text-decoration:none; color:#334155; background:#f8fafc; }
+.nav-list a:hover{ background:#eef2ff; }
+
+/* actions */
+.icon-btn{ position:relative; display:inline-grid; place-items:center; width:36px; height:36px;
+  border-radius:999px; border:1px solid #e5e7eb; background:#fff; cursor:pointer;
+}
+.icon-24{ width:20px; height:20px; }
+.hamburger{ margin-left:6px; }
+.hamburger[hidden]{ display:none !important; }
+
+/* 2/3 rule collapse */
+.header-collapsed .app-nav{ display:none; }
+.header-collapsed .hamburger{ display:inline-grid !important; }
+
+/* drawer */
+.hamburger-menu[hidden]{ display:none !important; }
+.hamburger-menu{
+  position:absolute; right:12px; top:56px; min-width:220px; background:#fff; border:1px solid #e5e7eb;
+  border-radius:12px; box-shadow:0 12px 40px rgba(0,0,0,.1); padding:8px;
+}
+.hamburger-menu .nav-list{ display:flex; flex-direction:column; gap:4px; }
+.hamburger-menu .nav-list a{ background:#fff; }
+
+/* timer button */
+.timer-btn .timer-dot{
+  position:absolute; right:7px; top:7px; width:8px; height:8px; background:#ef4444;
+  border-radius:999px; box-shadow:0 0 0 2px #fff; 
+}
+
+/* modal */
+.modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; }
+.modal[open]{ display:flex; }
+.modal .backdrop{ position:absolute; inset:0; background:rgba(15,23,42,.45); }
+.modal .sheet{
+  position:relative; background:#fff; border-radius:14px; padding:16px; width:min(420px,90vw);
+  box-shadow:0 24px 80px rgba(0,0,0,.25);
+}
+.modal .sheet h3{ margin:0 0 8px; font-weight:800; }
+.modal .row{ display:grid; grid-template-columns:1fr auto auto; gap:8px; align-items:center; }
+.modal .actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:12px; }
+.btn-plain{ border:1px solid #e5e7eb; background:#fff; border-radius:8px; padding:8px 12px; }
+.btn-primary{ background:#8b5cf6; color:#fff; border:0; border-radius:8px; padding:8px 12px; }

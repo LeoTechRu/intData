@@ -1,0 +1,22 @@
+<dialog id="timerModal" class="modal" aria-labelledby="timerTitle">
+  <div class="backdrop" data-close="#timerModal"></div>
+  <div class="sheet">
+    <h3 id="timerTitle">Таймер</h3>
+    <div class="row">
+      <input class="control" id="timerDesc" type="text" placeholder="Что делаете?">
+      <button class="btn-primary" id="timerStartBtn">Старт</button>
+      <button class="btn-plain" id="timerStopBtn" hidden>Стоп</button>
+    </div>
+    <div id="timerInfo" class="muted small" style="margin-top:8px"></div>
+  </div>
+</dialog>
+
+<script>
+// Endpoints for timer API (uses existing REST under /api/time)
+window.TIMER_ENDPOINTS = {
+  status: "/api/time",           // GET list, determine running by end_time == null
+  start:  "/api/time/start",     // POST {description?}
+  stopOf: function(id){ return `/api/time/${id}/stop`; } // POST
+};
+</script>
+

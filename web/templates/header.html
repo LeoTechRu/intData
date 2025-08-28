@@ -1,47 +1,5 @@
 {% set header_user = current_user if (current_user is defined and current_user) else (user if user is defined else None) %}
 {% set header_role = current_role_name if current_role_name is defined else (role_name if role_name is defined else '') %}
-<div class="top-left">
-    <a class="brand" href="/">
-      <img class="brand-mark" src="{{ url_for('static', path='img/brand/leonidpro-mark.svg') }}" alt="LeonidPro" width="24" height="24" loading="lazy">
-      <span class="brand-type">LeonidPro</span>
-    </a>
-    <button id="nav-toggle" class="nav-toggle" aria-label="Открыть меню" aria-expanded="false">☰</button>
-    {# removed old emoji logo and project-name link #}
-</div>
-<div class="top-center">
-    <h2 class="page-title">{{ page_title }}</h2>
-</div>
-<div class="top-right">
-    <div class="bot-menu"><a href="{{ BOT_LANDING_URL }}" target="_blank">Bot</a></div>
-    {% if header_user %}
-        <div id="compact-toggle" class="profile-icon">🗜</div>
-        <div class="profile-menu">
-            <div id="profile-button" class="profile-icon role-{{ header_role|lower }}">👤</div>
-            <div id="profile-dropdown" class="dropdown-menu hidden">
-                <div class="role">
-                    Роль:
-                    <button type="button" class="role-badge" data-role="{{ header_role }}">{{ header_role }}</button>
-                </div>
-                {% if header_user.telegram_id is defined %}
-                <a href="/profile/{{ header_user.telegram_id }}">Профиль</a>
-                {% else %}
-                <a href="/profile/{{ header_user.username }}">Профиль</a>
-                {% endif %}
-                <a href="/settings">Настройки</a>
-                {% if is_admin %}
-                <a href="/admin">Админ</a>
-                {% endif %}
-                <a href="/auth/logout" data-method="post">Выйти</a>
-            </div>
-        </div>
-    {% else %}
-        <nav class="guest-menu">
-            <a href="/auth">Вход</a>
-        </nav>
-    {% endif %}
-</div>
-
-{# Основная навигация по приложениям с учётом ролей #}
 {% set _role = (header_role|lower) if header_role else '' %}
 {% set _path = request.url.path if request and request.url else '' %}
 {% set _is_banned = (_role == 'ban') %}
@@ -50,138 +8,70 @@
 {% set _is_multi = (_role in ['multiplayer','moderator','admin']) %}
 {% set _is_single = (_role in ['single','multiplayer','moderator','admin']) %}
 
-{% if not _is_banned %}
-<nav class="main-nav">
-  <a href="/" class="{{ 'active' if _path == '/' else '' }}">Дашборд</a>
-  {% if _is_single %}
-    <a href="/tasks" class="{{ 'active' if _path.startswith('/tasks') else '' }}">Задачи</a>
-    <a href="/reminders" class="{{ 'active' if _path.startswith('/reminders') else '' }}">Напоминания</a>
-    <a href="/calendar" class="{{ 'active' if _path.startswith('/calendar') else '' }}">Календарь</a>
-    <a href="/time" class="{{ 'active' if _path.startswith('/time') else '' }}">Время</a>
-    <a href="/notes" class="{{ 'active' if _path.startswith('/notes') else '' }}">Заметки</a>
-  {% endif %}
-  {# Зарезервировано для совместной работы (multi): группы/проекты — позже #}
-  {# {% if _is_multi %}<a href="/projects" class="{{ 'active' if _path.startswith('/projects') else '' }}">Проекты</a>{% endif %} #}
-  <span class="nav-fill"></span>
-</nav>
-{% endif %}
+<div class="app-header">
+  <!-- Brand -->
+  <div class="brand">
+    <a class="brand" href="/">
+      <img class="brand-mark" src="{{ url_for('static', path='img/brand/leonidpro-mark.svg') }}" alt="LeonidPro" width="24" height="24" loading="lazy">
+      <span class="brand-type">LeonidPro</span>
+    </a>
+  </div>
 
-<script>
-// Admin users: inject search and role filters (idempotent)
-(function(){
-  // Mobile menu toggle
-  function mobileMenu(){
-    const toggle = document.getElementById('nav-toggle');
-    const nav = document.querySelector('nav.main-nav');
-    if (!toggle || !nav) return;
-    function close(){ nav.classList.remove('open'); toggle.setAttribute('aria-expanded','false'); }
-    function open(){ nav.classList.add('open'); toggle.setAttribute('aria-expanded','true'); }
-    toggle.addEventListener('click', (e)=>{
-      e.stopPropagation();
-      const isOpen = nav.classList.contains('open');
-      isOpen ? close() : open();
-    });
-    // Close on link click or outside click
-    nav.addEventListener('click', (e)=>{ if (e.target.closest('a')) close(); });
-    document.addEventListener('click', (e)=>{
-      if (!nav.contains(e.target) && e.target !== toggle) close();
-    });
-    document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') close(); });
-  }
-  function create(tag, attrs, ...children){
-    const el = document.createElement(tag);
-    if (attrs) Object.entries(attrs).forEach(([k,v])=>{
-      if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
-      else if (k in el) el[k] = v; else el.setAttribute(k, v);
-    });
-    children.forEach(ch=> el.appendChild(typeof ch === 'string' ? document.createTextNode(ch) : ch));
-    return el;
-  }
+  <!-- Modules nav (center) -->
+  <nav class="app-nav" aria-label="Модули">
+    {% if not _is_banned %}
+    <ul class="nav-list">
+      <li><a href="/" class="{{ 'is-active' if _path == '/' else '' }}">Дашборд</a></li>
+      {% if _is_single %}
+        <li><a href="/tasks" class="{{ 'is-active' if _path.startswith('/tasks') else '' }}">Задачи</a></li>
+        <li><a href="/reminders" class="{{ 'is-active' if _path.startswith('/reminders') else '' }}">Напоминания</a></li>
+        <li><a href="/calendar" class="{{ 'is-active' if _path.startswith('/calendar') else '' }}">Календарь</a></li>
+        <li><a href="/notes" class="{{ 'is-active' if _path.startswith('/notes') else '' }}">Заметки</a></li>
+      {% endif %}
+    </ul>
+    {% endif %}
+  </nav>
 
-  function setupWebFilters(section){
-    if (!section || section.querySelector('#web-search')) return;
-    const roles = Array.from(document.querySelectorAll('#users-web select.web-role option'))
-      .map(o=>o.value).filter((v,i,arr)=> arr.indexOf(v)===i);
-    const controls = create('div', {style: {margin: '8px 0', display: 'flex', gap: '8px', alignItems: 'center'}},
-      create('input', {id: 'web-search', type: 'text', placeholder: 'Поиск по username, связанным TG', style: {flex: '1', padding: '6px 8px'}}),
-      create('label', {htmlFor: 'web-role-filter'}, 'Роль:'),
-      (function(){
-        const sel = create('select', {id: 'web-role-filter', style: {padding: '6px 8px'}});
-        sel.appendChild(create('option', {value: ''}, 'Все'));
-        roles.forEach(r=> sel.appendChild(create('option', {value: r}, r)));
-        return sel;
-      })()
-    );
-    const h1 = section.querySelector('h1');
-    if (h1) h1.insertAdjacentElement('afterend', controls); else section.prepend(controls);
+  <!-- Actions (right) -->
+  <div class="actions">
+    <a class="icon-btn" href="{{ BOT_LANDING_URL }}" target="_blank" aria-label="Bot">
+      <svg class="icon-24"><use href="#i-paper-plane"/></svg>
+    </a>
+    {% if header_user %}
+      <div id="compact-toggle" class="profile-icon" title="Компактный режим">🗜</div>
+      <button class="icon-btn timer-btn" id="timerToggle" aria-label="Таймер">
+        <svg class="icon-24"><use href="#i-clock"/></svg>
+        <span class="timer-dot" hidden></span>
+      </button>
+      <div class="profile-menu">
+        <div id="profile-button" class="profile-icon role-{{ header_role|lower }}">👤</div>
+        <div id="profile-dropdown" class="dropdown-menu hidden">
+          <div class="role">
+            Роль:
+            <button type="button" class="role-badge" data-role="{{ header_role }}">{{ header_role }}</button>
+          </div>
+          {% if header_user.telegram_id is defined %}
+          <a href="/profile/{{ header_user.telegram_id }}">Профиль</a>
+          {% else %}
+          <a href="/profile/{{ header_user.username }}">Профиль</a>
+          {% endif %}
+          <a href="/settings">Настройки</a>
+          {% if is_admin %}
+          <a href="/admin">Админ</a>
+          {% endif %}
+          <a href="/auth/logout" data-method="post">Выйти</a>
+        </div>
+      </div>
+    {% else %}
+      <nav class="guest-menu">
+        <a href="/auth">Вход</a>
+      </nav>
+    {% endif %}
+    <button class="icon-btn hamburger" id="navHamburger" aria-label="Меню" hidden>
+      <svg class="icon-24"><use href="#i-menu"/></svg>
+    </button>
+    <div class="hamburger-menu" id="navDrawer" hidden></div>
+  </div>
+</div>
 
-    function apply(){
-      const q = (section.querySelector('#web-search').value || '').trim().toLowerCase();
-      const role = section.querySelector('#web-role-filter').value || '';
-      section.querySelectorAll('table tbody tr').forEach(row=>{
-        const cells = row.querySelectorAll('td');
-        if (!cells.length) return;
-        const username = (cells[1]?.textContent || '').toLowerCase();
-        const tg = (cells[2]?.textContent || '').toLowerCase();
-        const rsel = row.querySelector('select.web-role');
-        const r = (rsel?.value || '').toLowerCase();
-        const matchText = !q || username.includes(q) || tg.includes(q);
-        const matchRole = !role || r === role.toLowerCase();
-        row.style.display = (matchText && matchRole) ? '' : 'none';
-      });
-    }
-    section.querySelector('#web-search').addEventListener('input', apply);
-    section.querySelector('#web-role-filter').addEventListener('change', apply);
-    apply();
-  }
-
-  function setupTgFilters(section){
-    if (!section || section.querySelector('#tg-search')) return;
-    const roles = Array.from(document.querySelectorAll('#users select.tg-role option'))
-      .map(o=>o.value).filter((v,i,arr)=> arr.indexOf(v)===i);
-    const controls = create('div', {style: {margin: '8px 0', display: 'flex', gap: '8px', alignItems: 'center'}},
-      create('input', {id: 'tg-search', type: 'text', placeholder: 'Поиск по ID, username, имени', style: {flex: '1', padding: '6px 8px'}}),
-      create('label', {htmlFor: 'tg-role-filter'}, 'Роль:'),
-      (function(){
-        const sel = create('select', {id: 'tg-role-filter', style: {padding: '6px 8px'}});
-        sel.appendChild(create('option', {value: ''}, 'Все'));
-        roles.forEach(r=> sel.appendChild(create('option', {value: r}, r)));
-        return sel;
-      })()
-    );
-    const h1 = section.querySelector('h1');
-    if (h1) h1.insertAdjacentElement('afterend', controls); else section.prepend(controls);
-
-    function apply(){
-      const q = (section.querySelector('#tg-search').value || '').trim().toLowerCase();
-      const role = section.querySelector('#tg-role-filter').value || '';
-      section.querySelectorAll('table tbody tr').forEach(row=>{
-        const cells = row.querySelectorAll('td');
-        if (!cells.length) return;
-        const id = (cells[0]?.textContent || '').toLowerCase();
-        const username = (cells[1]?.textContent || '').toLowerCase();
-        const first = (cells[2]?.textContent || '').toLowerCase();
-        const last = (cells[3]?.textContent || '').toLowerCase();
-        const rsel = row.querySelector('select.tg-role');
-        const r = (rsel?.value || '').toLowerCase();
-        const matchText = !q || id.includes(q) || username.includes(q) || first.includes(q) || last.includes(q);
-        const matchRole = !role || r === role.toLowerCase();
-        row.style.display = (matchText && matchRole) ? '' : 'none';
-      });
-    }
-    section.querySelector('#tg-search').addEventListener('input', apply);
-    section.querySelector('#tg-role-filter').addEventListener('change', apply);
-    apply();
-  }
-
-  function init(){
-    mobileMenu();
-    const web = document.getElementById('users-web');
-    const tg = document.getElementById('users');
-    if (web) setupWebFilters(web);
-    if (tg) setupTgFilters(tg);
-  }
-
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
-})();
-</script>
+{% include "_timer_widget.html" %}

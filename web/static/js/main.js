@@ -102,6 +102,95 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })();
 
+// ===== Header responsive (2/3 rule) =====
+(function(){
+  const header = document.querySelector('.app-header');
+  const nav = document.querySelector('.app-nav');
+  const hamb = document.getElementById('navHamburger');
+  const drawer = document.getElementById('navDrawer');
+  if (!header || !nav || !hamb || !drawer) return;
+
+  function collapseCheck(){
+    const avail = header.clientWidth;
+    const navW  = nav.scrollWidth;
+    const limit = avail * 2/3;
+    const needCollapse = navW > limit;
+    header.classList.toggle('header-collapsed', needCollapse);
+    hamb.hidden = !needCollapse;
+    if (!needCollapse){ drawer.hidden = true; }
+  }
+  try { new ResizeObserver(collapseCheck).observe(header); } catch(e) { window.addEventListener('resize', collapseCheck); }
+  window.addEventListener('load', collapseCheck);
+
+  hamb.addEventListener('click', ()=>{
+    const list = nav.querySelector('.nav-list');
+    if (!list) return;
+    drawer.innerHTML = '';
+    const clone = list.cloneNode(true);
+    clone.querySelectorAll('a').forEach(a=>a.classList.remove('is-active'));
+    drawer.appendChild(clone);
+    drawer.hidden = !drawer.hidden;
+  });
+  document.addEventListener('click', (e)=>{
+    if (drawer.hidden) return;
+    if (!drawer.contains(e.target) && !hamb.contains(e.target)) drawer.hidden = true;
+  });
+})();
+
+// ===== Timer modal & API =====
+(function(){
+  const btn = document.getElementById('timerToggle');
+  const modal = document.getElementById('timerModal');
+  if (!btn || !modal || !window.TIMER_ENDPOINTS) return;
+
+  const startBtn = document.getElementById('timerStartBtn');
+  const stopBtn  = document.getElementById('timerStopBtn');
+  const info     = document.getElementById('timerInfo');
+  const desc     = document.getElementById('timerDesc');
+  const dot      = btn.querySelector('.timer-dot');
+  let runningId = null;
+
+  async function getJSON(url){ const r = await fetch(url, {cache:'no-store'}); try { return await r.json(); } catch { return null; } }
+  async function postJSON(url, payload){
+    const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload||{}) });
+    try { return await r.json(); } catch { return null; }
+  }
+  function fmt(dt){ try { return new Date(dt).toLocaleString(); } catch { return dt || ''; } }
+
+  async function refresh(){
+    try{
+      const data = await getJSON(window.TIMER_ENDPOINTS.status);
+      let current = null;
+      if (Array.isArray(data)) current = data.find(e=>!e.end_time);
+      runningId = current ? current.id : null;
+      const running = Boolean(runningId);
+      if (startBtn) startBtn.hidden = running;
+      if (stopBtn) stopBtn.hidden  = !running;
+      if (dot) dot.hidden = !running;
+      if (info) info.textContent = running ? `Идёт с ${fmt(current.start_time)}` : 'Таймер не запущен';
+    }catch(e){ /* no-op */ }
+  }
+
+  btn.addEventListener('click', ()=>{ try { modal.showModal(); } catch { /* fallback for <dialog> unsupported */ modal.setAttribute('open',''); } refresh(); });
+  modal.addEventListener('click', (e)=>{ if (e.target.dataset && e.target.dataset.close) { try { modal.close(); } catch { modal.removeAttribute('open'); } }});
+
+  startBtn?.addEventListener('click', async ()=>{
+    await postJSON(window.TIMER_ENDPOINTS.start, { description: (desc && desc.value) || null });
+    if (desc) desc.value = '';
+    refresh();
+  });
+  stopBtn?.addEventListener('click', async ()=>{
+    if (!runningId) return;
+    const url = (window.TIMER_ENDPOINTS.stopOf ? window.TIMER_ENDPOINTS.stopOf(runningId) : null);
+    if (!url) return;
+    await postJSON(url, {});
+    refresh();
+  });
+
+  setInterval(refresh, 60000);
+  refresh();
+})();
+
 // ui2: role help modal (idempotent)
 (function(){
   const ROLE_HELP = {

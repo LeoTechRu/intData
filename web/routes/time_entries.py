@@ -44,6 +44,7 @@ class TimeEntryResponse(BaseModel):
     "/start",
     response_model=TimeEntryResponse,
     status_code=status.HTTP_201_CREATED,
+    name="timer_start",
 )
 async def start_timer(
     payload: StartPayload,
@@ -61,7 +62,7 @@ async def start_timer(
     return TimeEntryResponse.from_model(entry)
 
 
-@router.post("/{entry_id}/stop", response_model=TimeEntryResponse)
+@router.post("/{entry_id}/stop", response_model=TimeEntryResponse, name="timer_stop")
 async def stop_timer(
     entry_id: int,
     current_user: TgUser | None = Depends(get_current_tg_user),
@@ -77,7 +78,7 @@ async def stop_timer(
     return TimeEntryResponse.from_model(entry)
 
 
-@router.get("", response_model=List[TimeEntryResponse])
+@router.get("", response_model=List[TimeEntryResponse], name="timer_status")
 async def list_entries(
     current_user: TgUser | None = Depends(get_current_tg_user),
 ):
@@ -93,16 +94,6 @@ async def list_entries(
 
 
 @ui_router.get("")
-async def time_page(
-    request: Request,
-    current_user: WebUser | None = Depends(get_current_web_user),
-):
-    """Render simple UI for time tracking with role-aware header."""
-
-    context = {
-        "current_user": current_user,
-        "current_role_name": getattr(current_user, "role", ""),
-        "is_admin": getattr(current_user, "role", "") == "admin",
-        "page_title": "Учёт времени",
-    }
-    return templates.TemplateResponse(request, "time.html", context)
+async def time_page():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse("/", status_code=status.HTTP_302_FOUND)
