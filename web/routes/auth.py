@@ -8,6 +8,7 @@ import httpx
 from fastapi import APIRouter, HTTPException, Request, Form, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from ..template_env import templates
+from ..security.cookies import set_auth_cookies
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from sqlalchemy import select
 
@@ -75,14 +76,7 @@ def render_auth(
 def login_user(request: Request, user: WebUser) -> RedirectResponse:
     """Set cookies for authenticated user and redirect home."""
     response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
-    response.set_cookie(
-        "web_user_id",
-        str(user.id),
-        max_age=S.SESSION_MAX_AGE,
-        path="/",
-        httponly=True,
-        samesite="lax",
-    )
+    set_auth_cookies(response, web_user_id=user.id)
     return response
 
 
@@ -204,22 +198,7 @@ async def auth_telegram(request: Request):
     if getattr(user, "role", "") == "ban":
         return RedirectResponse("/ban", status_code=307)
     response = RedirectResponse("/", status_code=302)
-    response.set_cookie(
-        "web_user_id",
-        str(user.id),
-        max_age=S.SESSION_MAX_AGE,
-        path="/",
-        httponly=True,
-        samesite="lax",
-    )
-    response.set_cookie(
-        "telegram_id",
-        str(info["id"]),
-        max_age=S.SESSION_MAX_AGE,
-        path="/",
-        httponly=True,
-        samesite="lax",
-    )
+    set_auth_cookies(response, web_user_id=user.id, telegram_id=info["id"])
     try:
         log_event(request, "tg_ok", user, {"tg_id": info.get("id")})
     except Exception:
@@ -405,36 +384,16 @@ async def telegram_callback(request: Request):
             response.delete_cookie("telegram_id", path="/")
             return response
         response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
-        response.set_cookie(
-            "web_user_id",
-            str(web_user.id),
-            max_age=S.SESSION_MAX_AGE,
-            path="/",
-            httponly=True,
-            samesite="lax",
-        )
-        response.set_cookie(
-            "telegram_id",
-            str(telegram_id),
-            max_age=S.SESSION_MAX_AGE,
-            path="/",
-            httponly=True,
-            samesite="lax",
-        )
+        set_auth_cookies(response, web_user_id=web_user.id, telegram_id=telegram_id)
         try:
             log_event(request, "tg_ok", web_user, {"tg_id": telegram_id})
         except Exception:
             pass
         return response
-    response = RedirectResponse("/auth/create_web_account", status_code=status.HTTP_303_SEE_OTHER)
-    response.set_cookie(
-        "telegram_id",
-        str(telegram_id),
-        max_age=S.SESSION_MAX_AGE,
-        path="/",
-        httponly=True,
-        samesite="lax",
+    response = RedirectResponse(
+        "/auth/create_web_account", status_code=status.HTTP_303_SEE_OTHER
     )
+    set_auth_cookies(response, telegram_id=telegram_id)
     return response
 
 
@@ -519,20 +478,5 @@ async def create_web_account(
             tg_user = await tsvc.get_user_by_telegram_id(int(telegram_id))
         await wsvc.link_telegram(web_user.id, tg_user.id)
     response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
-    response.set_cookie(
-        "web_user_id",
-        str(web_user.id),
-        max_age=S.SESSION_MAX_AGE,
-        path="/",
-        httponly=True,
-        samesite="lax",
-    )
-    response.set_cookie(
-        "telegram_id",
-        str(telegram_id),
-        max_age=S.SESSION_MAX_AGE,
-        path="/",
-        httponly=True,
-        samesite="lax",
-    )
+    set_auth_cookies(response, web_user_id=web_user.id, telegram_id=telegram_id)
     return response
