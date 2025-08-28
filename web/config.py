@@ -1,66 +1,145 @@
 from __future__ import annotations
 
-from dotenv import load_dotenv, find_dotenv
-from pydantic import (
-    Field,
-    AnyHttpUrl,
-    AliasChoices,
-    field_validator,
-)
-from pydantic_settings import BaseSettings, SettingsConfigDict
-
-# Загружаем корневой .env даже при запуске uvicorn из другого каталога
-ROOT_ENV = find_dotenv(usecwd=False)
-if ROOT_ENV:
-    load_dotenv(ROOT_ENV, override=False)
+from functools import lru_cache
+from typing import Optional
+from pydantic import BaseSettings, AnyHttpUrl, validator
+import os
 
 
-class Settings(BaseSettings):
-    # Основные переменные для веб-морды
-    BOT_TOKEN: str = Field(..., description="Telegram Bot API token")
-    BOT_USERNAME: str = Field(
-        ...,
-        description="Bot username без @",
-        validation_alias=AliasChoices("BOT_USERNAME", "BOT_USERNAME"),
-    )
-    WEB_PUBLIC_URL: AnyHttpUrl | None = Field(
-        default=None,
-        description="Публичный базовый URL веб-морды",
-        validation_alias=AliasChoices("WEB_PUBLIC_URL", "WEB_APP_URL"),
-    )
-    APP_BRAND_NAME: str = Field(
-        default="LeonidPro",
-        description="Application brand name для шаблонов",
-    )
-    BOT_LANDING_URL: AnyHttpUrl | None = Field(
-        default=None,
-        description="Публичный URL лендинга бота",
-    )
-    RECAPTCHA_SITE_KEY: str | None = Field(
-        default=None,
-        description="Site key для Google reCAPTCHA",
-    )
-    RECAPTCHA_SECRET_KEY: str | None = Field(
-        default=None,
-        description="Secret key для проверки reCAPTCHA",
-    )
+class EnvSettings(BaseSettings):
+    # General
+    LOG_LEVEL: str = "INFO"
+
+    # DB/Redis
+    DB_USER: str = "postgres"
+    DB_PASSWORD: str = "postgres"
+    DB_HOST: str = "localhost"
+    DB_NAME: str = "leonidpro"
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+
+    # Branding (ENV defaults)
+    APP_BRAND_NAME: str = "LeonidPro"
+    WEB_PUBLIC_URL: AnyHttpUrl = "http://localhost:5800"  # type: ignore[assignment]
+    BOT_LANDING_URL: AnyHttpUrl | None = None  # type: ignore[assignment]
+
+    # Bot
+    BOT_TOKEN: Optional[str] = None
+    BOT_USERNAME: Optional[str] = None  # без @
+
+    ADMIN_CHAT_ID: Optional[str] = None
+    ADMIN_TELEGRAM_IDS: str = ""
+
+    # Web/Auth
+    WEB_APP_URL: AnyHttpUrl | None = None  # type: ignore[assignment]
+    LOGIN_REDIRECT_URL: AnyHttpUrl | None = None  # type: ignore[assignment]
     SESSION_MAX_AGE: int = 86400
-    ADMIN_IDS: str | None = Field(
-        default=None,
-        description="CSV-список ID администраторов",
-        validation_alias=AliasChoices("ADMIN_TELEGRAM_IDS", "ADMIN_IDS"),
-    )
+    TG_LOGIN_ENABLED: bool = True
 
-    @field_validator("BOT_USERNAME")
-    @classmethod
-    def strip_at(cls, v: str) -> str:
-        return v.lstrip("@").strip()
+    class Config:
+        env_file = os.getenv("LEONIDPRO_ENV_FILE", ".env")
+        case_sensitive = False
 
-    model_config = SettingsConfigDict(
-        env_file=ROOT_ENV if ROOT_ENV else ".env",
-        case_sensitive=True,
-        extra="ignore",  # <-- критично: не валимся на лишних переменных
-    )
+    @validator("BOT_USERNAME", pre=True)
+    def strip_at(cls, v):  # noqa: D401
+        if not v:
+            return v
+        return str(v).lstrip("@").strip()
+
+    @validator("BOT_LANDING_URL", always=True)
+    def default_bot_landing(cls, v, values):  # noqa: D401
+        if v:
+            return v
+        base = str(values.get("WEB_PUBLIC_URL")).rstrip("/")
+        return f"{base}/bot"
+
+    @validator("WEB_APP_URL", always=True)
+    def default_web_app_url(cls, v, values):  # noqa: D401
+        if v:
+            return v
+        return values.get("WEB_PUBLIC_URL")
+
+    @validator("LOGIN_REDIRECT_URL", always=True)
+    def default_login_cb(cls, v, values):  # noqa: D401
+        if v:
+            return v
+        base = str(values.get("WEB_PUBLIC_URL")).rstrip("/")
+        return f"{base}/auth/callback"
 
 
-S = Settings()
+# --- Runtime overrides from DB ---
+try:
+    from core.settings_store import SettingsStore  # type: ignore
+except Exception:  # pragma: no cover - optional in tests
+    class SettingsStore:  # type: ignore
+        def reload(self):
+            pass
+
+        def get(self, key: str):
+            return None
+
+        def get_secret(self, key: str):
+            return None
+
+
+class Settings:
+    """Env + DB overrides. Use S = settings() to get singleton."""
+
+    def __init__(self, env: EnvSettings, store: SettingsStore):
+        self._env = env
+        self._store = store
+
+    def reload(self):
+        self._store.reload()
+
+    # read helpers with override priority (DB -> ENV)
+    @property
+    def APP_BRAND_NAME(self):
+        return self._store.get("branding.APP_BRAND_NAME") or self._env.APP_BRAND_NAME
+
+    @property
+    def WEB_PUBLIC_URL(self):
+        return self._store.get("branding.WEB_PUBLIC_URL") or str(self._env.WEB_PUBLIC_URL)
+
+    @property
+    def BOT_LANDING_URL(self):
+        return self._store.get("branding.BOT_LANDING_URL") or str(self._env.BOT_LANDING_URL)
+
+    @property
+    def BOT_USERNAME(self):
+        return self._store.get("telegram.BOT_USERNAME") or self._env.BOT_USERNAME
+
+    @property
+    def BOT_TOKEN(self):
+        return self._store.get_secret("telegram.BOT_TOKEN") or self._env.BOT_TOKEN
+
+    @property
+    def TG_LOGIN_ENABLED(self):
+        v = self._store.get("telegram.TG_LOGIN_ENABLED")
+        if v is None:
+            return self._env.TG_LOGIN_ENABLED
+        return str(v).strip() not in {"0", "false", "False"}
+
+    @property
+    def LOGIN_REDIRECT_URL(self):
+        return str(self._env.LOGIN_REDIRECT_URL)
+
+    @property
+    def SESSION_MAX_AGE(self):
+        return int(self._env.SESSION_MAX_AGE)
+
+    # expose raw env for DB/Redis etc
+    @property
+    def env(self):
+        return self._env
+
+
+@lru_cache(1)
+def settings() -> Settings:
+    env = EnvSettings()
+    store = SettingsStore()
+    return Settings(env, store)
+
+
+S = settings()
+

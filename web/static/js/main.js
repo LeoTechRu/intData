@@ -137,6 +137,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 })();
 
+// ===== Убрать случайные ссылки 'Подробнее' из хедера (подстраховка) =====
+(function(){
+  const hdr = document.querySelector('.app-header');
+  if (!hdr) return;
+  hdr.querySelectorAll('a,button').forEach(el=>{
+    if ((el.textContent||'').trim() === 'Подробнее') el.remove();
+  });
+})();
+
 // ===== Timer modal & API =====
 (function(){
   const btn = document.getElementById('timerToggle');

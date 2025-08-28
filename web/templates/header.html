@@ -1,78 +1,56 @@
 {% set header_user = current_user if (current_user is defined and current_user) else (user if user is defined else None) %}
 {% set header_role = current_role_name if current_role_name is defined else (role_name if role_name is defined else '') %}
-{% set _role = (header_role|lower) if header_role else '' %}
-{% set _path = request.url.path if request and request.url else '' %}
-{% set _is_banned = (_role == 'ban') %}
-{% set _is_admin = (_role == 'admin') %}
-{% set _is_moderator = (_role == 'moderator') %}
-{% set _is_multi = (_role in ['multiplayer','moderator','admin']) %}
-{% set _is_single = (_role in ['single','multiplayer','moderator','admin']) %}
-
-<div class="app-header">
-  <!-- Brand -->
-  <div class="brand">
+<header class="app-header" role="banner">
+  <div class="brand-wrap">
     <a class="brand" href="/">
-      <img class="brand-mark" src="{{ url_for('static', path='img/brand/leonidpro-mark.svg') }}" alt="LeonidPro" width="24" height="24" loading="lazy">
+      <img class="brand-mark" src="{{ url_for('static', path='img/brand/leonidpro-mark.svg') }}" alt="LeonidPro" width="22" height="22" loading="lazy">
       <span class="brand-type">LeonidPro</span>
     </a>
   </div>
 
-  <!-- Modules nav (center) -->
   <nav class="app-nav" aria-label="Модули">
-    {% if not _is_banned %}
     <ul class="nav-list">
-      {% if _is_single %}
-        <li><button type="button" class="nav-pill" data-widget="tasks" aria-haspopup="dialog">Задачи</button></li>
-        <li><button type="button" class="nav-pill" data-widget="rc" aria-haspopup="dialog">Напоминания/Календарь</button></li>
-        <li><button type="button" class="nav-pill" data-widget="notes" aria-haspopup="dialog">Заметки</button></li>
-      {% endif %}
+      <li><button type="button" class="nav-pill" data-widget="tasks" aria-haspopup="dialog">Задачи</button></li>
+      <li><button type="button" class="nav-pill" data-widget="rc" aria-haspopup="dialog">Напоминания/Календарь</button></li>
+      <li><button type="button" class="nav-pill" data-widget="notes" aria-haspopup="dialog">Заметки</button></li>
     </ul>
-    {% endif %}
   </nav>
 
-  <!-- Actions (right) -->
   <div class="actions">
-    <a class="icon-btn" href="{{ BOT_LANDING_URL }}" target="_blank" aria-label="Bot">
-      <svg class="icon-24"><use href="#i-paper-plane"/></svg>
-    </a>
-    {% if header_user %}
-      <div id="compact-toggle" class="profile-icon" title="Компактный режим">🗜</div>
-      <button class="icon-btn timer-btn" id="timerToggle" aria-label="Таймер">
-        <svg class="icon-24"><use href="#i-clock"/></svg>
-        <span class="timer-dot" hidden></span>
-      </button>
-      <div class="profile-menu">
-        <div id="profile-button" class="profile-icon role-{{ header_role|lower }}">👤</div>
-        <div id="profile-dropdown" class="dropdown-menu hidden">
-          <div class="role">
-            Роль:
-            <button type="button" class="role-badge" data-role="{{ header_role }}">{{ header_role }}</button>
-          </div>
-          {% if header_user.telegram_id is defined %}
-          <a href="/profile/{{ header_user.telegram_id }}">Профиль</a>
-          {% else %}
-          <a href="/profile/{{ header_user.username }}">Профиль</a>
-          {% endif %}
-          <a href="/settings">Настройки</a>
-          {% if is_admin %}
-          <a href="/admin">Админ</a>
-          {% endif %}
-          <a href="/auth/logout" data-method="post">Выйти</a>
+    <a class="icon-btn" href="{{ BOT_LANDING_URL }}" aria-label="Bot"><svg class="icon-24"><use href="#i-telegram"/></svg></a>
+    <button class="icon-btn timer-btn" id="timerToggle" aria-label="Таймер"><svg class="icon-24"><use href="#i-clock"/></svg><span class="timer-dot" hidden></span></button>
+    <button class="icon-btn hamburger" id="navHamburger" aria-label="Меню" hidden><svg class="icon-24"><use href="#i-menu"/></svg></button>
+    {# профиль и настройки #}
+    <div class="profile-menu">
+      <div id="profile-button" class="profile-icon role-{{ header_role|lower }}">👤</div>
+      <div id="profile-dropdown" class="dropdown-menu hidden">
+        <div class="role">
+          Роль:
+          <button type="button" class="role-badge" data-role="{{ header_role }}">{{ header_role }}</button>
         </div>
-      </div>
-    {% else %}
-      <nav class="guest-menu">
+        {% if header_user and header_user.telegram_id is defined %}
+        <a href="/profile/{{ header_user.telegram_id }}">Профиль</a>
+        {% elif header_user %}
+        <a href="/profile/{{ header_user.username }}">Профиль</a>
+        {% else %}
         <a href="/auth">Вход</a>
-      </nav>
-    {% endif %}
-    <button class="icon-btn hamburger" id="navHamburger" aria-label="Меню" hidden>
-      <svg class="icon-24"><use href="#i-menu"/></svg>
-    </button>
-    <div class="hamburger-menu" id="navDrawer" hidden></div>
+        {% endif %}
+        <a href="/settings">Настройки</a>
+        {% if is_admin %}
+        <a href="/admin">Админ</a>
+        {% endif %}
+        {% if header_user %}
+        <a href="/auth/logout" data-method="post">Выйти</a>
+        {% endif %}
+      </div>
+    </div>
   </div>
-</div>
 
-{% include "_timer_widget.html" %}
+  <div class="hamburger-menu" id="navDrawer" hidden></div>
+</header>
+
+{# подключаем поповеры-виджеты и таймер, если ещё не подключены #}
 {% include "_widget_tasks_today.html" %}
 {% include "_widget_rc_today.html" %}
 {% include "_widget_notes_quick.html" %}
+{% include "_timer_widget.html" %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Настройки{% endblock %}
+{% block content %}
+<div class="ui-layout">
+  <div id="main-content">
+    <section class="card" style="margin-bottom:1rem;">
+      <div class="card-title">Брендинг</div>
+      <form id="branding-form" class="ui-form">
+        <label>Имя бренда<input class="control" type="text" name="APP_BRAND_NAME" value="{{ APP_BRAND_NAME }}"></label>
+        <label>Публичный URL<input class="control" type="url" name="WEB_PUBLIC_URL" value="{{ WEB_PUBLIC_URL }}"></label>
+        <label>URL бота<input class="control" type="url" name="BOT_LANDING_URL" value="{{ BOT_LANDING_URL }}"></label>
+        <button class="button" type="submit">Сохранить</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="card-title">Telegram</div>
+      <form id="telegram-form" class="ui-form">
+        <label><input type="checkbox" name="TG_LOGIN_ENABLED" {% if TG_LOGIN_ENABLED %}checked{% endif %}> Включить Telegram Login</label>
+        <label>Имя бота (без @)<input class="control" type="text" name="BOT_USERNAME" value="{{ TG_BOT_USERNAME or '' }}"></label>
+        <label>Токен бота<input class="control" type="password" name="BOT_TOKEN" placeholder="Задать новый токен"></label>
+        <button class="button" type="submit">Сохранить</button>
+      </form>
+    </section>
+  </div>
+</div>
+
+<script>
+async function patch(url, data){
+  const resp = await fetch(url, {method:'PATCH', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(data)});
+  if (!resp.ok){ alert('Ошибка сохранения'); }
+}
+document.getElementById('branding-form')?.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const fd = new FormData(e.currentTarget);
+  await patch('/api/admin/settings/branding', {
+    APP_BRAND_NAME: fd.get('APP_BRAND_NAME'),
+    WEB_PUBLIC_URL: fd.get('WEB_PUBLIC_URL'),
+    BOT_LANDING_URL: fd.get('BOT_LANDING_URL'),
+  });
+  location.reload();
+});
+document.getElementById('telegram-form')?.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const fd = new FormData(e.currentTarget);
+  await patch('/api/admin/settings/telegram', {
+    TG_LOGIN_ENABLED: !!fd.get('TG_LOGIN_ENABLED'),
+    BOT_USERNAME: (fd.get('BOT_USERNAME')||'').toString().trim() || null,
+    BOT_TOKEN: (fd.get('BOT_TOKEN')||'').toString().trim() || null,
+  });
+  location.reload();
+});
+</script>
+{% endblock %}
+

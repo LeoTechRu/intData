@@ -17,12 +17,12 @@ _bot_username = os.getenv("BOT_USERNAME", S.BOT_USERNAME)
 _bot_username_with_at = "@" + _bot_username.lstrip("@")
 
 templates.env.globals.update(
-    APP_BRAND_NAME=os.getenv("APP_BRAND_NAME", "LeonidPro"),
-    WEB_PUBLIC_URL=_web_url,
-    BOT_USERNAME=_bot_username_with_at,
-    BOT_LANDING_URL=os.getenv("BOT_LANDING_URL", f"{_web_url}/bot"),
-    TG_LOGIN_ENABLED=os.getenv("TG_LOGIN_ENABLED", "1") == "1",
-    TG_BOT_USERNAME=os.getenv("TG_BOT_USERNAME", _bot_username_with_at),
+    APP_BRAND_NAME=S.APP_BRAND_NAME,
+    WEB_PUBLIC_URL=S.WEB_PUBLIC_URL,
+    BOT_LANDING_URL=S.BOT_LANDING_URL,
+    TG_LOGIN_ENABLED=S.TG_LOGIN_ENABLED,
+    TG_BOT_USERNAME=S.BOT_USERNAME,
+    BOT_USERNAME=("@" + (S.BOT_USERNAME or "").lstrip("@")) if S.BOT_USERNAME else None,
     RECAPTCHA_SITE_KEY=os.getenv("RECAPTCHA_SITE_KEY"),
 )
 
