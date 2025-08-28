@@ -12,7 +12,12 @@ from web.dependencies import get_current_tg_user
 from ..template_env import templates
 
 
-router = APIRouter(prefix="/reminders", tags=["reminders"])
+router = APIRouter(prefix="/api/reminders", tags=["reminders"])
+ui_router = APIRouter(
+    prefix="/reminders",
+    tags=["reminders"],
+    include_in_schema=False,
+)
 
 
 class ReminderCreate(BaseModel):
@@ -97,7 +102,7 @@ async def mark_reminder_done(
     return ReminderResponse.from_model(reminder)
 
 
-@router.get("/ui", include_in_schema=False)
+@ui_router.get("")
 async def reminders_page(request: Request):
     """Render simple UI for reminders."""
 
