@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sel.addEventListener('change', async e => {
             const id = e.target.dataset.tgId;
             const role = e.target.value;
-            await fetch(`/admin/role/${id}?role=${role}`, {method: 'POST'});
+            await fetch(`/api/admin/role/${id}?role=${role}`, {method: 'POST'});
             location.reload();
         });
     });
@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sel.addEventListener('change', async e => {
             const id = e.target.dataset.userId;
             const role = e.target.value;
-            await fetch(`/admin/web/role/${id}?role=${role}`, {method: 'POST'});
+            await fetch(`/api/admin/web/role/${id}?role=${role}`, {method: 'POST'});
             location.reload();
         });
     });
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', async e => {
             const webId = e.target.dataset.web;
             const tgId = e.target.dataset.tg;
-            await fetch(`/admin/web/unlink?web_user_id=${webId}&tg_user_id=${tgId}`, {method: 'POST'});
+            await fetch(`/api/admin/web/unlink?web_user_id=${webId}&tg_user_id=${tgId}`, {method: 'POST'});
             location.reload();
         });
     });
@@ -139,11 +139,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const select = document.getElementById(`link-select-${webId}`);
             const tgId = select.value;
             if (!tgId) return;
-            await fetch(`/admin/web/link?web_user_id=${webId}&tg_user_id=${tgId}`, {method: 'POST'});
+            await fetch(`/api/admin/web/link?web_user_id=${webId}&tg_user_id=${tgId}`, {method: 'POST'});
             location.reload();
         });
     });
 });
 </script>
 {% endblock %}
-

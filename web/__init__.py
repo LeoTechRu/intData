@@ -20,6 +20,7 @@ from .routes import (
     calendar,
     time_entries,
 )
+from .routes.api import admin as api_admin
 from core.db import init_models
 from core.services.web_user_service import WebUserService
 from core.services.telegram_user_service import TelegramUserService
@@ -166,6 +167,9 @@ app.include_router(time_entries.router)
 app.include_router(time_entries.ui_router)
 app.include_router(auth.router)
 app.include_router(admin.router, prefix="/admin")
+
+# Domain API routers
+app.include_router(api_admin.router)
 
 # Root API aggregator (prefix /api). Domain routers below already serve under /api/*
 # so we don't add nested prefixes here to avoid double /api.

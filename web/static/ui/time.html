@@ -65,7 +65,7 @@
   function minsBetween(a,b){ try { return Math.max(0, Math.floor((new Date(b)-new Date(a))/60000)); } catch(e){ return 0; } }
 
   async function fetchEntries(){
-    const resp = await fetch('/time', {credentials:'include'});
+  const resp = await fetch('/api/time', {credentials:'include'});
     if (!resp.ok){
       $('#time-auth-hint').style.display='block';
       return { entries: [] };
@@ -107,7 +107,7 @@
       e.preventDefault();
       const fd = new FormData(form);
       const payload = { description: fd.get('description') || null };
-      const resp = await fetch('/time/start', {
+    const resp = await fetch('/api/time/start', {
         method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload)
       });
       if (resp.ok){ form.reset(); reload(); }
@@ -115,7 +115,7 @@
     $('#running-stop').addEventListener('click', async ()=>{
       const id = $('#running-stop').dataset.entryId;
       if (!id) return;
-      const resp = await fetch(`/time/${id}/stop`, { method:'POST', credentials:'include' });
+  const resp = await fetch(`/api/time/${id}/stop`, { method:'POST', credentials:'include' });
       if (resp.ok){ reload(); }
     });
     reload();
@@ -123,4 +123,3 @@
   </script>
   </body>
   </html>
-
