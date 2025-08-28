@@ -722,3 +722,5 @@ body.compact .admin-panel {
 .btn-link{ color:#6d28d9; text-decoration:none; font-weight:600; }
 .nav-pill{ display:inline-flex; align-items:center; padding:8px 10px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px; cursor:pointer; }
 .nav-pill:hover{ background:#eef2ff; }
+.popover-card:focus-visible{ outline: 2px solid #a78bfa; outline-offset: 2px; }
+.muted{ color:#94a3b8; }

@@ -315,7 +315,12 @@ if (hash && forms[hash]) activate(hash); else activate('login');
     btn.addEventListener('click', async ()=>{
       closeAll(w.dlg);
       try { w.dlg.showModal(); } catch { w.dlg.setAttribute('open',''); }
-      placeNear(btn, w.dlg.querySelector('.popover-card'));
+      const card = w.dlg.querySelector('.popover-card');
+      placeNear(btn, card);
+      if (card) {
+        card.setAttribute('tabindex','-1');
+        try { card.focus({preventScroll:true}); } catch { card.focus(); }
+      }
       await loadWidget(key);
     });
     document.addEventListener('click', (e)=>{
