@@ -74,7 +74,11 @@ async def index(
                 )
             role_name = tg_user.role if tg_user else current_user.role
 
+            # Use timezone-aware "now" to avoid naive/aware comparison errors
+            from datetime import UTC
             now = utcnow()
+            if getattr(now, "tzinfo", None) is None:
+                now = now.replace(tzinfo=UTC)
             week_ago = now - timedelta(days=7)
 
             tasks = []
