@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
 from core.models import TimeEntry, TgUser
 from core.services.time_service import TimeService
 from web.dependencies import get_current_tg_user
+from ..template_env import templates
 
 
 router = APIRouter(prefix="/time", tags=["time"])
@@ -87,3 +88,10 @@ async def list_entries(
             owner_id=current_user.telegram_id,
         )
     return [TimeEntryResponse.from_model(e) for e in entries]
+
+
+@router.get("/ui", include_in_schema=False)
+async def time_page(request: Request):
+    """Render simple UI for time tracking."""
+
+    return templates.TemplateResponse(request, "time.html", {})

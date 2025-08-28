@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Учёт времени{% endblock %}
+{% block content %}
+<div class="ui-layout">
+  <div id="main-content">
+    <div class="ui-notice">Запускайте таймер и отслеживайте работу.</div>
+
+    <section class="card" style="margin-bottom:1rem;">
+      <div class="card-title">Старт таймера</div>
+      <form id="time-form" class="ui-form">
+        <label>
+          <div>Описание</div>
+          <input type="text" name="description" placeholder="Что делаете?">
+        </label>
+        <button class="button" type="submit">Старт</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="card-title">Записи времени</div>
+      <table class="ui-table">
+        <thead><tr><th>ID</th><th>Начало</th><th>Конец</th><th>Описание</th><th></th></tr></thead>
+        <tbody id="time-list"></tbody>
+      </table>
+      <div id="time-empty" class="text-muted" style="display:none; padding:8px;">Записей пока нет</div>
+    </section>
+  </div>
+</div>
+
+<script>
+async function fetchEntries(){
+  const resp = await fetch('/time', {credentials:'include'});
+  if (!resp.ok){
+    const empty = document.getElementById('time-empty');
+    empty.textContent = 'Требуется вход и связанный Telegram-аккаунт';
+    empty.style.display='block';
+    return;
+  }
+  const data = await resp.json();
+  const list = document.getElementById('time-list');
+  list.innerHTML = '';
+  if (!data.length){
+    document.getElementById('time-empty').style.display='block';
+    return;
+  }
+  document.getElementById('time-empty').style.display='none';
+  for (const t of data){
+    const start = new Date(t.start_time).toLocaleString();
+    const end = t.end_time ? new Date(t.end_time).toLocaleString() : '';
+    const stopBtn = end ? '' : `<button class="button" data-action="stop" data-id="${t.id}">Стоп</button>`;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${t.id}</td><td>${start}</td><td>${end}</td><td>${t.description || ''}</td><td>${stopBtn}</td>`;
+    list.appendChild(tr);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  const form = document.getElementById('time-form');
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const fd = new FormData(form);
+    const payload = {description: fd.get('description') || null};
+    const resp = await fetch('/time/start', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body: JSON.stringify(payload)
+    });
+    if (resp.ok){ form.reset(); fetchEntries(); }
+  });
+  fetchEntries();
+});
+
+document.addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button[data-action="stop"]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  const resp = await fetch(`/time/${id}/stop`, {method:'POST', credentials:'include'});
+  if (resp.ok){ fetchEntries(); }
+});
+</script>
+{% endblock %}
