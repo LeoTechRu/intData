@@ -5,7 +5,7 @@
       <img class="brand-mark" src="{{ url_for('static', path='img/brand/leonidpro-mark.svg') }}" alt="LeonidPro" width="24" height="24" loading="lazy">
       <span class="brand-type">LeonidPro</span>
     </a>
-    
+    <button id="nav-toggle" class="nav-toggle" aria-label="Открыть меню" aria-expanded="false">☰</button>
     {# removed old emoji logo and project-name link #}
 </div>
 <div class="top-center">
@@ -62,9 +62,6 @@
   {% endif %}
   {# Зарезервировано для совместной работы (multi): группы/проекты — позже #}
   {# {% if _is_multi %}<a href="/projects" class="{{ 'active' if _path.startswith('/projects') else '' }}">Проекты</a>{% endif %} #}
-  {% if _is_admin %}
-    <a href="/admin" class="{{ 'active' if _path.startswith('/admin') else '' }}">Админ</a>
-  {% endif %}
   <span class="nav-fill"></span>
 </nav>
 {% endif %}
@@ -72,6 +69,25 @@
 <script>
 // Admin users: inject search and role filters (idempotent)
 (function(){
+  // Mobile menu toggle
+  function mobileMenu(){
+    const toggle = document.getElementById('nav-toggle');
+    const nav = document.querySelector('nav.main-nav');
+    if (!toggle || !nav) return;
+    function close(){ nav.classList.remove('open'); toggle.setAttribute('aria-expanded','false'); }
+    function open(){ nav.classList.add('open'); toggle.setAttribute('aria-expanded','true'); }
+    toggle.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const isOpen = nav.classList.contains('open');
+      isOpen ? close() : open();
+    });
+    // Close on link click or outside click
+    nav.addEventListener('click', (e)=>{ if (e.target.closest('a')) close(); });
+    document.addEventListener('click', (e)=>{
+      if (!nav.contains(e.target) && e.target !== toggle) close();
+    });
+    document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') close(); });
+  }
   function create(tag, attrs, ...children){
     const el = document.createElement(tag);
     if (attrs) Object.entries(attrs).forEach(([k,v])=>{
@@ -159,6 +175,7 @@
   }
 
   function init(){
+    mobileMenu();
     const web = document.getElementById('users-web');
     const tg = document.getElementById('users');
     if (web) setupWebFilters(web);

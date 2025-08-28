@@ -251,9 +251,10 @@ button,
 @media (max-width: 640px) {
   .top-center { display: none; }
   .bot-menu { display: none; }
-  .main-nav { overflow-x: auto; white-space: nowrap; gap: 8px; }
-  .main-nav a { flex: 0 0 auto; font-size: 0.95rem; padding: 6px 8px; }
-  .main-nav::-webkit-scrollbar { display: none; }
+  .nav-toggle { display: inline-flex; align-items:center; justify-content:center; margin-left: 8px; padding: 6px 10px; background: transparent; border: 1px solid rgba(255,255,255,0.6); color: #fff; border-radius: 8px; font-size: 1rem; }
+  .main-nav { display: none; flex-direction: column; gap: 6px; background: #f8f7fb; color: #333; padding: 8px 12px; border-bottom: 1px solid #e5e7eb; }
+  .main-nav.open { display: flex; }
+  .main-nav a { font-size: 1rem; padding: 8px 10px; }
 }
 
 #login-page {
