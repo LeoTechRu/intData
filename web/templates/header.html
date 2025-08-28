@@ -23,10 +23,10 @@
 
     <div class="profile-menu">
       <button class="avatar-btn" id="profileMenuBtn" aria-haspopup="menu" aria-expanded="false">
-        <img class="avatar" src="{{ current_user.avatar_url if current_user else url_for('static', path='img/brand/leonidpro-mask.svg') }}" alt="" />
+        <img class="avatar" src="{{ header_user.avatar_url if header_user else url_for('static', path='img/brand/leonidpro-mask.svg') }}" alt="" />
       </button>
       <div class="menu" id="profileMenu" role="menu" hidden>
-        <a role="menuitem" href="/profile/{{ current_user.username if current_user else '' }}">Профиль</a>
+        <a role="menuitem" href="/profile/{{ header_user.username if header_user else '' }}">Профиль</a>
         <a role="menuitem" href="/settings">Настройки</a>
         <hr/>
         <a role="menuitem" href="/">Дашборд</a>
