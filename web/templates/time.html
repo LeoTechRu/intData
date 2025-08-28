@@ -29,7 +29,7 @@
 
 <script>
 async function fetchEntries(){
-  const resp = await fetch('/time', {credentials:'include'});
+  const resp = await fetch('/api/time', {credentials:'include'});
   if (!resp.ok){
     const empty = document.getElementById('time-empty');
     empty.textContent = 'Требуется вход и связанный Telegram-аккаунт';
@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     e.preventDefault();
     const fd = new FormData(form);
     const payload = {description: fd.get('description') || null};
-    const resp = await fetch('/time/start', {
+    const resp = await fetch('/api/time/start', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       credentials:'include',
@@ -75,7 +75,7 @@ document.addEventListener('click', async (e)=>{
   const btn = e.target.closest('button[data-action="stop"]');
   if (!btn) return;
   const id = btn.dataset.id;
-  const resp = await fetch(`/time/${id}/stop`, {method:'POST', credentials:'include'});
+  const resp = await fetch(`/api/time/${id}/stop`, {method:'POST', credentials:'include'});
   if (resp.ok){ fetchEntries(); }
 });
 </script>

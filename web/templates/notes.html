@@ -29,7 +29,7 @@
 
 <script>
 async function fetchNotes(){
-  const resp = await fetch('/notes', {credentials:'include'});
+  const resp = await fetch('/api/notes', {credentials:'include'});
   if (!resp.ok){
     document.getElementById('note-empty').textContent = 'Требуется вход и связанный Telegram-аккаунт';
     document.getElementById('note-empty').style.display = 'block';
@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
     e.preventDefault();
     const fd = new FormData(form);
     const payload = {content: fd.get('content')};
-    const resp = await fetch('/notes', {
+    const resp = await fetch('/api/notes', {
       method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload)
     });
     if (resp.ok){ form.reset(); fetchNotes(); }
@@ -72,13 +72,13 @@ document.addEventListener('click', async (e)=>{
   if (!btn) return;
   const id = btn.dataset.id;
   if (btn.dataset.action === 'delete'){
-    const resp = await fetch(`/notes/${id}`, {method:'DELETE', credentials:'include'});
+    const resp = await fetch(`/api/notes/${id}`, {method:'DELETE', credentials:'include'});
     if (resp.ok){ fetchNotes(); }
   } else if (btn.dataset.action === 'edit'){
     const current = btn.closest('tr').children[1].textContent;
     const content = prompt('Изменить заметку', current);
     if (content === null) return;
-    const resp = await fetch(`/notes/${id}`, {
+    const resp = await fetch(`/api/notes/${id}`, {
       method:'PUT',
       headers:{'Content-Type':'application/json'},
       credentials:'include',
