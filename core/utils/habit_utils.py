@@ -6,6 +6,16 @@ from typing import List, Tuple
 from ..models import Habit
 
 
+def calc_progress(progress: dict | None) -> int:
+    """Return completion percentage based on progress dict."""
+
+    if not progress:
+        return 0
+    total = len(progress)
+    done = sum(1 for v in progress.values() if v)
+    return round(done / total * 100)
+
+
 def _get_status(habit: Habit, day: date) -> str:
     today = date.today()
     key = day.isoformat()
@@ -17,7 +27,9 @@ def _get_status(habit: Habit, day: date) -> str:
     return "completed" if progress.get(key) else "missed"
 
 
-def generate_calendar(habit: Habit, start_date: date | None = None) -> List[Tuple[date, str]]:
+def generate_calendar(
+    habit: Habit, start_date: date | None = None
+) -> List[Tuple[date, str]]:
     """Return list of 30 days with status for each day."""
     today = date.today()
     base = habit.created_at.date() if habit.created_at else today

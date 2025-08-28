@@ -6,12 +6,13 @@ from fastapi import APIRouter, Request, Depends, status
 
 from core.models import UserRole, WebUser, TgUser, TaskStatus
 from core.services.telegram_user_service import TelegramUserService
-from core.services.nexus_service import ProjectService
+from core.services.nexus_service import ProjectService, HabitService
 from core.services.task_service import TaskService
 from core.services.reminder_service import ReminderService
 from core.services.calendar_service import CalendarService
 from core.services.time_service import TimeService
 from core.utils import utcnow
+from core.utils.habit_utils import calc_progress
 from web.dependencies import get_current_web_user
 from ..template_env import templates
 
@@ -120,14 +121,19 @@ async def index(
             for r in reminders:
                 if r.remind_at.date() == today:
                     day_timeline.append(
-                        {"time": r.remind_at.strftime("%H:%M"), "text": r.message}
+                        {
+                            "time": r.remind_at.strftime("%H:%M"),
+                            "text": r.message,
+                        }
                     )
             day_timeline.sort(key=lambda x: x["time"])
 
             upcoming_tasks = [
                 {
                     "title": t.title,
-                    "subtitle": t.due_date.strftime("%d.%m") if t.due_date else None,
+                    "subtitle": (
+                        t.due_date.strftime("%d.%m") if t.due_date else None
+                    ),
                 }
                 for t in tasks
                 if t.due_date and t.due_date >= now
@@ -149,6 +155,21 @@ async def index(
                 if e.start_at >= now
             ][:5]
             habit_list = []
+            if tg_user:
+                async with HabitService() as hs:
+                    try:
+                        habits = await hs.list_habits(
+                            owner_id=tg_user.telegram_id
+                        )
+                    except Exception:  # pragma: no cover
+                        habits = []
+                habit_list = [
+                    {
+                        "title": h.name,
+                        "percent": calc_progress(h.progress),
+                    }
+                    for h in habits
+                ]
 
             context = {
                 "user": tg_user,

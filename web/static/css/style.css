@@ -312,6 +312,18 @@ button,
 }
 .list-item:hover { background: rgba(0,0,0,0.04); }
 
+.habit-progress {
+  background: rgba(0,0,0,0.1);
+  border-radius: var(--radius);
+  overflow: hidden;
+  height: 6px;
+  margin-top: var(--spacing-xs);
+}
+.habit-progress > div {
+  background: var(--color-accent-turquoise);
+  height: 100%;
+}
+
 /* Existing profile/dashboard components */
 .profile-card {
   background-color: var(--color-accent-purple);
