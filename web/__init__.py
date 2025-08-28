@@ -3,7 +3,7 @@ from pathlib import Path
 from urllib.parse import quote
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, APIRouter
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -66,7 +66,13 @@ async def lifespan(app: FastAPI):
                 pass
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    lifespan=lifespan,
+    title="LeonidPro API",
+    docs_url="/api",                 # Swagger UI -> /api
+    redoc_url=None,                   # ReDoc off for now
+    openapi_url="/api/openapi.json", # Spec -> /api/openapi.json
+)
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
@@ -125,8 +131,8 @@ async def auth_middleware(request: Request, call_next):
             return RedirectResponse("/")
         return await call_next(request)
 
-    # Skip docs and schema endpoints
-    if path.startswith("/docs") or path.startswith("/openapi"):
+    # Allow public API docs endpoints only: /api and /api/openapi.json
+    if path == "/api" or path == "/api/openapi.json":
         return await call_next(request)
 
     # Allow root path for both authenticated and guest users
@@ -160,3 +166,8 @@ app.include_router(time_entries.router)
 app.include_router(time_entries.ui_router)
 app.include_router(auth.router)
 app.include_router(admin.router, prefix="/admin")
+
+# Root API aggregator (prefix /api). Domain routers below already serve under /api/*
+# so we don't add nested prefixes here to avoid double /api.
+api = APIRouter(prefix="/api")
+app.include_router(api)
