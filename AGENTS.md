@@ -1,127 +1,49 @@
-# Инструкции для Codex (agent)
+# Repository Guidelines
 
-Этот файл предназначен для «агента», который автоматически решает задачи в репозитории LeonidPro. Следуйте этим правилам, чтобы избегать лишних задержек и ошибок при выполнении любых задач.
+## Project Structure & Module Organization
+- `core/`: shared models, services, utils, logging. All logic reused by bot and web lives here.
+- `bot/`: Telegram bot (aiogram) handlers, FSM states, routers. Import business logic from `core`, do not duplicate it.
+- `web/`: FastAPI app routes, templates, dependencies. Reuse `core` services.
+- `tests/`: end-to-end and unit tests across subsystems.
+- `deploy/systemd/`: systemd unit files; `./deploy/install_services.sh` installs/restarts services.
 
-## Подготовка окружения
+## Build, Test, and Development Commands
+- Create venv: `python -m venv venv && source venv/bin/activate`
+- Install deps: `pip install --quiet -r requirements.txt`
+- Run tests: `pytest -q` (requires local PostgreSQL on `127.0.0.1:5432`)
+- Lint: `flake8` (if configured)
+- Deploy services: `./deploy/install_services.sh` (loads `.env`, restarts `leonidbot-bot` and `leonidbot-web`)
 
-Работайте из корня проекта. Если виртуальное окружение ещё не создано, создайте его и активируйте:
+## Security & Configuration
+- Use `.env` (see `.env.example`) and never commit secrets.
+- Required vars: `BOT_TOKEN`, `BOT_USERNAME`, `WEB_PUBLIC_URL`, `SESSION_MAX_AGE`, `ADMIN_TELEGRAM_IDS`, DB settings.
+- Tests: create `.env.test` (ignored) and export vars, e.g.:
+  ```bash
+  cat > .env.test <<'EOF'
+  DB_HOST=127.0.0.1
+  DB_USER=postgres
+  DB_PASSWORD=postgres
+  DB_NAME=postgres
+  EOF
+  set -a; source .env.test; set +a
+  ```
 
-```bash
-python -m venv venv
-source venv/bin/activate
-```
+## Coding Style & Naming Conventions
+- Python, async/await where used; prefer f-strings; add type hints.
+- Keep shared logic in `core/services` and import in `bot`/`web`.
+- Table names: prefix by module; user-related tables use `users_` (e.g., `users_tg`).
+- Branding: use “LeonidPro” for product/headers; bot is “@LeonidBot”. Default links to `https://leonid.pro/` and bot to `https://leonid.pro/bot`.
+- Language: prioritize Russian-speaking users. All user-facing texts (bot/web) default to Russian; keep code identifiers/comments in English. Add i18n only when needed, with Russian as the primary locale.
 
-Перед выполнением любой задачи обязательно устанавливайте зависимости из файла `requirements.txt`:
+## Testing Guidelines
+- Framework: `pytest` with a running PostgreSQL.
+- Test naming: `tests/test_*.py`; mirror module layout.
+- Run locally: `pytest -q`. Fix failing tests before merging.
 
-```bash
-pip install --quiet -r requirements.txt
-```
+## Commit & Pull Request Guidelines
+- Commits: clear, imperative summary (why + what). Update `requirements.txt` when adding deps; adjust `.env.example` and `README.md` when env/behavior changes.
+- PRs: concise description, linked issues, setup notes, screenshots for UI changes. Ensure CI/tests pass.
 
-Если вы добавляете новые зависимости, фиксируйте их в `requirements.txt` и повторно запускайте установку.
-
-Используйте файл `.env` (или `.env.example` как шаблон) для переменных окружения. Убедитесь, что параметры `BOT_TOKEN`, `BOT_USERNAME`, `WEB_PUBLIC_URL`, `SESSION_MAX_AGE`, `ADMIN_TELEGRAM_IDS` и другие заданы перед запуском бота или веб-приложения.
-
-### Тестовая база данных PostgreSQL
-
-Для корректного прохождения тестов требуется запущенный экземпляр PostgreSQL.
-
-1. Поднимите сервер PostgreSQL локально (через `pg_ctlcluster`, Docker или иной способ) и убедитесь, что он принимает подключения на `127.0.0.1:5432`.
-2. Создайте временный файл `.env.test` со строками подключения и экспортируйте переменные:
-   ```bash
-   cat > .env.test <<'EOF'
-   DB_HOST=127.0.0.1
-   DB_USER=postgres
-   DB_PASSWORD=postgres
-   DB_NAME=postgres
-   EOF
-   set -a; source .env.test; set +a
-   ```
-   Файл `.env.test` уже добавлен в `.gitignore` и не должен попадать в репозиторий.
-3. Запустите тесты: `pytest -q`.
-4. По завершении остановите сервер PostgreSQL.
-
-## Архитектура и структура кода
-
-Проект разделён на подсистемы. Соблюдайте это разделение, чтобы не дублировать бизнес‑логику:
-
-- `core/` — общие модели, сервисы, утилиты и логирование. Весь код, разделяемый `web` и `bot`, храните здесь.
-- `bot/` — код Telegram‑бота: хендлеры, состояния FSM, роутеры aiogram. Не дублируйте в боте логику, которая должна быть в `core`.
-- `web/` — FastAPI‑приложение: маршруты, шаблоны, зависимости. Общие функции и сервисы импортируются из `core`.
-- `tests/` — тесты для всего проекта. Актуализируйте их при внесении изменений в логику и выполняйте для проверки корректности.
-
-Если функция используется и ботом, и веб‑частью, создайте сервис в `core/services` и обращайтесь к нему отовсюду.
-
-## Выполнение задач
-
-1. Обновите зависимости:
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. Поддерживайте чистое рабочее дерево и пишите осмысленные коммит‑сообщения, аргументируя внесённые изменения.
-3. По завершении любой задачи запускайте тесты:
-   ```bash
-   pytest -q
-   ```
-   Тесты находятся в каталоге `tests`. Исправляйте все ошибки перед завершением работы.
-4. После прохождения тестов обновите сопутствующие файлы: `requirements.txt` (если добавлены новые пакеты), `.env.example` (при появлении новых переменных), а в `README.md` зафиксируйте внедрённые изменения и планы на следующие шаги.
-
-## Стиль кодирования
-
-- Используйте асинхронные функции (`async/await`) там, где это уже используется.
-- Формируйте строки с помощью f‑строк.
-- Давайте понятные имена переменным и функциям на английском языке.
-- Пишите типы (аннотации), где это возможно.
-- Прогоняйте линтер (flake8 или аналог) перед коммитом.
-
-## Именование таблиц
-
-- Название каждой таблицы начинается с названия модуля (группы), которому она принадлежит.
-- Таблицы, связанные с пользователями, используют префикс `users_` (например, `users_tg`, `users_web`).
-
-## UI/UX
-
-- Шапка приложения должна быть единой для всех страниц.
-- Название текущего модуля или страницы выводится по центру основной шапки.
-- Внутри страниц не используйте вложенных шапок.
-- Переадресацию на отдельные страницы используйте только для новых модулей, отличающихся от базового функционала.
-
-## Деплой и сервисы
-
-Unit-файлы systemd находятся в `deploy/systemd`. Для установки или обновления сервисов используйте `./deploy/install_services.sh`, который загружает переменные из `.env` и перезапускает `leonidbot-bot` и `leonidbot-web`. Автодеплой настроен через workflow `.github/workflows/deploy.yml` (нужны secrets `VPS_HOST`, `VPS_USER`, `VPS_KEY`).
-
-## Финальный шаг
-
-Каждый раз, завершив задачу, выполняйте:
-
-```bash
-source venv/bin/activate
-pip install --quiet -r requirements.txt
-pytest -q
-```
-
-Эти действия обновят виртуальную среду и убедят вас в том, что все тесты проходят. Только после успешного прохождения тестов можно считать задачу выполненной.
-
-## Документирование изменений
-
-После выполнения любой задачи:
-
-- Обновите `README.md`, кратко описав внедрённые изменения.
-- В том же файле зафиксируйте планы на следующие шаги.
-
-Соблюдайте заложенную архитектуру: весь общий код для `web` и `bot` должен располагаться в каталоге `core/`.
-
----
-
-# LeonidPro — правила нейминга
-
-- Название проекта: **LeonidPro**.
-- Основной домен продукта: **https://leonid.pro/**.
-- Телеграм-бот: **@LeonidBot** — это часть проекта LeonidPro.
-- Лендинг бота: **https://leonid.pro/bot** (превью/инструкции по использованию).
-- В текстах UI, документации и мета-данных “LeonidPro” использовать **только** как имя Telegram-бота
-  (например: «Подключите бота @LeonidBot»).
-- Бренд и заголовки страниц должны использовать **LeonidPro**.
-- Все новые ссылки на продукт по умолчанию ведут на **https://leonid.pro/**,
-  а ссылки, связанные именно с ботом — на **https://leonid.pro/bot** или @LeonidBot.
-- При необходимости указывать base URL в конфиге: `WEB_PUBLIC_URL=https://leonid.pro`.
-
+## Agent-Specific Instructions
+- Work from repo root, activate venv, install deps, then implement.
+- Keep changes minimal and aligned with existing style. Always finish with: `source venv/bin/activate && pip install --quiet -r requirements.txt && pytest -q`.

@@ -22,16 +22,40 @@ DATABASE_URL = (
     f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
 )
 
-# Async engine and session
+"""Database engine and session factory.
+
+By default, an async engine is created from environment variables
+(`DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_NAME`). Tests may override
+`async_session` (and optionally `engine`) to point to an in-memory
+SQLite engine. The `init_models()` helper below prefers the engine bound
+to the current `async_session` so that tests don't require Postgres.
+"""
+
 engine = create_async_engine(DATABASE_URL)
-async_session = sessionmaker(
-    engine, expire_on_commit=False, class_=AsyncSession
-)
+async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
 
 async def init_models() -> None:
-    """Create database tables for all models."""
-    async with engine.begin() as conn:
+    """Create database tables for all models.
+
+    Prefer the engine bound to ``async_session`` when available. This
+    allows the test suite to replace ``async_session`` with a SQLite
+    sessionmaker and run without a Postgres server. Falls back to the
+    module-level ``engine`` otherwise.
+    """
+    eng = None
+    try:
+        # SQLAlchemy 1.4/2.0: sessionmaker may expose the bound engine either
+        # via ``bind`` attribute or inside ``kw['bind']``.
+        eng = getattr(async_session, "bind", None)
+        if eng is None:
+            kw = getattr(async_session, "kw", {}) or {}
+            eng = kw.get("bind")
+    except Exception:
+        eng = None
+
+    eng = eng or engine
+    async with eng.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
 # Bot
