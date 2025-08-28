@@ -11,7 +11,8 @@ from web.dependencies import get_current_tg_user
 from ..template_env import templates
 
 
-router = APIRouter(prefix="/notes", tags=["notes"])
+router = APIRouter(prefix="/api/notes", tags=["notes"])
+ui_router = APIRouter(prefix="/notes", tags=["notes"], include_in_schema=False)
 
 
 class NoteCreate(BaseModel):
@@ -99,7 +100,7 @@ async def update_note(
     return NoteResponse.from_model(note)
 
 
-@router.get("/ui", include_in_schema=False)
+@ui_router.get("")
 async def notes_page(request: Request):
     """Render simple UI for notes."""
 

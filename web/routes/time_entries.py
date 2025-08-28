@@ -11,7 +11,8 @@ from web.dependencies import get_current_tg_user
 from ..template_env import templates
 
 
-router = APIRouter(prefix="/time", tags=["time"])
+router = APIRouter(prefix="/api/time", tags=["time"])
+ui_router = APIRouter(prefix="/time", tags=["time"], include_in_schema=False)
 
 
 class StartPayload(BaseModel):
@@ -90,7 +91,7 @@ async def list_entries(
     return [TimeEntryResponse.from_model(e) for e in entries]
 
 
-@router.get("/ui", include_in_schema=False)
+@ui_router.get("")
 async def time_page(request: Request):
     """Render simple UI for time tracking."""
 
