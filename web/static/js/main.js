@@ -286,3 +286,104 @@ if (j){ e.preventDefault(); activate(j.dataset.tabJump); }
 const hash = (location.hash||'').replace('#','');
 if (hash && forms[hash]) activate(hash); else activate('login');
 })();
+
+// ===== Popover widgets =====
+(function(){
+  const q = (s) => document.querySelector(s);
+  const widgets = {
+    tasks: { btnSel:'[data-widget="tasks"]', dlg:q('#wTasks') },
+    rc:    { btnSel:'[data-widget="rc"]',    dlg:q('#wRC')    },
+    notes: { btnSel:'[data-widget="notes"]', dlg:q('#wNotes') },
+  };
+
+  function placeNear(btn, card){
+    if (!btn || !card) return;
+    const r = btn.getBoundingClientRect();
+    // place below with small offset; clamp to viewport with 12px padding
+    const left = Math.min(Math.max(12, r.left), Math.max(12, window.innerWidth - (card.offsetWidth || 320) - 12));
+    card.style.top  = (r.bottom + 8) + 'px';
+    card.style.left = left + 'px';
+  }
+  function closeAll(except){
+    Object.values(widgets).forEach(w=>{ if (w.dlg && w.dlg !== except && w.dlg.open) { try { w.dlg.close(); } catch{} } });
+  }
+
+  function bindOpen(key){
+    const w = widgets[key];
+    const btn = document.querySelector(w.btnSel);
+    if (!btn || !w.dlg) return;
+    btn.addEventListener('click', async ()=>{
+      closeAll(w.dlg);
+      try { w.dlg.showModal(); } catch { w.dlg.setAttribute('open',''); }
+      placeNear(btn, w.dlg.querySelector('.popover-card'));
+      await loadWidget(key);
+    });
+    document.addEventListener('click', (e)=>{
+      if (!w.dlg.open) return;
+      if (!w.dlg.contains(e.target) && e.target !== btn) { try { w.dlg.close(); } catch { w.dlg.removeAttribute('open'); } }
+    });
+    window.addEventListener('resize', ()=>{ if (w.dlg.open) placeNear(btn, w.dlg.querySelector('.popover-card')); });
+  }
+  Object.keys(widgets).forEach(bindOpen);
+
+  const fmtTime = (d)=> { try { return new Date(d).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); } catch { return '';} };
+  const isoDate = (d)=> (d||'').slice(0,10);
+  const todayISO = ()=> new Date().toISOString().slice(0,10);
+
+  async function loadWidget(key){
+    if (key==='tasks'){
+      const ul = q('#wTasksList'); if (!ul) return; ul.innerHTML='…';
+      let items = [];
+      try{
+        const r = await fetch('/api/tasks', {credentials:'same-origin'});
+        const data = await r.json();
+        items = Array.isArray(data) ? data.filter(t=> (t.due_date||'').startsWith(todayISO())) : [];
+      }catch{}
+      ul.innerHTML = items.length ? '' : '<li class="muted">На сегодня задач нет</li>';
+      items.slice(0,6).forEach(t=>{
+        const li = document.createElement('li');
+        const time = t.due_date ? fmtTime(t.due_date) : '';
+        li.innerHTML = `<span>${t.title||''}</span><span class="due">${time}</span>`;
+        ul.appendChild(li);
+      });
+    }
+    if (key==='rc'){
+      const rem = q('#wReminders'); const ev = q('#wEvents'); if (!rem || !ev) return;
+      rem.innerHTML = ev.innerHTML = '…';
+      let R=[], C=[];
+      try{ const r=await fetch('/api/reminders', {credentials:'same-origin'}); const data=await r.json(); R = Array.isArray(data)? data.filter(x=> (x.remind_at||'').startsWith(todayISO())):[]; }catch{}
+      try{ const r=await fetch('/api/calendar',  {credentials:'same-origin'}); const data=await r.json(); C = Array.isArray(data)? data.filter(x=> (x.start_at||'').startsWith(todayISO())):[]; }catch{}
+      const fill = (ul, arr, empty)=>{ ul.innerHTML = arr.length? '' : `<li class="muted">${empty}</li>`;
+        arr.slice(0,6).forEach(x=>{
+          const li=document.createElement('li');
+          const time = x.remind_at? fmtTime(x.remind_at) : (x.start_at? fmtTime(x.start_at):'');
+          li.innerHTML=`<span>${x.title||x.message||''}</span><span class="due">${time}</span>`;
+          ul.appendChild(li);
+        });
+      };
+      fill(rem, R, 'Напоминаний нет');
+      fill(ev,  C, 'Событий нет');
+    }
+    if (key==='notes'){
+      // no preload; wait for user input
+    }
+  }
+
+  // Quick note save
+  const saveBtn = q('#wNoteSave');
+  if (saveBtn){
+    saveBtn.addEventListener('click', async ()=>{
+      const ta = q('#wNoteText');
+      const text = (ta && ta.value || '').trim(); if (!text) return;
+      try{
+        await fetch('/api/notes', {
+          method:'POST', credentials:'same-origin',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ content: text })
+        });
+      }catch{}
+      if (ta) ta.value='';
+      const dlg = saveBtn.closest('dialog'); try { dlg && dlg.close(); } catch { dlg && dlg.removeAttribute('open'); }
+    });
+  }
+})();

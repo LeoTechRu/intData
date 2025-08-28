@@ -94,6 +94,16 @@ async def list_entries(
 
 
 @ui_router.get("")
-async def time_page():
-    from fastapi.responses import RedirectResponse
-    return RedirectResponse("/", status_code=status.HTTP_302_FOUND)
+async def time_page(
+    request: Request,
+    current_user: WebUser | None = Depends(get_current_web_user),
+):
+    """Render full UI for time tracking with role-aware header."""
+
+    context = {
+        "current_user": current_user,
+        "current_role_name": getattr(current_user, "role", ""),
+        "is_admin": getattr(current_user, "role", "") == "admin",
+        "page_title": "Учёт времени",
+    }
+    return templates.TemplateResponse(request, "time.html", context)
