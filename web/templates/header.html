@@ -21,12 +21,10 @@
   <nav class="app-nav" aria-label="Модули">
     {% if not _is_banned %}
     <ul class="nav-list">
-      <li><a href="/" class="{{ 'is-active' if _path == '/' else '' }}">Дашборд</a></li>
       {% if _is_single %}
-        <li><a href="/tasks" class="{{ 'is-active' if _path.startswith('/tasks') else '' }}">Задачи</a></li>
-        <li><a href="/reminders" class="{{ 'is-active' if _path.startswith('/reminders') else '' }}">Напоминания</a></li>
-        <li><a href="/calendar" class="{{ 'is-active' if _path.startswith('/calendar') else '' }}">Календарь</a></li>
-        <li><a href="/notes" class="{{ 'is-active' if _path.startswith('/notes') else '' }}">Заметки</a></li>
+        <li><button type="button" class="nav-pill" data-widget="tasks" aria-haspopup="dialog">Задачи</button></li>
+        <li><button type="button" class="nav-pill" data-widget="rc" aria-haspopup="dialog">Напоминания/Календарь</button></li>
+        <li><button type="button" class="nav-pill" data-widget="notes" aria-haspopup="dialog">Заметки</button></li>
       {% endif %}
     </ul>
     {% endif %}
@@ -75,3 +73,6 @@
 </div>
 
 {% include "_timer_widget.html" %}
+{% include "_widget_tasks_today.html" %}
+{% include "_widget_rc_today.html" %}
+{% include "_widget_notes_quick.html" %}
