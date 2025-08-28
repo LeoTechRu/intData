@@ -12,7 +12,11 @@
 <body>
     {% include "_icons.html" %}
     <header class="top-bar">
-        {% if not auth_page %}{% include "header.html" %}{% endif %}
+        {% if not auth_page %}
+            {# Передаём в шапку название модуля: page_title -> блок title -> бренд #}
+            {% set MODULE_TITLE = page_title if page_title is defined and page_title else self.title() %}
+            {% include "header.html" %}
+        {% endif %}
     </header>
     {% block content %}{% endblock %}
     {% if TG_LOGIN_ENABLED %}
