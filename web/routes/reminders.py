@@ -49,6 +49,60 @@ class ReminderResponse(BaseModel):
         )
 
 
+class ReminderTodayItem(BaseModel):
+    """Lightweight representation of a reminder scheduled for today (UTC)."""
+
+    id: int
+    title: str
+    date: str | None = None
+    time: str | None = None
+    due_date: str | None = None
+    due_time: str | None = None
+
+
+@router.get("/today", response_model=List[ReminderTodayItem])
+async def list_reminders_today(
+    current_user: TgUser | None = Depends(get_current_tg_user),
+):
+    """Return reminders whose ``remind_at`` is today (UTC)."""
+
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    async with ReminderService() as service:
+        reminders = await service.list_reminders(owner_id=current_user.telegram_id)
+
+    from datetime import UTC
+    from core.utils import utcnow
+
+    now = utcnow()
+    if getattr(now, "tzinfo", None) is None:
+        now = now.replace(tzinfo=UTC)
+    today = now.date()
+
+    items: list[ReminderTodayItem] = []
+    for r in reminders:
+        dt = getattr(r, "remind_at", None)
+        if not dt:
+            continue
+        if getattr(dt, "tzinfo", None) is None:
+            dt = dt.replace(tzinfo=UTC)
+        if dt.date() != today:
+            continue
+        date_s = dt.date().isoformat()
+        time_s = dt.strftime("%H:%M")
+        items.append(
+            ReminderTodayItem(
+                id=r.id,
+                title=r.message,
+                date=date_s,
+                time=time_s,
+                due_date=date_s,
+                due_time=time_s,
+            )
+        )
+    return items
+
+
 @router.get("", response_model=List[ReminderResponse])
 async def list_reminders(
     current_user: TgUser | None = Depends(get_current_tg_user),

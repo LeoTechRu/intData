@@ -50,6 +50,60 @@ class EventResponse(BaseModel):
         )
 
 
+class EventTodayItem(BaseModel):
+    """Lightweight representation of a calendar event starting today (UTC)."""
+
+    id: int
+    title: str
+    date: str | None = None
+    time: str | None = None
+    due_date: str | None = None
+    due_time: str | None = None
+
+
+@router.get("/today", response_model=List[EventTodayItem])
+async def list_events_today(
+    current_user: TgUser | None = Depends(get_current_tg_user),
+):
+    """Return events whose ``start_at`` is today (UTC)."""
+
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    async with CalendarService() as service:
+        events = await service.list_events(owner_id=current_user.telegram_id)
+
+    from datetime import UTC
+    from core.utils import utcnow
+
+    now = utcnow()
+    if getattr(now, "tzinfo", None) is None:
+        now = now.replace(tzinfo=UTC)
+    today = now.date()
+
+    items: list[EventTodayItem] = []
+    for e in events:
+        dt = getattr(e, "start_at", None)
+        if not dt:
+            continue
+        if getattr(dt, "tzinfo", None) is None:
+            dt = dt.replace(tzinfo=UTC)
+        if dt.date() != today:
+            continue
+        date_s = dt.date().isoformat()
+        time_s = dt.strftime("%H:%M")
+        items.append(
+            EventTodayItem(
+                id=e.id,
+                title=e.title,
+                date=date_s,
+                time=time_s,
+                due_date=date_s,
+                due_time=time_s,
+            )
+        )
+    return items
+
+
 @router.get("", response_model=List[EventResponse])
 async def list_events(
     current_user: TgUser | None = Depends(get_current_tg_user),

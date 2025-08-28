@@ -49,6 +49,62 @@ class TaskResponse(BaseModel):
         )
 
 
+class TaskTodayItem(BaseModel):
+    """Lightweight representation of a task due today (UTC)."""
+
+    id: int
+    title: str
+    date: str | None = None
+    time: str | None = None
+    due_date: str | None = None
+    due_time: str | None = None
+
+
+@router.get("/today", response_model=List[TaskTodayItem])
+async def list_tasks_today(
+    current_user: TgUser | None = Depends(get_current_tg_user),
+):
+    """Return tasks whose ``due_date`` is today (UTC)."""
+
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    # Fetch all tasks for user and filter by UTC date
+    async with TaskService() as service:
+        tasks = await service.list_tasks(owner_id=current_user.telegram_id)
+
+    from datetime import UTC
+    from core.utils import utcnow
+
+    now = utcnow()
+    if getattr(now, "tzinfo", None) is None:
+        now = now.replace(tzinfo=UTC)
+    today = now.date()
+
+    items: list[TaskTodayItem] = []
+    for t in tasks:
+        dt = getattr(t, "due_date", None)
+        if not dt:
+            continue
+        # ensure aware
+        if getattr(dt, "tzinfo", None) is None:
+            dt = dt.replace(tzinfo=UTC)
+        if dt.date() != today:
+            continue
+        date_s = dt.date().isoformat()
+        time_s = dt.strftime("%H:%M")
+        items.append(
+            TaskTodayItem(
+                id=t.id,
+                title=t.title,
+                date=date_s,
+                time=time_s,
+                due_date=date_s,
+                due_time=time_s,
+            )
+        )
+    return items
+
+
 @router.get("", response_model=List[TaskResponse])
 async def list_tasks(
     current_user: TgUser | None = Depends(get_current_tg_user),
