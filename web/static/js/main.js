@@ -331,6 +331,25 @@ if (hash && forms[hash]) activate(hash); else activate('login');
   }
   Object.keys(widgets).forEach(bindOpen);
 
+  // Delegated handler for dynamically cloned buttons (e.g., in hamburger drawer)
+  document.addEventListener('click', async (e)=>{
+    const btn = e.target && e.target.closest && e.target.closest('.nav-pill[data-widget]');
+    if (!btn) return;
+    const key = btn.getAttribute('data-widget');
+    if (!key || !(key in widgets)) return;
+    const w = widgets[key];
+    if (!w.dlg) return;
+    closeAll(w.dlg);
+    try { w.dlg.showModal(); } catch { w.dlg.setAttribute('open',''); }
+    const card = w.dlg.querySelector('.popover-card');
+    placeNear(btn, card);
+    if (card) {
+      card.setAttribute('tabindex','-1');
+      try { card.focus({preventScroll:true}); } catch { card.focus(); }
+    }
+    await loadWidget(key);
+  });
+
   const fmtTime = (d)=> { try { return new Date(d).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); } catch { return '';} };
   const isoDate = (d)=> (d||'').slice(0,10);
   const todayISO = ()=> new Date().toISOString().slice(0,10);
