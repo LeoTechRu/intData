@@ -1,10 +1,17 @@
 from __future__ import annotations
 
+from datetime import timedelta
+
 from fastapi import APIRouter, Request, Depends, status
 
-from core.models import UserRole, WebUser, TgUser
+from core.models import UserRole, WebUser, TgUser, TaskStatus
 from core.services.telegram_user_service import TelegramUserService
 from core.services.nexus_service import ProjectService
+from core.services.task_service import TaskService
+from core.services.reminder_service import ReminderService
+from core.services.calendar_service import CalendarService
+from core.services.time_service import TimeService
+from core.utils import utcnow
 from web.dependencies import get_current_web_user
 from ..template_env import templates
 
@@ -66,35 +73,83 @@ async def index(
                 )
             role_name = tg_user.role if tg_user else current_user.role
 
-            kpi_focus_week = 12
-            kpi_focus_week_delta = 4.5
-            kpi_goals = 3
-            kpi_goals_delta = 33.3
-            kpi_focused_hours = 42
-            kpi_focused_hours_delta = 12.0
-            kpi_health = 72
-            kpi_health_delta = -1.2
-            day_timeline = [
-                {"time": "08:30", "text": "Утренняя зарядка"},
-                {"time": "09:30", "text": "Планирование дня"},
-                {"time": "19:00", "text": "Чтение / самообразование"},
-            ]
+            now = utcnow()
+            week_ago = now - timedelta(days=7)
+
+            tasks = []
+            reminders = []
+            events = []
+            entries = []
+            if tg_user:
+                async with TaskService() as ts:
+                    tasks = await ts.list_tasks(owner_id=tg_user.telegram_id)
+                async with ReminderService() as rs:
+                    reminders = await rs.list_reminders(
+                        owner_id=tg_user.telegram_id
+                    )
+                async with CalendarService() as cs:
+                    events = await cs.list_events(owner_id=tg_user.telegram_id)
+                async with TimeService() as time_svc:
+                    entries = await time_svc.list_entries(
+                        owner_id=tg_user.telegram_id
+                    )
+
+            kpi_goals = sum(1 for t in tasks if t.status == TaskStatus.done)
+            kpi_focus_week = (
+                sum(
+                    ((e.end_time or now) - e.start_time).total_seconds()
+                    for e in entries
+                    if (e.end_time or now) >= week_ago
+                )
+                / 3600
+            )
+            kpi_focus_week_delta = 0
+            kpi_goals_delta = 0
+            kpi_focused_hours = kpi_focus_week
+            kpi_focused_hours_delta = 0
+            kpi_health = 0
+            kpi_health_delta = 0
+
+            today = now.date()
+            day_timeline = []
+            for e in events:
+                if e.start_at.date() == today:
+                    day_timeline.append(
+                        {"time": e.start_at.strftime("%H:%M"), "text": e.title}
+                    )
+            for r in reminders:
+                if r.remind_at.date() == today:
+                    day_timeline.append(
+                        {"time": r.remind_at.strftime("%H:%M"), "text": r.message}
+                    )
+            day_timeline.sort(key=lambda x: x["time"])
+
             upcoming_tasks = [
-                {"title": "Подготовить отчёт", "subtitle": "до 18:00"},
-                {"title": "Ревью pull request", "subtitle": "завтра"},
-            ]
+                {
+                    "title": t.title,
+                    "subtitle": t.due_date.strftime("%d.%m") if t.due_date else None,
+                }
+                for t in tasks
+                if t.due_date and t.due_date >= now
+            ][:5]
             upcoming_reminders = [
-                {"title": "Выпить воду", "subtitle": "каждые 2 часа"},
-                {"title": "Размяться", "subtitle": "через 30 минут"},
-            ]
+                {
+                    "title": r.message,
+                    "subtitle": r.remind_at.strftime("%H:%M"),
+                }
+                for r in reminders
+                if r.remind_at >= now
+            ][:5]
             upcoming_events = [
-                {"title": "Встреча с командой", "subtitle": "Пн 10:00"},
-                {"title": "Демо проекта", "subtitle": "Пт 16:00"},
-            ]
-            habit_list = [
-                {"title": "Чтение", "subtitle": "3 дня подряд"},
-                {"title": "Медитация", "subtitle": "5 дней подряд"},
-            ]
+                {
+                    "title": e.title,
+                    "subtitle": e.start_at.strftime("%d.%m %H:%M"),
+                }
+                for e in events
+                if e.start_at >= now
+            ][:5]
+            habit_list = []
+
             context = {
                 "user": tg_user,
                 "current_user": current_user,
@@ -106,11 +161,11 @@ async def index(
                 "role_name": role_name,
                 "current_role_name": current_user.role,
                 "is_admin": UserRole[role_name] >= UserRole.admin,
-                "kpi_focus_week": kpi_focus_week,
+                "kpi_focus_week": round(kpi_focus_week, 2),
                 "kpi_focus_week_delta": kpi_focus_week_delta,
                 "kpi_goals": kpi_goals,
                 "kpi_goals_delta": kpi_goals_delta,
-                "kpi_focused_hours": kpi_focused_hours,
+                "kpi_focused_hours": round(kpi_focused_hours, 2),
                 "kpi_focused_hours_delta": kpi_focused_hours_delta,
                 "kpi_health": kpi_health,
                 "kpi_health_delta": kpi_health_delta,

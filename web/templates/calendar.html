@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Календарь{% endblock %}
+{% block content %}
+<div class="ui-layout">
+  <div id="main-content">
+    <div class="ui-notice">Создавайте события и просматривайте календарь.</div>
+
+    <section class="card" style="margin-bottom:1rem;">
+      <div class="card-title">Новое событие</div>
+      <form id="event-form" class="ui-form">
+        <label>
+          <div>Название</div>
+          <input type="text" name="title" required placeholder="Событие">
+        </label>
+        <label>
+          <div>Начало</div>
+          <input type="datetime-local" name="start_at" required>
+        </label>
+        <label>
+          <div>Конец</div>
+          <input type="datetime-local" name="end_at">
+        </label>
+        <label>
+          <div>Описание</div>
+          <textarea name="description" rows="3" placeholder="Описание события"></textarea>
+        </label>
+        <button class="button" type="submit">Добавить</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="card-title">Мои события</div>
+      <table class="ui-table">
+        <thead><tr><th>ID</th><th>Название</th><th>Начало</th><th>Конец</th></tr></thead>
+        <tbody id="event-list"></tbody>
+      </table>
+      <div id="event-empty" class="text-muted" style="display:none; padding:8px;">Событий пока нет</div>
+    </section>
+  </div>
+</div>
+
+<script>
+async function fetchEvents(){
+  const resp = await fetch('/calendar', {credentials:'include'});
+  if (!resp.ok){
+    const empty = document.getElementById('event-empty');
+    empty.textContent = 'Требуется вход и связанный Telegram-аккаунт';
+    empty.style.display = 'block';
+    return;
+  }
+  const data = await resp.json();
+  const list = document.getElementById('event-list');
+  list.innerHTML = '';
+  if (!data.length){
+    document.getElementById('event-empty').style.display='block';
+    return;
+  }
+  document.getElementById('event-empty').style.display='none';
+  for (const e of data){
+    const start = new Date(e.start_at).toLocaleString();
+    const end = e.end_at ? new Date(e.end_at).toLocaleString() : '';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${e.id}</td><td>${e.title}</td><td>${start}</td><td>${end}</td>`;
+    list.appendChild(tr);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  const form = document.getElementById('event-form');
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const fd = new FormData(form);
+    const payload = {
+      title: fd.get('title'),
+      start_at: new Date(fd.get('start_at')).toISOString(),
+      end_at: fd.get('end_at') ? new Date(fd.get('end_at')).toISOString() : null,
+      description: fd.get('description') || null
+    };
+    const resp = await fetch('/calendar', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body: JSON.stringify(payload)
+    });
+    if (resp.ok){ form.reset(); fetchEvents(); }
+  });
+  fetchEvents();
+});
+</script>
+{% endblock %}
