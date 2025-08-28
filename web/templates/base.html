@@ -15,6 +15,9 @@
         {% if not auth_page %}{% include "header.html" %}{% endif %}
     </header>
     {% block content %}{% endblock %}
+    {% if TG_LOGIN_ENABLED %}
+    <script>window.__LP_AUTH={{ 'true' if current_user else 'false' }};</script>
+    <script src="{{ url_for('static', path='js/tg_webapp_boot.js') }}" defer></script>
+    {% endif %}
 </body>
 </html>
-

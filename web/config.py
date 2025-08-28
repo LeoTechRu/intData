@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from typing import Optional
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import AnyHttpUrl, validator
 import os
 
@@ -38,9 +38,12 @@ class EnvSettings(BaseSettings):
     TG_LOGIN_ENABLED: bool = True
     RECAPTCHA_SECRET_KEY: Optional[str] = None
 
-    class Config:
-        env_file = os.getenv("LEONIDPRO_ENV_FILE", ".env")
-        case_sensitive = False
+    # pydantic-settings v2 style configuration
+    model_config = SettingsConfigDict(
+        env_file=os.getenv("LEONIDPRO_ENV_FILE", ".env"),
+        case_sensitive=False,
+        extra="allow",  # ignore unrelated env vars (e.g., deployment-specific)
+    )
 
     @validator("BOT_USERNAME", pre=True)
     def strip_at(cls, v):  # noqa: D401
