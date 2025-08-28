@@ -47,3 +47,18 @@
 ## Agent-Specific Instructions
 - Work from repo root, activate venv, install deps, then implement.
 - Keep changes minimal and aligned with existing style. Always finish with: `source ./venv/bin/activate && pip install --quiet -r requirements.txt && pytest -q`.
+
+# AGENTS: правила работы с бэклогом и ченджлогом
+
+## Где хранится бэклог
+- Единственный источник правды: **`BACKLOG.md` в корне**.
+- Дополнительные ресёрчи/развернутые планы: `docs/backlog/*` с ссылками из `BACKLOG.md`.
+
+## Где хранится история изменений
+- Все изменения: **`CHANGELOG.md` в корне** (формат *Keep a Changelog*).
+- После мержа PR: добавляйте записи под `## [Unreleased]` с тегами `Added/Changed/Fixed/Removed`.
+- Релиз (версионирование SemVer): переносим блок `Unreleased` под новую версию `X.Y.Z` с датой.
+
+## README.md
+- Никаких списков «Сделано/Планы» в README. Только краткое описание проекта и ссылки:
+  - `[Changelog](./CHANGELOG.md)`, `[Backlog](./BACKLOG.md)`.
