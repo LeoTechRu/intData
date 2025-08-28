@@ -3,8 +3,8 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Request
 
 from core.models import WebUser, UserRole
-from .dependencies import role_required
-from .template_env import templates
+from ..dependencies import role_required
+from ..template_env import templates
 
 
 router = APIRouter(prefix="/admin", tags=["admin"], include_in_schema=False)
@@ -21,4 +21,3 @@ async def admin_settings_page(
         "is_admin": True,
         "page_title": "Настройки приложения",
     })
-

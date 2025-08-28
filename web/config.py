@@ -36,6 +36,7 @@ class EnvSettings(BaseSettings):
     LOGIN_REDIRECT_URL: AnyHttpUrl | None = None  # type: ignore[assignment]
     SESSION_MAX_AGE: int = 86400
     TG_LOGIN_ENABLED: bool = True
+    RECAPTCHA_SITE_KEY: Optional[str] = None
     RECAPTCHA_SECRET_KEY: Optional[str] = None
 
     # pydantic-settings v2 style configuration
@@ -136,6 +137,10 @@ class Settings:
     @property
     def RECAPTCHA_SECRET_KEY(self):
         return self._env.RECAPTCHA_SECRET_KEY
+
+    @property
+    def RECAPTCHA_SITE_KEY(self):
+        return self._env.RECAPTCHA_SITE_KEY
 
     # expose raw env for DB/Redis etc
     @property

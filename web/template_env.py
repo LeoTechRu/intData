@@ -23,7 +23,7 @@ templates.env.globals.update(
     TG_LOGIN_ENABLED=S.TG_LOGIN_ENABLED,
     TG_BOT_USERNAME=S.BOT_USERNAME,
     BOT_USERNAME=("@" + (S.BOT_USERNAME or "").lstrip("@")) if S.BOT_USERNAME else None,
-    RECAPTCHA_SITE_KEY=os.getenv("RECAPTCHA_SITE_KEY"),
+    RECAPTCHA_SITE_KEY=S.RECAPTCHA_SITE_KEY,
 )
 
 __all__ = ["templates"]
