@@ -17,6 +17,8 @@ from core.services.telegram_user_service import TelegramUserService
 from core.models import WebUser
 from web.config import S
 from web.security.authlog import log_event
+from core.logger import logger
+from urllib.parse import urlparse
 
 router = APIRouter(tags=["auth"])
 
@@ -51,6 +53,42 @@ def base_context() -> Dict[str, object]:
     }
 
 
+def _config_diagnostics(request: Request) -> list[dict]:
+    """Return a list of config issues and log them.
+
+    Includes only non-secret info suitable for end-user screenshotting.
+    """
+    issues: list[dict] = []
+    # Telegram Login
+    if S.TG_LOGIN_ENABLED:
+        if not S.BOT_TOKEN:
+            issues.append({
+                "code": "tg_login_no_token",
+                "message": "Telegram Login включен, но отсутствует BOT_TOKEN.",
+            })
+        if not S.BOT_USERNAME:
+            issues.append({
+                "code": "tg_login_no_username",
+                "message": "Telegram Login включен, но не задан BOT_USERNAME (без @).",
+            })
+    # Public URL mismatch
+    try:
+        want = urlparse(str(S.WEB_PUBLIC_URL))
+        got = urlparse(str(request.base_url))
+        if want.scheme and want.netloc and (want.scheme != got.scheme or want.netloc != got.netloc):
+            issues.append({
+                "code": "web_public_url_mismatch",
+                "message": f"Ожидается {want.scheme}://{want.netloc}, а запрос пришёл на {got.scheme}://{got.netloc}.",
+            })
+    except Exception:
+        pass
+
+    # Log warnings once per request
+    for it in issues:
+        logger.warning("config: %s - %s", it.get("code"), it.get("message"))
+    return issues
+
+
 def render_auth(
     request: Request,
     active: str = "login",
@@ -58,6 +96,7 @@ def render_auth(
     form_errors: dict | None = None,
     flash: str | None = None,
     status_code: int | None = None,
+    config_warnings: list[dict] | None = None,
 ):
     return templates.TemplateResponse(
         request,
@@ -68,6 +107,7 @@ def render_auth(
             "form_values": form_values or {},
             "form_errors_json": json.dumps(form_errors or {}, ensure_ascii=False),
             "flash": flash,
+            "config_warnings": config_warnings or _config_diagnostics(request),
         },
         status_code=status_code or 200,
     )

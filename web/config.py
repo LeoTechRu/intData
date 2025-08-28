@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from functools import lru_cache
 from typing import Optional
-from pydantic import BaseSettings, AnyHttpUrl, validator
+from pydantic_settings import BaseSettings
+from pydantic import AnyHttpUrl, validator
 import os
 
 
@@ -35,6 +36,7 @@ class EnvSettings(BaseSettings):
     LOGIN_REDIRECT_URL: AnyHttpUrl | None = None  # type: ignore[assignment]
     SESSION_MAX_AGE: int = 86400
     TG_LOGIN_ENABLED: bool = True
+    RECAPTCHA_SECRET_KEY: Optional[str] = None
 
     class Config:
         env_file = os.getenv("LEONIDPRO_ENV_FILE", ".env")
@@ -128,6 +130,10 @@ class Settings:
     def SESSION_MAX_AGE(self):
         return int(self._env.SESSION_MAX_AGE)
 
+    @property
+    def RECAPTCHA_SECRET_KEY(self):
+        return self._env.RECAPTCHA_SECRET_KEY
+
     # expose raw env for DB/Redis etc
     @property
     def env(self):
@@ -142,4 +148,3 @@ def settings() -> Settings:
 
 
 S = settings()
-

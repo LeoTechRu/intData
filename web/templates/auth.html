@@ -22,6 +22,17 @@
 
   <main class="auth-hero">
     <div class="auth-card">
+      {% if config_warnings and config_warnings|length %}
+      <div class="auth-alert" role="status">
+        <div><strong>Диагностика конфигурации:</strong></div>
+        <ul style="margin:6px 0 0 18px;">
+          {% for w in config_warnings %}
+            <li><code>{{ w.code }}</code> — {{ w.message }}</li>
+          {% endfor %}
+        </ul>
+        <div class="muted small" style="margin-top:6px">Сделайте скриншот и отправьте в поддержку.</div>
+      </div>
+      {% endif %}
 
       <nav class="auth-tabs" role="tablist">
         <a href="#login"     class="tab {% if active_tab=='login' %}is-active{% endif %}" data-tab="login"     role="tab" aria-selected="{{ 'true' if active_tab=='login' else 'false' }}">Вход</a>
