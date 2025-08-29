@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Простые SQL-миграции и раннер `db/migrate.py` с таблицами календаря и уведомлений.
 - Асинхронный бэкенд на aiogram + SQLAlchemy с подключением к PostgreSQL.
 - Модели пользователей, групп, каналов и настроек логирования.
 - `UserService` для работы с пользователями, группами и логированием.
