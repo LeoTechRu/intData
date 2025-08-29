@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import AnyHttpUrl, validator
+from pydantic import AnyHttpUrl, ValidationInfo, field_validator
 import os
 
 
@@ -46,30 +46,40 @@ class EnvSettings(BaseSettings):
         extra="allow",  # ignore unrelated env vars (e.g., deployment-specific)
     )
 
-    @validator("BOT_USERNAME", pre=True)
-    def strip_at(cls, v):  # noqa: D401
+    @field_validator("BOT_USERNAME", mode="before")
+    @classmethod
+    def strip_at(cls, v: str | None) -> str | None:  # noqa: D401
         if not v:
             return v
         return str(v).lstrip("@").strip()
 
-    @validator("BOT_LANDING_URL", always=True)
-    def default_bot_landing(cls, v, values):  # noqa: D401
+    @field_validator("BOT_LANDING_URL", mode="before")
+    @classmethod
+    def default_bot_landing(
+        cls, v: AnyHttpUrl | None, info: ValidationInfo
+    ) -> AnyHttpUrl | None:  # noqa: D401
         if v:
             return v
-        base = str(values.get("WEB_PUBLIC_URL")).rstrip("/")
+        base = str(info.data.get("WEB_PUBLIC_URL")).rstrip("/")
         return f"{base}/bot"
 
-    @validator("WEB_APP_URL", always=True)
-    def default_web_app_url(cls, v, values):  # noqa: D401
+    @field_validator("WEB_APP_URL", mode="before")
+    @classmethod
+    def default_web_app_url(
+        cls, v: AnyHttpUrl | None, info: ValidationInfo
+    ) -> AnyHttpUrl | None:  # noqa: D401
         if v:
             return v
-        return values.get("WEB_PUBLIC_URL")
+        return info.data.get("WEB_PUBLIC_URL")
 
-    @validator("LOGIN_REDIRECT_URL", always=True)
-    def default_login_cb(cls, v, values):  # noqa: D401
+    @field_validator("LOGIN_REDIRECT_URL", mode="before")
+    @classmethod
+    def default_login_cb(
+        cls, v: AnyHttpUrl | None, info: ValidationInfo
+    ) -> AnyHttpUrl | None:  # noqa: D401
         if v:
             return v
-        base = str(values.get("WEB_PUBLIC_URL")).rstrip("/")
+        base = str(info.data.get("WEB_PUBLIC_URL")).rstrip("/")
         return f"{base}/auth/callback"
 
 
@@ -149,9 +159,6 @@ class Settings:
     def ADMIN_IDS(self):
         return self._env.ADMIN_TELEGRAM_IDS
     # expose raw env for DB/Redis etc
-    @property
-    def env(self):
-        return self._env
     @property
     def env(self):
         return self._env
