@@ -12,7 +12,7 @@
 - Install deps: `pip install --quiet -r requirements.txt`
 - Run tests: `pytest -q` (requires local PostgreSQL on `127.0.0.1:5432`)
 - Lint: `flake8` (if configured)
-- Deploy services: `./deploy/install_services.sh` (loads `.env`, restarts `leonidbot-bot` and `leonidbot-web`)
+- Deploy services: `./deploy/install_services.sh` (loads `.env`, restarts `leonidpro-bot` and `leonidpro-web`)
 
 ## Security & Configuration
 - Use `.env` (see `.env.example`) and never commit secrets.

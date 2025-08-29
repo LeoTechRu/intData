@@ -118,6 +118,9 @@ class Settings:
     @property
     def BOT_TOKEN(self):
         return self._store.get_secret("telegram.BOT_TOKEN") or self._env.BOT_TOKEN
+    @BOT_TOKEN.setter
+    def BOT_TOKEN(self, value):  # pragma: no cover - used in tests
+        self._env.BOT_TOKEN = value
 
     @property
     def TG_LOGIN_ENABLED(self):
@@ -142,7 +145,13 @@ class Settings:
     def RECAPTCHA_SITE_KEY(self):
         return self._env.RECAPTCHA_SITE_KEY
 
+    @property
+    def ADMIN_IDS(self):
+        return self._env.ADMIN_TELEGRAM_IDS
     # expose raw env for DB/Redis etc
+    @property
+    def env(self):
+        return self._env
     @property
     def env(self):
         return self._env

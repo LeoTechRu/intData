@@ -74,11 +74,18 @@ async def index(
                 )
             role_name = tg_user.role if tg_user else current_user.role
 
-            # Use timezone-aware "now" to avoid naive/aware comparison errors
+            # Use timezone-aware "now" and normalize model datetimes
             from datetime import UTC
             now = utcnow()
             if getattr(now, "tzinfo", None) is None:
                 now = now.replace(tzinfo=UTC)
+
+            def _aware(dt):
+                if dt is None:
+                    return None
+                if getattr(dt, "tzinfo", None) is None:
+                    return dt.replace(tzinfo=UTC)
+                return dt
             week_ago = now - timedelta(days=7)
 
             tasks = []
@@ -102,9 +109,9 @@ async def index(
             kpi_goals = sum(1 for t in tasks if t.status == TaskStatus.done)
             kpi_focus_week = (
                 sum(
-                    ((e.end_time or now) - e.start_time).total_seconds()
+                    ((_aware(e.end_time) or now) - _aware(e.start_time)).total_seconds()
                     for e in entries
-                    if (e.end_time or now) >= week_ago
+                    if (_aware(e.end_time) or now) >= week_ago
                 )
                 / 3600
             )
@@ -136,11 +143,11 @@ async def index(
                 {
                     "title": t.title,
                     "subtitle": (
-                        t.due_date.strftime("%d.%m") if t.due_date else None
+                        _aware(t.due_date).strftime("%d.%m") if t.due_date else None
                     ),
                 }
                 for t in tasks
-                if t.due_date and t.due_date >= now
+                if t.due_date and _aware(t.due_date) >= now
             ][:5]
             upcoming_reminders = [
                 {
@@ -148,7 +155,7 @@ async def index(
                     "subtitle": r.remind_at.strftime("%H:%M"),
                 }
                 for r in reminders
-                if r.remind_at >= now
+                if _aware(r.remind_at) >= now
             ][:5]
             upcoming_events = [
                 {
@@ -156,7 +163,7 @@ async def index(
                     "subtitle": e.start_at.strftime("%d.%m %H:%M"),
                 }
                 for e in events
-                if e.start_at >= now
+                if _aware(e.start_at) >= now
             ][:5]
             habit_list = []
             if tg_user:

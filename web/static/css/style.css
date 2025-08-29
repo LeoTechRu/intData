@@ -654,42 +654,7 @@ body.compact .admin-panel {
 .auth-form.is-hidden{ display:none; }
 .auth-tabs .tab{ cursor:pointer; }
 
-/* === app header === */
-.app-header{
-  display:grid; grid-template-columns:auto 1fr auto; align-items:center;
-  gap:12px; padding:10px 12px;
-}
-.app-nav{ min-width:0; }
-.nav-list{ display:flex; gap:12px; flex-wrap:nowrap; overflow:hidden; }
-.nav-list a{ display:inline-flex; align-items:center; padding:8px 10px; border-radius:8px; text-decoration:none; color:#334155; background:#f8fafc; }
-.nav-list a:hover{ background:#eef2ff; }
-
-/* actions */
-.icon-btn{ position:relative; display:inline-grid; place-items:center; width:36px; height:36px;
-  border-radius:999px; border:1px solid #e5e7eb; background:#fff; cursor:pointer;
-}
-.icon-24{ width:20px; height:20px; }
-.hamburger{ margin-left:6px; }
-.hamburger[hidden]{ display:none !important; }
-
-/* 2/3 rule collapse */
-.header-collapsed .app-nav{ display:none; }
-.header-collapsed .hamburger{ display:inline-grid !important; }
-
-/* drawer */
-.hamburger-menu[hidden]{ display:none !important; }
-.hamburger-menu{
-  position:absolute; right:12px; top:56px; min-width:220px; background:#fff; border:1px solid #e5e7eb;
-  border-radius:12px; box-shadow:0 12px 40px rgba(0,0,0,.1); padding:8px;
-}
-.hamburger-menu .nav-list{ display:flex; flex-direction:column; gap:4px; }
-.hamburger-menu .nav-list a{ background:#fff; }
-
-/* timer button */
-.timer-btn .timer-dot{
-  position:absolute; right:7px; top:7px; width:8px; height:8px; background:#ef4444;
-  border-radius:999px; box-shadow:0 0 0 2px #fff; 
-}
+/* legacy app-header & hamburger styles removed (migrated to simplified header) */
 
 /* modal */
 .modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; }
@@ -720,53 +685,12 @@ body.compact .admin-panel {
 .popover-card .sep{ border:0; height:1px; background:#eef2f7; margin:8px 0; }
 .popover-card footer{ display:flex; justify-content:flex-end; gap:10px; margin-top:10px; }
 .btn-link{ color:#6d28d9; text-decoration:none; font-weight:600; }
-.nav-pill{ display:inline-flex; align-items:center; padding:8px 10px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px; cursor:pointer; }
-.nav-pill:hover{ background:#eef2ff; }
+/* legacy nav-pill removed */
 .popover-card:focus-visible{ outline: 2px solid #a78bfa; outline-offset: 2px; }
 .muted{ color:#94a3b8; }
-/* ===== Header ===== */
-.app-header{
-  position: sticky; top: 0; z-index: 50;
-  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px;
-  padding: 10px clamp(12px, 3vw, 20px);
-  background: #d3b0f1;
-}
-.brand{ display:inline-flex; align-items:center; gap:8px; text-decoration:none; }
-.brand-type{ font-weight:800; color:#1f2937; }
-.app-nav{ min-width:0; }
-.nav-list{ display:flex; gap:10px; flex-wrap:nowrap; overflow:hidden; }
-.nav-pill{ display:inline-flex; align-items:center; padding:8px 10px; border:1px solid #e5e7eb; border-radius:10px; background:#fff; color:#374151; cursor:pointer; }
-.nav-pill:hover{ background:#f3f4f6; }
-.actions{ display:flex; align-items:center; gap:10px; }
-.icon-btn{ position:relative; display:inline-grid; place-items:center; width:36px; height:36px; border-radius:999px; border:1px solid #e5e7eb; background:#fff; }
-.icon-24{ width:20px; height:20px; }
-.timer-btn .timer-dot{ position:absolute; right:7px; top:7px; width:8px; height:8px; background:#ef4444; border-radius:999px; box-shadow:0 0 0 2px #fff; }
-.hamburger[hidden]{ display:none !important; }
+/* legacy header/hamburger rules removed */
 
-/* Collapse rule: если центр > 2/3 ширины — скрываем нав и показываем гамбургер */
-.header-collapsed .app-nav{ display:none; }
-.header-collapsed .hamburger{ display:inline-grid !important; }
-
-/* Drawer */
-.hamburger-menu[hidden]{ display:none !important; }
-.hamburger-menu{
-  position: absolute; right: clamp(12px, 3vw, 20px); top: calc(100% + 8px);
-  min-width: 240px; background:#fff; border:1px solid #e5e7eb; border-radius:12px; box-shadow:0 16px 50px rgba(0,0,0,.15);
-  padding:8px;
-}
-.hamburger-menu .nav-list{ display:flex; flex-direction:column; gap:6px; }
-.hamburger-menu .nav-pill{ width:100%; justify-content:flex-start; }
-
-/* === simplified header (override) === */
-.app-nav, .nav-list { display: none; }
-
-.app-header {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: var(--space-3, 12px);
-  padding: 10px 16px;
-}
+/* header helpers (brand/avatar) */
 
 .brand { display:flex; align-items:center; gap:10px; }
 .brand-box {
@@ -808,3 +732,9 @@ body.compact .admin-panel {
 .row.end { justify-content:flex-end; }
 .gap-2 { gap:8px; }
 .btn-ghost { border:1px solid #e5e7eb; background:transparent; color:inherit; border-radius:8px; padding:8px 12px; text-decoration:none; }
+
+/* profile dropdown – default hidden */
+.profile-menu{ display:none; position:absolute; right:0; top:100%; z-index:1000; }
+.profile-menu.is-open{ display:block; }
+/* защита от случайных !important */
+body:not(.debug) .profile-menu.force-hidden{ display:none !important; }

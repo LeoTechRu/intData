@@ -16,7 +16,7 @@ logging.basicConfig(
     format="[%(asctime)s] [%(levelname)s] %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S"
 )
-logger = logging.getLogger("LeonidBot")
+logger = logging.getLogger("LeonidPro")
 
 def escape_markdown_v2(text: str) -> str:
     """Экранирует специальные символы MarkdownV2"""

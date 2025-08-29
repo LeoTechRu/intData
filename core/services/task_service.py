@@ -14,8 +14,12 @@ from core.models import (
     Reminder,
     TaskCheckpoint,
     ScheduleException,
+    Project,
+    Area,
 )
 from core.services.reminder_service import ReminderService
+from core.services.time_service import TimeService
+from sqlalchemy import func
 
 
 class TaskService:
@@ -51,8 +55,23 @@ class TaskService:
         excluded_dates: list | None = None,
         custom_properties: dict | None = None,
         schedule_type: str | None = None,
+        *,
+        project_id: int | None = None,
+        area_id: int | None = None,
+        estimate_minutes: int | None = None,
     ) -> Task:
         """Create a new task for the given owner."""
+
+        # Validate project/area ownership and consistency
+        if project_id is not None:
+            prj = await self.session.get(Project, project_id)
+            if not prj or prj.owner_id != owner_id:
+                raise PermissionError("Project belongs to different owner or not found")
+            area_id = prj.area_id  # enforce inheritance
+        elif area_id is not None:
+            area = await self.session.get(Area, area_id)
+            if not area or area.owner_id != owner_id:
+                raise PermissionError("Area belongs to different owner or not found")
 
         task = Task(
             owner_id=owner_id,
@@ -66,6 +85,9 @@ class TaskService:
             excluded_dates=excluded_dates or [],
             custom_properties=custom_properties or {},
             schedule_type=schedule_type,
+            project_id=project_id,
+            area_id=area_id,
+            estimate_minutes=estimate_minutes,
         )
         if cognitive_cost:
             task.neural_priority = 1 / cognitive_cost
@@ -73,12 +95,22 @@ class TaskService:
         await self.session.flush()
         return task
 
-    async def list_tasks(self, owner_id: Optional[int] = None) -> List[Task]:
-        """Return tasks, optionally filtered by owner."""
+    async def list_tasks(
+        self,
+        owner_id: Optional[int] = None,
+        *,
+        project_id: int | None = None,
+        area_id: int | None = None,
+    ) -> List[Task]:
+        """Return tasks, optionally filtered by owner/area/project."""
 
         stmt = select(Task)
         if owner_id is not None:
             stmt = stmt.where(Task.owner_id == owner_id)
+        if project_id is not None:
+            stmt = stmt.where(Task.project_id == project_id)
+        if area_id is not None:
+            stmt = stmt.where(Task.area_id == area_id)
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
@@ -95,6 +127,12 @@ class TaskService:
             setattr(task, key, value)
             if key == "cognitive_cost" and value:
                 task.neural_priority = 1 / value
+
+        # Enforce area inheritance from project if project changed
+        if "project_id" in fields and task.project_id is not None:
+            prj = await self.session.get(Project, task.project_id)
+            if prj:
+                task.area_id = prj.area_id
 
         await self.session.flush()
         return task
@@ -158,3 +196,49 @@ class TaskService:
         self.session.add(exc)
         await self.session.flush()
         return exc
+
+    # --- Time tracking helpers -------------------------------------------------
+    async def start_timer(
+        self, task_id: int, description: str | None = None
+    ) -> Task | None:
+        """Start a running timer linked to ``task_id``.
+
+        Returns the task if successful, ``None`` if task not found.
+        """
+        task = await self.session.get(Task, task_id)
+        if task is None:
+            return None
+        time_service = TimeService(self.session)
+        await time_service.start_timer(
+            owner_id=task.owner_id, description=description, task_id=task_id
+        )
+        return task
+
+    async def total_tracked_minutes(self, task_id: int) -> int:
+        """Return total tracked minutes for finished entries of a task.
+
+        Uses Python aggregation for cross‑DB compatibility (SQLite, Postgres).
+        """
+        svc = TimeService(self.session)
+        entries = await svc.list_entries_by_task(task_id)
+        total = 0
+        for e in entries:
+            if e.end_time and e.start_time:
+                total += int((e.end_time - e.start_time).total_seconds())
+        return total // 60
+
+    async def list_tasks_by_area(self, owner_id: int, area_id: int, include_sub: bool = False) -> List[Task]:
+        if not include_sub:
+            return await self.list_tasks(owner_id=owner_id, area_id=area_id)
+        node = await self.session.get(Area, area_id)
+        if not node:
+            return []
+        from sqlalchemy import and_, or_
+        prefix = node.mp_path
+        stmt = (
+            select(Task)
+            .join(Area, Area.id == Task.area_id)
+            .where(and_(Task.owner_id == owner_id, or_(Area.mp_path == prefix, Area.mp_path.like(prefix + '%'))))
+        )
+        res = await self.session.execute(stmt)
+        return res.scalars().all()

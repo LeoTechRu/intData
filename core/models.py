@@ -17,6 +17,7 @@ from sqlalchemy import (
     Integer,
     Float,
     String,
+    Text,
     JSON,
 )
 from sqlalchemy.orm import relationship
@@ -115,6 +116,22 @@ class WebUser(Base):
         """Validate password against stored bcrypt hash."""
         return bcrypt.check_password_hash(self.password_hash, password)
 
+    @property
+    def avatar_url(self) -> str | None:
+        """Optional avatar URL for header/profile.
+
+        Looks into `privacy_settings["avatar_url"]` when present.
+        Returns None if not set, letting templates fall back to a default icon.
+        """
+        try:
+            if self.privacy_settings and isinstance(self.privacy_settings, dict):
+                url = self.privacy_settings.get("avatar_url")
+                if url:
+                    return url
+        except Exception:
+            pass
+        return None
+
 
 class WebTgLink(Base):
     """Link between web users and their Telegram accounts."""
@@ -185,6 +202,33 @@ class TaskStatus(PyEnum):
     done = "done"
 
 
+# PARA/PKM enums
+class ContainerType(PyEnum):
+    project = "project"
+    area = "area"
+    resource = "resource"
+
+
+class ProjectStatus(PyEnum):
+    active = "active"
+    paused = "paused"
+    completed = "completed"
+
+
+class ActivityType(PyEnum):
+    work = "work"
+    learning = "learning"
+    admin = "admin"
+    rest = "rest"
+    break_ = "break"
+
+
+class TimeSource(PyEnum):
+    timer = "timer"
+    manual = "manual"
+    import_ = "import"
+
+
 class Task(Base):
     """Basic task item owned by a telegram user."""
 
@@ -213,6 +257,15 @@ class Task(Base):
     exceptions = relationship(
         "ScheduleException", backref="task", cascade="all, delete-orphan"
     )
+    # Link to time tracking entries (work logs)
+    time_entries = relationship(
+        "TimeEntry", backref="task", cascade="all, delete-orphan"
+    )
+
+    # PARA links
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=True)
+    area_id = Column(Integer, ForeignKey("areas.id"), nullable=True)
+    estimate_minutes = Column(Integer)
 
     created_at = Column(DateTime(timezone=True), default=utcnow)
     updated_at = Column(
@@ -273,15 +326,35 @@ class TimeEntry(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
+    # Optional link to a task: time tracking is work on a task
+    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=True)
     start_time = Column(
         DateTime(timezone=True), default=utcnow, nullable=False
     )
     end_time = Column(DateTime(timezone=True))
     description = Column(String(500))
+    # PARA inheritance fields
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=True)
+    area_id = Column(Integer, ForeignKey("areas.id"), nullable=True)
+    activity_type = Column(Enum(ActivityType), default=ActivityType.work)
+    billable = Column(Boolean, default=True)
+    source = Column(Enum(TimeSource), default=TimeSource.timer)
     created_at = Column(DateTime(timezone=True), default=utcnow)
     updated_at = Column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
+
+    # Convenience: computed duration in seconds (Python-side)
+    @property
+    def duration_seconds(self) -> int | None:
+        """Return duration in seconds if entry is finished, else None."""
+        if not self.start_time or not self.end_time:
+            return None
+        try:
+            delta = self.end_time - self.start_time
+            return int(delta.total_seconds())
+        except Exception:
+            return None
 
 
 # ---------------------------------------------------------------------------
@@ -306,6 +379,14 @@ class Area(Base):
     color = Column(String(7))
     context_map = Column(JSON, default=dict)
     review_interval = Column(Integer)
+    review_interval_days = Column(Integer, default=7)
+    is_active = Column(Boolean, default=True)
+    archived_at = Column(DateTime(timezone=True))
+    # Tree fields
+    parent_id = Column(Integer, ForeignKey("areas.id", ondelete="SET NULL"))
+    mp_path = Column(String, default="", nullable=False)
+    depth = Column(Integer, default=0, nullable=False)
+    slug = Column(String, nullable=False, default="")
     created_at = Column(DateTime, default=utcnow)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
@@ -314,7 +395,7 @@ class Project(Base):
     __tablename__ = "projects"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    area_id = Column(Integer, ForeignKey("areas.id"))
+    area_id = Column(Integer, ForeignKey("areas.id"), nullable=False)
     owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
     name = Column(String(255), nullable=False)
     description = Column(String(500))
@@ -324,6 +405,9 @@ class Project(Base):
     metrics = Column(JSON, default=dict)
     start_date = Column(DateTime)
     end_date = Column(DateTime)
+    status = Column(Enum(ProjectStatus), default=ProjectStatus.active)
+    slug = Column(String(255))
+    archived_at = Column(DateTime(timezone=True))
     created_at = Column(DateTime, default=utcnow)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
@@ -362,6 +446,7 @@ class Resource(Base):
     content = Column(String(2000))
     type = Column(String(50))
     meta = Column(JSON, default=dict)
+    archived_at = Column(DateTime(timezone=True))
     created_at = Column(DateTime, default=utcnow)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
 
@@ -377,7 +462,11 @@ class Note(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
-    content = Column(String(1000), nullable=False)
+    title = Column(String(255))
+    content = Column(Text, nullable=False)
+    container_type = Column(Enum(ContainerType))
+    container_id = Column(Integer)
+    archived_at = Column(DateTime(timezone=True))
     created_at = Column(DateTime(timezone=True), default=utcnow)
     updated_at = Column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow

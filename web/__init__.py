@@ -20,6 +20,10 @@ from .routes import (
     notes,
     calendar,
     time_entries,
+    areas,
+    projects,
+    resources,
+    inbox,
 )
 from .routes.api import admin as api_admin
 from .routes.api import admin_settings as api_admin_settings
@@ -76,6 +80,10 @@ tags_metadata = [
     {"name": "calendar", "description": "Calendar events API"},
     {"name": "notes", "description": "Notes CRUD API"},
     {"name": "time", "description": "Time tracking API"},
+    {"name": "areas", "description": "PARA Areas API"},
+    {"name": "projects", "description": "PARA Projects API"},
+    {"name": "resources", "description": "PARA Resources API"},
+    {"name": "inbox", "description": "Inbox API"},
     {"name": "admin", "description": "Admin operations (requires admin role)"},
 ]
 
@@ -174,6 +182,14 @@ app.include_router(reminders.router)
 app.include_router(reminders.ui_router)
 app.include_router(notes.router)
 app.include_router(notes.ui_router)
+app.include_router(areas.router)
+app.include_router(areas.ui_router)
+app.include_router(projects.router)
+app.include_router(projects.ui_router)
+app.include_router(resources.router)
+app.include_router(resources.ui_router)
+app.include_router(inbox.router)
+app.include_router(inbox.ui_router)
 app.include_router(calendar.router)
 app.include_router(calendar.ui_router)
 app.include_router(time_entries.router)

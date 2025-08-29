@@ -6,6 +6,7 @@ from aiogram.exceptions import TelegramNetworkError
 
 from core.db import bot, dp
 from bot.handlers.telegram import user_router, group_router, router
+from bot.handlers.note import router as note_router
 from bot.handlers.habit import router as habit_router
 from core.logger import LoggerMiddleware
 from core.models import LogLevel
@@ -20,6 +21,7 @@ async def main() -> None:
     dp.include_router(group_router)
     dp.include_router(habit_router)
     dp.include_router(router)
+    dp.include_router(note_router)
 
     try:
         async with TelegramUserService() as user_service:
@@ -37,4 +39,3 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
-

@@ -58,6 +58,7 @@ async def cmd_time_start(message: Message) -> None:
         await message.answer(
             f"Таймер запущен. ID: {entry.id}\n"
             f"Начало: {_fmt_dt(entry.start_time)}\n"
+            f"Задача: #{entry.task_id}\n"
             f"Описание: {entry.description or '—'}"
         )
 
@@ -121,8 +122,51 @@ async def cmd_time_list(message: Message) -> None:
         delta = end - (e.start_time or end)
         mins = int(delta.total_seconds() // 60)
         status = "идёт" if e.end_time is None else "завершён"
+        taskinfo = f" (задача #{e.task_id})" if getattr(e, 'task_id', None) else ""
         lines.append(
-            f"#{e.id} [{status}] {_fmt_dt(e.start_time)} — {_fmt_dt(e.end_time)}"
+            f"#{e.id}{taskinfo} [{status}] {_fmt_dt(e.start_time)} — {_fmt_dt(e.end_time)}"
             f" • {mins} мин • {e.description or '—'}"
         )
     await message.answer("\n".join(lines))
+
+
+@router.message(Command("time_resume"))
+async def cmd_time_resume(message: Message) -> None:
+    """Resume a timer for an existing task: `/time_resume <task_id>`."""
+    arg = message.text.split(maxsplit=1)[1:] if message.text else []
+    if not arg:
+        await message.answer("Нужно указать ID задачи. Пример: /time_resume 42")
+        return
+    try:
+        task_id = int(arg[0])
+    except ValueError:
+        await message.answer("ID должен быть числом. Пример: /time_resume 42")
+        return
+
+    async with TimeService() as service:
+        # Check another timer isn't running
+        from sqlalchemy import select
+        stmt = (
+            select(TimeEntry)
+            .where(TimeEntry.owner_id == message.from_user.id)
+            .where(TimeEntry.end_time.is_(None))
+            .order_by(TimeEntry.start_time.desc())
+        )
+        res = await service.session.execute(stmt)
+        running = res.scalars().first()
+        if running:
+            await message.answer(
+                f"Сначала останови текущий таймер #{running.id} (команда /time_stop)."
+            )
+            return
+        try:
+            entry = await service.resume_task(owner_id=message.from_user.id, task_id=task_id)
+        except PermissionError:
+            await message.answer("Задача принадлежит другому пользователю.")
+            return
+        except ValueError:
+            await message.answer("Задача не найдена.")
+            return
+    await message.answer(
+        f"Возобновлено по задаче #{task_id}. Таймер #{entry.id}. Начало: {_fmt_dt(entry.start_time)}"
+    )

@@ -1,5 +1,5 @@
 [Unit]
-Description=LeonidBot Web Service (FastAPI)
+Description=LeonidPro Web Service (FastAPI)
 After=network.target
 
 [Service]

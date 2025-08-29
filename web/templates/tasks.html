@@ -6,6 +6,21 @@
     <div class="ui-notice">Создавайте задачи и следите за статусом.</div>
 
     <section class="card" style="margin-bottom:1rem;">
+      <div class="card-title">Фильтры</div>
+      <div class="ui-form" id="task-filters">
+        <label>
+          <div>Область</div>
+          <select id="filter-area"></select>
+        </label>
+        <label style="align-self:flex-end;">
+          <input type="checkbox" id="filter-include-sub"/> Включая подкатегории
+        </label>
+        <button class="button" id="filter-apply">Показать</button>
+      </div>
+      <div class="text-muted" style="font-size:12px;">Area = сфера ответственности. Это управляемая иерархия (дерево), например: Здоровье → Фитнес/Сон/Питание. Привязывайте проекты/задачи к подкатегории (листу). В отчётах можно включать подкатегории.</div>
+    </section>
+
+    <section class="card" style="margin-bottom:1rem;">
       <div class="card-title">Новая задача</div>
       <form id="task-form" class="ui-form">
         <label>
@@ -28,7 +43,7 @@
       <div class="card-title">Мои задачи</div>
       <table class="ui-table">
         <thead>
-          <tr><th>ID</th><th>Название</th><th>Статус</th><th>Срок</th></tr>
+          <tr><th>ID</th><th>Название</th><th>Статус</th><th>Срок</th><th>Время</th><th>Действия</th></tr>
         </thead>
         <tbody id="task-list"></tbody>
       </table>
@@ -39,7 +54,13 @@
 
 <script>
 async function fetchTasks(){
-  const resp = await fetch('/api/tasks', {credentials:'include'});
+  const sel = document.getElementById('filter-area');
+  const area = sel.value ? Number(sel.value) : null;
+  const include = document.getElementById('filter-include-sub').checked ? 1 : 0;
+  const qs = new URLSearchParams();
+  if (area) qs.set('area_id', String(area));
+  if (area && include) qs.set('include_sub', '1');
+  const resp = await fetch('/api/tasks' + (qs.toString()? ('?'+qs.toString()):''), {credentials:'include'});
   if (!resp.ok) { document.getElementById('task-empty').textContent = 'Требуется вход и связанный Telegram-аккаунт'; document.getElementById('task-empty').style.display='block'; return; }
   const data = await resp.json();
   const list = document.getElementById('task-list');
@@ -49,12 +70,29 @@ async function fetchTasks(){
   for (const t of data){
     const tr = document.createElement('tr');
     const due = t.due_date ? new Date(t.due_date).toLocaleString() : '';
-    tr.innerHTML = `<td>${t.id}</td><td>${t.title}</td><td>${t.status}</td><td>${due}</td>`;
+    const mins = t.tracked_minutes || 0;
+    const hours = Math.floor(mins / 60);
+    const mm = mins % 60;
+    const timeText = (hours ? hours + ' ч ' : '') + mm + ' мин';
+    const isRunning = !!t.running_entry_id;
+    const actionBtn = isRunning
+      ? `<button class="button" data-action="stop" data-task="${t.id}" data-entry="${t.running_entry_id}">Стоп</button>`
+      : `<button class="button" data-action="start" data-task="${t.id}">${mins>0?'Продолжить':'Старт'}</button>`;
+    tr.innerHTML = `<td>${t.id}</td><td>${t.title}</td><td>${t.status}</td><td>${due}</td><td>${timeText}</td><td>${actionBtn}</td>`;
     list.appendChild(tr);
   }
 }
 
 document.addEventListener('DOMContentLoaded', ()=>{
+  (async ()=>{
+    const resp = await fetch('/api/areas', {credentials:'include'}); if (!resp.ok) return;
+    const areas = await resp.json();
+    const parentIds = new Set(areas.filter(a=>a.parent_id!==null).map(a=>a.parent_id));
+    areas.sort((a,b)=> (a.mp_path || '').localeCompare(b.mp_path || ''));
+    const sel = document.getElementById('filter-area'); sel.innerHTML = '<option value="">— не выбрано —</option>';
+    for (const a of areas){ const opt = document.createElement('option'); opt.value=a.id; opt.dataset.depth=a.depth||0; opt.textContent = '— '.repeat(a.depth||0)+a.name; sel.appendChild(opt); }
+  })();
+  document.getElementById('filter-apply').addEventListener('click', (e)=>{ e.preventDefault(); fetchTasks(); });
   const form = document.getElementById('task-form');
   form.addEventListener('submit', async (e)=>{
     e.preventDefault();
@@ -70,6 +108,24 @@ document.addEventListener('DOMContentLoaded', ()=>{
     if (resp.ok){ form.reset(); fetchTasks(); }
   });
   fetchTasks();
+});
+
+document.addEventListener('click', async (e)=>{
+  const start = e.target.closest('button[data-action="start"]');
+  if (start){
+    const taskId = start.dataset.task;
+    const resp = await fetch(`/api/tasks/${taskId}/start_timer`, {method:'POST', credentials:'include'});
+    if (resp.ok){ fetchTasks(); }
+    return;
+  }
+  const stop = e.target.closest('button[data-action="stop"]');
+  if (stop){
+    const taskId = stop.dataset.task;
+    const entryId = stop.dataset.entry;
+    // можно через /api/tasks/{task}/stop_timer, но для простоты остановим по entry
+    const resp = await fetch(`/api/time/${entryId}/stop`, {method:'POST', credentials:'include'});
+    if (resp.ok){ fetchTasks(); }
+  }
 });
 </script>
 {% endblock %}

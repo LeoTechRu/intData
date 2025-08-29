@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Projects{% endblock %}
+{% block content %}
+<div class="ui-layout">
+  <div id="main-content">
+    <section class="card" style="margin-bottom:1rem;">
+      <div class="card-title">Новый проект</div>
+      <form id="project-form" class="ui-form">
+        <label><div>Название</div><input name="name" required/></label>
+        <label><div>Область (Area)</div>
+          <select name="area_id" id="area-select" required></select>
+          <div class="text-muted" style="font-size:12px;">Выбирайте только листья. Родительские узлы недоступны.</div>
+        </label>
+        <label><div>Slug</div><input name="slug"/></label>
+        <button class="button" type="submit">Добавить</button>
+      </form>
+    </section>
+    <section class="card">
+      <div class="card-title">Мои проекты</div>
+      <table class="ui-table">
+        <thead><tr><th>ID</th><th>Название</th><th>Area</th><th>Slug</th></tr></thead>
+        <tbody id="project-list"></tbody>
+      </table>
+      <div id="project-empty" class="text-muted" style="display:none; padding:8px;">Нет проектов</div>
+    </section>
+  </div>
+</div>
+<script>
+async function fetchProjects(){
+  const r = await fetch('/api/projects', {credentials:'include'});
+  if (!r.ok){ document.getElementById('project-empty').style.display = 'block'; return; }
+  const data = await r.json();
+  const list = document.getElementById('project-list');
+  list.innerHTML = '';
+  if (!data.length){ document.getElementById('project-empty').style.display='block'; return; }
+  document.getElementById('project-empty').style.display='none';
+  for (const p of data){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${p.id}</td><td>${p.name}</td><td>${p.area_id}</td><td>${p.slug||''}</td>`;
+    list.appendChild(tr);
+  }
+}
+document.addEventListener('DOMContentLoaded', ()=>{
+  (async ()=>{
+    const resp = await fetch('/api/areas', {credentials:'include'});
+    if (!resp.ok) return;
+    const areas = await resp.json();
+    const parentIds = new Set(areas.filter(a=>a.parent_id!==null).map(a=>a.parent_id));
+    areas.sort((a,b)=> (a.mp_path || '').localeCompare(b.mp_path || ''));
+    const sel = document.getElementById('area-select');
+    sel.innerHTML = '';
+    for (const a of areas){
+      const opt = document.createElement('option');
+      opt.value = a.id;
+      opt.dataset.depth = a.depth||0;
+      const prefix = '— '.repeat(a.depth||0);
+      opt.textContent = prefix + a.name;
+      if (parentIds.has(a.id)){ opt.disabled = true; opt.title='Выберите подкатегорию (лист)'; }
+      sel.appendChild(opt);
+    }
+  })();
+  const form = document.getElementById('project-form');
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const fd = new FormData(form);
+    const payload = {name: fd.get('name'), area_id: Number(fd.get('area_id')), slug: fd.get('slug')||null};
+    const r = await fetch('/api/projects', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload)});
+    if (r.ok){ form.reset(); fetchProjects(); }
+  });
+  fetchProjects();
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Resources{% endblock %}
+{% block content %}
+<div class="ui-layout">
+  <div id="main-content">
+    <section class="card" style="margin-bottom:1rem;">
+      <div class="card-title">Новый ресурс</div>
+      <form id="resource-form" class="ui-form">
+        <label><div>Заголовок</div><input name="title" required/></label>
+        <label><div>Тип</div><input name="type"/></label>
+        <button class="button" type="submit">Добавить</button>
+      </form>
+    </section>
+    <section class="card">
+      <div class="card-title">Мои ресурсы</div>
+      <table class="ui-table">
+        <thead><tr><th>ID</th><th>Заголовок</th><th>Тип</th></tr></thead>
+        <tbody id="resource-list"></tbody>
+      </table>
+      <div id="resource-empty" class="text-muted" style="display:none; padding:8px;">Нет ресурсов</div>
+    </section>
+  </div>
+</div>
+<script>
+async function fetchResources(){
+  const r = await fetch('/api/resources', {credentials:'include'});
+  if (!r.ok){ document.getElementById('resource-empty').style.display = 'block'; return; }
+  const data = await r.json();
+  const list = document.getElementById('resource-list');
+  list.innerHTML = '';
+  if (!data.length){ document.getElementById('resource-empty').style.display='block'; return; }
+  document.getElementById('resource-empty').style.display='none';
+  for (const it of data){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${it.id}</td><td>${it.title}</td><td>${it.type||''}</td>`;
+    list.appendChild(tr);
+  }
+}
+document.addEventListener('DOMContentLoaded', ()=>{
+  const form = document.getElementById('resource-form');
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const fd = new FormData(form);
+    const payload = {title: fd.get('title'), type: fd.get('type')||null};
+    const r = await fetch('/api/resources', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload)});
+    if (r.ok){ form.reset(); fetchResources(); }
+  });
+  fetchResources();
+});
+</script>
+{% endblock %}
+

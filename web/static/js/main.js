@@ -7,39 +7,6 @@ export function enableAccessibility() {
         document.documentElement.classList.toggle('high-contrast');
     });
 }
-export function initProfileMenu() {
-    const button = document.getElementById('profile-button');
-    const dropdown = document.getElementById('profile-dropdown');
-    if (!button || !dropdown)
-        return;
-    button.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        dropdown.classList.toggle('hidden');
-    });
-    document.addEventListener('click', (ev) => {
-        if (!dropdown.contains(ev.target) && ev.target !== button) {
-            dropdown.classList.add('hidden');
-        }
-    });
-    dropdown.addEventListener('click', async (ev) => {
-        const target = ev.target;
-        const link = target === null || target === void 0 ? void 0 : target.closest('a');
-        if (!link)
-            return;
-        const method = link.dataset.method;
-        if (method && method.toUpperCase() !== 'GET') {
-            ev.preventDefault();
-            const resp = await fetch(link.href, { method, credentials: 'include' });
-            if (resp.redirected) {
-                window.location.href = resp.url;
-            }
-            else if (resp.ok) {
-                window.location.reload();
-            }
-        }
-        dropdown.classList.add('hidden');
-    });
-}
 export function initProfileEditForm() {
     const form = document.getElementById('profile-edit-form');
     if (!form)
@@ -80,7 +47,6 @@ export function initDashboardCompact() {
 }
 document.addEventListener('DOMContentLoaded', () => {
     enableAccessibility();
-    initProfileMenu();
     initProfileEditForm();
     initDashboardCompact();
 });
@@ -102,20 +68,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })();
 
-// ===== Header responsive (2/3 rule) — deprecated =====
-// (removed by design: navigation moved into profile menu)
-// (function(){
-//   const header = document.querySelector('.app-header');
-//   const nav = document.querySelector('.app-nav');
-//   const hamb = document.getElementById('navHamburger');
-//   const drawer = document.getElementById('navDrawer');
-//   if (!header || !nav || !hamb || !drawer) return;
-//   function collapseCheck(){ /* no-op */ }
-// })();
+// (header responsive logic removed — navigation moved into profile menu)
 
 // ===== Убрать случайные ссылки 'Подробнее' из хедера (подстраховка) =====
 (function(){
-  const hdr = document.querySelector('.app-header');
+  const hdr = document.querySelector('header.top-bar');
   if (!hdr) return;
   hdr.querySelectorAll('a,button').forEach(el=>{
     if ((el.textContent||'').trim() === 'Подробнее') el.remove();
@@ -459,4 +416,60 @@ if (hash && forms[hash]) activate(hash); else activate('login');
       const dlg = saveBtn.closest('dialog'); try { dlg && dlg.close(); } catch { dlg && dlg.removeAttribute('open'); }
     });
   }
+})();
+
+
+// Profile dropdown: robust, accessible, no persisted state
+(function initProfileMenu(){
+  const btn = document.getElementById('profileBtn');
+  const menu = document.getElementById('profileMenu');
+  if (!btn || !menu) return;
+
+  let open = false;
+  const openMenu = () => {
+    if (open) return;
+    open = true;
+    menu.classList.add('is-open');
+    menu.setAttribute('aria-hidden','false');
+    btn.setAttribute('aria-expanded','true');
+    const focusable = menu.querySelector('a,button,[tabindex]:not([tabindex="-1"])');
+    if (focusable) focusable.focus({preventScroll:true});
+  };
+  const closeMenu = () => {
+    if (!open) return;
+    open = false;
+    menu.classList.remove('is-open');
+    menu.setAttribute('aria-hidden','true');
+    btn.setAttribute('aria-expanded','false');
+  };
+
+  try {
+    ['profileMenu','profileMenuOpen'].forEach(k => localStorage.removeItem(k));
+  } catch(_){ }
+
+  // initial state
+  closeMenu();
+
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    open ? closeMenu() : openMenu();
+  });
+  menu.addEventListener('click', (e) => { e.stopPropagation(); });
+
+  const onDocClick = (e) => {
+    if (!open) return;
+    const t = e.target;
+    if (t === btn || btn.contains(t) || menu.contains(t)) return;
+    closeMenu();
+  };
+  document.addEventListener('click', onDocClick);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeMenu();
+  });
+  window.addEventListener('scroll', closeMenu, {passive:true});
+  window.addEventListener('resize', closeMenu, {passive:true});
+  window.addEventListener('pageshow', () => closeMenu());
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') closeMenu(); });
 })();
