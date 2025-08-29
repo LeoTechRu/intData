@@ -80,18 +80,21 @@ def _psql(dsn_sync: str, sql: str) -> tuple[int, str, str]:
 
 async def init_models() -> None:
     """Ensure the database schema is up to date."""
+    logger.debug("init_models(): begin")
     try:
         eng = engine
         logger.debug("DB URL (masked): %s", eng.url.render_as_string(hide_password=True))
         if eng.url.drivername.startswith("sqlite"):
             async with eng.begin() as conn:
                 await conn.run_sync(Base.metadata.create_all)
+            logger.info("init_models(): alembic upgrade done")
+            logger.debug("init_models(): end")
             return
         dsn_sync = _to_sync_dsn(eng.url)
 
         try:
             _run_alembic_upgrade_with_connection(dsn_sync)
-            logger.info("Alembic upgrade via injected connection: OK")
+            logger.info("init_models(): alembic upgrade done")
         except ModuleNotFoundError as e:
             logger.warning(
                 "Alembic skipped (no PG DBAPI found: %s). Service will start; applying minimal DDL via psql.",
@@ -117,8 +120,9 @@ async def init_models() -> None:
                 logger.warning("Applied fallback DDL: projects.status added.")
 
     except Exception as e:
-        logger.exception("init_models() failed: %s", e)
+        logger.error("init_models() failed: %s\n%s", e, traceback.format_exc())
         raise
+    logger.debug("init_models(): end")
 
 # Bot
 BOT_TOKEN = os.getenv("BOT_TOKEN") or ("123456:" + "A" * 35)
