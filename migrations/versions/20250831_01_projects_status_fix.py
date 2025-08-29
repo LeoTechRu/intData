@@ -19,25 +19,25 @@ depends_on = None
 def upgrade() -> None:
     bind = op.get_bind()
     inspector = sa.inspect(bind)
-    cols = [c['name'] for c in inspector.get_columns('projects')]
-    if 'status' not in cols:
-        status_enum = sa.Enum('active', 'paused', 'completed', name='project_status')
+    cols = [c["name"] for c in inspector.get_columns("projects")]
+    if "status" not in cols:
+        status_enum = sa.Enum("active", "paused", "completed", name="project_status")
         status_enum.create(bind, checkfirst=True)
-        op.add_column('projects', sa.Column('status', status_enum, nullable=True))
-        try:
-            op.create_index('ix_projects_owner_status', 'projects', ['owner_id', 'status'])
-        except Exception:
-            pass
+        op.add_column(
+            "projects",
+            sa.Column(
+                "status",
+                status_enum,
+                server_default="active",
+                nullable=True,
+            ),
+        )
 
 
 def downgrade() -> None:
-    with op.batch_alter_table('projects') as batch_op:
+    with op.batch_alter_table("projects") as batch_op:
         try:
-            batch_op.drop_index('ix_projects_owner_status')
-        except Exception:
-            pass
-        try:
-            batch_op.drop_column('status')
+            batch_op.drop_column("status")
         except Exception:
             pass
     op.execute("DROP TYPE IF EXISTS project_status")
