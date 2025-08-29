@@ -194,11 +194,14 @@ button,
   color: #fff;
 }
 
-.profile-icon.role-admin { background-color: var(--color-accent-purple); }
-.profile-icon.role-moderator { background-color: #f5a623; }
-.profile-icon.role-multiplayer { background-color: var(--color-accent-turquoise); }
-.profile-icon.role-single { background-color: #9e9e9e; }
-.profile-icon.role-ban { background-color: #e53e3e; }
+.persona-wrapper{display:flex;align-items:center;gap:8px;margin-left:12px;position:relative;}
+.persona-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;background:#efe8ff;color:#5a3ec8;}
+.persona-name{background:transparent;border:0;cursor:pointer;font-size:14px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
+.persona-popover{position:absolute;top:56px;left:12px;z-index:1000;min-width:320px;background:#fff;color:#333;border:1px solid #eaeaea;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:12px 14px;}
+.persona-popover-title{font-weight:700;margin-bottom:6px;}
+.persona-popover-text{font-size:13px;line-height:1.35;margin-bottom:8px;color:#444;}
+.persona-popover-slogan{font-size:12px;color:#666;}
+
 
 .dropdown-menu {
   position: absolute;
@@ -223,11 +226,6 @@ button,
   padding: 0.25rem 0;
   border-radius: var(--radius);
   transition: background-color 0.2s;
-}
-
-.dropdown-menu .role {
-  font-weight: bold;
-  margin-bottom: 0.5rem;
 }
 
 .dropdown-menu a:hover {
@@ -498,15 +496,6 @@ body.compact .admin-panel {
 }
 /* === /ui2 === */
 
-/* ui2: role badge + modal */
-.role-badge{
-  display:inline-block; border:none; cursor:pointer;
-  padding:4px 10px; border-radius:12px; font:inherit;
-  background: var(--color-accent-purple); color:#fff;
-}
-.role-badge:hover{ filter:brightness(0.95); }
-
-/* Profile widget */
 #card-profile .profile-info{
   display:flex;
   flex-direction:column;
@@ -523,19 +512,6 @@ body.compact .admin-panel {
   font-size:1.2rem;
   line-height:1;
 }
-
-.role-help-modal.hidden{ display:none; }
-.role-help-modal{
-  position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
-  background: rgba(17,24,39,.45); z-index:1000;
-}
-.role-help-card{
-  background:#fff; border-radius:12px; padding:18px 20px; width:min(560px, 92vw);
-  box-shadow:0 10px 30px rgba(0,0,0,.18);
-}
-.role-help-card .title{ font-weight:700; margin-bottom:8px; }
-.role-help-card .text{ color:#4b5563; }
-.role-help-card .actions{ text-align:right; margin-top:14px; }
 
 /* === ui2: profile widget === */
 .profile-widget { position: relative; }
@@ -560,9 +536,6 @@ body.compact .admin-panel {
 .profile-name .title { font-weight: 700; font-size: 18px; line-height: 1.2; }
 .profile-name .muted { color: #6b7280; font-size: 14px; }
 
-.profile-role {
-  position: absolute; top: 8px; right: 8px;
-}
 
 .profile-grid {
   display: grid;
@@ -583,7 +556,6 @@ body.compact .admin-panel {
 @media (max-width: 640px) {
   .profile-grid { grid-template-columns: 1fr; }
   .profile-header { flex-wrap: wrap; }
-  .profile-role { position: static; margin-left: auto; margin-top: 8px; }
 }
 /* === /ui2: profile widget === */
 

@@ -10,6 +10,13 @@
     <img src="{{ url_for('static', path='img/brand/leonidpro-mark.svg') }}" alt="" />
   </a>
   {# Текстовый бренд убран по требованию — оставляем только знак #}
+  {% if header_user %}
+  <div id="personaHeader"
+       data-persona="{{ header_user.role }}"
+       data-full-name="{{ header_user.full_name or '' }}"
+       data-nickname="{{ header_user.username or '' }}"
+       data-email="{{ header_user.email or '' }}"></div>
+  {% endif %}
 </div>
 
 <div class="top-center">

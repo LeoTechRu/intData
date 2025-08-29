@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Каркас системы напоминаний: модель `Reminder`, `ReminderService`, привязка к задачам.
 - Каркас календаря: модель `CalendarEvent`, `CalendarService`.
 - REST-эндпоинты `/api/v1/app-settings` и загрузка динамических персон UI через `app_settings`.
+- Персонализированная шапка с названием системы и подсказкой в зависимости от роли.
 
 ### Changed
 - Унифицирована работа с паролями через обёртку `core.db.bcrypt` и `WebUserService`.
@@ -38,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Переведены валидаторы конфигурации на синтаксис `field_validator` Pydantic v2, устранены предупреждения устаревания.
 
 ### Removed
+ - Упоминания роли из пользовательского интерфейса.
  - Убраны фиксированные ссылки (Дашборд, Задачи и др.) из меню профиля; оставлены только «Профиль», «Настройки», избранное и «Выход».
 
 ## [0.1.0] - YYYY-MM-DD
