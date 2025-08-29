@@ -20,17 +20,26 @@ def upgrade() -> None:
     bind = op.get_bind()
     inspector = sa.inspect(bind)
     cols = [c["name"] for c in inspector.get_columns("projects")]
+    status_enum = sa.Enum("active", "paused", "completed", name="project_status")
+    status_enum.create(bind, checkfirst=True)
     if "status" not in cols:
-        status_enum = sa.Enum("active", "paused", "completed", name="project_status")
-        status_enum.create(bind, checkfirst=True)
         op.add_column(
             "projects",
             sa.Column(
                 "status",
                 status_enum,
                 server_default="active",
-                nullable=True,
+                nullable=False,
             ),
+        )
+    else:
+        op.alter_column(
+            "projects",
+            "status",
+            existing_type=status_enum,
+            server_default="active",
+            existing_nullable=True,
+            nullable=False,
         )
 
 
