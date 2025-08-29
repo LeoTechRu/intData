@@ -8,7 +8,11 @@
     "strict": true,
     "jsx": "react-jsx",
     "types": ["node", "react"],
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["static/ts/*"]
+    }
   },
   "include": ["static/ts/**/*"]
 }
