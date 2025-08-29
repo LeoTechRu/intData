@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from datetime import datetime
 from typing import Dict
 from uuid import UUID
@@ -14,31 +15,32 @@ from core.services.app_settings_service import get_settings_by_prefix, upsert_se
 from web.dependencies import get_current_web_user, role_required
 
 PERSONA_DEFAULTS: Dict[str, str] = {
-    "ui.persona.personal_brain.label.ru": "Личный мозг",
-    "ui.persona.personal_brain.tooltip.ru": "Пространство вашего разума.",
-    "ui.persona.personal_brain.slogan.ru": "Работайте в своём втором мозге.",
-    "ui.persona.collective_consciousness.label.ru": "Коллективное сознание",
-    "ui.persona.collective_consciousness.tooltip.ru": "Вы — часть общего знания.",
-    "ui.persona.collective_consciousness.slogan.ru": "Собираем знания вместе.",
-    "ui.persona.knowledge_keeper.label.ru": "Хранитель знаний",
-    "ui.persona.knowledge_keeper.tooltip.ru": "Поддерживайте порядок и ясность.",
-    "ui.persona.knowledge_keeper.slogan.ru": "Помогаем команде понимать больше.",
-    "ui.persona.system_architect.label.ru": "Архитектор системы",
-    "ui.persona.system_architect.tooltip.ru": "Вы задаёте правила системы.",
-    "ui.persona.system_architect.slogan.ru": "Создавайте опоры для платформы.",
-    # English minimum
-    "ui.persona.personal_brain.label.en": "Personal Brain",
-    "ui.persona.personal_brain.tooltip.en": "Your space of thought.",
-    "ui.persona.personal_brain.slogan.en": "Work in your second brain.",
-    "ui.persona.collective_consciousness.label.en": "Collective Consciousness",
-    "ui.persona.collective_consciousness.tooltip.en": "You are part of shared knowledge.",
-    "ui.persona.collective_consciousness.slogan.en": "Gathering knowledge together.",
-    "ui.persona.knowledge_keeper.label.en": "Knowledge Keeper",
-    "ui.persona.knowledge_keeper.tooltip.en": "Maintain order and clarity.",
-    "ui.persona.knowledge_keeper.slogan.en": "Helping the team understand more.",
-    "ui.persona.system_architect.label.en": "System Architect",
-    "ui.persona.system_architect.tooltip.en": "You define the system rules.",
-    "ui.persona.system_architect.slogan.en": "Build the platform's foundations.",
+    # RU defaults
+    "ui.persona.single.label.ru": "Второй мозг",
+    "ui.persona.single.tooltip_md.ru": "Ваш второй мозг — внешний контур памяти и обдумывания. [Что это?](https://trends.rbc.ru/trends/social/620393859a7947e531dafbcc)",
+    "ui.persona.single.slogan.ru": "Работайте во «втором мозге».",
+    "ui.persona.multiplayer.label.ru": "Коллективное сознание",
+    "ui.persona.multiplayer.tooltip_md.ru": "Вы — часть общего знания.",
+    "ui.persona.multiplayer.slogan.ru": "Собираем знание вместе.",
+    "ui.persona.moderator.label.ru": "Хранитель знаний",
+    "ui.persona.moderator.tooltip_md.ru": "Поддерживайте порядок и ясность.",
+    "ui.persona.moderator.slogan.ru": "Помогаем команде понимать больше.",
+    "ui.persona.admin.label.ru": "Архитектор системы",
+    "ui.persona.admin.tooltip_md.ru": "Вы задаёте правила платформы.",
+    "ui.persona.admin.slogan.ru": "Создавайте опоры для всей системы.",
+    # EN minimal defaults
+    "ui.persona.single.label.en": "Second Brain",
+    "ui.persona.single.tooltip_md.en": "Your external memory and thinking. [What is it?](https://trends.rbc.ru/trends/social/620393859a7947e531dafbcc)",
+    "ui.persona.single.slogan.en": "Work in your second brain.",
+    "ui.persona.multiplayer.label.en": "Collective Mind",
+    "ui.persona.multiplayer.tooltip_md.en": "You are part of shared knowledge.",
+    "ui.persona.multiplayer.slogan.en": "Gather knowledge together.",
+    "ui.persona.moderator.label.en": "Knowledge Keeper",
+    "ui.persona.moderator.tooltip_md.en": "Maintain order and clarity.",
+    "ui.persona.moderator.slogan.en": "Helping the team understand more.",
+    "ui.persona.admin.label.en": "System Architect",
+    "ui.persona.admin.tooltip_md.en": "You set the platform rules.",
+    "ui.persona.admin.slogan.en": "Build foundations for the whole system.",
 }
 
 router = APIRouter(prefix="/api/v1", tags=["app-settings"])
@@ -82,10 +84,19 @@ async def api_put_settings(
     payload: SettingsIn,
     current_user: WebUser = Depends(get_current_web_user),
 ):
+    link_re = re.compile(r"\[[^\]]+\]\((https?://[^)]+)\)")
     for key, value in payload.entries.items():
-        if any(ch in value for ch in "<>&"):
+        if "<" in value or ">" in value or "javascript:" in value.lower():
             raise HTTPException(status_code=400, detail="HTML not allowed")
-        limit = 40 if ".label." in key else 140
+        if ".label." in key:
+            limit = 40
+        elif ".tooltip_md." in key:
+            limit = 300
+            stripped = link_re.sub("", value)
+            if any(ch in stripped for ch in "[]()"):
+                raise HTTPException(status_code=400, detail="Only markdown links allowed")
+        else:
+            limit = 140
         if len(value) > limit:
             raise HTTPException(status_code=400, detail="Value too long")
     updated_by: UUID | None = None

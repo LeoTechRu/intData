@@ -1,46 +1,46 @@
 export const personaDefaults = {
   ru: {
-    personal_brain: {
-      label: "Личный мозг",
-      tooltip: "Пространство вашего разума.",
-      slogan: "Работайте в своём втором мозге."
+    single: {
+      label: "Второй мозг",
+      tooltipMd: "Ваш второй мозг — внешний контур памяти и обдумывания. [Что это?](https://trends.rbc.ru/trends/social/620393859a7947e531dafbcc)",
+      slogan: "Работайте во «втором мозге»."
     },
-    collective_consciousness: {
+    multiplayer: {
       label: "Коллективное сознание",
-      tooltip: "Вы — часть общего знания.",
-      slogan: "Собираем знания вместе."
+      tooltipMd: "Вы — часть общего знания.",
+      slogan: "Собираем знание вместе."
     },
-    knowledge_keeper: {
+    moderator: {
       label: "Хранитель знаний",
-      tooltip: "Поддерживайте порядок и ясность.",
+      tooltipMd: "Поддерживайте порядок и ясность.",
       slogan: "Помогаем команде понимать больше."
     },
-    system_architect: {
+    admin: {
       label: "Архитектор системы",
-      tooltip: "Вы задаёте правила системы.",
-      slogan: "Создавайте опоры для платформы."
+      tooltipMd: "Вы задаёте правила платформы.",
+      slogan: "Создавайте опоры для всей системы."
     }
   },
   en: {
-    personal_brain: {
-      label: "Personal Brain",
-      tooltip: "Your space of thought.",
+    single: {
+      label: "Second Brain",
+      tooltipMd: "Your external memory and thinking. [What is it?](https://trends.rbc.ru/trends/social/620393859a7947e531dafbcc)",
       slogan: "Work in your second brain."
     },
-    collective_consciousness: {
-      label: "Collective Consciousness",
-      tooltip: "You are part of shared knowledge.",
-      slogan: "Gathering knowledge together."
+    multiplayer: {
+      label: "Collective Mind",
+      tooltipMd: "You are part of shared knowledge.",
+      slogan: "Gather knowledge together."
     },
-    knowledge_keeper: {
+    moderator: {
       label: "Knowledge Keeper",
-      tooltip: "Maintain order and clarity.",
+      tooltipMd: "Maintain order and clarity.",
       slogan: "Helping the team understand more."
     },
-    system_architect: {
+    admin: {
       label: "System Architect",
-      tooltip: "You define the system rules.",
-      slogan: "Build the platform's foundations."
+      tooltipMd: "You set the platform rules.",
+      slogan: "Build foundations for the whole system."
     }
   }
 } as const;

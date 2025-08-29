@@ -1,22 +1,22 @@
 import { personaDefaults } from './constants/personaDefaults';
 
-export type PersonaCode = 'personal_brain' | 'collective_consciousness' | 'knowledge_keeper' | 'system_architect';
+export type PersonaCode = 'single' | 'multiplayer' | 'moderator' | 'admin';
 
-type Entry = { label: string; tooltip: string; slogan: string };
+type Entry = { label: string; tooltipMd: string; slogan: string };
 export type PersonaTexts = Record<PersonaCode, Entry>;
 
 const memory: Record<string, { exp: number; data: PersonaTexts }> = {};
 
 function build(entries: Record<string, string>, locale: string): PersonaTexts {
   const fall = 'ru';
-  const codes: PersonaCode[] = ['personal_brain','collective_consciousness','knowledge_keeper','system_architect'];
+  const codes: PersonaCode[] = ['single','multiplayer','moderator','admin'];
   const result: any = {};
   for (const code of codes) {
     const key = (field: string) => `ui.persona.${code}.${field}.${locale}`;
     const fallKey = (field: string) => `ui.persona.${code}.${field}.${fall}`;
     result[code] = {
       label: entries[key('label')] ?? entries[fallKey('label')] ?? personaDefaults[fall][code].label,
-      tooltip: entries[key('tooltip')] ?? entries[fallKey('tooltip')] ?? personaDefaults[fall][code].tooltip,
+      tooltipMd: entries[key('tooltip_md')] ?? entries[fallKey('tooltip_md')] ?? personaDefaults[fall][code].tooltipMd,
       slogan: entries[key('slogan')] ?? entries[fallKey('slogan')] ?? personaDefaults[fall][code].slogan
     };
   }
@@ -59,17 +59,51 @@ export async function loadPersonaTexts(locale: 'ru'|'en'): Promise<PersonaTexts>
 // React components (lightweight)
 import React, { useEffect, useState } from 'react';
 
-export function PersonaBadge({ code, locale }: { code: PersonaCode; locale: 'ru'|'en' }) {
+function renderMarkdown(md: string): React.ReactNode[] {
+  const re = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
+  const out: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(md)) !== null) {
+    if (match.index > lastIndex) out.push(md.slice(lastIndex, match.index));
+    out.push(<a href={match[2]} target="_blank" rel="noopener noreferrer">{match[1]}</a>);
+    lastIndex = re.lastIndex;
+  }
+  if (lastIndex < md.length) out.push(md.slice(lastIndex));
+  return out;
+}
+
+export function PersonaHeader({ role, fullName, locale }: { role: PersonaCode; fullName: string; locale: 'ru'|'en' }) {
   const [texts, setTexts] = useState<PersonaTexts | null>(null);
+  const [open, setOpen] = useState(false);
   useEffect(() => { loadPersonaTexts(locale).then(setTexts); }, [locale]);
   if (!texts) return null;
-  const entry = texts[code];
-  const id = `persona-tip-${code}`;
+  const entry = texts[role];
+  const short = fullName.length > 24 ? fullName.slice(0,24) + '…' : fullName;
+  const id = 'persona-pop';
   return (
-    <span className="persona-badge" aria-describedby={id}>
-      {entry.label}
-      <span id={id} role="tooltip" className="sr-only">{entry.tooltip}</span>
-    </span>
+    <div className="persona-header">
+      <span
+        className="persona-badge"
+        tabIndex={0}
+        aria-haspopup="dialog"
+        aria-describedby={id}
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+      >
+        {entry.label}
+      </span>
+      <span className="persona-name">{short}</span>
+      {open && (
+        <div id={id} role="dialog" className="persona-popover">
+          <strong>{fullName}</strong>
+          <div>{renderMarkdown(entry.tooltipMd)}</div>
+          <div className="muted">{entry.slogan}</div>
+        </div>
+      )}
+    </div>
   );
 }
 
