@@ -11,7 +11,7 @@ from core.services.nexus_service import HabitService
 from web.dependencies import get_current_tg_user
 
 
-router = APIRouter(prefix="/habits", tags=["habits"])
+router = APIRouter(prefix="/api/v1/habits", tags=["habits"])
 
 
 class HabitCreate(BaseModel):
