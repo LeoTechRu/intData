@@ -3,10 +3,14 @@ from pathlib import Path
 from urllib.parse import quote
 from contextlib import asynccontextmanager
 import logging
+import os
+from datetime import datetime, timedelta
+from pathlib import Path
 
-from fastapi import FastAPI, Request, APIRouter
-from fastapi.responses import RedirectResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 from .routes import (
     admin,
@@ -26,11 +30,6 @@ from .routes import (
     resources,
     inbox,
 )
-from .routes.api import admin as api_admin
-from .routes.api import admin_settings as api_admin_settings
-from .routes.api import auth_webapp as api_auth_webapp
-from .routes.api import user_favorites as api_user_favorites
-from .routes.api import app_settings as api_app_settings
 from core.db import engine, init_models
 from core.services.web_user_service import WebUserService
 from core.services.telegram_user_service import TelegramUserService
@@ -39,6 +38,7 @@ from core.services.notification_service import (
     run_reminder_dispatcher,
     is_scheduler_enabled,
 )
+from api import api_v1
 
 
 logger = logging.getLogger(__name__)
@@ -116,6 +116,16 @@ app = FastAPI(
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+API_REDIRECTS_ENABLED = os.getenv("API_REDIRECTS_ENABLED", "true").lower() != "false"
+_sunset_days = int(os.getenv("API_SUNSET_DAYS", "60"))
+SUNSET_DATE = (datetime.utcnow() + timedelta(days=_sunset_days)).date().isoformat()
 
 @app.middleware("http")
 async def auth_middleware(request: Request, call_next):
@@ -193,40 +203,69 @@ async def auth_middleware(request: Request, call_next):
     return RedirectResponse(f"/auth?next={quote(next_url, safe='')}")
 
 
-app.include_router(index.router)
-app.include_router(profile.router)
-app.include_router(settings.router)
-app.include_router(habits.router)
-app.include_router(tasks.router)
-app.include_router(tasks.ui_router)
-app.include_router(reminders.router)
-app.include_router(reminders.ui_router)
-app.include_router(notes.router)
-app.include_router(notes.ui_router)
-app.include_router(areas.router)
-app.include_router(areas.ui_router)
-app.include_router(projects.router)
-app.include_router(projects.ui_router)
-app.include_router(resources.router)
-app.include_router(resources.ui_router)
-app.include_router(inbox.router)
-app.include_router(inbox.ui_router)
-app.include_router(calendar.router)
-app.include_router(calendar.ui_router)
-app.include_router(time_entries.router)
-app.include_router(time_entries.ui_router)
-app.include_router(auth.router)
-app.include_router(admin.router, prefix="/admin")
-app.include_router(admin_settings.router)
+@app.middleware("http")
+async def api_redirect_middleware(request: Request, call_next):
+    path = request.url.path
+    target = None
+    if path.startswith("/api/") and not path.startswith("/api/v1/"):
+        target = "/api/v1/" + path[len("/api/") :]
+    if target:
+        if request.url.query:
+            target = f"{target}?{request.url.query}"
+        if API_REDIRECTS_ENABLED:
+            resp = RedirectResponse(target, status_code=308)
+            resp.headers["Deprecation"] = "true"
+            resp.headers["Sunset"] = SUNSET_DATE
+            return resp
+        headers = {"Link": f"<{target}>; rel=\"successor-version\""}
+        return JSONResponse({"detail": "Gone"}, status_code=410, headers=headers)
+    return await call_next(request)
 
-# Domain API routers
-app.include_router(api_admin.router)
-app.include_router(api_admin_settings.router)
-app.include_router(api_auth_webapp.router)
-app.include_router(api_user_favorites.router)
-app.include_router(api_app_settings.router)
 
-# Root API aggregator (prefix /api/v1). Domain routers below already serve under
-# /api/v1/* so we don't add nested prefixes here to avoid double /api/v1.
-api = APIRouter(prefix="/api/v1")
-app.include_router(api)
+app.include_router(index.router, include_in_schema=False)
+app.include_router(profile.router, include_in_schema=False)
+app.include_router(settings.router, include_in_schema=False)
+app.include_router(habits.router, include_in_schema=False)
+app.include_router(tasks.router, include_in_schema=False)
+app.include_router(tasks.ui_router, include_in_schema=False)
+app.include_router(reminders.router, include_in_schema=False)
+app.include_router(reminders.ui_router, include_in_schema=False)
+app.include_router(notes.router, include_in_schema=False)
+app.include_router(notes.ui_router, include_in_schema=False)
+app.include_router(areas.router, include_in_schema=False)
+app.include_router(areas.ui_router, include_in_schema=False)
+app.include_router(projects.router, include_in_schema=False)
+app.include_router(projects.ui_router, include_in_schema=False)
+app.include_router(resources.router, include_in_schema=False)
+app.include_router(resources.ui_router, include_in_schema=False)
+app.include_router(inbox.router, include_in_schema=False)
+app.include_router(inbox.ui_router, include_in_schema=False)
+app.include_router(calendar.router, include_in_schema=False)
+app.include_router(calendar.ui_router, include_in_schema=False)
+app.include_router(time_entries.router, include_in_schema=False)
+app.include_router(time_entries.ui_router, include_in_schema=False)
+app.include_router(auth.router, include_in_schema=False)
+app.include_router(admin.router, prefix="/admin", include_in_schema=False)
+app.include_router(admin_settings.router, include_in_schema=False)
+
+# API routers aggregated under /api/v1
+app.include_router(api_v1)
+
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    from fastapi.openapi.utils import get_openapi
+
+    schema = get_openapi(
+        title=app.title,
+        version="1.0.0",
+        routes=app.routes,
+        tags=tags_metadata,
+        servers=[{"url": "/api/v1"}],
+    )
+    app.openapi_schema = schema
+    return schema
+
+
+app.openapi = custom_openapi

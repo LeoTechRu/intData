@@ -15,12 +15,10 @@ import uvicorn
 
 from bot.main import main as bot_main
 from web import app as fastapi_app
-from web.routes import profile
 from core.logger import logger
 
-# Expose FastAPI app for tests; attach extra routers
+# Expose FastAPI app for tests
 app = fastapi_app
-app.include_router(profile.router)
 
 
 def run_bot() -> None:

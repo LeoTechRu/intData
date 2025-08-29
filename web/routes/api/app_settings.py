@@ -34,7 +34,7 @@ PERSONA_DEFAULTS: Dict[str, str] = {
     "ui.persona.single.slogan.en": "Work in your second brain.",
 }
 
-router = APIRouter(prefix="/api/v1", tags=["app-settings"])
+router = APIRouter(tags=["app-settings"])
 
 
 class SettingsIn(BaseModel):
