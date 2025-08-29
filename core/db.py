@@ -8,8 +8,13 @@ import os
 from dotenv import load_dotenv
 import builtins
 import sys
-import re
 import bcrypt as _bcrypt
+from alembic import command
+from alembic.config import Config
+from sqlalchemy import create_engine
+import traceback, logging
+
+logger = logging.getLogger(__name__)
 
 from base import Base
 
@@ -44,23 +49,10 @@ def _to_sync_dsn(url_like) -> str:
     return url.render_as_string(hide_password=False)
 
 
-def _ini_escape_percent(s: str) -> str:
-    """Escape lone '%' signs for safe ConfigParser usage."""
-    return re.sub(r'%(?!%)', '%%', s)
-
-
 async def init_models() -> None:
-    """Ensure the database schema is up to date.
-
-    In production the function applies Alembic migrations.  For tests that
-    bind ``async_session`` to an in-memory SQLite database we fall back to
-    creating all tables directly from ``Base.metadata``.
-    """
-    from core.logger import logger
+    """Ensure the database schema is up to date."""
     eng = None
     try:
-        # SQLAlchemy 1.4/2.0: sessionmaker may expose the bound engine either
-        # via ``bind`` attribute or inside ``kw['bind']``.
         eng = getattr(async_session, "bind", None)
         if eng is None:
             kw = getattr(async_session, "kw", {}) or {}
@@ -69,31 +61,28 @@ async def init_models() -> None:
         eng = None
 
     eng = eng or engine
-    # Никогда не используем str(eng.url) для Alembic.
     real_sync_dsn = _to_sync_dsn(eng.url)
     if real_sync_dsn.startswith("sqlite"):
-        # For test environment use the simpler metadata-based creation.
         async with eng.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
         return
 
-    # Run Alembic migrations for real databases (e.g. PostgreSQL).
-    from alembic import command
-    from alembic.config import Config
-    from pathlib import Path
-    import asyncio as _asyncio
+    logger.debug("DB URL (masked): %s", eng.url.render_as_string(hide_password=True))
 
-    cfg = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
-    cfg.set_main_option(
-        "script_location", str(Path(__file__).resolve().parents[1] / "migrations")
-    )
-    ini_safe_dsn = _ini_escape_percent(real_sync_dsn)
-    cfg.set_main_option("sqlalchemy.url", ini_safe_dsn)
-    logger.debug(
-        "DB URL (masked): %s", eng.url.render_as_string(hide_password=True)
-    )
+    def _run_alembic_upgrade_with_connection(sync_url: str):
+        ini_path = os.path.join(os.path.dirname(__file__), "..", "alembic.ini")
+        ini_path = os.path.abspath(ini_path)
+        cfg = Config(ini_path) if os.path.exists(ini_path) else Config()
+        mig_engine = create_engine(sync_url, pool_pre_ping=True)
+        with mig_engine.connect() as conn:
+            cfg.attributes["connection"] = conn
+            command.upgrade(cfg, "head")
 
-    await _asyncio.to_thread(command.upgrade, cfg, "head")
+    try:
+        _run_alembic_upgrade_with_connection(real_sync_dsn)
+    except Exception as e:
+        logger.exception("init_models() failed: %s", e)
+        raise
 
 # Bot
 BOT_TOKEN = os.getenv("BOT_TOKEN") or ("123456:" + "A" * 35)
