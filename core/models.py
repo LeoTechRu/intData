@@ -665,3 +665,95 @@ class LogSettings(Base):
     )
     def __repr__(self) -> str:  # pragma: no cover - debug aid
         return f"<LogSettings(level='{self.level}', chat_id='{self.chat_id}')>"
+
+
+# ---------------------------------------------------------------------------
+# New PARA calendar and notification models
+# ---------------------------------------------------------------------------
+
+
+class CalendarItemStatus(PyEnum):
+    """Lifecycle status for :class:`CalendarItem`."""
+
+    planned = "planned"
+    done = "done"
+    cancelled = "cancelled"
+
+
+class CalendarItem(Base):
+    """Calendar event bound to an Area or Project."""
+
+    __tablename__ = "calendar_items"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
+    title = Column(String(255), nullable=False)
+    start_at = Column(DateTime(timezone=True), nullable=False)
+    end_at = Column(DateTime(timezone=True))
+    project_id = Column(Integer, ForeignKey("projects.id"))
+    area_id = Column(Integer, ForeignKey("areas.id"))
+    status = Column(Enum(CalendarItemStatus), default=CalendarItemStatus.planned)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class Alarm(Base):
+    """Reminder tied to a :class:`CalendarItem`."""
+
+    __tablename__ = "alarms"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    item_id = Column(Integer, ForeignKey("calendar_items.id"), nullable=False)
+    trigger_at = Column(DateTime(timezone=True), nullable=False)
+    is_sent = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class NotificationChannelKind(PyEnum):
+    """Supported notification channel types."""
+
+    telegram = "telegram"
+    email = "email"
+
+
+class NotificationChannel(Base):
+    """User notification channel (e-mail, Telegram, ...)."""
+
+    __tablename__ = "notification_channels"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
+    kind = Column(Enum(NotificationChannelKind), nullable=False)
+    address = Column(String(255), nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class ProjectNotification(Base):
+    """Mapping of :class:`Project` to subscribed :class:`Channel`."""
+
+    __tablename__ = "project_notifications"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
+    channel_id = Column(Integer, ForeignKey("notification_channels.id"), nullable=False)
+    is_enabled = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class GCalLink(Base):
+    """Link to an external Google Calendar."""
+
+    __tablename__ = "gcal_links"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
+    calendar_id = Column(String(255), nullable=False)
+    access_token = Column(String(255))
+    refresh_token = Column(String(255))
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+

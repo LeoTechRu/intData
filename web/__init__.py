@@ -38,6 +38,7 @@ from core.services.notification_service import (
     run_reminder_dispatcher,
     is_scheduler_enabled,
 )
+from . import para_schemas  # noqa: F401
 
 
 logger = logging.getLogger(__name__)
