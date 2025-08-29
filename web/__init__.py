@@ -29,6 +29,7 @@ from .routes import (
 from .routes.api import admin as api_admin
 from .routes.api import admin_settings as api_admin_settings
 from .routes.api import auth_webapp as api_auth_webapp
+from .routes.api import user_favorites as api_user_favorites
 from core.db import engine, init_models
 from core.services.web_user_service import WebUserService
 from core.services.telegram_user_service import TelegramUserService
@@ -218,6 +219,7 @@ app.include_router(admin_settings.router)
 app.include_router(api_admin.router)
 app.include_router(api_admin_settings.router)
 app.include_router(api_auth_webapp.router)
+app.include_router(api_user_favorites.router)
 
 # Root API aggregator (prefix /api). Domain routers below already serve under /api/*
 # so we don't add nested prefixes here to avoid double /api.

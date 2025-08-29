@@ -13,7 +13,9 @@
 </div>
 
 <div class="top-center">
-  <h1 class="page-title">{{ (MODULE_TITLE if MODULE_TITLE is defined and MODULE_TITLE else APP_BRAND_NAME)|striptags }}</h1>
+  {% set TITLE_TEXT = (MODULE_TITLE if MODULE_TITLE is defined and MODULE_TITLE else APP_BRAND_NAME)|striptags %}
+  <h1 class="page-title">{{ TITLE_TEXT }}</h1>
+  <button id="favToggle" class="fav-toggle" type="button" data-path="{{ request.url.path }}" data-label="{{ TITLE_TEXT }}" aria-label="Добавить в избранное">☆</button>
   {# На узких экранах .top-center скрывается через CSS #}
 </div>
 
@@ -23,20 +25,27 @@
       <img class="avatar" src="{{ header_user.avatar_url | default(url_for('static', path='img/profile-default.svg'), true) }}" alt="" />
     </button>
     <div class="dropdown-menu profile-menu" id="profileMenu" role="menu" aria-hidden="true">
-      <a role="menuitem" href="/profile/{{ header_user.username if header_user else '' }}">Профиль</a>
-      <a role="menuitem" href="/settings">Настройки</a>
-      <hr/>
-      <a role="menuitem" href="/">Дашборд</a>
-      <a role="menuitem" href="/tasks">Задачи</a>
-      <a role="menuitem" href="/reminders">Напоминания</a>
-      <a role="menuitem" href="/calendar">Календарь</a>
-      <a role="menuitem" href="/notes">Заметки</a>
-      {% if is_admin %}
-        <hr/>
-        <a role="menuitem" href="/admin">Админка</a>
-      {% endif %}
-      <hr/>
-      <a role="menuitem" href="/auth/logout" data-method="post">Выход</a>
+      <ul class="menu-section menu-list">
+        <li><a role="menuitem" href="/profile/{{ header_user.username if header_user else '' }}">Профиль</a></li>
+        <li><a role="menuitem" href="/settings">Настройки</a></li>
+      </ul>
+      <hr class="menu-sep"/>
+      <ul class="menu-section menu-list" data-fav-box aria-label="Избранное"></ul>
+      <hr class="menu-sep"/>
+      <ul class="menu-section menu-list">
+        <li><a role="menuitem" href="/">Дашборд</a></li>
+        <li><a role="menuitem" href="/tasks">Задачи</a></li>
+        <li><a role="menuitem" href="/reminders">Напоминания</a></li>
+        <li><a role="menuitem" href="/calendar">Календарь</a></li>
+        <li><a role="menuitem" href="/notes">Заметки</a></li>
+        {% if is_admin %}
+          <li><a role="menuitem" href="/admin">Админка</a></li>
+        {% endif %}
+      </ul>
+      <hr class="menu-sep"/>
+      <ul class="menu-section menu-list">
+        <li><a role="menuitem" href="/auth/logout" data-method="post">Выход</a></li>
+      </ul>
     </div>
   </div>
 </div>
