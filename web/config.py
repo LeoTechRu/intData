@@ -39,6 +39,11 @@ class EnvSettings(BaseSettings):
     RECAPTCHA_SITE_KEY: Optional[str] = None
     RECAPTCHA_SECRET_KEY: Optional[str] = None
 
+    # Google Calendar
+    GOOGLE_CLIENT_ID: Optional[str] = None
+    GOOGLE_CLIENT_SECRET: Optional[str] = None
+    GCAL_WEBHOOK_URL: AnyHttpUrl | None = None  # type: ignore[assignment]
+
     # pydantic-settings v2 style configuration
     model_config = SettingsConfigDict(
         env_file=os.getenv("LEONIDPRO_ENV_FILE", ".env"),
@@ -154,6 +159,21 @@ class Settings:
     @property
     def RECAPTCHA_SITE_KEY(self):
         return self._env.RECAPTCHA_SITE_KEY
+
+    @property
+    def GOOGLE_CLIENT_ID(self):
+        return self._store.get("google.GOOGLE_CLIENT_ID") or self._env.GOOGLE_CLIENT_ID
+
+    @property
+    def GOOGLE_CLIENT_SECRET(self):
+        return self._store.get_secret("google.GOOGLE_CLIENT_SECRET") or self._env.GOOGLE_CLIENT_SECRET
+
+    @property
+    def GCAL_WEBHOOK_URL(self):
+        val = self._store.get("google.GCAL_WEBHOOK_URL")
+        if val:
+            return val
+        return str(self._env.GCAL_WEBHOOK_URL) if self._env.GCAL_WEBHOOK_URL else None
 
     @property
     def ADMIN_IDS(self):
