@@ -10,7 +10,7 @@ from core.services.favorite_service import FavoriteService
 from web.dependencies import get_current_web_user
 
 
-router = APIRouter(prefix="/api/v1/user/favorites", tags=["favorites"])
+router = APIRouter(prefix="/user/favorites", tags=["favorites"])
 
 
 class FavCreate(BaseModel):

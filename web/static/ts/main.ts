@@ -1,4 +1,18 @@
 // Example TypeScript entry point with modular structure
+
+const _origFetch = window.fetch;
+window.fetch = async (input: RequestInfo, init: RequestInit = {}) => {
+  const resp = await _origFetch(input, { ...init, redirect: 'manual' });
+  if (resp.status === 307 || resp.status === 308) {
+    const location = resp.headers.get('Location');
+    if (location) {
+      console.warn('API redirect', input, '→', location);
+      return _origFetch(location, init);
+    }
+  }
+  return resp;
+};
+
 export function enableAccessibility() {
   const btn = document.getElementById('accessibility-toggle');
   if (!btn) return;
