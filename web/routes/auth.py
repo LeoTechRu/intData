@@ -389,8 +389,9 @@ async def register(
     return RedirectResponse("/auth", status_code=status.HTTP_303_SEE_OTHER)
 
 
-@router.post("/auth/logout")
+@router.api_route("/auth/logout", methods=["GET", "POST"])
 async def logout() -> RedirectResponse:
+    """Clear auth cookies and redirect to login page."""
     response = RedirectResponse("/auth", status_code=status.HTTP_303_SEE_OTHER)
     response.delete_cookie("web_user_id", path="/")
     response.delete_cookie("telegram_id", path="/")

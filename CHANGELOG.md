@@ -37,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Исправлена ошибка отсутствующего столбца `projects.status` в базе данных.
 - Починено падение Alembic при наличии символов `%` в пароле DSN.
 - Переведены валидаторы конфигурации на синтаксис `field_validator` Pydantic v2, устранены предупреждения устаревания.
+- Swagger UI снова доступен на `/api`, статические файлы не редиректятся на `/api/v1`.
+- `GET /auth/logout` корректно завершает сессию; браузеры получают favicon по `/favicon.ico`.
 
 ### Removed
  - Упоминания роли из пользовательского интерфейса.
