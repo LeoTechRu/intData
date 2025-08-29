@@ -25,27 +25,16 @@
       <img class="avatar" src="{{ header_user.avatar_url | default(url_for('static', path='img/profile-default.svg'), true) }}" alt="" />
     </button>
     <div class="dropdown-menu profile-menu" id="profileMenu" role="menu" aria-hidden="true">
-      <ul class="menu-section menu-list">
-        <li><a role="menuitem" href="/profile/{{ header_user.username if header_user else '' }}">Профиль</a></li>
-        <li><a role="menuitem" href="/settings">Настройки</a></li>
-      </ul>
-      <hr class="menu-sep"/>
-      <ul class="menu-section menu-list" data-fav-box aria-label="Избранное"></ul>
-      <hr class="menu-sep"/>
-      <ul class="menu-section menu-list">
-        <li><a role="menuitem" href="/">Дашборд</a></li>
-        <li><a role="menuitem" href="/tasks">Задачи</a></li>
-        <li><a role="menuitem" href="/reminders">Напоминания</a></li>
-        <li><a role="menuitem" href="/calendar">Календарь</a></li>
-        <li><a role="menuitem" href="/notes">Заметки</a></li>
-        {% if is_admin %}
-          <li><a role="menuitem" href="/admin">Админка</a></li>
-        {% endif %}
-      </ul>
-      <hr class="menu-sep"/>
-      <ul class="menu-section menu-list">
-        <li><a role="menuitem" href="/auth/logout" data-method="post">Выход</a></li>
-      </ul>
+        <ul class="menu-section menu-list">
+          <li><a role="menuitem" href="/profile/{{ header_user.username if header_user else '' }}">Профиль</a></li>
+          <li><a role="menuitem" href="/settings">Настройки</a></li>
+        </ul>
+        <hr class="menu-sep"/>
+        <ul class="menu-section menu-list" data-fav-box aria-label="Избранное"></ul>
+        <hr class="menu-sep"/>
+        <ul class="menu-section menu-list">
+          <li><a role="menuitem" href="/auth/logout" data-method="post">Выход</a></li>
+        </ul>
     </div>
   </div>
 </div>
