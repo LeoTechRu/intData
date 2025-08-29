@@ -5,8 +5,10 @@ import os
 import sys
 from logging.config import fileConfig
 from pathlib import Path
+import configparser
 
 from alembic import context
+from alembic.config import Config
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.engine.url import make_url, URL
@@ -20,9 +22,15 @@ from base import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
-cfg = context.config
+cfg: Config = context.config
 if cfg.config_file_name is not None:
     fileConfig(cfg.config_file_name)
+
+ini_path = cfg.config_file_name
+raw = configparser.ConfigParser(interpolation=None)
+if ini_path:
+    raw.read(ini_path)
+cfg.file_config = raw
 
 
 def _to_sync_dsn(url_like: str) -> str:

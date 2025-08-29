@@ -8,6 +8,7 @@ import os
 from dotenv import load_dotenv
 import builtins
 import sys
+import re
 import bcrypt as _bcrypt
 
 from base import Base
@@ -36,14 +37,16 @@ engine = create_async_engine(DATABASE_URL)
 async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
 
-# helper: to sync DSN string with password preserved (for Alembic/psql)
 def _to_sync_dsn(url_like) -> str:
-    url = make_url(str(url_like)) if not isinstance(url_like, URL) else url_like
-    driver = url.drivername or ""
-    if driver.startswith("postgresql+"):
+    url = url_like if isinstance(url_like, URL) else make_url(str(url_like))
+    if (url.drivername or "").startswith("postgresql+"):
         url = url.set(drivername="postgresql")
-    # IMPORTANT: do not mask password when passing to Alembic/psql
     return url.render_as_string(hide_password=False)
+
+
+def _ini_escape_percent(s: str) -> str:
+    """Escape lone '%' signs for safe ConfigParser usage."""
+    return re.sub(r'%(?!%)', '%%', s)
 
 
 async def init_models() -> None:
@@ -84,9 +87,11 @@ async def init_models() -> None:
     cfg.set_main_option(
         "script_location", str(Path(__file__).resolve().parents[1] / "migrations")
     )
-    cfg.set_main_option("sqlalchemy.url", real_sync_dsn)
-    masked = eng.url.render_as_string(hide_password=True)
-    logger.debug("DB URL resolved (masked): %s", masked)
+    ini_safe_dsn = _ini_escape_percent(real_sync_dsn)
+    cfg.set_main_option("sqlalchemy.url", ini_safe_dsn)
+    logger.debug(
+        "DB URL (masked): %s", eng.url.render_as_string(hide_password=True)
+    )
 
     await _asyncio.to_thread(command.upgrade, cfg, "head")
 
