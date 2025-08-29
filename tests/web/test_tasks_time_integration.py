@@ -43,27 +43,27 @@ async def test_task_time_summary_and_actions(client: AsyncClient):
     cookies = {"telegram_id": str(telegram_id)}
 
     # Create task
-    resp = await client.post("/api/tasks", json={"title": "Tracked Task"}, cookies=cookies)
+    resp = await client.post("/api/v1/tasks", json={"title": "Tracked Task"}, cookies=cookies)
     assert resp.status_code == 201
     task_id = resp.json()["id"]
 
     # Start timer for task
-    resp = await client.post(f"/api/tasks/{task_id}/start_timer", cookies=cookies)
+    resp = await client.post(f"/api/v1/tasks/{task_id}/start_timer", cookies=cookies)
     assert resp.status_code == 200
 
     # List tasks -> running_entry_id should be present
-    resp = await client.get("/api/tasks", cookies=cookies)
+    resp = await client.get("/api/v1/tasks", cookies=cookies)
     assert resp.status_code == 200
     task = [t for t in resp.json() if t["id"] == task_id][0]
     assert task["running_entry_id"] is not None
 
     # Stop via time stop endpoint
     entry_id = task["running_entry_id"]
-    resp = await client.post(f"/api/time/{entry_id}/stop", cookies=cookies)
+    resp = await client.post(f"/api/v1/time/{entry_id}/stop", cookies=cookies)
     assert resp.status_code == 200
 
     # List tasks -> tracked_minutes >= 0 and no running
-    resp = await client.get("/api/tasks", cookies=cookies)
+    resp = await client.get("/api/v1/tasks", cookies=cookies)
     task = [t for t in resp.json() if t["id"] == task_id][0]
     assert task["tracked_minutes"] >= 0
     assert task["running_entry_id"] is None

@@ -60,7 +60,7 @@ async function fetchTasks(){
   const qs = new URLSearchParams();
   if (area) qs.set('area_id', String(area));
   if (area && include) qs.set('include_sub', '1');
-  const resp = await fetch('/api/tasks' + (qs.toString()? ('?'+qs.toString()):''), {credentials:'include'});
+  const resp = await fetch('/api/v1/tasks' + (qs.toString()? ('?'+qs.toString()):''), {credentials:'include'});
   if (!resp.ok) { document.getElementById('task-empty').textContent = 'Требуется вход и связанный Telegram-аккаунт'; document.getElementById('task-empty').style.display='block'; return; }
   const data = await resp.json();
   const list = document.getElementById('task-list');
@@ -85,7 +85,7 @@ async function fetchTasks(){
 
 document.addEventListener('DOMContentLoaded', ()=>{
   (async ()=>{
-    const resp = await fetch('/api/areas', {credentials:'include'}); if (!resp.ok) return;
+    const resp = await fetch('/api/v1/areas', {credentials:'include'}); if (!resp.ok) return;
     const areas = await resp.json();
     const parentIds = new Set(areas.filter(a=>a.parent_id!==null).map(a=>a.parent_id));
     areas.sort((a,b)=> (a.mp_path || '').localeCompare(b.mp_path || ''));
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
       description: fd.get('description') || null,
       due_date: fd.get('due_date') ? new Date(fd.get('due_date')).toISOString() : null,
     };
-    const resp = await fetch('/api/tasks', {
+    const resp = await fetch('/api/v1/tasks', {
       method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload)
     });
     if (resp.ok){ form.reset(); fetchTasks(); }
@@ -114,7 +114,7 @@ document.addEventListener('click', async (e)=>{
   const start = e.target.closest('button[data-action="start"]');
   if (start){
     const taskId = start.dataset.task;
-    const resp = await fetch(`/api/tasks/${taskId}/start_timer`, {method:'POST', credentials:'include'});
+    const resp = await fetch(`/api/v1/tasks/${taskId}/start_timer`, {method:'POST', credentials:'include'});
     if (resp.ok){ fetchTasks(); }
     return;
   }
@@ -122,8 +122,8 @@ document.addEventListener('click', async (e)=>{
   if (stop){
     const taskId = stop.dataset.task;
     const entryId = stop.dataset.entry;
-    // можно через /api/tasks/{task}/stop_timer, но для простоты остановим по entry
-    const resp = await fetch(`/api/time/${entryId}/stop`, {method:'POST', credentials:'include'});
+    // можно через /api/v1/tasks/{task}/stop_timer, но для простоты остановим по entry
+    const resp = await fetch(`/api/v1/time/${entryId}/stop`, {method:'POST', credentials:'include'});
     if (resp.ok){ fetchTasks(); }
   }
 });

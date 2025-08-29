@@ -41,7 +41,7 @@
 
 <script>
 async function fetchEvents(){
-  const resp = await fetch('/api/calendar', {credentials:'include'});
+  const resp = await fetch('/api/v1/calendar', {credentials:'include'});
   if (!resp.ok){
     const empty = document.getElementById('event-empty');
     empty.textContent = 'Требуется вход и связанный Telegram-аккаунт';
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
       end_at: fd.get('end_at') ? new Date(fd.get('end_at')).toISOString() : null,
       description: fd.get('description') || null
     };
-    const resp = await fetch('/api/calendar', {
+    const resp = await fetch('/api/v1/calendar', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       credentials:'include',

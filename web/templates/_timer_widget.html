@@ -12,11 +12,11 @@
 </dialog>
 
 <script>
-// Endpoints for timer API (uses existing REST under /api/time)
+// Endpoints for timer API (uses existing REST under /api/v1/time)
 window.TIMER_ENDPOINTS = {
-  status: "/api/time",           // GET list, determine running by end_time == null
-  start:  "/api/time/start",     // POST {description?}
-  stopOf: function(id){ return `/api/time/${id}/stop`; } // POST
+  status: "/api/v1/time",           // GET list, determine running by end_time == null
+  start:  "/api/v1/time/start",     // POST {description?}
+  stopOf: function(id){ return `/api/v1/time/${id}/stop`; } // POST
 };
 </script>
 

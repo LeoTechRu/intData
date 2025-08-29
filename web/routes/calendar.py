@@ -13,7 +13,7 @@ from core.models import WebUser
 from ..template_env import templates
 
 
-router = APIRouter(prefix="/api/calendar", tags=["calendar"])
+router = APIRouter(prefix="/api/v1/calendar", tags=["calendar"])
 ui_router = APIRouter(
     prefix="/calendar",
     tags=["calendar"],

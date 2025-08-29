@@ -69,13 +69,13 @@ async def test_role_and_link_operations(client: AsyncClient):
     headers = {"Authorization": f"Bearer {admin_id}"}
 
     resp = await client.post(
-        f"/admin/web/link?web_user_id={user_id}&tg_user_id={tg_id}",
+        f"/api/v1/admin/web/link?web_user_id={user_id}&tg_user_id={tg_id}",
         headers=headers,
     )
     assert resp.status_code == 200
 
     resp = await client.post(
-        f"/admin/role/{telegram_id}?role=moderator",
+        f"/api/v1/admin/role/{telegram_id}?role=moderator",
         headers=headers,
     )
     assert resp.status_code == 200
@@ -84,7 +84,7 @@ async def test_role_and_link_operations(client: AsyncClient):
         assert tuser.role == UserRole.moderator.name
 
     resp = await client.post(
-        f"/admin/web/role/{user_id}?role=moderator",
+        f"/api/v1/admin/web/role/{user_id}?role=moderator",
         headers=headers,
     )
     assert resp.status_code == 200
@@ -100,7 +100,7 @@ async def test_role_and_link_operations(client: AsyncClient):
         assert res.scalar_one_or_none() is not None
 
     resp = await client.post(
-        f"/admin/web/unlink?web_user_id={user_id}&tg_user_id={tg_id}",
+        f"/api/v1/admin/web/unlink?web_user_id={user_id}&tg_user_id={tg_id}",
         headers=headers,
     )
     assert resp.status_code == 200
