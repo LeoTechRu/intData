@@ -27,6 +27,7 @@ from .api.admin_settings import router as admin_settings_api
 from .api.app_settings import router as app_settings_api
 from .api.auth_webapp import router as auth_webapp_api
 from .api.user_favorites import router as user_favorites_api
+from .api.integrations_google import router as gcal_api
 
 # Монтирование под /api/v1
 api_router.include_router(tasks_api, prefix="/tasks", tags=["tasks"])
@@ -44,3 +45,4 @@ api_router.include_router(admin_settings_api, prefix="/admin_settings", tags=["a
 api_router.include_router(app_settings_api, prefix="/app-settings", tags=["app-settings"])
 api_router.include_router(auth_webapp_api, prefix="/auth", tags=["auth"])
 api_router.include_router(user_favorites_api, prefix="/user", tags=["user"])
+api_router.include_router(gcal_api, prefix="/integrations/google", tags=["integrations"])

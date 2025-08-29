@@ -1,6 +1,7 @@
 """Database models used by the application."""
 from enum import IntEnum, Enum as PyEnum
 from datetime import date
+import uuid
 
 from .db import bcrypt
 
@@ -23,6 +24,7 @@ from sqlalchemy import (
     Index,
 )
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 
 from base import Base
 
@@ -634,6 +636,31 @@ class Link(Base):
     weight = Column(Float, default=1.0)
     decay = Column(Float, default=1.0)
     created_at = Column(DateTime, default=utcnow)
+
+
+# ---------------------------------------------------------------------------
+# Google Calendar link
+# ---------------------------------------------------------------------------
+
+class GCalLink(Base):
+    """OAuth credentials and watch state for Google Calendar integration."""
+
+    __tablename__ = "gcal_links"
+
+    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(PG_UUID(as_uuid=True), nullable=False)
+    google_calendar_id = Column(String, nullable=False)
+    access_token = Column(String, nullable=False)
+    refresh_token = Column(String, nullable=False)
+    scope = Column(String, nullable=False)
+    token_expiry = Column(DateTime(timezone=True), nullable=False)
+    sync_token = Column(String)
+    resource_id = Column(String)
+    channel_id = Column(String)
+    channel_expiry = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
 
 
 # ---------------------------------------------------------------------------
