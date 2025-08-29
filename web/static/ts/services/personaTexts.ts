@@ -1,3 +1,5 @@
+import { API_BASE } from './apiBase';
+
 export type BackendRole = 'single'|'multiplayer'|'moderator'|'admin';
 export type PersonaBundle = Record<BackendRole, { label: string; tooltipMd: string; slogan: string }>;
 
@@ -28,7 +30,7 @@ export async function loadPersonaBundle(locale: 'ru'|'en'): Promise<PersonaBundl
   const cached = sessionStorage.getItem(key);
   if (cached) return JSON.parse(cached) as PersonaBundle;
   try {
-    const res = await fetch(`/api/v1/app-settings?prefix=ui.persona.`);
+    const res = await fetch(`${API_BASE}/app-settings?prefix=ui.persona.`);
     const { entries } = await res.json();
     const data = buildFromEntries(entries, locale);
     sessionStorage.setItem(key, JSON.stringify(data));

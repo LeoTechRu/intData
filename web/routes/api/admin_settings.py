@@ -8,7 +8,7 @@ from core.models import UserRole
 from web.config import S
 
 
-router = APIRouter(prefix="/admin/settings", tags=["admin"])
+router = APIRouter(prefix="/api/v1", tags=["admin"])
 
 
 class BrandingIn(BaseModel):
@@ -23,7 +23,7 @@ class TelegramIn(BaseModel):
     BOT_TOKEN: str | None = None
 
 
-@router.get("", name="api:admin_settings_get", dependencies=[Depends(role_required(UserRole.admin))])
+@router.get("/admin/settings", name="api:admin_settings_get", dependencies=[Depends(role_required(UserRole.admin))])
 async def get_settings():
     return {
         "branding": {
@@ -39,7 +39,7 @@ async def get_settings():
     }
 
 
-@router.patch("/branding", name="api:admin_settings_branding", dependencies=[Depends(role_required(UserRole.admin))])
+@router.patch("/admin/settings/branding", name="api:admin_settings_branding", dependencies=[Depends(role_required(UserRole.admin))])
 async def patch_branding(payload: BrandingIn):
     st = S._store  # use shared store
     await st.set_async("branding.APP_BRAND_NAME", payload.APP_BRAND_NAME)
@@ -52,7 +52,7 @@ async def patch_branding(payload: BrandingIn):
     return {"ok": True}
 
 
-@router.patch("/telegram", name="api:admin_settings_telegram", dependencies=[Depends(role_required(UserRole.admin))])
+@router.patch("/admin/settings/telegram", name="api:admin_settings_telegram", dependencies=[Depends(role_required(UserRole.admin))])
 async def patch_telegram(payload: TelegramIn):
     st = S._store
     await st.set_async("telegram.TG_LOGIN_ENABLED", "1" if payload.TG_LOGIN_ENABLED else "0")

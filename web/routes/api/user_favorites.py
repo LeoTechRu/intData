@@ -10,7 +10,7 @@ from core.services.favorite_service import FavoriteService
 from web.dependencies import get_current_web_user
 
 
-router = APIRouter(prefix="/user/favorites", tags=["favorites"])
+router = APIRouter(prefix="/api/v1", tags=["favorites"])
 
 
 class FavCreate(BaseModel):
@@ -23,7 +23,7 @@ class FavUpdate(BaseModel):
     position: Optional[int] = None
 
 
-@router.get("/")
+@router.get("/user/favorites")
 async def list_favorites(current_user: WebUser | None = Depends(get_current_web_user)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
@@ -35,7 +35,7 @@ async def list_favorites(current_user: WebUser | None = Depends(get_current_web_
     ]
 
 
-@router.post("/", status_code=201)
+@router.post("/user/favorites", status_code=201)
 async def add_favorite(
     data: FavCreate, current_user: WebUser | None = Depends(get_current_web_user)
 ):
@@ -49,7 +49,7 @@ async def add_favorite(
     return {"id": fav.id, "label": fav.label, "path": fav.path, "position": fav.position}
 
 
-@router.put("/{fav_id}")
+@router.put("/user/favorites/{fav_id}")
 async def update_favorite(
     fav_id: int,
     data: FavUpdate,
@@ -64,7 +64,7 @@ async def update_favorite(
     return {"id": fav.id, "label": fav.label, "path": fav.path, "position": fav.position}
 
 
-@router.delete("/{fav_id}", status_code=204)
+@router.delete("/user/favorites/{fav_id}", status_code=204)
 async def delete_favorite(
     fav_id: int, current_user: WebUser | None = Depends(get_current_web_user)
 ):

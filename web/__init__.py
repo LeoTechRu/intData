@@ -3,9 +3,6 @@ from pathlib import Path
 from urllib.parse import quote
 from contextlib import asynccontextmanager
 import logging
-import os
-from datetime import datetime, timedelta
-from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse, JSONResponse, FileResponse
@@ -13,8 +10,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from .routes import (
-    admin,
-    admin_settings,
+    admin as admin_ui,
+    admin_settings as admin_settings_ui,
     auth,
     index,
     profile,
@@ -38,7 +35,13 @@ from core.services.notification_service import (
     run_reminder_dispatcher,
     is_scheduler_enabled,
 )
-from api import api_v1
+from web.routes.api import (
+    admin as api_admin,
+    admin_settings as api_admin_settings,
+    app_settings as api_app_settings,
+    auth_webapp,
+    user_favorites,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -112,6 +115,7 @@ app = FastAPI(
     redoc_url=None,                   # ReDoc off for now
     openapi_url="/api/openapi.json", # Spec -> /api/openapi.json
     openapi_tags=tags_metadata,
+    redirect_slashes=False,
 )
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -130,10 +134,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-API_REDIRECTS_ENABLED = os.getenv("API_REDIRECTS_ENABLED", "true").lower() != "false"
-_sunset_days = int(os.getenv("API_SUNSET_DAYS", "60"))
-SUNSET_DATE = (datetime.utcnow() + timedelta(days=_sunset_days)).date().isoformat()
 
 @app.middleware("http")
 async def auth_middleware(request: Request, call_next):
@@ -219,24 +219,15 @@ async def auth_middleware(request: Request, call_next):
 @app.middleware("http")
 async def api_redirect_middleware(request: Request, call_next):
     path = request.url.path
-    target = None
     if (
-        path.startswith("/api/")
-        and not path.startswith("/api/v1/")
-        and not path.startswith("/api/openapi.json")
-        and not path.startswith("/api/swagger-ui")
+        path.startswith("/api/v1/")
+        or path == "/api"
+        or path == "/api/openapi.json"
+        or path.startswith("/api/swagger-ui")
     ):
-        target = "/api/v1/" + path[len("/api/") :]
-    if target:
-        if request.url.query:
-            target = f"{target}?{request.url.query}"
-        if API_REDIRECTS_ENABLED:
-            resp = RedirectResponse(target, status_code=308)
-            resp.headers["Deprecation"] = "true"
-            resp.headers["Sunset"] = SUNSET_DATE
-            return resp
-        headers = {"Link": f"<{target}>; rel=\"successor-version\""}
-        return JSONResponse({"detail": "Gone"}, status_code=410, headers=headers)
+        return await call_next(request)
+    if path.startswith("/api/"):
+        return JSONResponse({"detail": "Use /api/v1/*"}, status_code=404)
     return await call_next(request)
 
 
@@ -263,11 +254,15 @@ app.include_router(calendar.ui_router, include_in_schema=False)
 app.include_router(time_entries.router, include_in_schema=False)
 app.include_router(time_entries.ui_router, include_in_schema=False)
 app.include_router(auth.router, include_in_schema=False)
-app.include_router(admin.router, prefix="/admin", include_in_schema=False)
-app.include_router(admin_settings.router, include_in_schema=False)
+app.include_router(admin_ui.router, prefix="/admin", include_in_schema=False)
+app.include_router(admin_settings_ui.router, include_in_schema=False)
 
-# API routers aggregated under /api/v1
-app.include_router(api_v1)
+# Dedicated API routers under /api/v1
+app.include_router(api_admin.router)
+app.include_router(api_admin_settings.router)
+app.include_router(api_app_settings.router)
+app.include_router(auth_webapp.router)
+app.include_router(user_favorites.router)
 
 
 def custom_openapi():
