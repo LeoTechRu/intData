@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Тайм‑трекер: модель `TimeEntry`, `TimeService`, веб‑API `/time`, страница UI, команды бота `/time_start`, `/time_stop`, `/time_list`.
 - Каркас системы напоминаний: модель `Reminder`, `ReminderService`, привязка к задачам.
 - Каркас календаря: модель `CalendarEvent`, `CalendarService`.
+- REST-эндпоинты `/api/v1/app-settings` и загрузка динамических персон UI через `app_settings`.
 
 ### Changed
 - Унифицирована работа с паролями через обёртку `core.db.bcrypt` и `WebUserService`.

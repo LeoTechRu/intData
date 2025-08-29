@@ -30,6 +30,7 @@ from .routes.api import admin as api_admin
 from .routes.api import admin_settings as api_admin_settings
 from .routes.api import auth_webapp as api_auth_webapp
 from .routes.api import user_favorites as api_user_favorites
+from .routes.api import app_settings as api_app_settings
 from core.db import engine, init_models
 from core.services.web_user_service import WebUserService
 from core.services.telegram_user_service import TelegramUserService
@@ -129,6 +130,9 @@ async def auth_middleware(request: Request, call_next):
     if path == "/ban":
         return await call_next(request)
 
+    if path.startswith("/api/v1/app-settings"):
+        return await call_next(request)
+
     # Allow direct access to API calls using explicit authorization headers
     # Но при этом соблюдаем блокировку для забаненных пользователей
     auth = request.headers.get("Authorization")
@@ -220,6 +224,7 @@ app.include_router(api_admin.router)
 app.include_router(api_admin_settings.router)
 app.include_router(api_auth_webapp.router)
 app.include_router(api_user_favorites.router)
+app.include_router(api_app_settings.router)
 
 # Root API aggregator (prefix /api). Domain routers below already serve under /api/*
 # so we don't add nested prefixes here to avoid double /api.
