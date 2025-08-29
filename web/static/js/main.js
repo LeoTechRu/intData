@@ -471,5 +471,85 @@ if (hash && forms[hash]) activate(hash); else activate('login');
   window.addEventListener('scroll', closeMenu, {passive:true});
   window.addEventListener('resize', closeMenu, {passive:true});
   window.addEventListener('pageshow', () => closeMenu());
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') closeMenu(); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') closeMenu(); });
+})();
+
+(function initFavorites(){
+  const menu = document.getElementById('profileMenu');
+  if (!menu) return;
+
+  const favBox = menu.querySelector('[data-fav-box]');
+  const toggle = document.getElementById('favToggle');
+  if (!favBox && !toggle) return;
+
+  const api = {
+    list: () => fetch('/api/user/favorites', {credentials:'include'}).then(r=>r.json()),
+    add: (label, path) => fetch('/api/user/favorites', {
+      method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
+      body: JSON.stringify({label, path})
+    }),
+    remove: (id) => fetch(`/api/user/favorites/${id}`, {method:'DELETE', credentials:'include'})
+  };
+
+  let cache = [];
+
+  function render(items){
+    if(!favBox) return;
+    favBox.innerHTML = '';
+    if (!items || !items.length){
+      const li = document.createElement('li');
+      li.className = 'muted';
+      li.textContent = 'Избранное пусто';
+      favBox.appendChild(li);
+      return;
+    }
+    for (const it of items){
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = it.path;
+      a.setAttribute('role','menuitem');
+      a.textContent = it.label || it.path;
+      li.appendChild(a);
+      favBox.appendChild(li);
+    }
+  }
+
+  function updateToggle(){
+    if(!toggle) return;
+    const path = toggle.dataset.path || location.pathname;
+    const found = cache.find(it => it.path === path);
+    if (found){
+      toggle.textContent = '★';
+      toggle.dataset.id = found.id;
+      toggle.setAttribute('aria-label','Убрать из избранного');
+    } else {
+      toggle.textContent = '☆';
+      toggle.dataset.id = '';
+      toggle.setAttribute('aria-label','Добавить в избранное');
+    }
+  }
+
+  if (toggle){
+    api.list().then(items => { cache = items || []; updateToggle(); }).catch(()=>{});
+    toggle.addEventListener('click', (e)=>{
+      e.preventDefault();
+      const id = toggle.dataset.id;
+      const path = toggle.dataset.path || location.pathname;
+      const label = toggle.dataset.label || document.title;
+      if (id){
+        api.remove(id).then(()=>{ cache = cache.filter(it => String(it.id) !== String(id)); updateToggle(); render(cache); }).catch(()=>{});
+      } else {
+        api.add(label, path).then(r=>{ if(r.status===409) return null; return r.json(); }).then(it=>{ if(it){ cache.push(it); updateToggle(); render(cache); } }).catch(()=>{});
+      }
+    });
+  }
+
+  const btn = document.getElementById('profileBtn');
+  if (btn && favBox){
+    btn.addEventListener('click', () => {
+      if (menu.classList.contains('is-open')){
+        api.list().then(items => { cache = items || []; render(cache); updateToggle(); }).catch(()=>render([]));
+      }
+    });
+  }
 })();

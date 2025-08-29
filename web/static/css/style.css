@@ -738,3 +738,33 @@ body.compact .admin-panel {
 .profile-menu.is-open{ display:block; }
 /* защита от случайных !important */
 body:not(.debug) .profile-menu.force-hidden{ display:none !important; }
+
+/* profile dropdown layout (vertical) */
+.profile-menu { min-width: 220px; padding: 8px 0; }
+.profile-menu .menu-section { margin: 0; padding: 0; list-style: none; }
+.profile-menu .menu-list { display: flex; flex-direction: column; gap: 6px; }
+
+.profile-menu .menu-list > li { margin: 0; }
+.profile-menu a[role="menuitem"],
+.profile-menu button[role="menuitem"] {
+  display: block;
+  width: 100%;
+  padding: 8px 16px;
+  text-align: left;
+  line-height: 1.2;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.profile-menu a[role="menuitem"]:hover,
+.profile-menu button[role="menuitem"]:hover {
+  background: rgba(0,0,0,0.04);
+}
+
+.profile-menu .menu-sep {
+  margin: 8px 0;
+  border: 0;
+  border-top: 1px solid rgba(0,0,0,0.08);
+}
+
+.fav-toggle{margin-left:4px;background:transparent;border:0;cursor:pointer;font-size:1.1em;line-height:1;}

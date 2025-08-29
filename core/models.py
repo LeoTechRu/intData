@@ -19,6 +19,8 @@ from sqlalchemy import (
     String,
     Text,
     JSON,
+    UniqueConstraint,
+    Index,
 )
 from sqlalchemy.orm import relationship
 
@@ -143,6 +145,24 @@ class WebTgLink(Base):
     tg_user_id = Column(Integer, ForeignKey("users_tg.id"), unique=True, nullable=False)
     link_type = Column(String(50))
     created_at = Column(DateTime(timezone=True), default=utcnow)
+
+
+class UserFavorite(Base):
+    """Custom user navigation shortcuts."""
+
+    __tablename__ = "users_favorites"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(Integer, ForeignKey("users_web.id"), nullable=False)
+    label = Column(String(40))
+    path = Column(String(128), nullable=False)
+    position = Column(Integer, default=0, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("owner_id", "path"),
+        Index("ix_users_favorites_owner_position", "owner_id", "position"),
+    )
 
 class Group(Base):  # Группа
     __tablename__ = "groups"
