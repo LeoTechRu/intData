@@ -2,6 +2,7 @@
 from pathlib import Path
 from urllib.parse import quote
 from contextlib import asynccontextmanager
+import logging
 
 from fastapi import FastAPI, Request, APIRouter
 from fastapi.responses import RedirectResponse
@@ -38,32 +39,42 @@ from core.services.notification_service import (
 )
 
 
+logger = logging.getLogger(__name__)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_models()
-    password = None
-    async with WebUserService() as wsvc:
-        password = await wsvc.ensure_test_user()
-    if password:
-        async with TelegramUserService() as tsvc:
-            await tsvc.send_log_to_telegram(
-                LogLevel.INFO,
-                f"test user created:\nusername: test\npassword: {password}",
-            )
-
-    # Запускаем фоновый диспетчер напоминаний при включённом флаге
+    logger.info("Lifespan startup: begin")
     stop_event = None
     task = None
-    if is_scheduler_enabled():
-        import asyncio
-
-        stop_event = asyncio.Event()
-        task = asyncio.create_task(
-            run_reminder_dispatcher(poll_interval=60.0, stop_event=stop_event)
-        )
-
     try:
+        await init_models()
+        logger.info("Lifespan startup: init_models() completed")
+
+        password = None
+        async with WebUserService() as wsvc:
+            password = await wsvc.ensure_test_user()
+        if password:
+            async with TelegramUserService() as tsvc:
+                await tsvc.send_log_to_telegram(
+                    LogLevel.INFO,
+                    f"test user created:\nusername: test\npassword: {password}",
+                )
+
+        # Запускаем фоновый диспетчер напоминаний при включённом флаге
+        if is_scheduler_enabled():
+            import asyncio
+
+            stop_event = asyncio.Event()
+            task = asyncio.create_task(
+                run_reminder_dispatcher(poll_interval=60.0, stop_event=stop_event)
+            )
+
         yield
+        logger.info("Lifespan startup: completed")
+    except Exception:
+        logger.exception("Lifespan startup failed with exception")
+        raise
     finally:
         if stop_event:
             stop_event.set()
@@ -71,7 +82,13 @@ async def lifespan(app: FastAPI):
             try:
                 await task
             except Exception:
-                pass
+                logger.exception("Reminder dispatcher task raised during shutdown")
+        try:
+            from core.db import engine
+            await engine.dispose()
+            logger.info("Lifespan shutdown: engine disposed")
+        except Exception:
+            logger.exception("Lifespan shutdown raised")
 
 
 tags_metadata = [
