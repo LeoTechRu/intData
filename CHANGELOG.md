@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `LogLevel` переведён на числовой `IntEnum` для корректных сравнений.
 - Обновлены шаблоны и хэндлеры под текущее API FastAPI/Starlette; переход на lifespan‑события.
 - API жёстко переведён на `/api/v1` без редиректов и хвостовых слэшей; старые `/api/*` возвращают `404`.
+- `GET /api/v1/reminders` проксирует ближайшие alarms и помечен устаревшим; используйте `/api/v1/calendar/items/{item_id}/alarms`.
 
 ### Fixed
 - Исправлены сравнения уровней логирования после перехода на `IntEnum`.

@@ -23,6 +23,7 @@
 ## Документация
 - Changelog: [CHANGELOG.md](./CHANGELOG.md)
 - Backlog: [BACKLOG.md](./BACKLOG.md)
+- `/api/v1/reminders` устарел; используйте `/api/v1/calendar/items/{item_id}/alarms`
 
 ## Persona in header via app_settings (no roles in UI)
 Персональные тексты для шапки берутся из `app_settings` по ключам

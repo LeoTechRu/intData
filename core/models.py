@@ -335,6 +335,44 @@ class CalendarEvent(Base):
     updated_at = Column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
+ 
+ 
+# ---------------------------------------------------------------------------
+# CalendarItem & Alarm models
+# ---------------------------------------------------------------------------
+
+
+class CalendarItem(Base):
+    """Unified calendar item used for events and tasks."""
+
+    __tablename__ = "calendar_items"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    kind = Column(String(20), nullable=False)
+    title = Column(String(255), nullable=False)
+    due_at = Column(DateTime(timezone=True))
+    area_id = Column(Integer, ForeignKey("areas.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+
+class Alarm(Base):
+    """Alarm attached to a :class:`CalendarItem`."""
+
+    __tablename__ = "alarms"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    item_id = Column(
+        Integer,
+        ForeignKey("calendar_items.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    trigger_at = Column(DateTime(timezone=True), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+
+    item = relationship("CalendarItem", backref="alarms")
 
 
 # ---------------------------------------------------------------------------

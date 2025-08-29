@@ -14,6 +14,7 @@ api_router = APIRouter()
 from .tasks import api as tasks_api
 from .reminders import api as reminders_api
 from .calendar import api as calendar_api
+from .alarms import api as alarms_api
 from .notes import api as notes_api
 from .time_entries import api as time_api
 from .areas import api as areas_api
@@ -33,6 +34,7 @@ from .api.integrations_google import router as gcal_api
 api_router.include_router(tasks_api, prefix="/tasks", tags=["tasks"])
 api_router.include_router(reminders_api, prefix="/reminders", tags=["reminders"])
 api_router.include_router(calendar_api, prefix="/calendar", tags=["calendar"])
+api_router.include_router(alarms_api, tags=["calendar"])
 api_router.include_router(notes_api, prefix="/notes", tags=["notes"])
 api_router.include_router(time_api, prefix="/time", tags=["time"])
 api_router.include_router(areas_api, prefix="/areas", tags=["areas"])

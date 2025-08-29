@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from core.models import Reminder, TgUser
 from core.services.reminder_service import ReminderService
+from core.services.alarm_service import AlarmService
 from web.dependencies import get_current_tg_user, get_current_web_user
 from core.models import WebUser
 from ..template_env import templates
@@ -103,19 +104,34 @@ async def list_reminders_today(
     return items
 
 
-@router.get("", response_model=List[ReminderResponse])
+@router.get("", response_model=List[ReminderResponse], deprecated=True)
 async def list_reminders(
     current_user: TgUser | None = Depends(get_current_tg_user),
 ):
-    """List reminders for the current user."""
+    """List upcoming alarms for the current user.
+
+    Deprecated: use ``/api/v1/calendar/items/{item_id}/alarms``.
+    """
 
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    async with ReminderService() as service:
-        reminders = await service.list_reminders(
+    async with AlarmService() as service:
+        alarms = await service.list_upcoming(
             owner_id=current_user.telegram_id,
         )
-    return [ReminderResponse.from_model(r) for r in reminders]
+    items: list[ReminderResponse] = []
+    for alarm in alarms:
+        title = getattr(alarm.item, "title", "")
+        items.append(
+            ReminderResponse(
+                id=alarm.id,
+                message=title or "",
+                remind_at=alarm.trigger_at,
+                task_id=None,
+                is_done=False,
+            )
+        )
+    return items
 
 
 @router.post(
