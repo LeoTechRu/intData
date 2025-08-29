@@ -12,7 +12,7 @@ from web.dependencies import get_current_tg_user, get_current_web_user
 from ..template_env import templates
 
 
-router = APIRouter(prefix="/api/v1/areas", tags=["areas"])
+router = APIRouter(tags=["areas"])
 ui_router = APIRouter(prefix="/areas", tags=["areas"], include_in_schema=False)
 
 
@@ -118,3 +118,7 @@ async def rename_area(area_id: int, payload: AreaRenamePayload, current_user: Tg
         area.slug = new_slug
         await svc.move_area(area_id, area.parent_id)
     return AreaResponse.from_model(area)
+
+
+# Alias for centralized API mounting
+api = router

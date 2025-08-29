@@ -13,7 +13,7 @@ from core.models import WebUser
 from ..template_env import templates
 
 
-router = APIRouter(prefix="/api/v1/calendar", tags=["calendar"])
+router = APIRouter(tags=["calendar"])
 ui_router = APIRouter(
     prefix="/calendar",
     tags=["calendar"],
@@ -155,3 +155,7 @@ async def calendar_page(
         "page_title": "Календарь",
     }
     return templates.TemplateResponse(request, "calendar.html", context)
+
+
+# Alias for centralized API mounting
+api = router

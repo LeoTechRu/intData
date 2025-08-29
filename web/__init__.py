@@ -5,9 +5,10 @@ from contextlib import asynccontextmanager
 import logging
 
 from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse, JSONResponse, FileResponse
+from fastapi.responses import RedirectResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.docs import get_swagger_ui_html, get_swagger_ui_oauth2_redirect_html
 
 from .routes import (
     admin as admin_ui,
@@ -26,6 +27,8 @@ from .routes import (
     projects,
     resources,
     inbox,
+    api_router,
+    API_PREFIX,
 )
 from core.db import engine, init_models
 from core.services.web_user_service import WebUserService
@@ -34,13 +37,6 @@ from core.models import LogLevel
 from core.services.notification_service import (
     run_reminder_dispatcher,
     is_scheduler_enabled,
-)
-from web.routes.api import (
-    admin as api_admin,
-    admin_settings as api_admin_settings,
-    app_settings as api_app_settings,
-    auth_webapp,
-    user_favorites,
 )
 
 
@@ -106,16 +102,20 @@ tags_metadata = [
     {"name": "resources", "description": "PARA Resources API"},
     {"name": "inbox", "description": "Inbox API"},
     {"name": "admin", "description": "Admin operations (requires admin role)"},
+    {"name": "app-settings", "description": "Application settings API"},
+    {"name": "auth", "description": "Authentication API"},
+    {"name": "user", "description": "User favorites API"},
 ]
 
 app = FastAPI(
     lifespan=lifespan,
     title="LeonidPro API",
-    docs_url="/api",                 # Swagger UI -> /api
-    redoc_url=None,                   # ReDoc off for now
-    openapi_url="/api/openapi.json", # Spec -> /api/openapi.json
+    docs_url=None,
+    redoc_url=None,
+    openapi_url="/api/openapi.json",
     openapi_tags=tags_metadata,
     redirect_slashes=False,
+    servers=[{"url": API_PREFIX}],
 )
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -127,6 +127,18 @@ FAVICON_PATH = STATIC_DIR / "img" / "brand" / "leonidpro-favicon.svg"
 async def favicon() -> FileResponse:
     """Serve application favicon."""
     return FileResponse(FAVICON_PATH, media_type="image/svg+xml")
+
+
+@app.get("/api", include_in_schema=False)
+async def swagger_ui():
+    return get_swagger_ui_html(
+        openapi_url="/api/openapi.json", title="LeonidPro API - Swagger UI"
+    )
+
+
+@app.get("/api/swagger-ui/oauth2-redirect", include_in_schema=False)
+async def swagger_redirect():
+    return get_swagger_ui_oauth2_redirect_html()
 
 app.add_middleware(
     CORSMiddleware,
@@ -201,6 +213,10 @@ async def auth_middleware(request: Request, call_next):
     ):
         return await call_next(request)
 
+    # Allow other API paths to return their own status codes
+    if path.startswith("/api/"):
+        return await call_next(request)
+
     # Allow root path for both authenticated and guest users
     if path == "/":
         return await call_next(request)
@@ -216,69 +232,22 @@ async def auth_middleware(request: Request, call_next):
     return RedirectResponse(f"/auth?next={quote(next_url, safe='')}")
 
 
-@app.middleware("http")
-async def api_redirect_middleware(request: Request, call_next):
-    path = request.url.path
-    if (
-        path.startswith("/api/v1/")
-        or path == "/api"
-        or path == "/api/openapi.json"
-        or path.startswith("/api/swagger-ui")
-    ):
-        return await call_next(request)
-    if path.startswith("/api/"):
-        return JSONResponse({"detail": "Use /api/v1/*"}, status_code=404)
-    return await call_next(request)
-
-
 app.include_router(index.router, include_in_schema=False)
 app.include_router(profile.router, include_in_schema=False)
 app.include_router(settings.router, include_in_schema=False)
 app.include_router(habits.router, include_in_schema=False)
-app.include_router(tasks.router, include_in_schema=False)
 app.include_router(tasks.ui_router, include_in_schema=False)
-app.include_router(reminders.router, include_in_schema=False)
 app.include_router(reminders.ui_router, include_in_schema=False)
-app.include_router(notes.router, include_in_schema=False)
 app.include_router(notes.ui_router, include_in_schema=False)
-app.include_router(areas.router, include_in_schema=False)
 app.include_router(areas.ui_router, include_in_schema=False)
-app.include_router(projects.router, include_in_schema=False)
 app.include_router(projects.ui_router, include_in_schema=False)
-app.include_router(resources.router, include_in_schema=False)
 app.include_router(resources.ui_router, include_in_schema=False)
-app.include_router(inbox.router, include_in_schema=False)
 app.include_router(inbox.ui_router, include_in_schema=False)
-app.include_router(calendar.router, include_in_schema=False)
 app.include_router(calendar.ui_router, include_in_schema=False)
-app.include_router(time_entries.router, include_in_schema=False)
 app.include_router(time_entries.ui_router, include_in_schema=False)
 app.include_router(auth.router, include_in_schema=False)
 app.include_router(admin_ui.router, prefix="/admin", include_in_schema=False)
 app.include_router(admin_settings_ui.router, include_in_schema=False)
 
-# Dedicated API routers under /api/v1
-app.include_router(api_admin.router)
-app.include_router(api_admin_settings.router)
-app.include_router(api_app_settings.router)
-app.include_router(auth_webapp.router)
-app.include_router(user_favorites.router)
-
-
-def custom_openapi():
-    if app.openapi_schema:
-        return app.openapi_schema
-    from fastapi.openapi.utils import get_openapi
-
-    schema = get_openapi(
-        title=app.title,
-        version="1.0.0",
-        routes=app.routes,
-        tags=tags_metadata,
-        servers=[{"url": "/api/v1"}],
-    )
-    app.openapi_schema = schema
-    return schema
-
-
-app.openapi = custom_openapi
+# Подключение всех API под единым префиксом
+app.include_router(api_router, prefix=API_PREFIX)

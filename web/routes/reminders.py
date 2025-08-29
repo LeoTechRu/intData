@@ -13,7 +13,7 @@ from core.models import WebUser
 from ..template_env import templates
 
 
-router = APIRouter(prefix="/api/v1/reminders", tags=["reminders"])
+router = APIRouter(tags=["reminders"])
 ui_router = APIRouter(
     prefix="/reminders",
     tags=["reminders"],
@@ -171,3 +171,7 @@ async def reminders_page(
         "page_title": "Напоминания",
     }
     return templates.TemplateResponse(request, "reminders.html", context)
+
+
+# Alias for centralized API mounting
+api = router

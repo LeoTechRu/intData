@@ -11,7 +11,7 @@ from web.dependencies import get_current_tg_user, get_current_web_user
 from ..template_env import templates
 
 
-router = APIRouter(prefix="/api/v1/inbox", tags=["inbox"])
+router = APIRouter(tags=["inbox"])
 ui_router = APIRouter(prefix="/inbox", tags=["inbox"], include_in_schema=False)
 
 
@@ -43,4 +43,8 @@ async def inbox_page(request: Request, current_user: WebUser | None = Depends(ge
         "page_title": "Inbox",
     }
     return templates.TemplateResponse(request, "inbox.html", context)
+
+
+# Alias for centralized API mounting
+api = router
 

@@ -6,10 +6,10 @@ from core.services.telegram_user_service import TelegramUserService
 from ...dependencies import role_required
 
 
-router = APIRouter(prefix="/api/v1", tags=["admin"])
+router = APIRouter(tags=["admin"])
 
 
-@router.post("/admin/role/{telegram_id}")
+@router.post("/role/{telegram_id}")
 async def api_change_user_role(
     telegram_id: int,
     role: str,
@@ -20,7 +20,7 @@ async def api_change_user_role(
     return {"status": "ok"}
 
 
-@router.post("/admin/web/role/{user_id}")
+@router.post("/web/role/{user_id}")
 async def api_change_web_user_role(
     user_id: int,
     role: str,
@@ -31,7 +31,7 @@ async def api_change_web_user_role(
     return {"status": "ok"}
 
 
-@router.post("/admin/web/link")
+@router.post("/web/link")
 async def api_link_web_user(
     web_user_id: int,
     tg_user_id: int,
@@ -42,7 +42,7 @@ async def api_link_web_user(
     return {"status": "ok"}
 
 
-@router.post("/admin/web/unlink")
+@router.post("/web/unlink")
 async def api_unlink_web_user(
     web_user_id: int,
     tg_user_id: int,
@@ -54,7 +54,7 @@ async def api_unlink_web_user(
 
 
 
-@router.post("/admin/restart")
+@router.post("/restart")
 async def restart_service(
     target: str, current_user: WebUser = Depends(role_required(UserRole.admin))
 ):

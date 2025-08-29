@@ -11,7 +11,7 @@ from web.dependencies import get_current_tg_user, get_current_web_user
 from ..template_env import templates
 
 
-router = APIRouter(prefix="/api/v1/resources", tags=["resources"])
+router = APIRouter(tags=["resources"])
 ui_router = APIRouter(prefix="/resources", tags=["resources"], include_in_schema=False)
 
 
@@ -63,4 +63,8 @@ async def resources_page(request: Request, current_user: WebUser | None = Depend
         "page_title": "Resources",
     }
     return templates.TemplateResponse(request, "resources.html", context)
+
+
+# Alias for centralized API mounting
+api = router
 

@@ -17,7 +17,7 @@ from core.services.telegram_user_service import TelegramUserService
 from core.services.web_user_service import WebUserService
 
 
-router = APIRouter(prefix="/api/v1", tags=["auth"])
+router = APIRouter(tags=["auth"])
 
 
 class ExchangeIn(BaseModel):
@@ -72,7 +72,7 @@ def _check_telegram_webapp_auth(data: dict) -> dict:
     return user
 
 
-@router.post("/auth/tg-webapp/exchange", name="api:auth_webapp_exchange")
+@router.post("/tg-webapp/exchange", name="api:auth_webapp_exchange")
 async def exchange(req: Request, payload: ExchangeIn):
     data = _parse_init_data(payload.init_data)
     try:

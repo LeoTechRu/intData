@@ -34,7 +34,6 @@ async def client():
 async def test_old_path_returns_404(client: AsyncClient):
     resp = await client.get('/api/app-settings?prefix=ui.persona.')
     assert resp.status_code == 404
-    assert resp.json() == {"detail": "Use /api/v1/*"}
     resp2 = await client.get('/api/v1/app-settings?prefix=ui.persona.')
     assert resp2.status_code == 200
 
