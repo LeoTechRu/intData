@@ -57,10 +57,13 @@ export function initDashboardCompact() {
         apply(compact);
     });
 }
+import { initPersonaHeader } from './persona-header.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     enableAccessibility();
     initProfileEditForm();
     initDashboardCompact();
+    initPersonaHeader();
 });
 (function(){
   function applyNoGridIfNeeded(){
@@ -143,55 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   setInterval(refresh, 60000);
   refresh();
-})();
-
-// ui2: role help modal (idempotent)
-(function(){
-  const ROLE_HELP = {
-    admin: 'Админ: полные права администрирования.',
-    moderator: 'Модератор: управление контентом/группами.',
-    multiplayer: 'Совместная работа: доступ к групповым функциям.',
-    single: 'Обычный пользователь: индивидуальный режим.',
-    ban: 'Заблокирован: доступ к приложению закрыт. Напишите администратору.'
-  };
-
-  function ensureModal(){
-    if (document.getElementById('role-help-modal')) return;
-    const wrap = document.createElement('div');
-    wrap.id = 'role-help-modal';
-    wrap.className = 'role-help-modal hidden';
-    wrap.innerHTML = `
-      <div class="role-help-card">
-        <div class="title">Роль пользователя</div>
-        <div class="text" id="role-help-text"></div>
-        <div class="actions"><button id="role-help-close" class="button">Понятно</button></div>
-      </div>`;
-    wrap.addEventListener('click', (e)=>{ if (!e.target.closest('.role-help-card')) hide(); });
-    document.body.appendChild(wrap);
-    document.getElementById('role-help-close').addEventListener('click', hide);
-    document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') hide(); });
-  }
-
-  function show(role){
-    ensureModal();
-    const wrap = document.getElementById('role-help-modal');
-    document.getElementById('role-help-text').textContent =
-      ROLE_HELP[role] || `Роль: ${role}`;
-    wrap.classList.remove('hidden');
-  }
-  function hide(){
-    const wrap = document.getElementById('role-help-modal');
-    if (wrap) wrap.classList.add('hidden');
-  }
-
-  function onClick(e){
-    const b = e.target.closest('[data-role]');
-    if (!b) return;
-    e.preventDefault();
-    show((b.dataset.role || '').trim());
-  }
-
-  document.addEventListener('click', onClick);
 })();
 
 // auth: toggle password

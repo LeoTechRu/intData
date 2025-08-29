@@ -44,12 +44,6 @@
           <div><div class="text-muted">Телефон</div><div>{{ profile_user.phone or 'не указан' }}</div></div>
           <div><div class="text-muted">День рождения</div><div>{{ profile_user.birthday.strftime('%d.%m.%Y') if profile_user.birthday else 'не указано' }}</div></div>
           <div><div class="text-muted">Язык</div><div>{{ profile_user.language or 'не указан' }}</div></div>
-          <div>
-            <div class="text-muted">Роль</div>
-            <div>
-              {# роль скрыта из UI #}
-            </div>
-          </div>
         </div>
         <div style="display:flex; justify-content:flex-end; margin-top:1rem;">
           <button class="button" onclick="location.href='/profile/{{ profile_user.username }}?edit=true'">Редактировать профиль</button>
