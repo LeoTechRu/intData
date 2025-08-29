@@ -1,3 +1,4 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { personaDefaults } from './constants/personaDefaults';
 const memory = {};
 function build(entries, locale) {
@@ -61,19 +62,7 @@ export function PersonaBadge({ code, locale }) {
         return null;
     const entry = texts[code];
     const id = `persona-tip-${code}`;
-    return className = "persona-badge";
-    aria - describedby;
-    {
-        id;
-    }
-     >
-        { entry, : .label }
-        < span;
-    id = { id };
-    role = "tooltip";
-    className = "sr-only" > { entry, : .tooltip } < /span>
-        < /span>;
-    ;
+    return (_jsxs("span", { className: "persona-badge", "aria-describedby": id, children: [entry.label, _jsx("span", { id: id, role: "tooltip", className: "sr-only", children: entry.tooltip })] }));
 }
 export function StickySlogan({ code, locale }) {
     const [texts, setTexts] = useState(null);
@@ -81,15 +70,5 @@ export function StickySlogan({ code, locale }) {
     if (!texts)
         return null;
     const entry = texts[code];
-    return style = {};
-    {
-        position: 'sticky', top;
-        0, backdropFilter;
-        'blur(6px)';
-    }
+    return (_jsx("div", { style: { position: 'sticky', top: 0, backdropFilter: 'blur(6px)' }, "data-testid": "sticky-slogan", children: entry.slogan }));
 }
-data - testid;
-"sticky-slogan" >
-    { entry, : .slogan }
-    < /div>;
-;
