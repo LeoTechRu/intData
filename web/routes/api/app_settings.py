@@ -17,7 +17,7 @@ from web.dependencies import get_current_web_user, role_required
 PERSONA_DEFAULTS: Dict[str, str] = {
     # RU defaults
     "ui.persona.single.label.ru": "Второй мозг",
-    "ui.persona.single.tooltip_md.ru": "Ваш второй мозг — внешний контур памяти и обдумывания. [Что это?](https://trends.rbc.ru/trends/social/620393859a7947e531dafbcc)",
+    "ui.persona.single.tooltip_md.ru": "Внешний контур памяти и мышления. [Что это?](https://intdata.pro/second-brain)",
     "ui.persona.single.slogan.ru": "Работайте во «втором мозге».",
     "ui.persona.multiplayer.label.ru": "Коллективное сознание",
     "ui.persona.multiplayer.tooltip_md.ru": "Вы — часть общего знания.",
@@ -30,17 +30,8 @@ PERSONA_DEFAULTS: Dict[str, str] = {
     "ui.persona.admin.slogan.ru": "Создавайте опоры для всей системы.",
     # EN minimal defaults
     "ui.persona.single.label.en": "Second Brain",
-    "ui.persona.single.tooltip_md.en": "Your external memory and thinking. [What is it?](https://trends.rbc.ru/trends/social/620393859a7947e531dafbcc)",
+    "ui.persona.single.tooltip_md.en": "External memory & thinking. [What is it?](https://intdata.pro/second-brain)",
     "ui.persona.single.slogan.en": "Work in your second brain.",
-    "ui.persona.multiplayer.label.en": "Collective Mind",
-    "ui.persona.multiplayer.tooltip_md.en": "You are part of shared knowledge.",
-    "ui.persona.multiplayer.slogan.en": "Gather knowledge together.",
-    "ui.persona.moderator.label.en": "Knowledge Keeper",
-    "ui.persona.moderator.tooltip_md.en": "Maintain order and clarity.",
-    "ui.persona.moderator.slogan.en": "Helping the team understand more.",
-    "ui.persona.admin.label.en": "System Architect",
-    "ui.persona.admin.tooltip_md.en": "You set the platform rules.",
-    "ui.persona.admin.slogan.en": "Build foundations for the whole system.",
 }
 
 router = APIRouter(prefix="/api/v1", tags=["app-settings"])
