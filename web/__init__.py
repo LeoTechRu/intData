@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -116,6 +116,14 @@ app = FastAPI(
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
+FAVICON_PATH = STATIC_DIR / "img" / "brand" / "leonidpro-favicon.svg"
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon() -> FileResponse:
+    """Serve application favicon."""
+    return FileResponse(FAVICON_PATH, media_type="image/svg+xml")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -184,8 +192,13 @@ async def auth_middleware(request: Request, call_next):
             return RedirectResponse("/")
         return await call_next(request)
 
-    # Allow public API docs endpoints only: /api and /api/openapi.json
-    if path == "/api" or path == "/api/openapi.json" or path == "/api/v1/auth/tg-webapp/exchange":
+    # Allow public API docs endpoints
+    if (
+        path == "/api"
+        or path.startswith("/api/swagger-ui")
+        or path == "/api/openapi.json"
+        or path == "/api/v1/auth/tg-webapp/exchange"
+    ):
         return await call_next(request)
 
     # Allow root path for both authenticated and guest users
@@ -207,7 +220,12 @@ async def auth_middleware(request: Request, call_next):
 async def api_redirect_middleware(request: Request, call_next):
     path = request.url.path
     target = None
-    if path.startswith("/api/") and not path.startswith("/api/v1/"):
+    if (
+        path.startswith("/api/")
+        and not path.startswith("/api/v1/")
+        and not path.startswith("/api/openapi.json")
+        and not path.startswith("/api/swagger-ui")
+    ):
         target = "/api/v1/" + path[len("/api/") :]
     if target:
         if request.url.query:
