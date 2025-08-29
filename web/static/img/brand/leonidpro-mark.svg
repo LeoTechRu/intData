@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Щит -->
+  <path d="M32 4 12 10v18c0 15 11.2 23.4 20 27 8.8-3.6 20-12 20-27V10L32 4z"/>
+  <!-- Грива в форме буквы L -->
+  <path d="M22 18h14v16"/>
+  <!-- Морда/глаз -->
+  <circle cx="38" cy="22" r="1.8" fill="currentColor" stroke="none"/>
+  <!-- Галочка (эффективность/достижение) -->
+  <path d="M20 36l5 5 9-9"/>
+</svg>
+

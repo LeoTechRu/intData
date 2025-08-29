@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Авторизация — LeonidPro</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+  <script type="module" src="{{ url_for('static', path='js/main.js') }}"></script>
+  <script src="{{ url_for('static', path='js/auth_extra.js') }}"></script>
+  {% if RECAPTCHA_SITE_KEY %}
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  {% endif %}
+  {% if EXTRA_HEAD %}{{ EXTRA_HEAD|safe }}{% endif %}
+  {% if head_scripts %}{{ head_scripts|safe }}{% endif %}
+</head>
+<body class="auth-page">
+  {% include "_icons.html" %}
+
+  <header class="auth-header">
+    <a class="brand" href="{{ WEB_PUBLIC_URL or '/' }}">LeonidPro</a>
+  </header>
+
+  <main class="auth-hero">
+    <div class="auth-card">
+      {% if config_warnings and config_warnings|length %}
+      <div class="auth-alert" role="status">
+        <div><strong>Диагностика конфигурации:</strong></div>
+        <ul style="margin:6px 0 0 18px;">
+          {% for w in config_warnings %}
+            <li><code>{{ w.code }}</code> — {{ w.message }}</li>
+          {% endfor %}
+        </ul>
+        <div class="muted small" style="margin-top:6px">Сделайте скриншот и отправьте в поддержку.</div>
+      </div>
+      {% endif %}
+
+      <nav class="auth-tabs" role="tablist">
+        <a href="#login"     class="tab {% if active_tab=='login' %}is-active{% endif %}" data-tab="login"     role="tab" aria-selected="{{ 'true' if active_tab=='login' else 'false' }}">Вход</a>
+        <a href="#register"  class="tab {% if active_tab=='register' %}is-active{% endif %}" data-tab="register"  role="tab" aria-selected="{{ 'true' if active_tab=='register' else 'false' }}">Регистрация</a>
+        <a href="#restore"   class="tab {% if active_tab=='restore' %}is-active{% endif %}" data-tab="restore"   role="tab" aria-selected="{{ 'true' if active_tab=='restore' else 'false' }}">Напомнить</a>
+      </nav>
+
+      <section class="auth-forms">
+        {% if form_errors_json %}
+          <script>window.AUTH_ERRORS={{ form_errors_json|safe }};</script>
+        {% endif %}
+
+        <!-- LOGIN -->
+        <form action="/login" method="post" class="auth-form form-login{% if active_tab!='login' %} is-hidden{% endif %}" data-validate="login" novalidate>
+          {{ csrf_input|safe if csrf_input is defined }}
+          <label class="field">
+            <span class="label">Username</span>
+            <input class="control" type="text" name="username" autocomplete="username" required placeholder="Ваш логин" value="{{ form_values.username or '' }}">
+            <div class="error-text" data-for="username"></div>
+          </label>
+
+          <label class="field">
+            <span class="label">Пароль</span>
+            <div class="control-with-action">
+              <input class="control" type="password" name="password" autocomplete="current-password" required placeholder="Введите пароль">
+              <button type="button" class="link tiny toggle-password" aria-label="Показать/скрыть пароль">👁</button>
+            </div>
+            <div class="error-text" data-for="password"></div>
+          </label>
+
+          <label class="checkbox">
+            <input type="checkbox" name="remember_me" value="1">
+            <span>Запомнить меня</span>
+            <a class="link small right" href="#restore" data-tab-jump="restore">напомнить</a>
+          </label>
+
+          {% if RECAPTCHA_SITE_KEY %}
+          <div class="g-recaptcha" data-sitekey="{{ RECAPTCHA_SITE_KEY }}"></div>
+          {% endif %}
+
+          <button class="btn primary full" type="submit">Войти</button>
+
+          <div class="or">или</div>
+
+          {% if TG_LOGIN_ENABLED %}
+            <div class="tg-login">
+              <script async src="https://telegram.org/js/telegram-widget.js?22"
+                      data-telegram-login="{{ TG_BOT_USERNAME or 'LeonidBot' }}"
+                      data-size="large"
+                      data-userpic="false"
+                      data-request-access="write"
+                      data-auth-url="/auth/telegram"
+                      data-lang="ru"></script>
+              <a class="btn telegram full" target="_blank" rel="noopener"
+                 href="https://t.me/{{ (TG_BOT_USERNAME or '@LeonidBot')|replace('@','') }}?start=login">
+                <svg class="icon"><use href="#i-paper-plane" /></svg>
+                Открыть {{ TG_BOT_USERNAME or '@LeonidBot' }}
+              </a>
+              <div class="muted small">Если виджет не загрузился, нажмите кнопку выше.</div>
+            </div>
+          {% endif %}
+
+          {% if flash %}
+            <div class="auth-alert">{{ flash }}</div>
+          {% endif %}
+        </form>
+
+        <!-- REGISTER -->
+        <form action="/register" method="post" class="auth-form form-register{% if active_tab!='register' %} is-hidden{% endif %}" data-validate="register" novalidate>
+          {{ csrf_input|safe if csrf_input is defined }}
+
+          <label class="field">
+            <span class="label">Username</span>
+            <input class="control" type="text" name="username" autocomplete="username" required placeholder="Придумайте логин" value="{{ form_values.username or '' }}">
+            <div class="error-text" data-for="username"></div>
+          </label>
+
+          <label class="field">
+            <span class="label">Email</span>
+            <input class="control" type="email" name="email" autocomplete="email" required placeholder="Введите Email" value="{{ form_values.email or '' }}">
+            <div class="error-text" data-for="email"></div>
+          </label>
+
+          <label class="field">
+            <span class="label">Пароль</span>
+            <div class="control-with-action">
+              <input class="control" type="password" name="password" autocomplete="new-password" required placeholder="Создайте пароль">
+              <button type="button" class="link tiny toggle-password" aria-label="Показать/скрыть пароль">👁</button>
+            </div>
+            <div class="error-text" data-for="password"></div>
+            <div class="pwd-meter" aria-hidden="true"><i></i></div>
+            <div class="pwd-hint">Минимум 8 символов. Лучше: буквы в разных регистрах, цифры и символы.</div>
+          </label>
+
+          <label class="field">
+            <span class="label">Повторите пароль</span>
+            <input class="control" type="password" name="password2" autocomplete="new-password" required placeholder="Повторите пароль">
+            <div class="error-text" data-for="password2"></div>
+          </label>
+
+          {% if RECAPTCHA_SITE_KEY %}
+          <div class="g-recaptcha" data-sitekey="{{ RECAPTCHA_SITE_KEY }}"></div>
+          {% endif %}
+
+          <button class="btn primary full" type="submit">Регистрация</button>
+        </form>
+
+        <!-- RESTORE -->
+        <form action="/restore" method="post" class="auth-form form-restore{% if active_tab!='restore' %} is-hidden{% endif %}" data-validate="restore" novalidate>
+          {{ csrf_input|safe if csrf_input is defined }}
+          <input type="hidden" name="form_ts" value="{{ now_ts }}">
+          <div class="hp-wrap" aria-hidden="true"><input type="text" name="hp_url" tabindex="-1" autocomplete="off"></div>
+
+          <label class="field">
+            <span class="label">Email</span>
+            <input class="control" type="email" name="email" required placeholder="Введите Email" value="{{ form_values.email or '' }}">
+            <div class="error-text" data-for="email"></div>
+          </label>
+
+          <button class="btn primary full" type="submit">Отправить ссылку</button>
+          <div class="or">или</div>
+          <button class="btn full" type="submit" formaction="/auth/magic/request">Войти по магической ссылке</button>
+          <p class="muted small" style="margin-top:10px">Мы пришлём письмо со ссылкой для смены пароля (если такой аккаунт существует).</p>
+        </form>
+
+      </section>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+{% block title %}Дашборд{% endblock %}
+
+{% block content %}
+  <div class="has-dashboard">
+    <div class="dashboard">
+
+      {# — Профиль #}
+      <section class="card span-2 profile-widget" id="card-profile">
+          <div class="profile-header">
+            <div class="profile-avatar" aria-hidden="true">
+              <svg class="icon-lg"><use href="#i-user"/></svg>
+            </div>
+            <div class="profile-name">
+              <div class="title">{{ profile_user.full_name or profile_user.username }}</div>
+              <div class="muted">@{{ profile_user.username }}</div>
+            </div>
+            {# роль скрыта из UI #}
+          </div>
+
+        <div class="profile-grid">
+            <div class="item">
+              <div class="label label-with-icon">
+                <svg class="icon icon-muted"><use href="#i-mail"/></svg>
+                <span>Email</span>
+              </div>
+              <div class="value">
+                {% if profile_user.email %}
+                  <a class="profile-link" href="mailto:{{ profile_user.email }}">{{ profile_user.email }}</a>
+                {% else %}
+                  <span class="ui2-muted">не указано</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="item">
+              <div class="label label-with-icon">
+                <svg class="icon icon-muted"><use href="#i-phone"/></svg>
+                <span>Телефон</span>
+              </div>
+              <div class="value">
+                {% if profile_user.phone %}
+                  {% set tel_clean = profile_user.phone
+                      |replace(' ', '')
+                      |replace('(', '')
+                      |replace(')', '')
+                      |replace('-', '') %}
+                  <a class="profile-link" href="tel:{{ tel_clean }}">{{ profile_user.phone }}</a>
+                {% else %}
+                  <span class="ui2-muted">не указан</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="item">
+              <div class="label label-with-icon">
+                <svg class="icon icon-muted"><use href="#i-cake"/></svg>
+                <span>День рождения</span>
+              </div>
+              <div class="value">
+                {{ profile_user.birthday.strftime('%d.%m.%Y') if profile_user.birthday else 'не указано' }}
+              </div>
+            </div>
+
+            <div class="item">
+              <div class="label label-with-icon">
+                <svg class="icon icon-muted"><use href="#i-globe"/></svg>
+                <span>Язык</span>
+              </div>
+              <div class="value">{{ profile_user.language or 'не указан' }}</div>
+            </div>
+        </div>
+
+        <div class="profile-actions">
+          <a class="button" href="/profile/{{ profile_user.username }}">Подробнее</a>
+        </div>
+      </section>
+
+      {# — Таймлайн дня #}
+      {% set events = day_timeline or [] %}
+      <section class="card span-2">
+        <div class="card-title">Сегодня</div>
+        <div class="timeline">
+          {% for event in events %}
+          <div class="timeline-row">
+            <div class="time">{{ event.time }}</div>
+            <div class="dot"></div>
+            <div class="text">{{ event.text }}</div>
+          </div>
+          {% else %}
+          <div class="text-muted">Нет событий</div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-title">Заметки</div>
+        <form id="quick-note-form" class="stack gap-2">
+          <textarea name="content" rows="3" placeholder="Быстрая заметка..." required></textarea>
+          <div class="row gap-2">
+            <button class="btn btn-primary" type="submit">Сохранить</button>
+            <a class="btn btn-ghost" href="/notes">Все заметки</a>
+          </div>
+        </form>
+        <div id="quick-note-result" class="muted" hidden>Сохранено</div>
+      </section>
+
+      {# — KPI ряд: примеры (могут прийти из контекста) #}
+      {% set delta = kpi_focus_week_delta or 0 %}
+      <section class="card">
+        <div class="card-title">Фокус за неделю</div>
+        <div class="kpi">
+          <div>
+            <div class="label text-muted">Часы</div>
+            <div class="value">{{ kpi_focus_week or "0ч" }}</div>
+          </div>
+          {% if delta is defined %}
+          <div class="delta {% if delta >= 0 %}up{% else %}down{% endif %}">
+            {{ delta|round(2) }}%
+          </div>
+          {% endif %}
+        </div>
+      </section>
+
+      {% set delta = kpi_goals_delta or 0 %}
+      <section class="card">
+        <div class="card-title">Достижения</div>
+        <div class="kpi">
+          <div>
+            <div class="label text-muted">Выполнено целей</div>
+            <div class="value">{{ kpi_goals or "0" }}</div>
+          </div>
+          {% if delta is defined %}
+          <div class="delta {% if delta >= 0 %}up{% else %}down{% endif %}">
+            {{ delta|round(2) }}%
+          </div>
+          {% endif %}
+        </div>
+      </section>
+
+      {% set delta = kpi_focused_hours_delta or 0 %}
+      <section class="card">
+        <div class="card-title">Сфокусированные часы</div>
+        <div class="kpi">
+          <div>
+            <div class="label text-muted">Всего</div>
+            <div class="value">{{ kpi_focused_hours or "0ч" }}</div>
+          </div>
+          {% if delta is defined %}
+          <div class="delta {% if delta >= 0 %}up{% else %}down{% endif %}">
+            {{ delta|round(2) }}%
+          </div>
+          {% endif %}
+        </div>
+      </section>
+
+      {% set delta = kpi_health_delta or 0 %}
+      <section class="card">
+        <div class="card-title">Здоровье</div>
+        <div class="kpi">
+          <div>
+            <div class="label text-muted">Health score</div>
+            <div class="value">{{ kpi_health or "—" }}</div>
+          </div>
+          {% if delta is defined %}
+          <div class="delta {% if delta >= 0 %}up{% else %}down{% endif %}">
+            {{ delta|round(2) }}%
+          </div>
+          {% endif %}
+        </div>
+      </section>
+
+      {# — Графики/плейсхолдеры #}
+      <section class="card span-2">
+        <div class="card-title">Активность по дням</div>
+        <div class="chart-placeholder"></div>
+      </section>
+      <section class="card span-2">
+        <div class="card-title">Сон / энергия</div>
+        <div class="chart-placeholder"></div>
+      </section>
+
+      {# — Группы и проекты #}
+      {% set groups_owned = owned_groups|map(attribute='title')|list %}
+      {% set groups_items = groups_owned|map('string')|list %}
+      {% set items = owned_groups or [] %}
+      <section class="card">
+        <div class="card-title">Руководите группами</div>
+        <div class="list">
+          {% for item in items %}
+          <div class="list-item">
+            <div class="title">{{ item.title }}</div>
+            {% if item.subtitle %}<div class="subtitle text-muted">{{ item.subtitle }}</div>{% endif %}
+          </div>
+          {% else %}
+          <div class="text-muted">Пока пусто</div>
+          {% endfor %}
+        </div>
+      </section>
+
+      {% set items = member_groups or [] %}
+      <section class="card">
+        <div class="card-title">Состоите в группах</div>
+        <div class="list">
+          {% for item in items %}
+          <div class="list-item">
+            <div class="title">{{ item.title }}</div>
+            {% if item.subtitle %}<div class="subtitle text-muted">{{ item.subtitle }}</div>{% endif %}
+          </div>
+          {% else %}
+          <div class="text-muted">Пока пусто</div>
+          {% endfor %}
+        </div>
+      </section>
+
+      {% set items = owned_projects or [] %}
+      <section class="card">
+        <div class="card-title">Ваши проекты</div>
+        <div class="list">
+          {% for item in items %}
+          <div class="list-item">
+            <div class="title">{{ item.title }}</div>
+            {% if item.subtitle %}<div class="subtitle text-muted">{{ item.subtitle }}</div>{% endif %}
+          </div>
+          {% else %}
+          <div class="text-muted">Пока пусто</div>
+          {% endfor %}
+        </div>
+      </section>
+
+      {% set items = member_projects or [] %}
+      <section class="card">
+        <div class="card-title">Участвуете в проектах</div>
+        <div class="list">
+          {% for item in items %}
+          <div class="list-item">
+            <div class="title">{{ item.title }}</div>
+            {% if item.subtitle %}<div class="subtitle text-muted">{{ item.subtitle }}</div>{% endif %}
+          </div>
+          {% else %}
+          <div class="text-muted">Пока пусто</div>
+          {% endfor %}
+        </div>
+      </section>
+
+      {# — Виджеты следующих этапов разработки #}
+      {% set items = upcoming_tasks or [] %}
+      <section class="card">
+        <div class="card-title">Предстоящие задачи</div>
+        <div class="list">
+          {% for item in items %}
+          <div class="list-item">
+            <div class="title">{{ item.title }}</div>
+            {% if item.subtitle %}<div class="subtitle text-muted">{{ item.subtitle }}</div>{% endif %}
+          </div>
+          {% else %}
+          <div class="text-muted">Нет задач</div>
+          {% endfor %}
+        </div>
+        <div class="row end">
+          <a class="btn btn-ghost" href="/tasks">Все задачи</a>
+        </div>
+      </section>
+
+      {% set items = upcoming_reminders or [] %}
+      <section class="card">
+        <div class="card-title">Напоминания</div>
+        <div class="list">
+          {% for item in items %}
+          <div class="list-item">
+            <div class="title">{{ item.title }}</div>
+            {% if item.subtitle %}<div class="subtitle text-muted">{{ item.subtitle }}</div>{% endif %}
+          </div>
+          {% else %}
+          <div class="text-muted">Нет напоминаний</div>
+          {% endfor %}
+        </div>
+        <div class="row end">
+          <a class="btn btn-ghost" href="/reminders">Все напоминания</a>
+        </div>
+      </section>
+
+      {% set items = upcoming_events or [] %}
+      <section class="card">
+        <div class="card-title">Ближайшие события</div>
+        <div class="list">
+          {% for item in items %}
+          <div class="list-item">
+            <div class="title">{{ item.title }}</div>
+            {% if item.subtitle %}<div class="subtitle text-muted">{{ item.subtitle }}</div>{% endif %}
+          </div>
+          {% else %}
+          <div class="text-muted">Нет событий</div>
+          {% endfor %}
+        </div>
+        <div class="row end">
+          <a class="btn btn-ghost" href="/calendar">Календарь</a>
+        </div>
+      </section>
+
+      {% set items = habit_list or [] %}
+      <section class="card">
+        <div class="card-title">Привычки</div>
+        <div class="list">
+          {% for item in items %}
+          <div class="list-item">
+            <div class="title">{{ item.title }}</div>
+            <div class="habit-progress"><div style="width: {{ item.percent }}%"></div></div>
+            <div class="subtitle text-muted">{{ item.percent }}%</div>
+          </div>
+          {% else %}
+          <div class="text-muted">Нет данных</div>
+          {% endfor %}
+        </div>
+      </section>
+
+    </div>
+  </div>
+{% endblock %}

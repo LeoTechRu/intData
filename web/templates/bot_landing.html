@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}@LeonidBot — Telegram бот проекта {{ APP_BRAND_NAME }}{% endblock %}
+
+{% block content %}
+<div style="display:flex;justify-content:center;margin-top:2rem;">
+  <div class="card" style="text-align:center;padding:2rem;">
+    <p>Используйте @LeonidBot в Telegram.</p>
+    <div style="margin-top:1rem;display:flex;flex-direction:column;gap:0.5rem;">
+      <a href="https://t.me/LeonidBot" target="_blank" class="button">Открыть @LeonidBot</a>
+      <a href="{{ WEB_PUBLIC_URL }}" class="button">На главную LeonidPro</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

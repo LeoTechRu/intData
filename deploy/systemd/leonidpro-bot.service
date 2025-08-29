@@ -1,0 +1,20 @@
+[Unit]
+Description=LeonidBot Telegram Bot Service
+After=network.target
+
+[Service]
+User=deploy
+Group=devs
+WorkingDirectory=%E{LEONIDPRO_WORKDIR}
+EnvironmentFile=%E{LEONIDPRO_WORKDIR}/.env
+Environment=PATH=%E{LEONIDPRO_VENV}/bin
+ExecStart=%E{LEONIDPRO_VENV}/bin/python -m bot.main
+
+Restart=on-failure
+RestartSec=3s
+UMask=0002
+StandardOutput=journal
+StandardError=inherit
+
+[Install]
+WantedBy=multi-user.target

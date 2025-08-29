@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block title %}Админ{% endblock %}
+{% block content %}
+<div class="ui-layout">
+    <div id="main-content">
+        <section id="users-web">
+            <h1>Web users</h1>
+            {% if users_web %}
+            <table border="1" cellpadding="4" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>username</th>
+                        <th>telegram accounts</th>
+                        <th>role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for user in users_web %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>
+                            {% for tg in user.telegram_accounts %}
+                                {{ tg.username or tg.telegram_id }}
+                                <button class="unlink-btn" data-web="{{ user.id }}" data-tg="{{ tg.id }}">x</button><br/>
+                            {% endfor %}
+                            <select id="link-select-{{ user.id }}">
+                                <option value="">--</option>
+                                {% for tg in users_tg %}
+                                    <option value="{{ tg.id }}">{{ tg.username or tg.telegram_id }}</option>
+                                {% endfor %}
+                            </select>
+                            <button class="link-btn" data-web="{{ user.id }}">link</button>
+                        </td>
+                        <td>
+                            <select class="web-role" data-user-id="{{ user.id }}">
+                                {% for r in roles %}
+                                    <option value="{{ r }}" {% if user.role == r %}selected{% endif %}>{{ r }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>нет пользователей</p>
+            {% endif %}
+        </section>
+
+        <section id="users">
+            <h1>Telegram users</h1>
+            {% if users_tg %}
+            <table border="1" cellpadding="4" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>username</th>
+                        <th>first_name</th>
+                        <th>last_name</th>
+                        <th>role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for user in users_tg %}
+                    <tr>
+                        <td>{{ user.telegram_id }}</td>
+                        <td>{{ user.username or '' }}</td>
+                        <td>{{ user.first_name }}</td>
+                        <td>{{ user.last_name or '' }}</td>
+                        <td>
+                            <select class="tg-role" data-tg-id="{{ user.telegram_id }}">
+                                {% for r in roles %}
+                                    <option value="{{ r }}" {% if user.role == r %}selected{% endif %}>{{ r }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>нет пользователей</p>
+            {% endif %}
+        </section>
+
+        <section id="groups">
+            <h1>Groups</h1>
+            <ul>
+                {% for item in groups %}
+                <li>
+                    {{ item.group.title }} ({{ item.group.participants_count }} members)
+                    <ul>
+                        {% for member in item.members %}
+                        <li>{{ member.first_name }}</li>
+                        {% endfor %}
+                    </ul>
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+
+        <section id="settings">
+            <h1>Админ настройки</h1>
+            <section class="card" style="margin-top:1rem;">
+              <div class="card-title">Настройки приложения</div>
+              <div class="grid grid-2">
+                <form id="adm-branding" class="ui-form">
+                  <label>Имя бренда<input class="control" type="text" name="APP_BRAND_NAME" value="{{ APP_BRAND_NAME }}"></label>
+                  <label>Публичный URL<input class="control" type="url" name="WEB_PUBLIC_URL" value="{{ WEB_PUBLIC_URL }}"></label>
+                  <label>URL бота<input class="control" type="url" name="BOT_LANDING_URL" value="{{ BOT_LANDING_URL }}"></label>
+                  <button class="button" type="submit">Сохранить</button>
+                </form>
+
+                <form id="adm-telegram" class="ui-form">
+                  <label><input type="checkbox" name="TG_LOGIN_ENABLED" {% if TG_LOGIN_ENABLED %}checked{% endif %}> Включить Telegram Login</label>
+                  <label>Имя бота (без @)<input class="control" type="text" name="BOT_USERNAME" value="{{ TG_BOT_USERNAME or '' }}"></label>
+                  <label>Новый токен бота<input class="control" type="password" name="BOT_TOKEN" placeholder="Задать новый токен"></label>
+                  <div class="grid" style="grid-template-columns: 1fr 1fr; gap:8px;">
+                    <button class="button" type="submit">Сохранить</button>
+                    <div style="display:flex; gap:8px; justify-content:flex-end;">
+                      <button class="button" type="button" id="btn-restart-web">Рестарт веба</button>
+                      <button class="button" type="button" id="btn-restart-bot">Рестарт бота</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <div id="adm-msg" class="muted" style="margin-top:8px;"></div>
+            </section>
+        </section>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.tg-role').forEach(sel => {
+        sel.addEventListener('change', async e => {
+            const id = e.target.dataset.tgId;
+            const role = e.target.value;
+            await fetch(`/api/v1/admin/role/${id}?role=${role}`, {method: 'POST'});
+            location.reload();
+        });
+    });
+    document.querySelectorAll('.web-role').forEach(sel => {
+        sel.addEventListener('change', async e => {
+            const id = e.target.dataset.userId;
+            const role = e.target.value;
+            await fetch(`/api/v1/admin/web/role/${id}?role=${role}`, {method: 'POST'});
+            location.reload();
+        });
+    });
+    document.querySelectorAll('.unlink-btn').forEach(btn => {
+        btn.addEventListener('click', async e => {
+            const webId = e.target.dataset.web;
+            const tgId = e.target.dataset.tg;
+            await fetch(`/api/v1/admin/web/unlink?web_user_id=${webId}&tg_user_id=${tgId}`, {method: 'POST'});
+            location.reload();
+        });
+    });
+    document.querySelectorAll('.link-btn').forEach(btn => {
+        btn.addEventListener('click', async e => {
+            const webId = e.target.dataset.web;
+            const select = document.getElementById(`link-select-${webId}`);
+            const tgId = select.value;
+            if (!tgId) return;
+            await fetch(`/api/v1/admin/web/link?web_user_id=${webId}&tg_user_id=${tgId}`, {method: 'POST'});
+            location.reload();
+        });
+    });
+});
+
+async function patch(url, data){
+  const r = await fetch(url, {method:'PATCH', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(data)});
+  return r.ok;
+}
+document.getElementById('adm-branding')?.addEventListener('submit', async (e)=>{
+  e.preventDefault(); const fd = new FormData(e.currentTarget);
+  const ok = await patch('/api/v1/admin/settings/branding', {
+    APP_BRAND_NAME: fd.get('APP_BRAND_NAME'), WEB_PUBLIC_URL: fd.get('WEB_PUBLIC_URL'), BOT_LANDING_URL: fd.get('BOT_LANDING_URL')
+  });
+  document.getElementById('adm-msg').textContent = ok ? 'Сохранено' : 'Ошибка сохранения';
+  if (ok) location.reload();
+});
+document.getElementById('adm-telegram')?.addEventListener('submit', async (e)=>{
+  e.preventDefault(); const fd = new FormData(e.currentTarget);
+  const ok = await patch('/api/v1/admin/settings/telegram', {
+    TG_LOGIN_ENABLED: !!fd.get('TG_LOGIN_ENABLED'), BOT_USERNAME: (fd.get('BOT_USERNAME')||'').toString().trim()||null, BOT_TOKEN: (fd.get('BOT_TOKEN')||'').toString().trim()||null
+  });
+  document.getElementById('adm-msg').textContent = ok ? 'Сохранено' : 'Ошибка сохранения';
+});
+async function restart(target){
+  const r = await fetch('/api/v1/admin/restart?target='+encodeURIComponent(target), {method:'POST', credentials:'include'});
+  const j = await r.json().catch(()=>({}));
+  document.getElementById('adm-msg').textContent = j.ok ? `Рестарт ${target} выполнен` : `Ошибка рестарта ${target}: ${j.error||j.stderr||j.code}`;
+}
+document.getElementById('btn-restart-web')?.addEventListener('click', ()=> restart('web'));
+document.getElementById('btn-restart-bot')?.addEventListener('click', ()=> restart('bot'));
+</script>
+{% endblock %}

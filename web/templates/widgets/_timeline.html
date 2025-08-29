@@ -1,0 +1,14 @@
+{% include "widgets/_card.html" with context %}
+{% block body %}
+  <div class="timeline">
+    {% for event in events %}
+      <div class="timeline-row">
+        <div class="time">{{ event.time }}</div>
+        <div class="dot"></div>
+        <div class="text">{{ event.text }}</div>
+      </div>
+    {% else %}
+      <div class="text-muted">Нет событий</div>
+    {% endfor %}
+  </div>
+{% endblock %}

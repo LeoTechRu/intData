@@ -1,0 +1,15 @@
+/* === brand === */
+.brand{ display:inline-flex; align-items:center; gap:8px; text-decoration:none; }
+.brand-mark{ display:inline-block; }
+.brand-type{ font-weight:800; letter-spacing:.2px; color:#111827; }
+.top-bar .brand-type, .auth-header .brand-type{ color:#f5f5f7; } /* если в шапке тёмный фон */
+@media (max-width:640px){
+  .brand-type{ font-weight:700; }
+}
+/* === /brand === */
+
+/* brand color helpers */
+.brand--accent .brand-mark{ color:#a78bfa; }
+.brand--success .brand-mark{ color:#22c55e; }
+.brand--warning .brand-mark{ color:#f59e0b; }
+

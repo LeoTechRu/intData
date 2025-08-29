@@ -1,0 +1,23 @@
+[Unit]
+Description=LeonidPro Web Service (FastAPI)
+After=network.target
+
+[Service]
+User=deploy
+Group=devs
+WorkingDirectory=%E{LEONIDPRO_WORKDIR}
+EnvironmentFile=%E{LEONIDPRO_WORKDIR}/.env
+Environment=PATH=%E{LEONIDPRO_VENV}/bin
+Environment=PYTHONUNBUFFERED=1
+Environment=UVICORN_LOG_LEVEL=debug
+Environment=PYTHONASYNCIODEBUG=1
+ExecStart=%E{LEONIDPRO_VENV}/bin/uvicorn web:app --host 0.0.0.0 --port 5800 --lifespan=on --log-level debug
+
+Restart=on-failure
+RestartSec=3s
+UMask=0002
+StandardOutput=journal
+StandardError=inherit
+
+[Install]
+WantedBy=multi-user.target
