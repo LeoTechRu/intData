@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Исправлены сравнения уровней логирования после перехода на `IntEnum`.
 - Исправлена авторизация через Telegram (создание `TgUser`, проверка `WebUser`, куки) и тесты.
 - В тестах исправлены параметры редиректов (`follow_redirects`).
+- Починена конфигурация Alembic и автоматическое применение миграций при запуске приложения.
 
 ### Removed
 - …

@@ -36,12 +36,11 @@ async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession
 
 
 async def init_models() -> None:
-    """Create database tables for all models.
+    """Ensure the database schema is up to date.
 
-    Prefer the engine bound to ``async_session`` when available. This
-    allows the test suite to replace ``async_session`` with a SQLite
-    sessionmaker and run without a Postgres server. Falls back to the
-    module-level ``engine`` otherwise.
+    In production the function applies Alembic migrations.  For tests that
+    bind ``async_session`` to an in-memory SQLite database we fall back to
+    creating all tables directly from ``Base.metadata``.
     """
     eng = None
     try:
@@ -55,8 +54,27 @@ async def init_models() -> None:
         eng = None
 
     eng = eng or engine
-    async with eng.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    url = str(eng.url)
+
+    if url.startswith("sqlite"):
+        # For test environment use the simpler metadata-based creation.
+        async with eng.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        return
+
+    # Run Alembic migrations for real databases (e.g. PostgreSQL).
+    from alembic import command
+    from alembic.config import Config
+    from pathlib import Path
+    import asyncio as _asyncio
+
+    cfg = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
+    cfg.set_main_option(
+        "script_location", str(Path(__file__).resolve().parents[1] / "migrations")
+    )
+    cfg.set_main_option("sqlalchemy.url", url)
+
+    await _asyncio.to_thread(command.upgrade, cfg, "head")
 
 # Bot
 BOT_TOKEN = os.getenv("BOT_TOKEN") or ("123456:" + "A" * 35)
