@@ -54,7 +54,9 @@ async def init_models() -> None:
         eng = None
 
     eng = eng or engine
-    url = str(eng.url)
+    # ``str(eng.url)`` masks the password with ``***`` which breaks Alembic when
+    # it tries to connect.  Render the URL explicitly with the password intact.
+    url = eng.url.render_as_string(hide_password=False)
 
     if url.startswith("sqlite"):
         # For test environment use the simpler metadata-based creation.
