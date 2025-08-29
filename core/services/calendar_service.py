@@ -61,3 +61,60 @@ class CalendarService:
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
+    async def get_event(
+        self, event_id: int, owner_id: Optional[int] = None
+    ) -> CalendarEvent | None:
+        """Fetch a single event by ID, optionally scoped to ``owner_id``."""
+
+        stmt = select(CalendarEvent).where(CalendarEvent.id == event_id)
+        if owner_id is not None:
+            stmt = stmt.where(CalendarEvent.owner_id == owner_id)
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def update_event(
+        self,
+        event: CalendarEvent,
+        *,
+        title=None,
+        start_at=None,
+        end_at=None,
+        description=None,
+    ) -> CalendarEvent:
+        """Update mutable fields of an event and flush changes."""
+
+        if title is not None:
+            event.title = title
+        if start_at is not None:
+            event.start_at = start_at
+        if end_at is not None:
+            event.end_at = end_at
+        if description is not None:
+            event.description = description
+        self.session.add(event)
+        await self.session.flush()
+        return event
+
+    async def delete_event(self, event: CalendarEvent) -> None:
+        """Delete an event and flush session."""
+
+        await self.session.delete(event)
+        await self.session.flush()
+
+    async def list_events_between(
+        self,
+        owner_id: int,
+        start_at,
+        end_at,
+    ) -> List[CalendarEvent]:
+        """Return events for ``owner_id`` within the [start_at, end_at] range."""
+
+        stmt = (
+            select(CalendarEvent)
+            .where(CalendarEvent.owner_id == owner_id)
+            .where(CalendarEvent.start_at >= start_at)
+            .where(CalendarEvent.start_at <= end_at)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
+

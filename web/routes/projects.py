@@ -64,6 +64,58 @@ async def create_project(payload: ProjectCreate, current_user: TgUser | None = D
     return ProjectResponse.from_model(p)
 
 
+# ---------------------------------------------------------------------------
+# Project notifications (placeholder)
+# ---------------------------------------------------------------------------
+
+
+class ProjectNotificationCreate(BaseModel):
+    """Bind a Telegram channel to a project with given rules."""
+
+    channel_id: int
+    rules: dict | None = None
+
+
+class ProjectNotificationResponse(ProjectNotificationCreate):
+    """Echo representation of a project notification binding."""
+
+    id: int | None = None
+
+
+@router.post(
+    "/{project_id}/notifications",
+    response_model=ProjectNotificationResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_project_notification(
+    project_id: int,
+    payload: ProjectNotificationCreate,
+    current_user: TgUser | None = Depends(get_current_tg_user),
+):
+    """Placeholder for creating project notification rules."""
+
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="Notifications not implemented",
+    )
+
+
+@router.get(
+    "/{project_id}/notifications",
+    response_model=List[ProjectNotificationResponse],
+)
+async def list_project_notifications(
+    project_id: int, current_user: TgUser | None = Depends(get_current_tg_user)
+):
+    """Placeholder for listing project notification rules."""
+
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    return []
+
+
 @ui_router.get("")
 async def projects_page(request: Request, current_user: WebUser | None = Depends(get_current_web_user)):
     context = {
