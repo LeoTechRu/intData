@@ -58,6 +58,7 @@ export function initDashboardCompact() {
     });
 }
 import { initPersonaHeader } from './persona-header.js';
+import { API_BASE } from './services/apiBase.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     enableAccessibility();
@@ -449,12 +450,12 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
   if (!favBox && !toggles.length) return;
 
   const api = {
-    list: () => fetch('/api/v1/user/favorites', {credentials:'same-origin'}).then(r=>r.json()),
-    add: (label, path) => fetch('/api/v1/user/favorites', {
+    list: () => fetch(`${API_BASE}/user/favorites`, {credentials:'same-origin'}).then(r=>r.json()),
+    add: (label, path) => fetch(`${API_BASE}/user/favorites`, {
       method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
       body: JSON.stringify({label, path})
     }),
-    remove: (id) => fetch(`/api/v1/user/favorites/${id}`, {method:'DELETE', credentials:'same-origin'})
+    remove: (id) => fetch(`${API_BASE}/user/favorites/${id}`, {method:'DELETE', credentials:'same-origin'})
   };
 
   let cache = [];

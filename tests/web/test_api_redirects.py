@@ -31,12 +31,11 @@ async def client():
 
 
 @pytest.mark.asyncio
-async def test_old_path_redirects(client: AsyncClient):
+async def test_old_path_returns_404(client: AsyncClient):
     resp = await client.get('/api/app-settings?prefix=ui.persona.')
-    assert resp.status_code in (307, 308)
-    loc = resp.headers['location']
-    assert loc.startswith('/api/v1/')
-    resp2 = await client.get(loc)
+    assert resp.status_code == 404
+    assert resp.json() == {"detail": "Use /api/v1/*"}
+    resp2 = await client.get('/api/v1/app-settings?prefix=ui.persona.')
     assert resp2.status_code == 200
 
 

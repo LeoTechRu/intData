@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Унифицирована работа с паролями через обёртку `core.db.bcrypt` и `WebUserService`.
 - `LogLevel` переведён на числовой `IntEnum` для корректных сравнений.
 - Обновлены шаблоны и хэндлеры под текущее API FastAPI/Starlette; переход на lifespan‑события.
+- API жёстко переведён на `/api/v1` без редиректов и хвостовых слэшей; старые `/api/*` возвращают `404`.
 
 ### Fixed
 - Исправлены сравнения уровней логирования после перехода на `IntEnum`.
@@ -39,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Переведены валидаторы конфигурации на синтаксис `field_validator` Pydantic v2, устранены предупреждения устаревания.
 - Swagger UI снова доступен на `/api`, статические файлы не редиректятся на `/api/v1`.
 - `GET /auth/logout` корректно завершает сессию; браузеры получают favicon по `/favicon.ico`.
+- Убраны редиректы при обращении к `POST /api/v1/user/favorites`.
 
 ### Removed
  - Упоминания роли из пользовательского интерфейса.

@@ -266,11 +266,11 @@
     },
     {
       "method": "GET",
-      "path": "/api/v1/user/favorites/"
+      "path": "/api/v1/user/favorites"
     },
     {
       "method": "POST",
-      "path": "/api/v1/user/favorites/"
+      "path": "/api/v1/user/favorites"
     },
     {
       "method": "PUT",
@@ -279,10 +279,6 @@
     {
       "method": "DELETE",
       "path": "/api/v1/user/favorites/{fav_id}"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/app-settings/"
     },
     {
       "method": "GET",
@@ -328,10 +324,6 @@
     },
     {
       "method": "GET",
-      "path": "/api/v1/app-settings/"
-    },
-    {
-      "method": "GET",
       "path": "/api/v1/app-settings"
     },
     {
@@ -344,11 +336,11 @@
     },
     {
       "method": "GET",
-      "path": "/api/v1/user/favorites/"
+      "path": "/api/v1/user/favorites"
     },
     {
       "method": "POST",
-      "path": "/api/v1/user/favorites/"
+      "path": "/api/v1/user/favorites"
     },
     {
       "method": "PUT",

@@ -1,3 +1,5 @@
+import { API_BASE } from './apiBase.js';
+
 const DEFAULTS_RU = {
     single: { label: 'Второй мозг', tooltipMd: 'Внешний контур памяти и мышления. [Что это?](https://intdata.pro/second-brain)', slogan: 'Работайте во «втором мозге».', },
     multiplayer: { label: 'Коллективное сознание', tooltipMd: 'Вы — часть общего знания.', slogan: 'Собираем знание вместе.', },
@@ -24,7 +26,7 @@ export async function loadPersonaBundle(locale) {
     if (cached)
         return JSON.parse(cached);
     try {
-        const res = await fetch(`/api/v1/app-settings?prefix=ui.persona.`);
+        const res = await fetch(`${API_BASE}/app-settings?prefix=ui.persona.`);
         const { entries } = await res.json();
         const data = buildFromEntries(entries, locale);
         sessionStorage.setItem(key, JSON.stringify(data));
