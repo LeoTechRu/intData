@@ -3,6 +3,7 @@ from aiogram import Dispatcher, Bot
 from aiogram.fsm.storage.memory import MemoryStorage
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.engine.url import make_url, URL
 import os
 from dotenv import load_dotenv
 import builtins
@@ -35,6 +36,16 @@ engine = create_async_engine(DATABASE_URL)
 async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
 
+# helper: to sync DSN string with password preserved (for Alembic/psql)
+def _to_sync_dsn(url_like) -> str:
+    url = make_url(str(url_like)) if not isinstance(url_like, URL) else url_like
+    driver = url.drivername or ""
+    if driver.startswith("postgresql+"):
+        url = url.set(drivername="postgresql")
+    # IMPORTANT: do not mask password when passing to Alembic/psql
+    return url.render_as_string(hide_password=False)
+
+
 async def init_models() -> None:
     """Ensure the database schema is up to date.
 
@@ -42,6 +53,7 @@ async def init_models() -> None:
     bind ``async_session`` to an in-memory SQLite database we fall back to
     creating all tables directly from ``Base.metadata``.
     """
+    from core.logger import logger
     eng = None
     try:
         # SQLAlchemy 1.4/2.0: sessionmaker may expose the bound engine either
@@ -54,11 +66,9 @@ async def init_models() -> None:
         eng = None
 
     eng = eng or engine
-    # ``str(eng.url)`` masks the password with ``***`` which breaks Alembic when
-    # it tries to connect.  Render the URL explicitly with the password intact.
-    url = eng.url.render_as_string(hide_password=False)
-
-    if url.startswith("sqlite"):
+    # Никогда не используем str(eng.url) для Alembic.
+    real_sync_dsn = _to_sync_dsn(eng.url)
+    if real_sync_dsn.startswith("sqlite"):
         # For test environment use the simpler metadata-based creation.
         async with eng.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
@@ -74,7 +84,9 @@ async def init_models() -> None:
     cfg.set_main_option(
         "script_location", str(Path(__file__).resolve().parents[1] / "migrations")
     )
-    cfg.set_main_option("sqlalchemy.url", url)
+    cfg.set_main_option("sqlalchemy.url", real_sync_dsn)
+    masked = eng.url.render_as_string(hide_password=True)
+    logger.debug("DB URL resolved (masked): %s", masked)
 
     await _asyncio.to_thread(command.upgrade, cfg, "head")
 
