@@ -22,7 +22,7 @@
 <div class="top-center">
   {% set TITLE_TEXT = (MODULE_TITLE if MODULE_TITLE is defined and MODULE_TITLE else APP_BRAND_NAME)|striptags %}
   <h1 class="page-title">{{ TITLE_TEXT }}</h1>
-  <button id="favToggle" class="fav-toggle" type="button" data-path="{{ request.url.path }}" data-label="{{ TITLE_TEXT }}" aria-label="Добавить в избранное">☆</button>
+  <button class="fav-toggle" data-fav-toggle data-kind="page" data-id="{{ request.url.path }}" data-path="{{ request.url.path }}" data-label="{{ TITLE_TEXT }}" aria-pressed="false" aria-label="Добавить в избранное">☆</button>
   {# На узких экранах .top-center скрывается через CSS #}
 </div>
 

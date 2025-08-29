@@ -445,16 +445,16 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
   if (!menu) return;
 
   const favBox = menu.querySelector('[data-fav-box]');
-  const toggle = document.getElementById('favToggle');
-  if (!favBox && !toggle) return;
+  const toggles = Array.from(document.querySelectorAll('[data-fav-toggle]'));
+  if (!favBox && !toggles.length) return;
 
   const api = {
-    list: () => fetch('/api/v1/user/favorites', {credentials:'include'}).then(r=>r.json()),
+    list: () => fetch('/api/v1/user/favorites', {credentials:'same-origin'}).then(r=>r.json()),
     add: (label, path) => fetch('/api/v1/user/favorites', {
-      method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
+      method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
       body: JSON.stringify({label, path})
     }),
-    remove: (id) => fetch(`/api/v1/user/favorites/${id}`, {method:'DELETE', credentials:'include'})
+    remove: (id) => fetch(`/api/v1/user/favorites/${id}`, {method:'DELETE', credentials:'same-origin'})
   };
 
   let cache = [];
@@ -480,41 +480,49 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
     }
   }
 
-  function updateToggle(){
-    if(!toggle) return;
-    const path = toggle.dataset.path || location.pathname;
-    const found = cache.find(it => it.path === path);
-    if (found){
-      toggle.textContent = '★';
-      toggle.dataset.id = found.id;
-      toggle.setAttribute('aria-label','Убрать из избранного');
-    } else {
-      toggle.textContent = '☆';
-      toggle.dataset.id = '';
-      toggle.setAttribute('aria-label','Добавить в избранное');
-    }
-  }
-
-  if (toggle){
-    api.list().then(items => { cache = items || []; updateToggle(); }).catch(()=>{});
-    toggle.addEventListener('click', (e)=>{
-      e.preventDefault();
-      const id = toggle.dataset.id;
-      const path = toggle.dataset.path || location.pathname;
-      const label = toggle.dataset.label || document.title;
-      if (id){
-        api.remove(id).then(()=>{ cache = cache.filter(it => String(it.id) !== String(id)); updateToggle(); render(cache); }).catch(()=>{});
+  function updateToggles(){
+    toggles.forEach(btn => {
+      const path = btn.dataset.path || location.pathname;
+      const found = cache.find(it => it.path === path);
+      if (found){
+        btn.textContent = '★';
+        btn.dataset.id = found.id;
+        btn.classList.add('is-fav');
+        btn.setAttribute('aria-label','Убрать из избранного');
+        btn.setAttribute('aria-pressed','true');
       } else {
-        api.add(label, path).then(r=>{ if(r.status===409) return null; return r.json(); }).then(it=>{ if(it){ cache.push(it); updateToggle(); render(cache); } }).catch(()=>{});
+        btn.textContent = '☆';
+        btn.dataset.id = '';
+        btn.classList.remove('is-fav');
+        btn.setAttribute('aria-label','Добавить в избранное');
+        btn.setAttribute('aria-pressed','false');
       }
     });
   }
+
+  api.list().then(items => { cache = items || []; updateToggles(); }).catch(()=>{});
+
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('[data-fav-toggle]');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const id = btn.dataset.id;
+    const path = btn.dataset.path || location.pathname;
+    const label = btn.dataset.label || document.title;
+    btn.classList.add('is-busy');
+    if (id){
+      api.remove(id).then(()=>{ cache = cache.filter(it => String(it.id) !== String(id)); updateToggles(); render(cache); }).catch(()=>{}).finally(()=>btn.classList.remove('is-busy'));
+    } else {
+      api.add(label, path).then(r=>{ if(r.status===409) return null; return r.json(); }).then(it=>{ if(it){ cache.push(it); updateToggles(); render(cache); } }).catch(()=>{}).finally(()=>btn.classList.remove('is-busy'));
+    }
+  });
 
   const btn = document.getElementById('profileBtn');
   if (btn && favBox){
     btn.addEventListener('click', () => {
       if (menu.classList.contains('is-open')){
-        api.list().then(items => { cache = items || []; render(cache); updateToggle(); }).catch(()=>render([]));
+        api.list().then(items => { cache = items || []; render(cache); updateToggles(); }).catch(()=>render([]));
       }
     });
   }
