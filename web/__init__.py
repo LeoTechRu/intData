@@ -29,7 +29,7 @@ from .routes import (
 from .routes.api import admin as api_admin
 from .routes.api import admin_settings as api_admin_settings
 from .routes.api import auth_webapp as api_auth_webapp
-from core.db import init_models
+from core.db import engine, init_models
 from core.services.web_user_service import WebUserService
 from core.services.telegram_user_service import TelegramUserService
 from core.models import LogLevel
@@ -84,7 +84,6 @@ async def lifespan(app: FastAPI):
             except Exception:
                 logger.exception("Reminder dispatcher task raised during shutdown")
         try:
-            from core.db import engine
             await engine.dispose()
             logger.info("Lifespan shutdown: engine disposed")
         except Exception:
