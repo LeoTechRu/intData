@@ -130,6 +130,9 @@ async def auth_middleware(request: Request, call_next):
     if path == "/ban":
         return await call_next(request)
 
+    if path.startswith("/api/v1/app-settings"):
+        return await call_next(request)
+
     # Allow direct access to API calls using explicit authorization headers
     # Но при этом соблюдаем блокировку для забаненных пользователей
     auth = request.headers.get("Authorization")

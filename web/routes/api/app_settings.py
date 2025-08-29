@@ -41,7 +41,7 @@ PERSONA_DEFAULTS: Dict[str, str] = {
     "ui.persona.system_architect.slogan.en": "Build the platform's foundations.",
 }
 
-router = APIRouter(prefix="/api/v1/app-settings", tags=["app-settings"])
+router = APIRouter(prefix="/api/v1", tags=["app-settings"])
 
 
 class SettingsIn(BaseModel):
@@ -56,22 +56,27 @@ def _apply_defaults(prefix: str, entries: Dict[str, str]) -> Dict[str, str]:
     return merged
 
 
-@router.get("", name="api:app_settings_get")
+@router.get("/app-settings", name="api:app_settings_get")
+@router.get("/app-settings/")
 async def api_get_settings(request: Request, prefix: str) -> Response:
     entries = await get_settings_by_prefix(prefix)
     entries = _apply_defaults(prefix, entries)
-    payload = {"entries": entries, "ts": datetime.utcnow().isoformat()}
-    raw = json.dumps(payload, ensure_ascii=False, sort_keys=True)
-    etag = hashlib.md5(raw.encode()).hexdigest()
+    entries_raw = json.dumps(entries, ensure_ascii=False, sort_keys=True)
+    etag = hashlib.md5(entries_raw.encode()).hexdigest()
     if request.headers.get("if-none-match") == etag:
         return Response(status_code=304)
+    payload = {"entries": entries, "ts": datetime.utcnow().isoformat()}
+    raw = json.dumps(payload, ensure_ascii=False, sort_keys=True)
     resp = Response(raw, media_type="application/json")
     resp.headers["ETag"] = etag
     return resp
 
 
 @router.put(
-    "", name="api:app_settings_put", dependencies=[Depends(role_required(UserRole.admin))]
+    "/app-settings", name="api:app_settings_put", dependencies=[Depends(role_required(UserRole.admin))]
+)
+@router.put(
+    "/app-settings/", dependencies=[Depends(role_required(UserRole.admin))], include_in_schema=False
 )
 async def api_put_settings(
     payload: SettingsIn,
