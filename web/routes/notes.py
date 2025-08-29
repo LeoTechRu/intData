@@ -12,7 +12,7 @@ from core.models import WebUser
 from ..template_env import templates
 
 
-router = APIRouter(prefix="/api/v1/notes", tags=["notes"])
+router = APIRouter(tags=["notes"])
 ui_router = APIRouter(prefix="/notes", tags=["notes"], include_in_schema=False)
 
 
@@ -157,3 +157,7 @@ async def notes_page(
         "page_title": "Заметки",
     }
     return templates.TemplateResponse(request, "notes.html", context)
+
+
+# Alias for centralized API mounting
+api = router

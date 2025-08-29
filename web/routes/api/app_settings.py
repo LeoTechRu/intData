@@ -34,7 +34,7 @@ PERSONA_DEFAULTS: Dict[str, str] = {
     "ui.persona.single.slogan.en": "Work in your second brain.",
 }
 
-router = APIRouter(prefix="/api/v1", tags=["app-settings"])
+router = APIRouter(tags=["app-settings"])
 
 
 class SettingsIn(BaseModel):
@@ -49,7 +49,7 @@ def _apply_defaults(prefix: str, entries: Dict[str, str]) -> Dict[str, str]:
     return merged
 
 
-@router.get("/app-settings", name="api:app_settings_get")
+@router.get("", name="api:app_settings_get")
 async def api_get_settings(request: Request, prefix: str) -> Response:
     entries = await get_settings_by_prefix(prefix)
     entries = _apply_defaults(prefix, entries)
@@ -65,7 +65,7 @@ async def api_get_settings(request: Request, prefix: str) -> Response:
 
 
 @router.put(
-    "/app-settings", name="api:app_settings_put", dependencies=[Depends(role_required(UserRole.admin))]
+    "", name="api:app_settings_put", dependencies=[Depends(role_required(UserRole.admin))]
 )
 async def api_put_settings(
     payload: SettingsIn,

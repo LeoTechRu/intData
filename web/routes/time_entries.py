@@ -12,7 +12,7 @@ from core.models import WebUser
 from ..template_env import templates
 
 
-router = APIRouter(prefix="/api/v1/time", tags=["time"])
+router = APIRouter(tags=["time"])
 ui_router = APIRouter(prefix="/time", tags=["time"], include_in_schema=False)
 
 
@@ -169,3 +169,7 @@ async def time_page(
         "page_title": "Учёт времени",
     }
     return templates.TemplateResponse(request, "time.html", context)
+
+
+# Alias for centralized API mounting
+api = router

@@ -13,7 +13,7 @@ from core.models import WebUser
 from ..template_env import templates
 
 
-router = APIRouter(prefix="/api/v1/tasks", tags=["tasks"])
+router = APIRouter(tags=["tasks"])
 ui_router = APIRouter(prefix="/tasks", tags=["tasks"], include_in_schema=False)
 
 
@@ -232,3 +232,7 @@ async def tasks_page(
         "page_title": "Задачи",
     }
     return templates.TemplateResponse(request, "tasks.html", context)
+
+
+# Alias for centralized API mounting
+api = router
