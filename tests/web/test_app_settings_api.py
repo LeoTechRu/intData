@@ -39,7 +39,7 @@ async def test_get_defaults_etag(client: AsyncClient):
     resp = await client.get('/api/v1/app-settings?prefix=ui.persona.')
     assert resp.status_code == 200
     data = resp.json()
-    assert data['entries']['ui.persona.personal_brain.label.ru'] == 'Личный мозг'
+    assert data['entries']['ui.persona.single.label.ru'] == 'Второй мозг'
     etag = resp.headers['ETag']
     resp2 = await client.get('/api/v1/app-settings?prefix=ui.persona.', headers={'If-None-Match': etag})
     assert resp2.status_code == 304
@@ -48,16 +48,16 @@ async def test_get_defaults_etag(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_put_settings(client: AsyncClient):
     admin_id = await _create_admin()
-    payload = {"entries": {"ui.persona.personal_brain.label.ru": "Новый мозг"}}
+    payload = {"entries": {"ui.persona.single.label.ru": "Новый мозг"}}
     resp = await client.put('/api/v1/app-settings', json=payload, headers={'Authorization': f'Bearer {admin_id}'})
     assert resp.status_code == 200
     resp_get = await client.get('/api/v1/app-settings?prefix=ui.persona.')
-    assert resp_get.json()['entries']['ui.persona.personal_brain.label.ru'] == 'Новый мозг'
+    assert resp_get.json()['entries']['ui.persona.single.label.ru'] == 'Новый мозг'
 
 
 @pytest.mark.asyncio
 async def test_put_validation(client: AsyncClient):
     admin_id = await _create_admin()
-    bad = {"entries": {"ui.persona.personal_brain.label.ru": "<bad>"}}
+    bad = {"entries": {"ui.persona.single.label.ru": "<bad>"}}
     resp = await client.put('/api/v1/app-settings', json=bad, headers={'Authorization': f'Bearer {admin_id}'})
     assert resp.status_code == 400

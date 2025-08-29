@@ -24,13 +24,16 @@
 - Changelog: [CHANGELOG.md](./CHANGELOG.md)
 - Backlog: [BACKLOG.md](./BACKLOG.md)
 
-## UI Personas via app_settings: keys, fallback, admin editor
-Тексты интерфейса для отображения статуса доступа берутся из таблицы `app_settings` по ключам вида
-`ui.persona.<code>.<field>.<locale>`. Для каждого кода (`personal_brain`, `collective_consciousness`,
-`knowledge_keeper`, `system_architect`) доступны поля `label`, `tooltip`, `slogan` на русскоязычном ключе с
-фолбэком на английский. При отсутствии значений используются дефолты, прошитые в коде. Изменение строк
-доступно через админский экран `/admin/ui/personas`, который отправляет изменения на API
-`/api/v1/app-settings`.
+## Persona in header via app_settings (no roles in UI)
+Персональные тексты для шапки берутся из `app_settings` по ключам
+`ui.persona.<backendRole>.<field>.<locale>`, где `backendRole` — одна из `single|multiplayer|moderator|admin`.
+Пример:
+```
+ui.persona.single.label.ru = Второй мозг
+ui.persona.single.tooltip_md.ru = Ваш второй мозг — внешний контур памяти и обдумывания. [Что это?](https://trends.rbc.ru/trends/social/620393859a7947e531dafbcc)
+ui.persona.single.slogan.ru = Работайте во «втором мозге».
+```
+В UI показываются только `label`, `tooltip_md` (как безопасный markdown со ссылками) и `slogan` — без упоминания ролей.
 - [x] Каркас системы заметок: модель `Note` и `NoteService`.
 - [x] Каркас модуля заметок.
 - [x] Дашборд показывает профиль пользователя и его группы и проекты.

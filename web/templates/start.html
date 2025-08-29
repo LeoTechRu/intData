@@ -15,11 +15,7 @@
               <div class="title">{{ profile_user.full_name or profile_user.username }}</div>
               <div class="muted">@{{ profile_user.username }}</div>
             </div>
-            <button type="button"
-                    class="role-badge profile-role"
-                    data-role="{{ profile_user.role }}">
-              <svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg>&nbsp;{{ profile_user.role }}
-            </button>
+            {# роль скрыта из UI #}
           </div>
 
         <div class="profile-grid">
