@@ -3,7 +3,7 @@
 
 ## Эпики/Блоки
 ### Заметки
-- [ ] P1•M: Быстрая заметка с /api/notes (улучшения UX)
+- [ ] P1•M: Быстрая заметка с /api/v1/notes (улучшения UX)
 - [ ] P2•S: Теги заметок и быстрый фильтр
 - [ ] P1•M: Веб/бот CRUD для заметок (роуты, валидация)
 
@@ -25,7 +25,7 @@
 - [ ] P2•L: Мобильное приложение (Flutter) — клиент
 
 ### Интеграции/Telegram
-- [ ] P0•M: SSO Telegram WebApp (initData → /api/auth/tg-webapp/exchange)
+- [ ] P0•M: SSO Telegram WebApp (initData → /api/v1/auth/tg-webapp/exchange)
 - [ ] P1•M: Интеграция с Google Calendar
 
 ### Админ/Брендинг

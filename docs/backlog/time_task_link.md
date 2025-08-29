@@ -4,7 +4,7 @@
 
 ## Кратко
 - Добавлено поле `time_entries.task_id` (FK → `tasks.id`), двунаправленная связь `Task.time_entries` ↔ `TimeEntry.task`.
-- API `/api/time/start` принимает `task_id` (опционально), UI `/time` показывает колонку «Задача» и поле ввода ID.
+- API `/api/v1/time/start` принимает `task_id` (опционально), UI `/time` показывает колонку «Задача» и поле ввода ID.
 - Сервисы: `TimeService.start_timer(..., task_id=...)` проверяет один активный таймер на пользователя, валидирует владельца, переводит задачу в `in_progress`.
 - `TaskService`: `start_timer(task_id, ...)`, `total_tracked_minutes(task_id)`.
 - Alembic‑миграция: `20250829_01_link_time_to_task.py`.

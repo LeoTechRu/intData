@@ -37,7 +37,7 @@
 
 <script>
 async function fetchReminders(){
-  const resp = await fetch('/api/reminders', {credentials:'include'});
+  const resp = await fetch('/api/v1/reminders', {credentials:'include'});
   if (!resp.ok) { document.getElementById('reminder-empty').textContent = 'Требуется вход и связанный Telegram-аккаунт'; document.getElementById('reminder-empty').style.display='block'; return; }
   const data = await resp.json();
   const list = document.getElementById('reminder-list');
@@ -57,7 +57,7 @@ document.addEventListener('click', async (e)=>{
   const btn = e.target.closest('button[data-id]');
   if (!btn) return;
   const id = btn.getAttribute('data-id');
-  const resp = await fetch(`/api/reminders/${id}/done`, {method:'POST', credentials:'include'});
+  const resp = await fetch(`/api/v1/reminders/${id}/done`, {method:'POST', credentials:'include'});
   if (resp.ok) fetchReminders();
 });
 
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
       remind_at: new Date(fd.get('remind_at')).toISOString(),
       task_id: fd.get('task_id') ? Number(fd.get('task_id')) : null,
     };
-    const resp = await fetch('/api/reminders', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify(payload)});
+    const resp = await fetch('/api/v1/reminders', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify(payload)});
     if (resp.ok){ form.reset(); fetchReminders(); }
   });
   fetchReminders();

@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const content = (fd.get('content') || '').toString().trim();
     if (!content) return;
 
-    const r = await fetch('/api/notes', {
+    const r = await fetch('/api/v1/notes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -365,7 +365,7 @@ if (hash && forms[hash]) activate(hash); else activate('login');
       const ul = q('#wTasksList'); if (!ul) return; ul.innerHTML='…';
       let items = [];
       try{
-        const r = await fetch('/api/tasks', {credentials:'same-origin'});
+        const r = await fetch('/api/v1/tasks', {credentials:'same-origin'});
         const data = await r.json();
         items = Array.isArray(data) ? data.filter(t=> (t.due_date||'').startsWith(todayISO())) : [];
       }catch{}
@@ -381,8 +381,8 @@ if (hash && forms[hash]) activate(hash); else activate('login');
       const rem = q('#wReminders'); const ev = q('#wEvents'); if (!rem || !ev) return;
       rem.innerHTML = ev.innerHTML = '…';
       let R=[], C=[];
-      try{ const r=await fetch('/api/reminders', {credentials:'same-origin'}); const data=await r.json(); R = Array.isArray(data)? data.filter(x=> (x.remind_at||'').startsWith(todayISO())):[]; }catch{}
-      try{ const r=await fetch('/api/calendar',  {credentials:'same-origin'}); const data=await r.json(); C = Array.isArray(data)? data.filter(x=> (x.start_at||'').startsWith(todayISO())):[]; }catch{}
+      try{ const r=await fetch('/api/v1/reminders', {credentials:'same-origin'}); const data=await r.json(); R = Array.isArray(data)? data.filter(x=> (x.remind_at||'').startsWith(todayISO())):[]; }catch{}
+      try{ const r=await fetch('/api/v1/calendar',  {credentials:'same-origin'}); const data=await r.json(); C = Array.isArray(data)? data.filter(x=> (x.start_at||'').startsWith(todayISO())):[]; }catch{}
       const fill = (ul, arr, empty)=>{ ul.innerHTML = arr.length? '' : `<li class="muted">${empty}</li>`;
         arr.slice(0,6).forEach(x=>{
           const li=document.createElement('li');
@@ -406,7 +406,7 @@ if (hash && forms[hash]) activate(hash); else activate('login');
       const ta = q('#wNoteText');
       const text = (ta && ta.value || '').trim(); if (!text) return;
       try{
-        await fetch('/api/notes', {
+        await fetch('/api/v1/notes', {
           method:'POST', credentials:'same-origin',
           headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ content: text })
@@ -483,12 +483,12 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
   if (!favBox && !toggle) return;
 
   const api = {
-    list: () => fetch('/api/user/favorites', {credentials:'include'}).then(r=>r.json()),
-    add: (label, path) => fetch('/api/user/favorites', {
+    list: () => fetch('/api/v1/user/favorites', {credentials:'include'}).then(r=>r.json()),
+    add: (label, path) => fetch('/api/v1/user/favorites', {
       method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
       body: JSON.stringify({label, path})
     }),
-    remove: (id) => fetch(`/api/user/favorites/${id}`, {method:'DELETE', credentials:'include'})
+    remove: (id) => fetch(`/api/v1/user/favorites/${id}`, {method:'DELETE', credentials:'include'})
   };
 
   let cache = [];

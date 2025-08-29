@@ -41,9 +41,9 @@
 ### 2) Organize (PARA/Areas/Projects)
 Описание: структура PARA; области (Areas), проекты (Projects), ресурсы (Resources), архив (Archive).
 
-- [ ] P0•M — Коллекции API/UI: `/api/areas|/api/projects|/api/resources` и `/areas|/projects|/resources`
-- [ ] P0•S — Inbox: `GET /api/inbox/notes` и `/inbox` (Container=NULL, неархивные)
-- [ ] P0•S — `POST /api/notes/{id}/assign {container_type, container_id}`
+- [ ] P0•M — Коллекции API/UI: `/api/v1/areas|/api/v1/projects|/api/v1/resources` и `/areas|/projects|/resources`
+- [ ] P0•S — Inbox: `GET /api/v1/inbox/notes` и `/inbox` (Container=NULL, неархивные)
+- [ ] P0•S — `POST /api/v1/notes/{id}/assign {container_type, container_id}`
 - [ ] P1•M — Авто‑предложение проекта по контексту (минимум: «последний использованный»)
 - [ ] P1•S — Правила архивации (stale → Archive)
 
@@ -51,7 +51,7 @@
 Описание: поиск, бэклинки, граф связей.
 
 - [ ] P0•M — Поиск по title/content (минимум)
-- [ ] P0•S — `GET /api/notes/{id}/backlinks` (минимальный контракт)
+- [ ] P0•S — `GET /api/v1/notes/{id}/backlinks` (минимальный контракт)
 - [ ] P1•M — Бэклинки из wikilinks `[[...]]` (парсер + записи Link(reference))
 - [ ] P1•L — Граф связей; ранжирование по свежести/ссылочности
 
@@ -59,7 +59,7 @@
 - [ ] P0•M — «Сегодня»: задачи + напоминания + события (общий список)
 
 ### 5) Tasks Bridge (Мост задач)
-- [ ] P0•S — Фильтры задач: `GET /api/tasks?area_id=&project_id=`
+- [ ] P0•S — Фильтры задач: `GET /api/v1/tasks?area_id=&project_id=`
 - [ ] P0•M — Старт/стоп таймера по задаче; наследование Area/Project в time_entries
 
 ### 6) Insights & Reports (Отчёты)
@@ -82,12 +82,12 @@
 3) MR‑3 API (контракты)
 - Файлы: `web/routes/{areas,projects,resources,inbox}.py`, дополнения `notes.py`, `time_entries.py`, `tasks.py`
 - DoD:
-  - `GET/POST /api/areas|/api/projects|/api/resources`
-  - `GET /api/inbox/notes`
-  - `POST /api/notes/{id}/assign`
-  - `GET /api/notes/{id}/backlinks`
-  - `GET /api/tasks?area_id=&project_id=`
-  - `GET /api/time/running`, `POST /api/time/{id}/assign_task`
+  - `GET/POST /api/v1/areas|/api/v1/projects|/api/v1/resources`
+  - `GET /api/v1/inbox/notes`
+  - `POST /api/v1/notes/{id}/assign`
+  - `GET /api/v1/notes/{id}/backlinks`
+  - `GET /api/v1/tasks?area_id=&project_id=`
+  - `GET /api/v1/time/running`, `POST /api/v1/time/{id}/assign_task`
 
 4) MR‑4 UI (каркас)
 - Файлы: `web/templates/{inbox,areas,projects,resources}.html`, роуты UI
@@ -103,13 +103,13 @@
 
 7) MR‑7 Отчёты/ревью
 - Сервис `ReviewService` + виджет «Areas due for review»
-- DoD: `GET /api/areas/{id}/review_due` и счётчик на дашборде.
+- DoD: `GET /api/v1/areas/{id}/review_due` и счётчик на дашборде.
 
 ---
 
 ## Definition of Done (минимальный PoC)
-- Inbox работает: нераспределённые заметки видны в `/inbox` и через `GET /api/inbox/notes`.
-- `POST /api/notes/{id}/assign` переносит заметку в Project/Area/Resource (исчезает из Inbox).
+- Inbox работает: нераспределённые заметки видны в `/inbox` и через `GET /api/v1/inbox/notes`.
+- `POST /api/v1/notes/{id}/assign` переносит заметку в Project/Area/Resource (исчезает из Inbox).
 - Project требует `area_id`; Task с `project_id` автоматически синхронизирует `area_id`.
 - Тайм‑лог из задачи автоматически содержит `project_id/area_id`.
 - UI: `/areas`, `/projects`, `/resources`, `/inbox` доступны (навигация добавится отдельно).
@@ -125,11 +125,11 @@
 - [ ] P0•S — Миграция `20250830_03_tasks_time_inherit_area`: убедиться в наличии индексов на `tasks`/`time_entries` (owner+area/project, started_at).
 - [ ] P0•M — Сервис `AreaService`: `create_area(owner_id, name, parent_id?)`, `move_area(area_id, new_parent_id)`, `is_leaf(area_id)`, `list_subtree(area_id)`, `mp_path(area_id)`.
 - [ ] P0•M — Валидации: при создании/редактировании `Project`/`Task` — `area_id` должен быть листом (если нет `project_id`).
-- [ ] P0•S — API: `GET /api/tasks|/api/projects|/api/time|/api/notes` принимают `include_sub=0|1` (+ `area_id`, `container_type=area`), фильтрация по поддереву через `mp_path LIKE prefix%`.
-- [ ] P0•S — API: `/api/areas/{id}/move`, `/api/areas/{id}/rename`, `/api/areas/{id}/archive` (soft delete).
+- [ ] P0•S — API: `GET /api/v1/tasks|/api/v1/projects|/api/v1/time|/api/v1/notes` принимают `include_sub=0|1` (+ `area_id`, `container_type=area`), фильтрация по поддереву через `mp_path LIKE prefix%`.
+- [ ] P0•S — API: `/api/v1/areas/{id}/move`, `/api/v1/areas/{id}/rename`, `/api/v1/areas/{id}/archive` (soft delete).
 - [ ] P1•S — UI: в формах выбора Area — иерархический `<select>` с отступом по глубине; родительские (не листья) — `disabled`; чекбокс «Включая подкатегории» в фильтрах.
 - [ ] P1•S — Админка Areas: создать/переименовать/переместить/архивировать; предупреждение о пересчёте путей у поддерева.
-- [ ] P0•S — Тесты: `AreaService` (create/move/list_subtree), валидации Project/Task, наследование TimeService, API `include_sub` на `/api/tasks`.
+- [ ] P0•S — Тесты: `AreaService` (create/move/list_subtree), валидации Project/Task, наследование TimeService, API `include_sub` на `/api/v1/tasks`.
 
 Критерии приёмки:
 - Можно создать дерево «Здоровье → Фитнес → Силовые», «Здоровье → Сон».

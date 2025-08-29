@@ -43,18 +43,18 @@ async def test_create_and_complete_task(client: AsyncClient):
     cookies = {"telegram_id": str(telegram_id)}
 
     resp = await client.post(
-        "/api/tasks",
+        "/api/v1/tasks",
         json={"title": "Test"},
         cookies=cookies,
     )
     assert resp.status_code == 201
     task_id = resp.json()["id"]
 
-    resp = await client.post(f"/api/tasks/{task_id}/done", cookies=cookies)
+    resp = await client.post(f"/api/v1/tasks/{task_id}/done", cookies=cookies)
     assert resp.status_code == 200
     assert resp.json()["status"] == "done"
 
-    resp = await client.get("/api/tasks", cookies=cookies)
+    resp = await client.get("/api/v1/tasks", cookies=cookies)
     assert resp.status_code == 200
     tasks = resp.json()
     assert len(tasks) == 1

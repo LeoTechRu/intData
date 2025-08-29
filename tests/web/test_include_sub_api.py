@@ -63,7 +63,7 @@ async def test_tasks_include_subtree(client: AsyncClient):
         await tsvc.create_task(owner_id=owner, title='Lights off', project_id=p2.id)
 
     # Filter by Health including subtree → should return both tasks
-    resp = await client.get(f"/api/tasks?area_id={health.id}&include_sub=1", cookies=cookies)
+    resp = await client.get(f"/api/v1/tasks?area_id={health.id}&include_sub=1", cookies=cookies)
     assert resp.status_code == 200
     tasks = [t['title'] for t in resp.json()]
     assert 'Squats' in tasks and 'Lights off' in tasks

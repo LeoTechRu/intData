@@ -175,7 +175,7 @@ async def auth_middleware(request: Request, call_next):
         return await call_next(request)
 
     # Allow public API docs endpoints only: /api and /api/openapi.json
-    if path == "/api" or path == "/api/openapi.json" or path == "/api/auth/tg-webapp/exchange":
+    if path == "/api" or path == "/api/openapi.json" or path == "/api/v1/auth/tg-webapp/exchange":
         return await call_next(request)
 
     # Allow root path for both authenticated and guest users
@@ -226,7 +226,7 @@ app.include_router(api_auth_webapp.router)
 app.include_router(api_user_favorites.router)
 app.include_router(api_app_settings.router)
 
-# Root API aggregator (prefix /api). Domain routers below already serve under /api/*
-# so we don't add nested prefixes here to avoid double /api.
-api = APIRouter(prefix="/api")
+# Root API aggregator (prefix /api/v1). Domain routers below already serve under
+# /api/v1/* so we don't add nested prefixes here to avoid double /api/v1.
+api = APIRouter(prefix="/api/v1")
 app.include_router(api)

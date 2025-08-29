@@ -33,4 +33,4 @@ async def admin_dashboard(
     return templates.TemplateResponse(request, "admin/index.html", context)
 
 
-"""Admin UI routes only. JSON actions moved to /api/admin/*."""
+"""Admin UI routes only. JSON actions moved to /api/v1/admin/*."""
