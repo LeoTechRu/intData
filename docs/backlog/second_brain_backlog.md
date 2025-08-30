@@ -1,4 +1,4 @@
-# Intelligent Data Platform: Бэклог «Второй мозг / PARA»
+# Intelligent Data Pro: Бэклог «Второй мозг / PARA»
 
 Источник: [Исходная статья](../research/habr_nspk_second_brain.md)
 

@@ -110,7 +110,7 @@ tags_metadata = [
 
 app = FastAPI(
     lifespan=lifespan,
-    title="Intelligent Data Platform API",
+    title="Intelligent Data Pro API",
     docs_url=None,
     redoc_url=None,
     openapi_url="/api/openapi.json",
@@ -133,7 +133,7 @@ async def favicon() -> FileResponse:
 @app.get("/api", include_in_schema=False)
 async def swagger_ui():
     return get_swagger_ui_html(
-        openapi_url="/api/openapi.json", title="Intelligent Data Platform API - Swagger UI"
+        openapi_url="/api/openapi.json", title="Intelligent Data Pro API - Swagger UI"
     )
 
 

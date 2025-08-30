@@ -32,7 +32,7 @@
 - Python, async/await where used; prefer f-strings; add type hints.
 - Keep shared logic in `core/services` and import in `bot`/`web`.
 - Table names: prefix by module; user-related tables use `users_` (e.g., `users_tg`).
-- Branding: use “Intelligent Data Platform” for product/headers; bot is “@intDataBot”. Default links to `https://intdata.pro/` and bot to `https://intdata.pro/bot`.
+- Branding: use “Intelligent Data Pro” for product/headers; bot is “@intDataBot”. Default links to `https://intdata.pro/` and bot to `https://intdata.pro/bot`.
 - Language: prioritize Russian-speaking users. All user-facing texts (bot/web) default to Russian; keep code identifiers/comments in English. Add i18n only when needed, with Russian as the primary locale.
 
 ## Testing Guidelines
