@@ -1,9 +1,6 @@
 # Intelligent Data Pro
-- Пет-проект для изучения возможностей Telegram-ботов. [intdata.pro](https://intdata.pro/) — продукт, [intdata.pro/bot](https://intdata.pro/bot) — бот @intDataBot.
-
-- Бот должен включать в себя различные полезные утилиты (таск-система, тайм-менеджер, интеграции с календарями, напоминалки, управление TG-группами)
-- Для усложнения задачи поставил себе цель прикрутить веб-морду с авторизацией через Telegram.
-- В качестве веб морды буду использовать Flask/FastApi/Django.
+- [intdata.pro](https://intdata.pro/) — продукт, [intdata.pro/bot](https://intdata.pro/bot) — бот @intDataBot.
+- Под капоом: Flask/FastApi/Django, Aiogram.
 - В дальнейшем в проект будет внедрён NexusCore Balance и HabitMinder ранее являющиеся отдельными проектами.
 
 ## Брендинг
