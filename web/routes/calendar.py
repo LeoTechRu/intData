@@ -11,6 +11,7 @@ from pydantic import BaseModel, model_validator
 from core.models import CalendarEvent, TgUser, WebUser, CalendarItem
 from core.services.calendar_service import CalendarService
 from core.services.para_repository import CalendarItemRepository
+from core.services.telegram_user_service import TelegramUserService
 from web.dependencies import get_current_tg_user, get_current_web_user
 from ..template_env import templates
 
@@ -340,22 +341,30 @@ async def agenda(
     return [CalendarItemResponse.from_model(i) for i in items]
 
 
-def _generate_ics(events: list[CalendarItem]) -> str:
-    """Create a minimal iCalendar feed for given events."""
+def _generate_ics(items: list[CalendarItem]) -> str:
+    """Create a minimal iCalendar feed for events and tasks."""
 
     from core.utils import utcnow
 
     now = utcnow().strftime("%Y%m%dT%H%M%SZ")
     lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//LeonidPro//EN"]
-    for e in events:
-        lines.append("BEGIN:VEVENT")
-        lines.append(f"UID:{e.id}@leonidpro")
-        lines.append(f"DTSTAMP:{now}")
-        lines.append(f"DTSTART:{e.start_at.strftime('%Y%m%dT%H%M%SZ')}")
+    for e in items:
         if e.end_at:
+            lines.append("BEGIN:VEVENT")
+            lines.append(f"UID:{e.id}@leonidpro")
+            lines.append(f"DTSTAMP:{now}")
+            lines.append(f"DTSTART:{e.start_at.strftime('%Y%m%dT%H%M%SZ')}")
             lines.append(f"DTEND:{e.end_at.strftime('%Y%m%dT%H%M%SZ')}")
-        lines.append(f"SUMMARY:{e.title}")
-        lines.append("END:VEVENT")
+            lines.append(f"SUMMARY:{e.title}")
+            lines.append("END:VEVENT")
+        else:
+            lines.append("BEGIN:VTODO")
+            lines.append(f"UID:{e.id}@leonidpro")
+            lines.append(f"DTSTAMP:{now}")
+            lines.append(f"DUE:{e.start_at.strftime('%Y%m%dT%H%M%SZ')}")
+            lines.append(f"SUMMARY:{e.title}")
+            lines.append(f"STATUS:{e.status.value.upper()}")
+            lines.append("END:VTODO")
     lines.append("END:VCALENDAR")
     return "\r\n".join(lines)
 
@@ -365,22 +374,35 @@ async def feed(
     scope: str = "all",
     id: int | None = None,
     token: str | None = None,
-    current_user: TgUser | None = Depends(get_current_tg_user),
 ):
-    """Return iCalendar feed. Scope, id and token are placeholders."""
+    """Return iCalendar feed using token-based access."""
 
-    if not current_user:
+    if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    secret = os.getenv("SECRET_KEY", "")
-    expected = hashlib.sha256(
-        f"{scope}:{id}:{current_user.telegram_id}:{secret}".encode()
-    ).hexdigest()
-    if token != expected:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    async with TelegramUserService() as users:
+        user = await users.get_user_by_ics_token_hash(token_hash)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     async with CalendarItemRepository() as repo:
-        events = await repo.list(owner_id=current_user.telegram_id)
+        if scope == "project" and id:
+            events = await repo.list(owner_id=user.telegram_id, project_id=id)
+        elif scope == "area" and id:
+            events = await repo.list(owner_id=user.telegram_id, area_id=id)
+        else:
+            events = await repo.list(owner_id=user.telegram_id)
     ics = _generate_ics(events)
     return Response(content=ics, media_type="text/calendar")
+
+
+@ui_router.get("/feed.ics")
+async def feed_ui(
+    scope: str = "all",
+    id: int | None = None,
+    token: str | None = None,
+):
+    """Proxy to API feed for user-facing ICS URL."""
+    return await feed(scope=scope, id=id, token=token)
 
 
 @ui_router.get("")

@@ -26,6 +26,25 @@
 - `/api/v1/reminders` устарел; используйте `/api/v1/calendar/items/{item_id}/alarms`
 - Добавление бота в группу и получение `chat_id`: [docs/telegram_chat_id.md](./docs/telegram_chat_id.md)
 
+## Подписка на календарь (ICS)
+LeonidPro предоставляет приватный iCalendar‑фид:
+
+```
+https://<HOST>/calendar/feed.ics?scope=all&token=<TOKEN>
+```
+
+### Google Calendar
+1. Откройте Google Calendar → «Другие календари» → «Добавить по URL».
+2. Вставьте ссылку на фид и подтвердите.
+
+### Microsoft Outlook
+1. В веб‑версии Outlook выберите «Добавить календарь» → «Из интернета».
+2. Укажите URL и название календаря.
+
+### Apple Calendar
+1. В приложении «Календарь» перейдите в «Файл» → «Новая подписка на календарь».
+2. Вставьте URL и нажмите «Подписаться».
+
 ## Persona in header via app_settings (no roles in UI)
 Персональные тексты для шапки берутся из `app_settings` по ключам
 `ui.persona.<backendRole>.<field>.<locale>`, где `backendRole` — одна из `single|multiplayer|moderator|admin`.
