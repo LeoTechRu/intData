@@ -116,7 +116,7 @@
                 <form id="adm-telegram" class="ui-form">
                   <label><input type="checkbox" name="TG_LOGIN_ENABLED" {% if TG_LOGIN_ENABLED %}checked{% endif %}> Включить Telegram Login</label>
                   <label>Имя бота (без @)<input class="control" type="text" name="BOT_USERNAME" value="{{ TG_BOT_USERNAME or '' }}"></label>
-                  <label>Новый токен бота<input class="control" type="password" name="BOT_TOKEN" placeholder="Задать новый токен"></label>
+                  <label>Новый токен бота<input class="control" type="password" name="TELEGRAM_BOT_TOKEN" placeholder="Задать новый токен"></label>
                   <div class="grid" style="grid-template-columns: 1fr 1fr; gap:8px;">
                     <button class="button" type="submit">Сохранить</button>
                     <div style="display:flex; gap:8px; justify-content:flex-end;">
@@ -184,7 +184,7 @@ document.getElementById('adm-branding')?.addEventListener('submit', async (e)=>{
 document.getElementById('adm-telegram')?.addEventListener('submit', async (e)=>{
   e.preventDefault(); const fd = new FormData(e.currentTarget);
   const ok = await patch('/api/v1/admin/settings/telegram', {
-    TG_LOGIN_ENABLED: !!fd.get('TG_LOGIN_ENABLED'), BOT_USERNAME: (fd.get('BOT_USERNAME')||'').toString().trim()||null, BOT_TOKEN: (fd.get('BOT_TOKEN')||'').toString().trim()||null
+    TG_LOGIN_ENABLED: !!fd.get('TG_LOGIN_ENABLED'), BOT_USERNAME: (fd.get('BOT_USERNAME')||'').toString().trim()||null, TELEGRAM_BOT_TOKEN: (fd.get('TELEGRAM_BOT_TOKEN')||'').toString().trim()||null
   });
   document.getElementById('adm-msg').textContent = ok ? 'Сохранено' : 'Ошибка сохранения';
 });

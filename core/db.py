@@ -93,12 +93,12 @@ async def init_models() -> None:
     await bootstrap_db(engine)
 
 # Bot
-BOT_TOKEN = os.getenv("BOT_TOKEN") or ("123456:" + "A" * 35)
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN") or ("123456:" + "A" * 35)
 try:
-    bot = Bot(token=BOT_TOKEN)
+    bot = Bot(token=TELEGRAM_BOT_TOKEN)
 except Exception:
-    BOT_TOKEN = "123456:" + "A" * 35
-    bot = Bot(token=BOT_TOKEN)
+    TELEGRAM_BOT_TOKEN = "123456:" + "A" * 35
+    bot = Bot(token=TELEGRAM_BOT_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 

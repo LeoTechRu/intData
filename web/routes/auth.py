@@ -23,7 +23,7 @@ from urllib.parse import urlparse
 router = APIRouter(tags=["auth"])
 
 # itsdangerous serializer for magic links and short-lived tokens
-serializer = URLSafeTimedSerializer(os.getenv("SECRET_KEY", S.BOT_TOKEN or ""))
+serializer = URLSafeTimedSerializer(os.getenv("SECRET_KEY", S.TELEGRAM_BOT_TOKEN or ""))
 
 
 async def verify_recaptcha_token(token: str | None) -> bool:
@@ -61,10 +61,10 @@ def _config_diagnostics(request: Request) -> list[dict]:
     issues: list[dict] = []
     # Telegram Login
     if S.TG_LOGIN_ENABLED:
-        if not S.BOT_TOKEN:
+        if not S.TELEGRAM_BOT_TOKEN:
             issues.append({
                 "code": "tg_login_no_token",
-                "message": "Telegram Login включен, но отсутствует BOT_TOKEN.",
+                "message": "Telegram Login включен, но отсутствует TELEGRAM_BOT_TOKEN.",
             })
         if not S.BOT_USERNAME:
             issues.append({
@@ -188,9 +188,9 @@ async def send_magic_email(email: str, link: str) -> None:  # pragma: no cover -
 
 def verify_telegram_auth(data: dict) -> dict:
     """Validate Telegram Login Widget signature."""
-    token = S.BOT_TOKEN
+    token = S.TELEGRAM_BOT_TOKEN
     if not token:
-        raise HTTPException(status_code=503, detail="Telegram login disabled (no BOT_TOKEN)")
+        raise HTTPException(status_code=503, detail="Telegram login disabled (no TELEGRAM_BOT_TOKEN)")
 
     recv_hash = data.get("hash", "")
     check_data = "\n".join(
@@ -250,7 +250,7 @@ def verify_telegram_login(data: Dict[str, str]) -> bool:
     recv_hash = data.get("hash", "")
     pairs = [f"{k}={v}" for k, v in sorted(data.items()) if k != "hash"]
     data_check_string = "\n".join(pairs)
-    secret = hashlib.sha256(S.BOT_TOKEN.encode()).digest()
+    secret = hashlib.sha256(S.TELEGRAM_BOT_TOKEN.encode()).digest()
     calc_hash = hmac.new(secret, data_check_string.encode(), hashlib.sha256).hexdigest()
     if not hmac.compare_digest(calc_hash, recv_hash):
         return False

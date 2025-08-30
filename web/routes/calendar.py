@@ -2,14 +2,16 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import List, Optional
+import hashlib
+import os
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status, Query, Response
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
-from core.models import CalendarEvent, TgUser
+from core.models import CalendarEvent, TgUser, WebUser, CalendarItem
 from core.services.calendar_service import CalendarService
+from core.services.para_repository import CalendarItemRepository
 from web.dependencies import get_current_tg_user, get_current_web_user
-from core.models import WebUser
 from ..template_env import templates
 
 
@@ -154,10 +156,18 @@ class CalendarItemBase(BaseModel):
     end_at: Optional[datetime] = None
     tzid: str
     description: Optional[str] = None
+    project_id: int | None = None
+    area_id: int | None = None
 
 
 class CalendarItemCreate(CalendarItemBase):
     """Payload to create a calendar item."""
+
+    @model_validator(mode="after")
+    def check_scope(self):  # noqa: D401
+        if (self.project_id is None) == (self.area_id is None):
+            raise ValueError("provide exactly one of project_id or area_id")
+        return self
 
 
 class CalendarItemUpdate(BaseModel):
@@ -168,6 +178,14 @@ class CalendarItemUpdate(BaseModel):
     end_at: Optional[datetime] = None
     tzid: Optional[str] = None
     description: Optional[str] = None
+    project_id: int | None = None
+    area_id: int | None = None
+
+    @model_validator(mode="after")
+    def check_scope(self):  # noqa: D401
+        if self.project_id is not None and self.area_id is not None:
+            raise ValueError("project_id and area_id are mutually exclusive")
+        return self
 
 
 class CalendarItemResponse(CalendarItemBase):
@@ -177,15 +195,17 @@ class CalendarItemResponse(CalendarItemBase):
 
     @classmethod
     def from_model(
-        cls, event: CalendarEvent, tzid: str = "UTC"
+        cls, item: CalendarItem, tzid: str = "UTC"
     ) -> "CalendarItemResponse":
         return cls(
-            id=event.id,
-            title=event.title,
-            start_at=event.start_at,
-            end_at=event.end_at,
-            description=event.description,
+            id=item.id,
+            title=item.title,
+            start_at=item.start_at,
+            end_at=item.end_at,
+            description=item.description,
             tzid=tzid,
+            project_id=item.project_id,
+            area_id=item.area_id,
         )
 
 
@@ -202,15 +222,16 @@ async def create_item(
 
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    async with CalendarService() as service:
-        event = await service.create_event(
+    async with CalendarItemRepository() as repo:
+        item = await repo.create(
             owner_id=current_user.telegram_id,
             title=payload.title,
             start_at=payload.start_at,
             end_at=payload.end_at,
-            description=payload.description,
+            project_id=payload.project_id,
+            area_id=payload.area_id,
         )
-    return CalendarItemResponse.from_model(event, tzid=payload.tzid)
+    return CalendarItemResponse.from_model(item, tzid=payload.tzid)
 
 
 @router.get("/items/{item_id}", response_model=CalendarItemResponse)
@@ -221,13 +242,11 @@ async def get_item(
 
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    async with CalendarService() as service:
-        event = await service.get_event(
-            item_id, owner_id=current_user.telegram_id
-        )
-    if not event:
+    async with CalendarItemRepository() as repo:
+        item = await repo.get(item_id)
+    if not item or item.owner_id != current_user.telegram_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    return CalendarItemResponse.from_model(event)
+    return CalendarItemResponse.from_model(item)
 
 
 @router.patch("/items/{item_id}", response_model=CalendarItemResponse)
@@ -240,20 +259,16 @@ async def update_item(
 
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    async with CalendarService() as service:
-        event = await service.get_event(
-            item_id, owner_id=current_user.telegram_id
-        )
-        if not event:
+    async with CalendarItemRepository() as repo:
+        item = await repo.get(item_id)
+        if not item or item.owner_id != current_user.telegram_id:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-        event = await service.update_event(
-            event,
-            title=payload.title,
-            start_at=payload.start_at,
-            end_at=payload.end_at,
-            description=payload.description,
-        )
-    return CalendarItemResponse.from_model(event, tzid=payload.tzid or "UTC")
+        updates = payload.dict(exclude_unset=True)
+        updates.pop("tzid", None)
+        item = await repo.update(item_id, **updates)
+    return CalendarItemResponse.from_model(
+        item, tzid=payload.tzid or "UTC"
+    )
 
 
 @router.delete("/items/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -264,13 +279,11 @@ async def delete_item(
 
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    async with CalendarService() as service:
-        event = await service.get_event(
-            item_id, owner_id=current_user.telegram_id
-        )
-        if not event:
+    async with CalendarItemRepository() as repo:
+        item = await repo.get(item_id)
+        if not item or item.owner_id != current_user.telegram_id:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-        await service.delete_event(event)
+        await repo.delete(item_id)
     return None
 
 
@@ -316,14 +329,18 @@ async def agenda(
 
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    async with CalendarService() as service:
-        events = await service.list_events_between(
-            current_user.telegram_id, from_dt, to_dt
+    async with CalendarItemRepository() as repo:
+        items = await repo.list(
+            owner_id=current_user.telegram_id,
+            project_id=project_id,
+            area_id=area_id,
+            start_from=from_dt,
+            start_to=to_dt,
         )
-    return [CalendarItemResponse.from_model(e) for e in events]
+    return [CalendarItemResponse.from_model(i) for i in items]
 
 
-def _generate_ics(events: list[CalendarEvent]) -> str:
+def _generate_ics(events: list[CalendarItem]) -> str:
     """Create a minimal iCalendar feed for given events."""
 
     from core.utils import utcnow
@@ -354,8 +371,14 @@ async def feed(
 
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    async with CalendarService() as service:
-        events = await service.list_events(owner_id=current_user.telegram_id)
+    secret = os.getenv("SECRET_KEY", "")
+    expected = hashlib.sha256(
+        f"{scope}:{id}:{current_user.telegram_id}:{secret}".encode()
+    ).hexdigest()
+    if token != expected:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    async with CalendarItemRepository() as repo:
+        events = await repo.list(owner_id=current_user.telegram_id)
     ics = _generate_ics(events)
     return Response(content=ics, media_type="text/calendar")
 

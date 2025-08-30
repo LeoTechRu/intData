@@ -4,7 +4,7 @@ from http.cookies import SimpleCookie
 from starlette.responses import Response
 
 # Ensure required env vars for web.config
-os.environ.setdefault("BOT_TOKEN", "TEST")
+os.environ.setdefault("TELEGRAM_BOT_TOKEN", "TEST")
 os.environ.setdefault("BOT_USERNAME", "testbot")
 
 from web.security.cookies import set_auth_cookies  # noqa: E402
