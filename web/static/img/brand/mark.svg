@@ -1,12 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <!-- Щит -->
-  <path d="M32 4 12 10v18c0 15 11.2 23.4 20 27 8.8-3.6 20-12 20-27V10L32 4z"/>
-  <!-- Грива в форме буквы L -->
-  <path d="M22 18h14v16"/>
-  <!-- Морда/глаз -->
-  <circle cx="38" cy="22" r="1.8" fill="currentColor" stroke="none"/>
-  <!-- Галочка (эффективность/достижение) -->
-  <path d="M20 36l5 5 9-9"/>
-</svg>
-
+ <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+     <!-- progress ring -->
+     <circle cx="12" cy="12" r="11" fill="none" stroke="#ffffffff" stroke-width="2"/>
+     <path d="M12 1 a11 11 0 1 1 -0.01 0" fill="none" stroke="#30C277" stroke-width="2" stroke-linecap="round" stroke-dasharray="34 100"/>
+     <!-- I -->
+     <rect x="8.2" y="5" width="2.2" height="14" rx="1.1" fill="#7A3BFF"/>
+     <!-- D (полукруг + «узелки» как в версии A) -->
+     <path d="M12.8 5 a7 7 0 0 1 0 14 h-1.6 v-3.1 a4 4 0 1 0 0 -7.8 V5z" fill="#0F1923"/>
+     <circle cx="14.7" cy="9.1" r="0.9" fill="#28C06F"/>
+     <circle cx="14.7" cy="14.9" r="0.9" fill="#28C06F"/>
+     <circle cx="15.5" cy="12" r="1.1" fill="#7A3BFF"/>
+   </svg>
