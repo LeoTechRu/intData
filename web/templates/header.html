@@ -6,10 +6,10 @@
 #}
 
 <div class="top-left">
-  <a href="/" class="brand-box" aria-label="{{ BRAND_NAME }}">
-    <img src="{{ url_for('static', path='img/brand/mark.svg') }}" alt="" />
+  <a href="/" class="app-brand" aria-label="{{ BRAND_NAME }}">
+    <img src="{{ url_for('static', path='img/brand/mark.svg') }}" class="brand-mark" alt="" />
+    <span class="brand-text">{{ BRAND_NAME }}</span>
   </a>
-  {# Текстовый бренд убран по требованию — оставляем только знак #}
   {% if header_user %}
   <div id="personaHeader"
        data-persona="{{ header_user.role }}"

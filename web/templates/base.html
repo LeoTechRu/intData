@@ -11,7 +11,7 @@
 </head>
 <body>
     {% include "_icons.html" %}
-    <header class="top-bar">
+    <header class="top-bar app-header">
         {% if not auth_page %}
             {# Передаём в шапку название модуля: page_title -> блок title -> бренд #}
             {% set MODULE_TITLE = page_title if page_title is defined and page_title else self.title() %}
