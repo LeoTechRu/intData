@@ -3,9 +3,12 @@
 <head>
     <meta charset="utf-8">
     <title>{% block title %}{{ BRAND_NAME }}{% endblock %}</title>
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='img/brand/favicon.svg') }}">
+    <link rel="icon" type="image/svg+xml" href="/static/img/brand/favicon.svg">
+    {% if ASSET_FAVICON_ICO %}<link rel="alternate icon" href="{{ ASSET_FAVICON_ICO }}">{% endif %}
+    <link rel="apple-touch-icon" href="/static/img/brand/favicon.svg" sizes="180x180">
     <link rel="mask-icon" href="{{ url_for('static', path='img/brand/mask.svg') }}" color="#a78bfa">
-    <meta name="theme-color" content="#1f2937">
+    <link rel="manifest" href="/static/manifest.webmanifest">
+    <meta name="theme-color" content="#101425">
     <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
     <script type="module" src="{{ url_for('static', path='js/main.js') }}"></script>
 </head>

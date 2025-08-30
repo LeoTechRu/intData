@@ -1,6 +1,51 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M32 4 14 9v17c0 14 10 22 18 25 8-3 18-11 18-25V9L32 4z"/>
-  <path d="M23 20h12v13M22 35l4 4 8-8"/>
-</svg>
+<!-- ID · Focus Ring (green) + Neuro Nodes — centered -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" shape-rendering="geometricPrecision">
+  <!-- R=84 (progress), monogram R=60, inner r=36, I_W=22 -->
+  <defs>
+    <!-- зелёный прогресс -->
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22C55E"/>
+      <stop offset="1" stop-color="#86EFAC"/>
+    </linearGradient>
+    <!-- фиолетовый для «I» -->
+    <linearGradient id="violet" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#A77BFF"/>
+      <stop offset="1" stop-color="#6B2DFF"/>
+    </linearGradient>
+    <clipPath id="clipRight"><rect x="0" y="-80" width="120" height="160"/></clipPath>
+  </defs>
 
+  <!-- фон -->
+  <rect width="256" height="256" rx="28" fill="#101425"/>
+  <rect x="10" y="10" width="236" height="236" rx="24" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="2"/>
+
+  <!-- прогресс-кольцо ~75% -->
+  <g transform="translate(128,128)">
+    <circle r="84" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="10"/>
+    <circle r="84" fill="none" stroke="url(#ring)" stroke-width="10"
+            stroke-linecap="round" transform="rotate(-90)"
+            stroke-dasharray="396 528" stroke-dashoffset="0"/>
+  </g>
+
+  <!-- монограмма (компенсация тяжести правой дуги) -->
+  <g transform="translate(128,128) translate(-6,0)">
+    <!-- I: узкая (22px) -->
+    <rect x="-38" y="-60" width="22" height="120" rx="11" fill="url(#violet)"/>
+
+    <!-- D (бублик, обрезанный справа) -->
+    <g clip-path="url(#clipRight)">
+      <path fill="#FFFFFF" fill-rule="evenodd"
+            d="M60,0A60,60,0,1,1,-60,0A60,60,0,1,1,60,0
+               M36,0A36,36,0,1,0,-36,0A36,36,0,1,0,36,0Z"/>
+      <!-- нижняя полка-акцент -->
+      <path fill="#7B61FF" d="M36,0A36,36,0,0,1,22,56A60,60,0,0,0,60,0Z"/>
+
+      <!-- нейро-дуга и узлы -->
+      <path d="M18,-42 Q36,-24 36,0 Q36,24 18,42"
+            fill="none" stroke="#0F1326" stroke-width="4" opacity=".22"/>
+      <circle cx="18" cy="-42" r="4.5" fill="#22C55E"/>
+      <circle cx="36" cy="0"    r="5"   fill="#7B61FF"/>
+      <circle cx="18" cy="42"  r="4.5" fill="#22C55E"/>
+    </g>
+  </g>
+</svg>

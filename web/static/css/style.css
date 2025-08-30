@@ -761,3 +761,10 @@ body:not(.debug) .profile-menu.force-hidden{ display:none !important; }
 }
 
 .fav-toggle{margin-left:4px;background:transparent;border:0;cursor:pointer;font-size:1.1em;line-height:1;}
+
+/* brand mark sizing (safe defaults) */
+.brand-mark{
+  display:inline-block;
+  width:28px; height:28px;
+  vertical-align:middle;
+}

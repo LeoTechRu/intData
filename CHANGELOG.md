@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API жёстко переведён на `/api/v1` без редиректов и хвостовых слэшей; старые `/api/*` возвращают `404`.
 - `GET /api/v1/reminders` проксирует ближайшие alarms и помечен устаревшим; используйте `/api/v1/calendar/items/{item_id}/alarms`.
 - API `/api/v1/reminders` переведён в read-only режим, UI редиректит на `/calendar`.
+- Обновлён бренд: новый SVG‑favicon, маркер в шапке и web manifest.
 
 ### Fixed
 - Исправлены сравнения уровней логирования после перехода на `IntEnum`.
