@@ -24,6 +24,7 @@
 - Changelog: [CHANGELOG.md](./CHANGELOG.md)
 - Backlog: [BACKLOG.md](./BACKLOG.md)
 - `/api/v1/reminders` устарел; используйте `/api/v1/calendar/items/{item_id}/alarms`
+- Добавление бота в группу и получение `chat_id`: [docs/telegram_chat_id.md](./docs/telegram_chat_id.md)
 
 ## Persona in header via app_settings (no roles in UI)
 Персональные тексты для шапки берутся из `app_settings` по ключам

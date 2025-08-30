@@ -5,7 +5,14 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
 from pydantic import BaseModel
 
-from core.models import Project, TgUser, WebUser
+from core.models import (
+    Project,
+    TgUser,
+    WebUser,
+    NotificationChannel,
+    NotificationChannelKind,
+    ProjectNotification,
+)
 from core.services.para_service import ParaService
 from web.dependencies import get_current_tg_user, get_current_web_user
 from ..template_env import templates
@@ -65,21 +72,34 @@ async def create_project(payload: ProjectCreate, current_user: TgUser | None = D
 
 
 # ---------------------------------------------------------------------------
-# Project notifications (placeholder)
+# Project notifications
 # ---------------------------------------------------------------------------
 
 
-class ProjectNotificationCreate(BaseModel):
-    """Bind a Telegram channel to a project with given rules."""
+class ChannelIn(BaseModel):
+    type: NotificationChannelKind
+    address: dict
 
-    channel_id: int
+
+class ProjectNotificationCreate(BaseModel):
+    channel: ChannelIn
     rules: dict | None = None
 
 
-class ProjectNotificationResponse(ProjectNotificationCreate):
-    """Echo representation of a project notification binding."""
+class ProjectNotificationResponse(BaseModel):
+    id: int
+    channel: ChannelIn
+    rules: dict | None = None
 
-    id: int | None = None
+    @classmethod
+    def from_models(
+        cls, pn: ProjectNotification, ch: NotificationChannel
+    ) -> "ProjectNotificationResponse":
+        return cls(
+            id=pn.id,
+            channel=ChannelIn(type=ch.kind, address=ch.address),
+            rules=pn.rules or {},
+        )
 
 
 @router.post(
@@ -92,14 +112,42 @@ async def create_project_notification(
     payload: ProjectNotificationCreate,
     current_user: TgUser | None = Depends(get_current_tg_user),
 ):
-    """Placeholder for creating project notification rules."""
-
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Notifications not implemented",
-    )
+
+    async with ParaService() as svc:
+        project = await svc.session.get(Project, project_id)
+        if not project or project.owner_id != current_user.telegram_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+        # Find or create channel
+        from sqlalchemy import select
+
+        stmt = select(NotificationChannel).where(
+            NotificationChannel.owner_id == current_user.telegram_id,
+            NotificationChannel.kind == payload.channel.type,
+            NotificationChannel.address == payload.channel.address,
+        )
+        res = await svc.session.execute(stmt)
+        channel = res.scalars().first()
+        if channel is None:
+            channel = NotificationChannel(
+                owner_id=current_user.telegram_id,
+                kind=payload.channel.type,
+                address=payload.channel.address,
+            )
+            svc.session.add(channel)
+            await svc.session.flush()
+
+        pn = ProjectNotification(
+            project_id=project_id,
+            channel_id=channel.id,
+            rules=payload.rules or {},
+        )
+        svc.session.add(pn)
+        await svc.session.flush()
+
+    return ProjectNotificationResponse.from_models(pn, channel)
 
 
 @router.get(
@@ -109,11 +157,25 @@ async def create_project_notification(
 async def list_project_notifications(
     project_id: int, current_user: TgUser | None = Depends(get_current_tg_user)
 ):
-    """Placeholder for listing project notification rules."""
-
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    return []
+
+    async with ParaService() as svc:
+        project = await svc.session.get(Project, project_id)
+        if not project or project.owner_id != current_user.telegram_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        from sqlalchemy import select
+
+        stmt = (
+            select(ProjectNotification, NotificationChannel)
+            .join(NotificationChannel, ProjectNotification.channel_id == NotificationChannel.id)
+            .where(ProjectNotification.project_id == project_id)
+        )
+        res = await svc.session.execute(stmt)
+        items = [
+            ProjectNotificationResponse.from_models(pn, ch) for pn, ch in res.all()
+        ]
+    return items
 
 
 @ui_router.get("")

@@ -338,44 +338,6 @@ class CalendarEvent(Base):
  
  
 # ---------------------------------------------------------------------------
-# CalendarItem & Alarm models
-# ---------------------------------------------------------------------------
-
-
-class CalendarItem(Base):
-    """Unified calendar item used for events and tasks."""
-
-    __tablename__ = "calendar_items"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    kind = Column(String(20), nullable=False)
-    title = Column(String(255), nullable=False)
-    due_at = Column(DateTime(timezone=True))
-    area_id = Column(Integer, ForeignKey("areas.id"), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=utcnow)
-    updated_at = Column(
-        DateTime(timezone=True), default=utcnow, onupdate=utcnow
-    )
-
-
-class Alarm(Base):
-    """Alarm attached to a :class:`CalendarItem`."""
-
-    __tablename__ = "alarms"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    item_id = Column(
-        Integer,
-        ForeignKey("calendar_items.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    trigger_at = Column(DateTime(timezone=True), nullable=False)
-    created_at = Column(DateTime(timezone=True), default=utcnow)
-
-    item = relationship("CalendarItem", backref="alarms")
-
-
-# ---------------------------------------------------------------------------
 # TimeEntry model
 # ---------------------------------------------------------------------------
 
@@ -676,26 +638,6 @@ class Link(Base):
     created_at = Column(DateTime, default=utcnow)
 
 
-# ---------------------------------------------------------------------------
-# Google Calendar link
-# ---------------------------------------------------------------------------
-
-class GCalLink(Base):
-    """OAuth credentials and watch state for Google Calendar integration."""
-
-    __tablename__ = "gcal_links"
-
-    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(PG_UUID(as_uuid=True), nullable=False)
-    google_calendar_id = Column(String, nullable=False)
-    access_token = Column(String, nullable=False)
-    refresh_token = Column(String, nullable=False)
-    scope = Column(String, nullable=False)
-    token_expiry = Column(DateTime(timezone=True), nullable=False)
-    sync_token = Column(String)
-    resource_id = Column(String)
-    channel_id = Column(String)
-    channel_expiry = Column(DateTime(timezone=True))
     created_at = Column(DateTime(timezone=True), default=utcnow)
     updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
@@ -790,7 +732,8 @@ class NotificationChannel(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
     kind = Column(Enum(NotificationChannelKind), nullable=False)
-    address = Column(String(255), nullable=False)
+    # Для Telegram address хранит JSON вида {"chat_id": -100123456}
+    address = Column(JSON, nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), default=utcnow)
     updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
@@ -804,9 +747,34 @@ class ProjectNotification(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
     channel_id = Column(Integer, ForeignKey("notification_channels.id"), nullable=False)
+    rules = Column(JSON, default=dict)
     is_enabled = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), default=utcnow)
     updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class NotificationTrigger(Base):
+    """Отложенный триггер отправки уведомления."""
+
+    __tablename__ = "notification_triggers"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    next_fire_at = Column(DateTime(timezone=True), nullable=False)
+    alarm_id = Column(Integer, ForeignKey("alarms.id"))
+    rule = Column(JSON)
+    dedupe_key = Column(String(255), unique=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+class NotificationDelivery(Base):
+    """Лог отправленных уведомлений для идемпотентности."""
+
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    dedupe_key = Column(String(255), unique=True, nullable=False)
+    sent_at = Column(DateTime(timezone=True), default=utcnow)
 
 
 class GCalLink(Base):
