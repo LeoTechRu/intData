@@ -18,7 +18,7 @@
       <form id="telegram-form" class="ui-form">
         <label><input type="checkbox" name="TG_LOGIN_ENABLED" {% if TG_LOGIN_ENABLED %}checked{% endif %}> Включить Telegram Login</label>
         <label>Имя бота (без @)<input class="control" type="text" name="BOT_USERNAME" value="{{ TG_BOT_USERNAME or '' }}"></label>
-        <label>Токен бота<input class="control" type="password" name="BOT_TOKEN" placeholder="Задать новый токен"></label>
+        <label>Токен бота<input class="control" type="password" name="TELEGRAM_BOT_TOKEN" placeholder="Задать новый токен"></label>
         <button class="button" type="submit">Сохранить</button>
       </form>
     </section>
@@ -46,7 +46,7 @@ document.getElementById('telegram-form')?.addEventListener('submit', async (e)=>
   await patch('/api/v1/admin/settings/telegram', {
     TG_LOGIN_ENABLED: !!fd.get('TG_LOGIN_ENABLED'),
     BOT_USERNAME: (fd.get('BOT_USERNAME')||'').toString().trim() || null,
-    BOT_TOKEN: (fd.get('BOT_TOKEN')||'').toString().trim() || null,
+    TELEGRAM_BOT_TOKEN: (fd.get('TELEGRAM_BOT_TOKEN')||'').toString().trim() || null,
   });
   location.reload();
 });

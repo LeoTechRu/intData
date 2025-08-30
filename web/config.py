@@ -25,7 +25,7 @@ class EnvSettings(BaseSettings):
     BOT_LANDING_URL: AnyHttpUrl | None = None  # type: ignore[assignment]
 
     # Bot
-    BOT_TOKEN: Optional[str] = None
+    TELEGRAM_BOT_TOKEN: Optional[str] = None
     BOT_USERNAME: Optional[str] = None  # без @
 
     ADMIN_CHAT_ID: Optional[str] = None
@@ -133,11 +133,11 @@ class Settings:
         return self._store.get("telegram.BOT_USERNAME") or self._env.BOT_USERNAME
 
     @property
-    def BOT_TOKEN(self):
-        return self._store.get_secret("telegram.BOT_TOKEN") or self._env.BOT_TOKEN
-    @BOT_TOKEN.setter
-    def BOT_TOKEN(self, value):  # pragma: no cover - used in tests
-        self._env.BOT_TOKEN = value
+    def TELEGRAM_BOT_TOKEN(self):
+        return self._store.get_secret("telegram.TELEGRAM_BOT_TOKEN") or self._env.TELEGRAM_BOT_TOKEN
+    @TELEGRAM_BOT_TOKEN.setter
+    def TELEGRAM_BOT_TOKEN(self, value):  # pragma: no cover - used in tests
+        self._env.TELEGRAM_BOT_TOKEN = value
 
     @property
     def TG_LOGIN_ENABLED(self):

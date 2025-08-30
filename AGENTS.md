@@ -16,7 +16,7 @@
 
 ## Security & Configuration
 - Use `.env` (see `.env.example`) and never commit secrets.
-- Required vars: `BOT_TOKEN`, `BOT_USERNAME`, `WEB_PUBLIC_URL`, `SESSION_MAX_AGE`, `ADMIN_TELEGRAM_IDS`, DB settings.
+- Required vars: `TELEGRAM_BOT_TOKEN`, `BOT_USERNAME`, `WEB_PUBLIC_URL`, `SESSION_MAX_AGE`, `ADMIN_TELEGRAM_IDS`, DB settings.
 - Tests: create `.env.test` (ignored) and export vars, e.g.:
   ```bash
   cat > .env.test <<'EOF'

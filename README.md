@@ -128,7 +128,7 @@ API находится на первом стабильном уровне `/api
 Создайте файл `.env` в корне репозитория со следующими переменными:
 
 ```dotenv
-BOT_TOKEN=123456789:AA...your...token
+TELEGRAM_BOT_TOKEN=123456789:AA...your...token
 BOT_USERNAME=YourBotName   # БЕЗ @; можно оставить BOT_USERNAME — тоже подхватится
 WEB_PUBLIC_URL=http://109.196.99.158:5800  # можно указать домен или IP с портом
 SESSION_MAX_AGE=86400

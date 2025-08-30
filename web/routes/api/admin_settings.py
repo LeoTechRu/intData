@@ -20,7 +20,7 @@ class BrandingIn(BaseModel):
 class TelegramIn(BaseModel):
     TG_LOGIN_ENABLED: bool
     BOT_USERNAME: str | None = None
-    BOT_TOKEN: str | None = None
+    TELEGRAM_BOT_TOKEN: str | None = None
 
 
 @router.get("", name="api:admin_settings_get", dependencies=[Depends(role_required(UserRole.admin))])
@@ -34,7 +34,7 @@ async def get_settings():
         "telegram": {
             "TG_LOGIN_ENABLED": S.TG_LOGIN_ENABLED,
             "BOT_USERNAME": S.BOT_USERNAME,
-            "BOT_TOKEN": bool(S.BOT_TOKEN),  # do not leak value
+            "TELEGRAM_BOT_TOKEN": bool(S.TELEGRAM_BOT_TOKEN),  # do not leak value
         },
     }
 
@@ -58,12 +58,12 @@ async def patch_telegram(payload: TelegramIn):
     await st.set_async("telegram.TG_LOGIN_ENABLED", "1" if payload.TG_LOGIN_ENABLED else "0")
     if payload.BOT_USERNAME is not None:
         await st.set_async("telegram.BOT_USERNAME", payload.BOT_USERNAME.lstrip("@"))
-    if payload.BOT_TOKEN:
-        await st.set_async("telegram.BOT_TOKEN", payload.BOT_TOKEN, is_secret=True)
+    if payload.TELEGRAM_BOT_TOKEN:
+        await st.set_async("telegram.TELEGRAM_BOT_TOKEN", payload.TELEGRAM_BOT_TOKEN, is_secret=True)
     st._cache["telegram.TG_LOGIN_ENABLED"] = "1" if payload.TG_LOGIN_ENABLED else "0"
     if payload.BOT_USERNAME is not None:
         st._cache["telegram.BOT_USERNAME"] = payload.BOT_USERNAME.lstrip("@")
-    if payload.BOT_TOKEN:
+    if payload.TELEGRAM_BOT_TOKEN:
         # do not cache secrets if encryption enabled; keep placeholder True
-        st._cache["telegram.BOT_TOKEN"] = "***"
+        st._cache["telegram.TELEGRAM_BOT_TOKEN"] = "***"
     return {"ok": True}
