@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Optional
+from typing import Optional, Literal
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import AnyHttpUrl, ValidationInfo, field_validator
 import os
@@ -36,8 +36,10 @@ class EnvSettings(BaseSettings):
     LOGIN_REDIRECT_URL: AnyHttpUrl | None = None  # type: ignore[assignment]
     SESSION_MAX_AGE: int = 86400
     TG_LOGIN_ENABLED: bool = True
+    CALENDAR_V2_ENABLED: bool = False
     RECAPTCHA_SITE_KEY: Optional[str] = None
     RECAPTCHA_SECRET_KEY: Optional[str] = None
+    APP_MODE: Literal["single", "multiplayer"] = "single"
 
     # Google Calendar
     GOOGLE_CLIENT_ID: Optional[str] = None
@@ -143,6 +145,17 @@ class Settings:
         if v is None:
             return self._env.TG_LOGIN_ENABLED
         return str(v).strip() not in {"0", "false", "False"}
+
+    @property
+    def CALENDAR_V2_ENABLED(self):
+        v = self._store.get("calendar.CALENDAR_V2_ENABLED")
+        if v is None:
+            return self._env.CALENDAR_V2_ENABLED
+        return str(v).strip() not in {"0", "false", "False"}
+
+    @property
+    def APP_MODE(self):
+        return self._store.get("app.APP_MODE") or self._env.APP_MODE
 
     @property
     def LOGIN_REDIRECT_URL(self):

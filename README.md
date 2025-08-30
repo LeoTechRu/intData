@@ -134,6 +134,8 @@ WEB_PUBLIC_URL=http://109.196.99.158:5800  # можно указать доме�
 SESSION_MAX_AGE=86400
 API_BASE=/api/v1
 ADMIN_TELEGRAM_IDS=123,456  # список Telegram-ID администраторов через запятую
+CALENDAR_V2_ENABLED=true
+APP_MODE=single
 ```
 
 ### Telegram Login Widget
