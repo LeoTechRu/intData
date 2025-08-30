@@ -21,6 +21,7 @@ from core.models import (
 )
 from core.utils import utcnow
 from .nexus_service import CRUDService
+from .alarm_service import AlarmService
 
 
 class AreaRepository(CRUDService[Area]):
@@ -89,6 +90,8 @@ class CalendarItemRepository(CRUDService[CalendarItem]):
         )
         self.session.add(item)
         await self.session.flush()
+        alarm_service = AlarmService(self.session)
+        await alarm_service.create_alarm(item.id, utcnow())
         return item
 
     async def list(

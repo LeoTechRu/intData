@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
 from core.models import Reminder, TgUser
@@ -11,7 +12,6 @@ from core.services.reminder_service import ReminderService
 from core.services.alarm_service import AlarmService
 from web.dependencies import get_current_tg_user, get_current_web_user
 from core.models import WebUser
-from ..template_env import templates
 
 
 router = APIRouter(tags=["reminders"])
@@ -143,18 +143,12 @@ async def create_reminder(
     payload: ReminderCreate,
     current_user: TgUser | None = Depends(get_current_tg_user),
 ):
-    """Create a reminder for the current user."""
+    """Legacy endpoint no longer supported."""
 
-    if not current_user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    async with ReminderService() as service:
-        reminder = await service.create_reminder(
-            owner_id=current_user.telegram_id,
-            message=payload.message,
-            remind_at=payload.remind_at,
-            task_id=payload.task_id,
-        )
-    return ReminderResponse.from_model(reminder)
+    raise HTTPException(
+        status_code=status.HTTP_410_GONE,
+        detail="Use /api/v1/calendar/items/{item_id}/alarms",
+    )
 
 
 @router.post("/{reminder_id}/done", response_model=ReminderResponse)
@@ -162,15 +156,12 @@ async def mark_reminder_done(
     reminder_id: int,
     current_user: TgUser | None = Depends(get_current_tg_user),
 ):
-    """Mark the given reminder as done."""
+    """Legacy endpoint no longer supported."""
 
-    if not current_user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    async with ReminderService() as service:
-        reminder = await service.mark_done(reminder_id)
-        if reminder is None or reminder.owner_id != current_user.telegram_id:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    return ReminderResponse.from_model(reminder)
+    raise HTTPException(
+        status_code=status.HTTP_410_GONE,
+        detail="Use /api/v1/calendar/items/{item_id}/alarms",
+    )
 
 
 @ui_router.get("")
@@ -178,15 +169,9 @@ async def reminders_page(
     request: Request,
     current_user: WebUser | None = Depends(get_current_web_user),
 ):
-    """Render simple UI for reminders with role-aware header."""
+    """Redirect legacy reminders UI to calendar page."""
 
-    context = {
-        "current_user": current_user,
-        "current_role_name": getattr(current_user, "role", ""),
-        "is_admin": getattr(current_user, "role", "") == "admin",
-        "page_title": "Напоминания",
-    }
-    return templates.TemplateResponse(request, "reminders.html", context)
+    return RedirectResponse("/calendar", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 
 
 # Alias for centralized API mounting

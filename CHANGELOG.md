@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Каркас системы напоминаний: модель `Reminder`, `ReminderService`, привязка к задачам.
 - Каркас календаря: модель `CalendarEvent`, `CalendarService`.
 - Базовые эндпоинты календаря `/api/v1/calendar/items` и генерация `feed.ics` (заглушки).
+- Таблицы `calendar_items`, `alarms`, `notification_channels`, `project_notifications`,
+  `notification_triggers` и `notifications`.
+- API `/api/v1/calendar/agenda` и `/api/v1/calendar/items/{item_id}/alarms`.
+- Уведомления в Telegram по расписанию через проектный канал.
 - REST-эндпоинты `/api/v1/app-settings` и загрузка динамических персон UI через `app_settings`.
 - Персонализированная шапка с названием системы и подсказкой в зависимости от роли.
 
@@ -31,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Обновлены шаблоны и хэндлеры под текущее API FastAPI/Starlette; переход на lifespan‑события.
 - API жёстко переведён на `/api/v1` без редиректов и хвостовых слэшей; старые `/api/*` возвращают `404`.
 - `GET /api/v1/reminders` проксирует ближайшие alarms и помечен устаревшим; используйте `/api/v1/calendar/items/{item_id}/alarms`.
+- API `/api/v1/reminders` переведён в read-only режим, UI редиректит на `/calendar`.
 
 ### Fixed
 - Исправлены сравнения уровней логирования после перехода на `IntEnum`.

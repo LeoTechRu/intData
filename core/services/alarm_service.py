@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core import db
-from core.models import Alarm, CalendarItem, Area
+from core.models import Alarm, CalendarItem, Area, NotificationTrigger
 from core.utils import utcnow
 
 
@@ -67,9 +67,17 @@ class AlarmService:
         return result.scalars().all()
 
     async def create_alarm(self, item_id: int, trigger_at) -> Alarm:
-        """Create an alarm for the given item."""
+        """Create an alarm and schedule notification trigger."""
 
         alarm = Alarm(item_id=item_id, trigger_at=trigger_at)
         self.session.add(alarm)
+        await self.session.flush()
+        self.session.add(
+            NotificationTrigger(
+                next_fire_at=trigger_at,
+                alarm_id=alarm.id,
+                dedupe_key=f"alarm:{alarm.id}",
+            )
+        )
         await self.session.flush()
         return alarm
