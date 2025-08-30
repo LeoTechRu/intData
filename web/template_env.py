@@ -10,19 +10,19 @@ from .config import S
 TEMPLATE_DIR = Path(__file__).resolve().parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 
-_web_url = os.getenv("WEB_PUBLIC_URL") or (
-    str(S.WEB_PUBLIC_URL) if S.WEB_PUBLIC_URL else "https://leonid.pro"
+_web_url = os.getenv("PUBLIC_URL") or (
+    str(S.PUBLIC_URL) if S.PUBLIC_URL else "https://intdata.pro"
 )
-_bot_username = os.getenv("BOT_USERNAME", S.BOT_USERNAME)
-_bot_username_with_at = "@" + _bot_username.lstrip("@")
+_TG_BOT_USERNAME = os.getenv("TG_BOT_USERNAME", S.TG_BOT_USERNAME)
+_TG_BOT_USERNAME_with_at = "@" + _TG_BOT_USERNAME.lstrip("@")
 
 templates.env.globals.update(
-    APP_BRAND_NAME=S.APP_BRAND_NAME,
-    WEB_PUBLIC_URL=S.WEB_PUBLIC_URL,
+    BRAND_NAME=S.BRAND_NAME,
+    PUBLIC_URL=S.PUBLIC_URL,
     BOT_LANDING_URL=S.BOT_LANDING_URL,
     TG_LOGIN_ENABLED=S.TG_LOGIN_ENABLED,
-    TG_BOT_USERNAME=S.BOT_USERNAME,
-    BOT_USERNAME=("@" + (S.BOT_USERNAME or "").lstrip("@")) if S.BOT_USERNAME else None,
+    TG_TG_BOT_USERNAME=S.TG_BOT_USERNAME,
+    TG_BOT_USERNAME=("@" + (S.TG_BOT_USERNAME or "").lstrip("@")) if S.TG_BOT_USERNAME else None,
     RECAPTCHA_SITE_KEY=S.RECAPTCHA_SITE_KEY,
     CALENDAR_V2_ENABLED=S.CALENDAR_V2_ENABLED,
 )

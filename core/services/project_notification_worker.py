@@ -11,7 +11,7 @@ from core.models import (
     NotificationChannel,
 )
 from core.utils import utcnow
-from .telegram_bot import TelegramBotClient
+from .TG_BOT import TelegramBotClient
 
 
 class ProjectNotificationWorker:

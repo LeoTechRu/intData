@@ -61,12 +61,12 @@ async def restart_service(
     """Restart systemd unit for 'web' or 'bot' (requires sudoers setup).
 
     Returns JSON with result. The service user must have passwordless sudo for
-    the corresponding units, e.g. in /etc/sudoers.d/leonidpro:
-        www-data ALL=NOPASSWD: /bin/systemctl restart leonidpro-web, /bin/systemctl restart leonidpro-bot
+    the corresponding units, e.g. in /etc/sudoers.d/intData:
+        www-data ALL=NOPASSWD: /bin/systemctl restart intdata-web, /bin/systemctl restart intdata-bot
     """
     import asyncio
 
-    units = {"web": "leonidpro-web", "bot": "leonidpro-bot"}
+    units = {"web": "intdata-web", "bot": "intdata-bot"}
     if target not in units:
         raise HTTPException(status_code=400, detail="invalid target")
     cmd = f"sudo -n systemctl restart {units[target]}"

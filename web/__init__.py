@@ -110,7 +110,7 @@ tags_metadata = [
 
 app = FastAPI(
     lifespan=lifespan,
-    title="LeonidPro API",
+    title="Intelligent Data Platform API",
     docs_url=None,
     redoc_url=None,
     openapi_url="/api/openapi.json",
@@ -121,7 +121,7 @@ app = FastAPI(
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
-FAVICON_PATH = STATIC_DIR / "img" / "brand" / "leonidpro-favicon.svg"
+FAVICON_PATH = STATIC_DIR / "img" / "brand" / "intdata-favicon.svg"
 
 
 @app.get("/favicon.ico", include_in_schema=False)
@@ -133,7 +133,7 @@ async def favicon() -> FileResponse:
 @app.get("/api", include_in_schema=False)
 async def swagger_ui():
     return get_swagger_ui_html(
-        openapi_url="/api/openapi.json", title="LeonidPro API - Swagger UI"
+        openapi_url="/api/openapi.json", title="Intelligent Data Platform API - Swagger UI"
     )
 
 

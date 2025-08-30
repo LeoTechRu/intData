@@ -23,7 +23,7 @@ from urllib.parse import urlparse
 router = APIRouter(tags=["auth"])
 
 # itsdangerous serializer for magic links and short-lived tokens
-serializer = URLSafeTimedSerializer(os.getenv("SECRET_KEY", S.TELEGRAM_BOT_TOKEN or ""))
+serializer = URLSafeTimedSerializer(os.getenv("SECRET_KEY", S.TG_BOT_TOKEN or ""))
 
 
 async def verify_recaptcha_token(token: str | None) -> bool:
@@ -61,23 +61,23 @@ def _config_diagnostics(request: Request) -> list[dict]:
     issues: list[dict] = []
     # Telegram Login
     if S.TG_LOGIN_ENABLED:
-        if not S.TELEGRAM_BOT_TOKEN:
+        if not S.TG_BOT_TOKEN:
             issues.append({
                 "code": "tg_login_no_token",
-                "message": "Telegram Login включен, но отсутствует TELEGRAM_BOT_TOKEN.",
+                "message": "Telegram Login включен, но отсутствует TG_BOT_TOKEN.",
             })
-        if not S.BOT_USERNAME:
+        if not S.TG_BOT_USERNAME:
             issues.append({
                 "code": "tg_login_no_username",
-                "message": "Telegram Login включен, но не задан BOT_USERNAME (без @).",
+                "message": "Telegram Login включен, но не задан TG_BOT_USERNAME (без @).",
             })
     # Public URL mismatch
     try:
-        want = urlparse(str(S.WEB_PUBLIC_URL))
+        want = urlparse(str(S.PUBLIC_URL))
         got = urlparse(str(request.base_url))
         if want.scheme and want.netloc and (want.scheme != got.scheme or want.netloc != got.netloc):
             issues.append({
-                "code": "web_public_url_mismatch",
+                "code": "PUBLIC_URL_mismatch",
                 "message": f"Ожидается {want.scheme}://{want.netloc}, а запрос пришёл на {got.scheme}://{got.netloc}.",
             })
     except Exception:
@@ -188,9 +188,9 @@ async def send_magic_email(email: str, link: str) -> None:  # pragma: no cover -
 
 def verify_telegram_auth(data: dict) -> dict:
     """Validate Telegram Login Widget signature."""
-    token = S.TELEGRAM_BOT_TOKEN
+    token = S.TG_BOT_TOKEN
     if not token:
-        raise HTTPException(status_code=503, detail="Telegram login disabled (no TELEGRAM_BOT_TOKEN)")
+        raise HTTPException(status_code=503, detail="Telegram login disabled (no TG_BOT_TOKEN)")
 
     recv_hash = data.get("hash", "")
     check_data = "\n".join(
@@ -250,7 +250,7 @@ def verify_telegram_login(data: Dict[str, str]) -> bool:
     recv_hash = data.get("hash", "")
     pairs = [f"{k}={v}" for k, v in sorted(data.items()) if k != "hash"]
     data_check_string = "\n".join(pairs)
-    secret = hashlib.sha256(S.TELEGRAM_BOT_TOKEN.encode()).digest()
+    secret = hashlib.sha256(S.TG_BOT_TOKEN.encode()).digest()
     calc_hash = hmac.new(secret, data_check_string.encode(), hashlib.sha256).hexdigest()
     if not hmac.compare_digest(calc_hash, recv_hash):
         return False
@@ -453,7 +453,7 @@ async def magic_request(request: Request, email: str = Form(...), form_ts: str =
         return render_auth(request, active="restore", form_values={"email": email})
 
     token = serializer.dumps({"email": email, "kind": "magic"})
-    magic_url = f"{os.getenv('APP_BASE_URL','https://leonid.pro')}/auth/magic?token={token}"
+    magic_url = f"{os.getenv('APP_BASE_URL','https://intdata.pro')}/auth/magic?token={token}"
     try:
         await send_magic_email(email, magic_url)  # если есть почтовик
     except Exception:

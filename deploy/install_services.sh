@@ -8,29 +8,29 @@ cd "$PROJECT_ROOT"
 [ -s ".env" ] || { echo "ERROR: .env missing at $PROJECT_ROOT/.env"; exit 1; }
 
 # 1) Подтягиваем только нужные переменные из .env (без экспорта «всего»)
-#    ожидаем, что в .env определены LEONIDPRO_WORKDIR и LEONIDPRO_VENV
-LEONIDPRO_WORKDIR=$(grep -E '^LEONIDPRO_WORKDIR=' .env | cut -d= -f2- | tr -d '"' | tr -d '\r')
-LEONIDPRO_VENV=$(grep -E '^LEONIDPRO_VENV=' .env | cut -d= -f2- | tr -d '"' | tr -d '\r')
-# expand nested refs like ${LEONIDPRO_WORKDIR}/venv
-LEONIDPRO_WORKDIR=$(eval echo "$LEONIDPRO_WORKDIR")
-LEONIDPRO_VENV=$(eval echo "$LEONIDPRO_VENV")
-[ -n "$LEONIDPRO_WORKDIR" ] && [ -n "$LEONIDPRO_VENV" ] || { echo "ERROR: LEONIDPRO_WORKDIR/LEONIDPRO_VENV not set in .env"; exit 1; }
+#    ожидаем, что в .env определены PROJECT_DIR и PROJECT_VENV
+PROJECT_DIR=$(grep -E '^PROJECT_DIR=' .env | cut -d= -f2- | tr -d '"' | tr -d '\r')
+PROJECT_VENV=$(grep -E '^PROJECT_VENV=' .env | cut -d= -f2- | tr -d '"' | tr -d '\r')
+# expand nested refs like ${PROJECT_DIR}/venv
+PROJECT_DIR=$(eval echo "$PROJECT_DIR")
+PROJECT_VENV=$(eval echo "$PROJECT_VENV")
+[ -n "$PROJECT_DIR" ] && [ -n "$PROJECT_VENV" ] || { echo "ERROR: PROJECT_DIR/PROJECT_VENV not set in .env"; exit 1; }
 
 # 2) Подготовка venv и зависимости
-mkdir -p "$LEONIDPRO_WORKDIR"
-python3 -m venv "$LEONIDPRO_VENV" >/dev/null 2>&1 || true
-"$LEONIDPRO_VENV/bin/pip" install --upgrade pip
-"$LEONIDPRO_VENV/bin/pip" install -r requirements.txt
+mkdir -p "$PROJECT_DIR"
+python3 -m venv "$PROJECT_VENV" >/dev/null 2>&1 || true
+"$PROJECT_VENV/bin/pip" install --upgrade pip
+"$PROJECT_VENV/bin/pip" install -r requirements.txt
 
 # 3) Установка unit-файлов (только если изменились)
-install -m 0644 -D "$PROJECT_ROOT/deploy/systemd/leonidpro-bot.service" /etc/systemd/system/leonidpro-bot.service
-install -m 0644 -D "$PROJECT_ROOT/deploy/systemd/leonidpro-web.service" /etc/systemd/system/leonidpro-web.service
+install -m 0644 -D "$PROJECT_ROOT/deploy/systemd/intdata-bot.service" /etc/systemd/system/intdata-bot.service
+install -m 0644 -D "$PROJECT_ROOT/deploy/systemd/intdata-web.service" /etc/systemd/system/intdata-web.service
 
 # 4) Проверка синтаксиса и перезагрузка конфигурации systemd
-systemd-analyze verify /etc/systemd/system/leonidpro-*.service
+systemd-analyze verify /etc/systemd/system/intdata-*.service
 systemctl daemon-reload
 
 # 5) Включаем, но НЕ рестартим здесь (перезапуск сделает GitHub job один раз)
-systemctl enable leonidpro-bot.service leonidpro-web.service
+systemctl enable intdata-bot.service intdata-web.service
 
 echo "install_services: ok"

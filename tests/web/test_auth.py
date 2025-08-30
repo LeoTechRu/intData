@@ -14,9 +14,9 @@ from base import Base
 from core.services.telegram_user_service import TelegramUserService
 from core.services.web_user_service import WebUserService
 
-TELEGRAM_BOT_TOKEN = "TEST_TOKEN"
-os.environ.setdefault("TELEGRAM_BOT_TOKEN", TELEGRAM_BOT_TOKEN)
-os.environ.setdefault("BOT_USERNAME", "testbot")
+TG_BOT_TOKEN = "TEST_TOKEN"
+os.environ.setdefault("TG_BOT_TOKEN", TG_BOT_TOKEN)
+os.environ.setdefault("TG_BOT_USERNAME", "testbot")
 from web.config import S  # noqa: E402
 
 try:
@@ -28,7 +28,7 @@ except ModuleNotFoundError:  # fallback if app located differently
 def _generate_hash(data: dict) -> str:
     """Generate Telegram auth hash."""
     data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(data.items()) if k != "hash")
-    secret_key = hashlib.sha256(TELEGRAM_BOT_TOKEN.encode()).digest()
+    secret_key = hashlib.sha256(TG_BOT_TOKEN.encode()).digest()
     return hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
 
 
@@ -39,8 +39,8 @@ async def client():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     db.async_session = async_session
-    db.TELEGRAM_BOT_TOKEN = TELEGRAM_BOT_TOKEN
-    S.TELEGRAM_BOT_TOKEN = TELEGRAM_BOT_TOKEN
+    db.TG_BOT_TOKEN = TG_BOT_TOKEN
+    S.TG_BOT_TOKEN = TG_BOT_TOKEN
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
     await engine.dispose()

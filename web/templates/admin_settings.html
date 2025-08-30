@@ -6,8 +6,8 @@
     <section class="card" style="margin-bottom:1rem;">
       <div class="card-title">Брендинг</div>
       <form id="branding-form" class="ui-form">
-        <label>Имя бренда<input class="control" type="text" name="APP_BRAND_NAME" value="{{ APP_BRAND_NAME }}"></label>
-        <label>Публичный URL<input class="control" type="url" name="WEB_PUBLIC_URL" value="{{ WEB_PUBLIC_URL }}"></label>
+        <label>Имя бренда<input class="control" type="text" name="BRAND_NAME" value="{{ BRAND_NAME }}"></label>
+        <label>Публичный URL<input class="control" type="url" name="PUBLIC_URL" value="{{ PUBLIC_URL }}"></label>
         <label>URL бота<input class="control" type="url" name="BOT_LANDING_URL" value="{{ BOT_LANDING_URL }}"></label>
         <button class="button" type="submit">Сохранить</button>
       </form>
@@ -17,8 +17,8 @@
       <div class="card-title">Telegram</div>
       <form id="telegram-form" class="ui-form">
         <label><input type="checkbox" name="TG_LOGIN_ENABLED" {% if TG_LOGIN_ENABLED %}checked{% endif %}> Включить Telegram Login</label>
-        <label>Имя бота (без @)<input class="control" type="text" name="BOT_USERNAME" value="{{ TG_BOT_USERNAME or '' }}"></label>
-        <label>Токен бота<input class="control" type="password" name="TELEGRAM_BOT_TOKEN" placeholder="Задать новый токен"></label>
+        <label>Имя бота (без @)<input class="control" type="text" name="TG_BOT_USERNAME" value="{{ TG_TG_BOT_USERNAME or '' }}"></label>
+        <label>Токен бота<input class="control" type="password" name="TG_BOT_TOKEN" placeholder="Задать новый токен"></label>
         <button class="button" type="submit">Сохранить</button>
       </form>
     </section>
@@ -34,8 +34,8 @@ document.getElementById('branding-form')?.addEventListener('submit', async (e)=>
   e.preventDefault();
   const fd = new FormData(e.currentTarget);
   await patch('/api/v1/admin/settings/branding', {
-    APP_BRAND_NAME: fd.get('APP_BRAND_NAME'),
-    WEB_PUBLIC_URL: fd.get('WEB_PUBLIC_URL'),
+    BRAND_NAME: fd.get('BRAND_NAME'),
+    PUBLIC_URL: fd.get('PUBLIC_URL'),
     BOT_LANDING_URL: fd.get('BOT_LANDING_URL'),
   });
   location.reload();
@@ -45,8 +45,8 @@ document.getElementById('telegram-form')?.addEventListener('submit', async (e)=>
   const fd = new FormData(e.currentTarget);
   await patch('/api/v1/admin/settings/telegram', {
     TG_LOGIN_ENABLED: !!fd.get('TG_LOGIN_ENABLED'),
-    BOT_USERNAME: (fd.get('BOT_USERNAME')||'').toString().trim() || null,
-    TELEGRAM_BOT_TOKEN: (fd.get('TELEGRAM_BOT_TOKEN')||'').toString().trim() || null,
+    TG_BOT_USERNAME: (fd.get('TG_BOT_USERNAME')||'').toString().trim() || null,
+    TG_BOT_TOKEN: (fd.get('TG_BOT_TOKEN')||'').toString().trim() || null,
   });
   location.reload();
 });

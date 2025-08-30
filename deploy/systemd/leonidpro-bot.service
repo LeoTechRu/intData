@@ -1,14 +1,14 @@
 [Unit]
-Description=LeonidBot Telegram Bot Service
+Description=intDataBot Telegram Bot Service
 After=network.target
 
 [Service]
 User=deploy
 Group=devs
-WorkingDirectory=%E{LEONIDPRO_WORKDIR}
-EnvironmentFile=%E{LEONIDPRO_WORKDIR}/.env
-Environment=PATH=%E{LEONIDPRO_VENV}/bin
-ExecStart=%E{LEONIDPRO_VENV}/bin/python -m bot.main
+WorkingDirectory=%E{PROJECT_DIR}
+EnvironmentFile=%E{PROJECT_DIR}/.env
+Environment=PATH=%E{PROJECT_VENV}/bin
+ExecStart=%E{PROJECT_VENV}/bin/python -m bot.main
 
 Restart=on-failure
 RestartSec=3s

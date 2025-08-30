@@ -1,4 +1,4 @@
-# /sd/leonidpro/decorators.py
+# /sd/intdata/decorators.py
 from functools import wraps
 import os
 

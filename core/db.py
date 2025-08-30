@@ -1,4 +1,4 @@
-# /sd/leonidpro/core/db.py
+# /sd/intdata/core/db.py
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 import logging
@@ -93,12 +93,12 @@ async def init_models() -> None:
     await bootstrap_db(engine)
 
 # Bot
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN") or ("123456:" + "A" * 35)
+TG_BOT_TOKEN = os.getenv("TG_BOT_TOKEN") or ("123456:" + "A" * 35)
 try:
-    bot = Bot(token=TELEGRAM_BOT_TOKEN)
+    bot = Bot(token=TG_BOT_TOKEN)
 except Exception:
-    TELEGRAM_BOT_TOKEN = "123456:" + "A" * 35
-    bot = Bot(token=TELEGRAM_BOT_TOKEN)
+    TG_BOT_TOKEN = "123456:" + "A" * 35
+    bot = Bot(token=TG_BOT_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 

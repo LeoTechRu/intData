@@ -23,7 +23,7 @@ def _fernet():  # lazy import to avoid hard dependency when unused
         from cryptography.fernet import Fernet  # type: ignore
     except Exception:  # pragma: no cover
         return None
-    key = os.getenv("LEONIDPRO_SECRET_KEY")
+    key = os.getenv("PROJECT_SECRET_KEY")
     if not key:
         return None
     try:

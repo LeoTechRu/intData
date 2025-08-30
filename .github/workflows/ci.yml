@@ -28,7 +28,7 @@ jobs:
 
       - name: Run tests
         env:
-          BOT_TOKEN: testtoken
-          BOT_USERNAME: testbot
+          TG_BOT_TOKEN: testtoken
+          TG_BOT_USERNAME: testbot
         run: pytest -q
 

@@ -1,4 +1,4 @@
-# /sd/leonidpro/bot/main.py
+# /sd/intdata/bot/main.py
 import asyncio
 import logging
 

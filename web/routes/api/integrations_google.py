@@ -21,7 +21,7 @@ router = APIRouter()
 async def connect(current_user: WebUser | None = Depends(get_current_web_user)):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    redirect_uri = f"{S.WEB_PUBLIC_URL.rstrip('/')}/api/v1/integrations/google/callback"
+    redirect_uri = f"{S.PUBLIC_URL.rstrip('/')}/api/v1/integrations/google/callback"
     url = generate_auth_url(str(current_user.id), redirect_uri)
     return RedirectResponse(url)
 
@@ -35,7 +35,7 @@ async def callback(
 ):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    redirect_uri = f"{S.WEB_PUBLIC_URL.rstrip('/')}/api/v1/integrations/google/callback"
+    redirect_uri = f"{S.PUBLIC_URL.rstrip('/')}/api/v1/integrations/google/callback"
     token_data = await exchange_code(code, redirect_uri)
     await save_gcal_link(str(current_user.id), "primary", token_data)
     logger.info("gcal connected for user %s", current_user.id)

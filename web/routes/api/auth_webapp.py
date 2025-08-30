@@ -35,7 +35,7 @@ def _check_telegram_webapp_auth(data: dict) -> dict:
 
     https://core.telegram.org/bots/webapps#validating-data-received-via-the-web-app
     """
-    if not S.TG_LOGIN_ENABLED or not S.TELEGRAM_BOT_TOKEN:
+    if not S.TG_LOGIN_ENABLED or not S.TG_BOT_TOKEN:
         raise HTTPException(status_code=503, detail="Telegram WebApp SSO disabled")
 
     recv_hash = data.get("hash")
@@ -47,7 +47,7 @@ def _check_telegram_webapp_auth(data: dict) -> dict:
         pairs.append(f"{k}={data[k]}")
     data_check_string = "\n".join(pairs)
 
-    secret_key = sha256((S.TELEGRAM_BOT_TOKEN or "").encode()).digest()
+    secret_key = sha256((S.TG_BOT_TOKEN or "").encode()).digest()
     calc_hash = hmac.new(secret_key, data_check_string.encode(), sha256).hexdigest()
 
     if not hmac.compare_digest(calc_hash, recv_hash):

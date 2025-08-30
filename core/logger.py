@@ -1,4 +1,4 @@
-# /sd/leonidpro/logger.py
+# /sd/intdata/logger.py
 from datetime import datetime
 
 from aiogram import BaseMiddleware, Bot
@@ -16,7 +16,7 @@ logging.basicConfig(
     format="[%(asctime)s] [%(levelname)s] %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S"
 )
-logger = logging.getLogger("LeonidPro")
+logger = logging.getLogger("intData")
 
 def escape_markdown_v2(text: str) -> str:
     """Экранирует специальные символы MarkdownV2"""

@@ -29,19 +29,19 @@ jobs:
             # обновление репозитория
             sudo -u deploy bash -lc '
               set -euo pipefail
-              cd /sd/leonidpro
+              cd /sd/intdata
               mkdir -p ~/.ssh && ssh-keyscan -H github.com >> ~/.ssh/known_hosts
               if git remote get-url origin | grep -q "^https://"; then
-                git remote set-url origin git@github.com:LeoTechRu/LeonidPro.git
+                git remote set-url origin git@github.com:LeoTechRu/intData.git
               fi
-              git config --global --add safe.directory /sd/leonidpro || true
+              git config --global --add safe.directory /sd/intdata || true
               git stash push -u -m "ci-autostash $(date -Iseconds)" || true
               git fetch --prune origin
               git reset --hard origin/main
             '
             # рестарт сервисов
-            sudo -n systemctl restart leonidpro-bot
-            sudo -n systemctl restart leonidpro-web
+            sudo -n systemctl restart intdata-bot
+            sudo -n systemctl restart intdata-web
             # проверка статуса
-            systemctl is-active --quiet leonidpro-bot
-            systemctl is-active --quiet leonidpro-web
+            systemctl is-active --quiet intdata-bot
+            systemctl is-active --quiet intdata-web

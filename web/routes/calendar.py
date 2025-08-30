@@ -347,11 +347,11 @@ def _generate_ics(items: list[CalendarItem]) -> str:
     from core.utils import utcnow
 
     now = utcnow().strftime("%Y%m%dT%H%M%SZ")
-    lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//LeonidPro//EN"]
+    lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//intData//EN"]
     for e in items:
         if e.end_at:
             lines.append("BEGIN:VEVENT")
-            lines.append(f"UID:{e.id}@leonidpro")
+            lines.append(f"UID:{e.id}@intData")
             lines.append(f"DTSTAMP:{now}")
             lines.append(f"DTSTART:{e.start_at.strftime('%Y%m%dT%H%M%SZ')}")
             lines.append(f"DTEND:{e.end_at.strftime('%Y%m%dT%H%M%SZ')}")
@@ -359,7 +359,7 @@ def _generate_ics(items: list[CalendarItem]) -> str:
             lines.append("END:VEVENT")
         else:
             lines.append("BEGIN:VTODO")
-            lines.append(f"UID:{e.id}@leonidpro")
+            lines.append(f"UID:{e.id}@intData")
             lines.append(f"DTSTAMP:{now}")
             lines.append(f"DUE:{e.start_at.strftime('%Y%m%dT%H%M%SZ')}")
             lines.append(f"SUMMARY:{e.title}")

@@ -390,7 +390,7 @@ class TelegramUserService:
             settings = await self.get_log_settings()
             if not settings or level.value < settings.level.value:
                 return False
-            bot = Bot(token=db.TELEGRAM_BOT_TOKEN)
+            bot = Bot(token=db.TG_BOT_TOKEN)
             await bot.send_message(
                 chat_id=settings.chat_id,
                 text=f"[{level.name}] {message}",

@@ -107,16 +107,16 @@
               <div class="card-title">Настройки приложения</div>
               <div class="grid grid-2">
                 <form id="adm-branding" class="ui-form">
-                  <label>Имя бренда<input class="control" type="text" name="APP_BRAND_NAME" value="{{ APP_BRAND_NAME }}"></label>
-                  <label>Публичный URL<input class="control" type="url" name="WEB_PUBLIC_URL" value="{{ WEB_PUBLIC_URL }}"></label>
+                  <label>Имя бренда<input class="control" type="text" name="BRAND_NAME" value="{{ BRAND_NAME }}"></label>
+                  <label>Публичный URL<input class="control" type="url" name="PUBLIC_URL" value="{{ PUBLIC_URL }}"></label>
                   <label>URL бота<input class="control" type="url" name="BOT_LANDING_URL" value="{{ BOT_LANDING_URL }}"></label>
                   <button class="button" type="submit">Сохранить</button>
                 </form>
 
                 <form id="adm-telegram" class="ui-form">
                   <label><input type="checkbox" name="TG_LOGIN_ENABLED" {% if TG_LOGIN_ENABLED %}checked{% endif %}> Включить Telegram Login</label>
-                  <label>Имя бота (без @)<input class="control" type="text" name="BOT_USERNAME" value="{{ TG_BOT_USERNAME or '' }}"></label>
-                  <label>Новый токен бота<input class="control" type="password" name="TELEGRAM_BOT_TOKEN" placeholder="Задать новый токен"></label>
+                  <label>Имя бота (без @)<input class="control" type="text" name="TG_BOT_USERNAME" value="{{ TG_TG_BOT_USERNAME or '' }}"></label>
+                  <label>Новый токен бота<input class="control" type="password" name="TG_BOT_TOKEN" placeholder="Задать новый токен"></label>
                   <div class="grid" style="grid-template-columns: 1fr 1fr; gap:8px;">
                     <button class="button" type="submit">Сохранить</button>
                     <div style="display:flex; gap:8px; justify-content:flex-end;">
@@ -176,7 +176,7 @@ async function patch(url, data){
 document.getElementById('adm-branding')?.addEventListener('submit', async (e)=>{
   e.preventDefault(); const fd = new FormData(e.currentTarget);
   const ok = await patch('/api/v1/admin/settings/branding', {
-    APP_BRAND_NAME: fd.get('APP_BRAND_NAME'), WEB_PUBLIC_URL: fd.get('WEB_PUBLIC_URL'), BOT_LANDING_URL: fd.get('BOT_LANDING_URL')
+    BRAND_NAME: fd.get('BRAND_NAME'), PUBLIC_URL: fd.get('PUBLIC_URL'), BOT_LANDING_URL: fd.get('BOT_LANDING_URL')
   });
   document.getElementById('adm-msg').textContent = ok ? 'Сохранено' : 'Ошибка сохранения';
   if (ok) location.reload();
@@ -184,7 +184,7 @@ document.getElementById('adm-branding')?.addEventListener('submit', async (e)=>{
 document.getElementById('adm-telegram')?.addEventListener('submit', async (e)=>{
   e.preventDefault(); const fd = new FormData(e.currentTarget);
   const ok = await patch('/api/v1/admin/settings/telegram', {
-    TG_LOGIN_ENABLED: !!fd.get('TG_LOGIN_ENABLED'), BOT_USERNAME: (fd.get('BOT_USERNAME')||'').toString().trim()||null, TELEGRAM_BOT_TOKEN: (fd.get('TELEGRAM_BOT_TOKEN')||'').toString().trim()||null
+    TG_LOGIN_ENABLED: !!fd.get('TG_LOGIN_ENABLED'), TG_BOT_USERNAME: (fd.get('TG_BOT_USERNAME')||'').toString().trim()||null, TG_BOT_TOKEN: (fd.get('TG_BOT_TOKEN')||'').toString().trim()||null
   });
   document.getElementById('adm-msg').textContent = ok ? 'Сохранено' : 'Ошибка сохранения';
 });

@@ -12,11 +12,11 @@
 - Install deps: `pip install --quiet -r requirements.txt`
 - Run tests: `pytest -q` (requires local PostgreSQL on `127.0.0.1:5432`)
 - Lint: `flake8` (if configured)
-- Deploy services: `./deploy/install_services.sh` (loads `.env`, restarts `leonidpro-bot` and `leonidpro-web`)
+- Deploy services: `./deploy/install_services.sh` (loads `.env`, restarts `intdata-bot` and `intdata-web`)
 
 ## Security & Configuration
 - Use `.env` (see `.env.example`) and never commit secrets.
-- Required vars: `TELEGRAM_BOT_TOKEN`, `BOT_USERNAME`, `WEB_PUBLIC_URL`, `SESSION_MAX_AGE`, `ADMIN_TELEGRAM_IDS`, DB settings.
+- Required vars: `TG_BOT_TOKEN`, `TG_BOT_USERNAME`, `PUBLIC_URL`, `SESSION_MAX_AGE`, `ADMIN_TELEGRAM_IDS`, DB settings.
 - Tests: create `.env.test` (ignored) and export vars, e.g.:
   ```bash
   cat > .env.test <<'EOF'
@@ -32,7 +32,7 @@
 - Python, async/await where used; prefer f-strings; add type hints.
 - Keep shared logic in `core/services` and import in `bot`/`web`.
 - Table names: prefix by module; user-related tables use `users_` (e.g., `users_tg`).
-- Branding: use “LeonidPro” for product/headers; bot is “@LeonidBot”. Default links to `https://leonid.pro/` and bot to `https://leonid.pro/bot`.
+- Branding: use “Intelligent Data Platform” for product/headers; bot is “@intDataBot”. Default links to `https://intdata.pro/` and bot to `https://intdata.pro/bot`.
 - Language: prioritize Russian-speaking users. All user-facing texts (bot/web) default to Russian; keep code identifiers/comments in English. Add i18n only when needed, with Russian as the primary locale.
 
 ## Testing Guidelines

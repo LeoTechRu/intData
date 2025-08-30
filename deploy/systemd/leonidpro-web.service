@@ -1,17 +1,17 @@
 [Unit]
-Description=LeonidPro Web Service (FastAPI)
+Description=Intelligent Data Platform Web Service (FastAPI)
 After=network.target
 
 [Service]
 User=deploy
 Group=devs
-WorkingDirectory=%E{LEONIDPRO_WORKDIR}
-EnvironmentFile=%E{LEONIDPRO_WORKDIR}/.env
-Environment=PATH=%E{LEONIDPRO_VENV}/bin
+WorkingDirectory=%E{PROJECT_DIR}
+EnvironmentFile=%E{PROJECT_DIR}/.env
+Environment=PATH=%E{PROJECT_VENV}/bin
 Environment=PYTHONUNBUFFERED=1
 Environment=UVICORN_LOG_LEVEL=debug
 Environment=PYTHONASYNCIODEBUG=1
-ExecStart=%E{LEONIDPRO_VENV}/bin/uvicorn web:app --host 0.0.0.0 --port 5800 --lifespan=on --log-level debug
+ExecStart=%E{PROJECT_VENV}/bin/uvicorn web:app --host 0.0.0.0 --port 5800 --lifespan=on --log-level debug
 
 Restart=on-failure
 RestartSec=3s

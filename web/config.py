@@ -15,25 +15,25 @@ class EnvSettings(BaseSettings):
     DB_USER: str = "postgres"
     DB_PASSWORD: str = "postgres"
     DB_HOST: str = "localhost"
-    DB_NAME: str = "leonidpro"
+    DB_NAME: str = "intData"
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
 
     # Branding (ENV defaults)
-    APP_BRAND_NAME: str = "LeonidPro"
-    WEB_PUBLIC_URL: AnyHttpUrl = "http://localhost:5800"  # type: ignore[assignment]
+    BRAND_NAME: str = "intData"
+    PUBLIC_URL: AnyHttpUrl = "http://localhost:5800"  # type: ignore[assignment]
     BOT_LANDING_URL: AnyHttpUrl | None = None  # type: ignore[assignment]
 
     # Bot
-    TELEGRAM_BOT_TOKEN: Optional[str] = None
-    BOT_USERNAME: Optional[str] = None  # без @
+    TG_BOT_TOKEN: Optional[str] = None
+    TG_BOT_USERNAME: Optional[str] = None  # без @
 
     ADMIN_CHAT_ID: Optional[str] = None
     ADMIN_TELEGRAM_IDS: str = ""
 
     # Web/Auth
-    WEB_APP_URL: AnyHttpUrl | None = None  # type: ignore[assignment]
-    LOGIN_REDIRECT_URL: AnyHttpUrl | None = None  # type: ignore[assignment]
+    LOCAL_URL: AnyHttpUrl | None = None  # type: ignore[assignment]
+    LOGIN_CALLBACK_URL: AnyHttpUrl | None = None  # type: ignore[assignment]
     SESSION_MAX_AGE: int = 86400
     TG_LOGIN_ENABLED: bool = True
     CALENDAR_V2_ENABLED: bool = False
@@ -48,12 +48,12 @@ class EnvSettings(BaseSettings):
 
     # pydantic-settings v2 style configuration
     model_config = SettingsConfigDict(
-        env_file=os.getenv("LEONIDPRO_ENV_FILE", ".env"),
+        env_file=os.getenv("INTDATA__ENV_FILE", ".env"),
         case_sensitive=False,
         extra="allow",  # ignore unrelated env vars (e.g., deployment-specific)
     )
 
-    @field_validator("BOT_USERNAME", mode="before")
+    @field_validator("TG_BOT_USERNAME", mode="before")
     @classmethod
     def strip_at(cls, v: str | None) -> str | None:  # noqa: D401
         if not v:
@@ -67,26 +67,26 @@ class EnvSettings(BaseSettings):
     ) -> AnyHttpUrl | None:  # noqa: D401
         if v:
             return v
-        base = str(info.data.get("WEB_PUBLIC_URL")).rstrip("/")
+        base = str(info.data.get("PUBLIC_URL")).rstrip("/")
         return f"{base}/bot"
 
-    @field_validator("WEB_APP_URL", mode="before")
+    @field_validator("LOCAL_URL", mode="before")
     @classmethod
-    def default_web_app_url(
+    def default_LOCAL_URL(
         cls, v: AnyHttpUrl | None, info: ValidationInfo
     ) -> AnyHttpUrl | None:  # noqa: D401
         if v:
             return v
-        return info.data.get("WEB_PUBLIC_URL")
+        return info.data.get("PUBLIC_URL")
 
-    @field_validator("LOGIN_REDIRECT_URL", mode="before")
+    @field_validator("LOGIN_CALLBACK_URL", mode="before")
     @classmethod
     def default_login_cb(
         cls, v: AnyHttpUrl | None, info: ValidationInfo
     ) -> AnyHttpUrl | None:  # noqa: D401
         if v:
             return v
-        base = str(info.data.get("WEB_PUBLIC_URL")).rstrip("/")
+        base = str(info.data.get("PUBLIC_URL")).rstrip("/")
         return f"{base}/auth/callback"
 
 
@@ -117,27 +117,27 @@ class Settings:
 
     # read helpers with override priority (DB -> ENV)
     @property
-    def APP_BRAND_NAME(self):
-        return self._store.get("branding.APP_BRAND_NAME") or self._env.APP_BRAND_NAME
+    def BRAND_NAME(self):
+        return self._store.get("branding.BRAND_NAME") or self._env.BRAND_NAME
 
     @property
-    def WEB_PUBLIC_URL(self):
-        return self._store.get("branding.WEB_PUBLIC_URL") or str(self._env.WEB_PUBLIC_URL)
+    def PUBLIC_URL(self):
+        return self._store.get("branding.PUBLIC_URL") or str(self._env.PUBLIC_URL)
 
     @property
     def BOT_LANDING_URL(self):
         return self._store.get("branding.BOT_LANDING_URL") or str(self._env.BOT_LANDING_URL)
 
     @property
-    def BOT_USERNAME(self):
-        return self._store.get("telegram.BOT_USERNAME") or self._env.BOT_USERNAME
+    def TG_BOT_USERNAME(self):
+        return self._store.get("telegram.TG_BOT_USERNAME") or self._env.TG_BOT_USERNAME
 
     @property
-    def TELEGRAM_BOT_TOKEN(self):
-        return self._store.get_secret("telegram.TELEGRAM_BOT_TOKEN") or self._env.TELEGRAM_BOT_TOKEN
-    @TELEGRAM_BOT_TOKEN.setter
-    def TELEGRAM_BOT_TOKEN(self, value):  # pragma: no cover - used in tests
-        self._env.TELEGRAM_BOT_TOKEN = value
+    def TG_BOT_TOKEN(self):
+        return self._store.get_secret("telegram.TG_BOT_TOKEN") or self._env.TG_BOT_TOKEN
+    @TG_BOT_TOKEN.setter
+    def TG_BOT_TOKEN(self, value):  # pragma: no cover - used in tests
+        self._env.TG_BOT_TOKEN = value
 
     @property
     def TG_LOGIN_ENABLED(self):
@@ -158,8 +158,8 @@ class Settings:
         return self._store.get("app.APP_MODE") or self._env.APP_MODE
 
     @property
-    def LOGIN_REDIRECT_URL(self):
-        return str(self._env.LOGIN_REDIRECT_URL)
+    def LOGIN_CALLBACK_URL(self):
+        return str(self._env.LOGIN_CALLBACK_URL)
 
     @property
     def SESSION_MAX_AGE(self):

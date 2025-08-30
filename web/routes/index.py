@@ -22,8 +22,8 @@ router = APIRouter()
 @router.get("/bot", include_in_schema=False)
 async def bot_landing(request: Request):
     page_title = (
-        "@LeonidBot — Telegram бот проекта "
-        f"{templates.env.globals['APP_BRAND_NAME']}"
+        "@intDataBot — Telegram бот проекта "
+        f"{templates.env.globals['BRAND_NAME']}"
     )
     return templates.TemplateResponse(
         request,

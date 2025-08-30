@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Авторизация — LeonidPro</title>
+  <title>Авторизация — intData</title>
   <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
   <script type="module" src="{{ url_for('static', path='js/main.js') }}"></script>
   <script src="{{ url_for('static', path='js/auth_extra.js') }}"></script>
@@ -17,7 +17,7 @@
   {% include "_icons.html" %}
 
   <header class="auth-header">
-    <a class="brand" href="{{ WEB_PUBLIC_URL or '/' }}">LeonidPro</a>
+    <a class="brand" href="{{ PUBLIC_URL or '/' }}">intData</a>
   </header>
 
   <main class="auth-hero">
@@ -80,16 +80,16 @@
           {% if TG_LOGIN_ENABLED %}
             <div class="tg-login">
               <script async src="https://telegram.org/js/telegram-widget.js?22"
-                      data-telegram-login="{{ TG_BOT_USERNAME or 'LeonidBot' }}"
+                      data-telegram-login="{{ TG_TG_BOT_USERNAME or 'intDataBot' }}"
                       data-size="large"
                       data-userpic="false"
                       data-request-access="write"
                       data-auth-url="/auth/telegram"
                       data-lang="ru"></script>
               <a class="btn telegram full" target="_blank" rel="noopener"
-                 href="https://t.me/{{ (TG_BOT_USERNAME or '@LeonidBot')|replace('@','') }}?start=login">
+                 href="https://t.me/{{ (TG_TG_BOT_USERNAME or '@intDataBot')|replace('@','') }}?start=login">
                 <svg class="icon"><use href="#i-paper-plane" /></svg>
-                Открыть {{ TG_BOT_USERNAME or '@LeonidBot' }}
+                Открыть {{ TG_TG_BOT_USERNAME or '@intDataBot' }}
               </a>
               <div class="muted small">Если виджет не загрузился, нажмите кнопку выше.</div>
             </div>
