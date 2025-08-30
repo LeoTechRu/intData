@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
+import secrets
+import hashlib
 
 from aiogram import Bot
 from sqlalchemy import select
@@ -69,6 +71,14 @@ class TelegramUserService:
         )
         return result.scalar_one_or_none()
 
+    async def get_user_by_ics_token_hash(
+        self, token_hash: str
+    ) -> Optional[TgUser]:
+        result = await self.session.execute(
+            select(TgUser).where(TgUser.ics_token_hash == token_hash)
+        )
+        return result.scalar_one_or_none()
+
     async def create_user(self, **kwargs) -> Optional[TgUser]:
         try:
             if "role" not in kwargs or kwargs["role"] is None:
@@ -111,6 +121,12 @@ class TelegramUserService:
 
         user = await self.create_user(**{**required_fields, **optional_fields})
         return user, True
+
+    async def generate_ics_token(self, user: TgUser) -> str:
+        token = secrets.token_urlsafe(32)
+        user.ics_token_hash = hashlib.sha256(token.encode()).hexdigest()
+        await self.session.flush()
+        return token
 
     async def update_from_telegram(
         self, telegram_id: int, **data: Any

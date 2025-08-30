@@ -67,6 +67,7 @@ class TgUser(Base):
     language_code = Column(String(10))
     role = Column(String(20), default=UserRole.single.name)
     bot_settings = Column(JSON, default=dict)
+    ics_token_hash = Column(String(64))
     created_at = Column(DateTime(timezone=True), default=utcnow)
     updated_at = Column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
