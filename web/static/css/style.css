@@ -761,3 +761,50 @@ body:not(.debug) .profile-menu.force-hidden{ display:none !important; }
 }
 
 .fav-toggle{margin-left:4px;background:transparent;border:0;cursor:pointer;font-size:1.1em;line-height:1;}
+
+/* === Header brand: bigger mark, no ring, better alignment === */
+
+.app-header .app-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.app-header .brand-mark {
+  display: block;
+  inline-size: 28px; /* base size */
+  block-size: 28px;
+  aspect-ratio: 1 / 1;
+  /* убираем обводки/тени, которые могли остаться от старых стилей */
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  filter: none !important;
+}
+
+@media (min-width: 640px) {
+  .app-header .brand-mark { inline-size: 32px; block-size: 32px; }
+}
+@media (min-width: 1024px) {
+  .app-header .brand-mark { inline-size: 36px; block-size: 36px; }
+}
+
+/* Подправим текст-бренд для читабельности — опционально */
+.app-header .brand-text {
+  font-weight: 600;
+  letter-spacing: .2px;
+  line-height: 1;
+  /* цвет под светлую/тёмную темы — подставь свои токены, если есть */
+  color: var(--header-brand-fg, #1f1f1f);
+}
+:root[data-theme="dark"] .app-header .brand-text { color: #fff; }
+
+/* На случай, если где-то был «badge» с рамкой вокруг бренда */
+.app-header .brand-badge,
+.app-header .brand-wrap {
+  box-shadow: none !important;
+  border: 0 !important;
+  background: transparent !important;
+}
