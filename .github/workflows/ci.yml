@@ -52,12 +52,12 @@ jobs:
       group: deploy-main
       cancel-in-progress: true
     steps:
-      - name: Add server host key
+      - name: "Add server host key"
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
 
-      - name: SSH: pull & restart (soft-fail)
+      - name: "SSH: pull & restart (soft-fail)"
         uses: appleboy/ssh-action@v1.0.0
         continue-on-error: true
         with:
@@ -90,6 +90,6 @@ jobs:
             systemctl is-active --quiet intdata-bot || echo "WARN: intdata-bot inactive"
             systemctl is-active --quiet intdata-web || echo "WARN: intdata-web inactive"
 
-      - name: Deploy summary (always)
+      - name: "Deploy summary (always)"
         if: ${{ always() }}
         run: echo "Deploy finished (check logs above)."
