@@ -33,7 +33,7 @@ SELECT id, start_time FROM time_entries
 2. Добавить CHECK-ограничения для Tasks/Resources/CalendarItems/TimeEntries.
 3. Реализовать триггеры наследования `area_id` от `project_id` для Tasks и Resources.
 4. Создать таблицу `para_overrides` для субъективных привязок пользователя.
-5. Добавить линтер `scripts/para_lint.py` в CI.
+5. Добавить линтер `utils/para_lint.py` в CI.
 
 ## Appendix / Open Questions
 - Как мигрировать существующие ресурсы без полей `project_id` и `area_id`?
