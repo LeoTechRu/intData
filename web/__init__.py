@@ -19,7 +19,6 @@ from .routes import (
     settings,
     habits,
     tasks,
-    reminders,
     notes,
     calendar,
     time_entries,
@@ -94,7 +93,6 @@ async def lifespan(app: FastAPI):
 
 tags_metadata = [
     {"name": "tasks", "description": "Task management API"},
-    {"name": "reminders", "description": "Reminders scheduling API"},
     {"name": "calendar", "description": "Calendar events API"},
     {"name": "notes", "description": "Notes CRUD API"},
     {"name": "time", "description": "Time tracking API"},
@@ -238,7 +236,6 @@ app.include_router(profile.router, include_in_schema=False)
 app.include_router(settings.router, include_in_schema=False)
 app.include_router(habits.router, include_in_schema=False)
 app.include_router(tasks.ui_router, include_in_schema=False)
-app.include_router(reminders.ui_router, include_in_schema=False)
 app.include_router(notes.ui_router, include_in_schema=False)
 app.include_router(areas.ui_router, include_in_schema=False)
 app.include_router(projects.ui_router, include_in_schema=False)

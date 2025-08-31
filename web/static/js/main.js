@@ -57,6 +57,20 @@ export function initDashboardCompact() {
         apply(compact);
     });
 }
+
+export function initCardLinks() {
+    document.querySelectorAll('[data-href]').forEach((el) => {
+        el.addEventListener('click', (ev) => {
+            const target = ev.target;
+            if (target instanceof Element && target.closest('a,button,textarea,input,select,form')) {
+                return;
+            }
+            const url = el.getAttribute('data-href');
+            if (url)
+                window.location.href = url;
+        });
+    });
+}
 import { initPersonaHeader } from './persona-header.js';
 import { API_BASE } from './services/apiBase.js';
 
@@ -65,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initProfileEditForm();
     initDashboardCompact();
     initPersonaHeader();
+    initCardLinks();
 });
 (function(){
   function applyNoGridIfNeeded(){
@@ -348,7 +363,6 @@ if (hash && forms[hash]) activate(hash); else activate('login');
       const rem = q('#wReminders'); const ev = q('#wEvents'); if (!rem || !ev) return;
       rem.innerHTML = ev.innerHTML = '…';
       let R=[], C=[];
-      try{ const r=await fetch('/api/v1/reminders', {credentials:'same-origin'}); const data=await r.json(); R = Array.isArray(data)? data.filter(x=> (x.remind_at||'').startsWith(todayISO())):[]; }catch{}
       try{ const r=await fetch('/api/v1/calendar',  {credentials:'same-origin'}); const data=await r.json(); C = Array.isArray(data)? data.filter(x=> (x.start_at||'').startsWith(todayISO())):[]; }catch{}
       const fill = (ul, arr, empty)=>{ ul.innerHTML = arr.length? '' : `<li class="muted">${empty}</li>`;
         arr.slice(0,6).forEach(x=>{
