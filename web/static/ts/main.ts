@@ -145,6 +145,7 @@ export async function loadUserSettings() {
           const a = document.createElement('a');
           a.href = it.path;
           a.textContent = it.label || it.path;
+          a.setAttribute('role', 'menuitem');
           li.appendChild(a);
           favBox.appendChild(li);
         }
