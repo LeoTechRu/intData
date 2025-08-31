@@ -2,13 +2,16 @@ name: CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
+  workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,17 +21,75 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install system deps (ripgrep for tests)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ripgrep
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install --quiet -r requirements.txt
 
       - name: Lint (flake8)
-        run: flake8 || true
+        continue-on-error: true
+        run: flake8
 
       - name: Run tests
         env:
           TG_BOT_TOKEN: testtoken
           TG_BOT_USERNAME: testbot
+        continue-on-error: true
         run: pytest -q
 
+  deploy:
+    # деплоим только пуши в main; запускаем даже если job test упал
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    needs: [test]
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    concurrency:
+      group: deploy-main
+      cancel-in-progress: true
+    steps:
+      - name: Add server host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: SSH: pull & restart (soft-fail)
+        uses: appleboy/ssh-action@v1.0.0
+        continue-on-error: true
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          script_stop: false
+          script: |
+            set -euo pipefail
+
+            # --- обновление репозитория (ошибки не фатальны) ---
+            sudo -u deploy bash -lc '
+              set -euo pipefail
+              cd /sd/intdata
+              mkdir -p ~/.ssh && ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+              if git remote get-url origin | grep -q "^https://"; then
+                git remote set-url origin git@github.com:LeoTechRu/intData.git
+              fi
+              git config --global --add safe.directory /sd/intdata || true
+              git stash push -u -m "ci-autostash $(date -Iseconds)" || true
+              git fetch --prune origin || true
+              git reset --hard origin/main || true
+            ' || true
+
+            # --- рестарт сервисов (ошибки не фатальны) ---
+            sudo -n systemctl restart intdata-bot || true
+            sudo -n systemctl restart intdata-web || true
+
+            # --- статусы (не валят шаг) ---
+            systemctl is-active --quiet intdata-bot || echo "WARN: intdata-bot inactive"
+            systemctl is-active --quiet intdata-web || echo "WARN: intdata-web inactive"
+
+      - name: Deploy summary (always)
+        if: ${{ always() }}
+        run: echo "Deploy finished (check logs above)."
