@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write  # нужно для пуша revert-коммита в rollback
+  contents: write  # для пуша revert-коммита
 
 jobs:
   test:
@@ -48,14 +48,10 @@ jobs:
         run: pytest -q
 
   deploy:
-    # деплоим только пуши в main; деплой стартует даже если тесты "красные"
+    # деплоим только пуши в main; стартует даже если тесты "красные"
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: [test]
     runs-on: ubuntu-latest
-
-    # job-outputs должны быть объявлены до steps
-    outputs:
-      health: ${{ steps.export_health.outputs.health }}
 
     steps:
       - name: Add server host key
@@ -136,9 +132,12 @@ jobs:
         if: ${{ always() }}
         run: echo "Deploy done. Health = ${{ steps.export_health.outputs.health }}"
 
+    outputs:
+      health: ${{ steps.export_health.outputs.health }}
+
   rollback:
-    # Срабатывает, если деплой «красный» (result=failure) ИЛИ health=fail
-    if: ${{ always() && (needs.deploy.result == 'failure' || needs.deploy.outputs.health == 'fail') && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    # Срабатывает, если деплой упал ИЛИ health=fail
+    if: ${{ (needs.deploy.result == 'failure' || needs.deploy.outputs.health == 'fail') && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: [deploy]
     runs-on: ubuntu-latest
     steps:
@@ -164,7 +163,7 @@ jobs:
             echo "do_rollback=yes" >> "$GITHUB_ENV"
           fi
 
-      # --- ДВОЙНАЯ ПРОВЕРКА ПЕРЕД ОТКАТОМ (анти-ложный откат) ---
+      # --- ДВОЙНАЯ ПРОВЕРКА ПЕРЕД ОТКАТОМ ---
       - name: SSH: double-check health (hard)
         id: doublecheck
         uses: appleboy/ssh-action@v1.0.0
@@ -199,7 +198,6 @@ jobs:
           echo "do_rollback=${want}" >> "$GITHUB_ENV"
           echo "Rollback decision: ${want}"
 
-      # --- Сбор логов в Summary перед откатом ---
       - name: SSH: collect remote logs
         id: collectlogs
         if: ${{ env.do_rollback == 'yes' && steps.doublecheck.outcome == 'failure' }}
@@ -246,7 +244,6 @@ jobs:
           sed -n '1,500p' intdata_ci_logs.txt >> "$GITHUB_STEP_SUMMARY" || true
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
-      # --- Сам откат (если всё ещё нужно) ---
       - name: Create revert commit
         if: ${{ env.do_rollback == 'yes' && steps.doublecheck.outcome == 'failure' }}
         run: |
