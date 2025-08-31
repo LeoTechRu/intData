@@ -8,7 +8,10 @@ from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.openapi.docs import get_swagger_ui_html, get_swagger_ui_oauth2_redirect_html
+from fastapi.openapi.docs import (
+    get_swagger_ui_html,
+    get_swagger_ui_oauth2_redirect_html,
+)
 
 from .routes import (
     admin as admin_ui,
@@ -29,7 +32,9 @@ from .routes import (
     api_router,
     API_PREFIX,
 )
-from core.db import engine, init_models
+from core.db import engine
+from core.db.init_app import init_app_once
+from core.env import env
 from core.services.web_user_service import WebUserService
 from core.services.telegram_user_service import TelegramUserService
 from core.models import LogLevel
@@ -49,8 +54,8 @@ async def lifespan(app: FastAPI):
     stop_event = None
     task = None
     try:
-        await init_models()
-        logger.info("Lifespan startup: init_models() completed")
+        init_app_once(env)
+        logger.info("Lifespan startup: init_app_once() completed")
 
         password = None
         async with WebUserService() as wsvc:

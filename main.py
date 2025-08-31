@@ -10,8 +10,6 @@ from __future__ import annotations
 
 import asyncio
 import multiprocessing
-import os
-
 import uvicorn
 
 from bot.main import main as bot_main
@@ -40,13 +38,6 @@ def run_web() -> None:
 
 def main() -> None:
     """Launch bot then web, allowing the second to start even if first fails."""
-    if os.getenv("DB_BOOTSTRAP", "1") == "1":
-        try:
-            from core.scripts import db_bootstrap
-            db_bootstrap.run()
-        except Exception:  # pragma: no cover - log unexpected errors
-            logger.exception("DB bootstrap failed")
-
     bot_process = multiprocessing.Process(target=run_bot, name="bot")
     bot_process.start()
 
