@@ -2,9 +2,14 @@
 
 ## Project Structure & Module Organization
 - `core/`: shared models, services, utils, logging. All logic reused by bot and web lives here.
+- /core - директория для общего переиспользуемого кода приложения (основного бэкенда) к которому может обращаться как фронтенд (/web), так и Telegram-бот (/bot).
 - `bot/`: Telegram bot (aiogram) handlers, FSM states, routers. Import business logic from `core`, do not duplicate it.
+- /bot - директория (модуль) Telegram-бота независимый от логики фронтенда приложения, который можно запустить отдельно от фронтенда.
 - `web/`: FastAPI app routes, templates, dependencies. Reuse `core` services.
+- /web - директория (модуль) фронтенда приложений независимый от логики Telegram-бота, который можно запустить отдельно от Telegram-бота.
 - `tests/`: end-to-end and unit tests across subsystems.
+- /tests - Директория для тестов приложения без прямого влияния на функциональность приложения.
+- /utils - Директория для вспомогательных утилит напрямую не влияющих на функциональность приложения.
 
 ## Build, Test, and Development Commands
 - Create venv: `python -m venv venv && source ./venv/bin/activate`
