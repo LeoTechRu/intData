@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+import logging
 import sqlalchemy as sa
 from sqlalchemy.engine import Connection
 
 from .bootstrap import run_bootstrap_sql
 from .repair import run_repair
-from .engine import engine, Base
+from .engine import engine, ENGINE_MODE, Base
 
-_init_done = False
+logger = logging.getLogger(__name__)
+
+_inited = False
 
 
 def _advisory_lock(conn: Connection, key: int) -> bool:
@@ -29,26 +32,41 @@ def _create_models(conn: Connection) -> None:
 
 async def init_app_once(env) -> None:
     """One-stop database initialization for web and bot processes."""
-    global _init_done
-    if _init_done:
+    global _inited
+    if _inited:
         return
-    if not (env.DB_BOOTSTRAP or env.DB_REPAIR or env.DEV_INIT_MODELS):
-        _init_done = True
+    if ENGINE_MODE == "async":
+        async with engine.connect() as aconn:  # type: ignore[arg-type]
+            await aconn.run_sync(_bootstrap_and_repair_sync, env)
+    else:
+        with engine.connect() as conn:  # type: ignore[call-arg]
+            _bootstrap_and_repair_sync(conn, env)
+    _inited = True
+
+
+def _bootstrap_and_repair_sync(conn: Connection, env) -> None:
+    key = 0x5EED1DB
+    have_lock = _advisory_lock(conn, key)
+    if not have_lock:
         return
-    async with engine.begin() as conn:
-        key = 0x5EED1DB
-        have_lock = await conn.run_sync(_advisory_lock, key)
-        if not have_lock:
-            return
-        try:
-            did_bootstrap = False
-            if env.DB_BOOTSTRAP:
-                await conn.run_sync(run_bootstrap_sql)
-                did_bootstrap = True
-            if env.DB_REPAIR:
-                await conn.run_sync(run_repair)
-            if env.DEV_INIT_MODELS and not did_bootstrap:
-                await conn.run_sync(_create_models)
-        finally:
-            await conn.run_sync(_advisory_unlock, key)
-    _init_done = True
+    try:
+        logger.info("init_app_once: ENGINE_MODE=%s", ENGINE_MODE)
+        did_bootstrap = False
+        if env.DB_BOOTSTRAP:
+            stats = run_bootstrap_sql(conn)
+            logger.info(
+                "bootstrap summary: files=%s executed=%s failed=%s",
+                stats["files"],
+                stats["executed"],
+                stats["failed"],
+            )
+            did_bootstrap = True
+        if env.DB_REPAIR:
+            run_repair(conn)
+        if env.DEV_INIT_MODELS and not did_bootstrap:
+            _create_models(conn)
+    except Exception as e:  # pragma: no cover - log and continue
+        logger.exception("bootstrap fatal: %s", e)
+    finally:
+        _advisory_unlock(conn, key)
+    conn.exec_driver_sql("SELECT 1")

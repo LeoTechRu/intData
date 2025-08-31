@@ -34,6 +34,7 @@ from .routes import (
 )
 from .routes.api_user_settings import router as user_settings_api
 from core.db import engine
+from core.db.engine import ENGINE_MODE
 from core.db.init_app import init_app_once
 from core.env import env
 from core.services.web_user_service import WebUserService
@@ -51,7 +52,7 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Lifespan startup: begin")
+    logger.info("Lifespan startup: begin (ENGINE_MODE=%s)", ENGINE_MODE)
     stop_event = None
     task = None
     try:

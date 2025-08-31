@@ -307,15 +307,34 @@ def _migrate_favorites(conn: Connection) -> None:
             logger.warning("favorites backfill failed for %s: %s", user_id, exc)
 
 
-def run_repair(conn: Connection) -> None:
-    """Perform backfill and repair tasks."""
+def run_repair(conn: Connection) -> dict[str, object]:
+    """Perform backfill and repair tasks.
+
+    Each step commits independently so that a failure does not abort the
+    entire sequence.
+    """
+
     stats: dict[str, object] = {}
-    stats["user_settings_created"] = ensure_user_settings_table(conn)
-    stats["default_areas"] = ensure_default_areas(conn)
-    stats["projects_area"] = backfill_projects_area(conn)
-    tr_stats = backfill_tasks_resources(conn)
-    stats.update({f"tasks_resources_{k}": v for k, v in tr_stats.items()})
-    te_stats = backfill_time_entries(conn)
-    stats.update({f"time_entries_{k}": v for k, v in te_stats.items()})
-    _migrate_favorites(conn)
+
+    def _step(name: str, fn) -> None:
+        nonlocal stats
+        try:
+            res = fn(conn)
+            conn.commit()
+            if isinstance(res, dict):
+                stats.update({f"{name}_{k}": v for k, v in res.items()})
+            else:
+                stats[name] = res
+        except Exception as exc:  # pragma: no cover - log and continue
+            conn.rollback()
+            logger.warning("repair step %s failed: %s", name, exc)
+
+    _step("user_settings_created", ensure_user_settings_table)
+    _step("default_areas", ensure_default_areas)
+    _step("projects_area", backfill_projects_area)
+    _step("tasks_resources", backfill_tasks_resources)
+    _step("time_entries", backfill_time_entries)
+    _step("migrate_favorites", _migrate_favorites)
+
     logger.info("repair summary: %s", json.dumps(stats, ensure_ascii=False))
+    return stats

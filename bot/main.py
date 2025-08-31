@@ -5,6 +5,7 @@ import logging
 from aiogram.exceptions import TelegramNetworkError
 from core.db import bot, dp
 from core.db.init_app import init_app_once
+from core.db.engine import ENGINE_MODE
 from core.env import env
 from bot.handlers.telegram import user_router, group_router, router
 from bot.handlers.note import router as note_router
@@ -16,6 +17,7 @@ from core.services.telegram_user_service import TelegramUserService
 
 async def main() -> None:
     """Run bot polling with middleware and routers."""
+    logging.getLogger(__name__).info("Bot startup: ENGINE_MODE=%s", ENGINE_MODE)
     await init_app_once(env)
 
     dp.message.middleware(LoggerMiddleware(bot))

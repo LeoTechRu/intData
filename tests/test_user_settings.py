@@ -44,7 +44,7 @@ async def test_service_upsert_and_get():
 
 def test_repair_migrates_favorites():
     eng = sa.create_engine("sqlite:///:memory:")
-    with eng.begin() as conn:
+    with eng.connect() as conn:
         conn.execute(sa.text("CREATE TABLE users_web(id INTEGER PRIMARY KEY)")).close()
         conn.execute(
             sa.text(
