@@ -74,33 +74,83 @@ export function initCardLinks() {
 import { initPersonaHeader } from './persona-header.js';
 import { API_BASE } from './services/apiBase.js';
 
+let userFavorites = { v: 1, items: [] };
+
+function renderFavorites() {
+    const favBox = document.querySelector('[data-fav-box]');
+    if (!favBox)
+        return;
+    const items = (userFavorites.items || []).sort((a, b) => (a.position || 0) - (b.position || 0));
+    favBox.innerHTML = '';
+    if (!items.length) {
+        const li = document.createElement('li');
+        li.className = 'muted';
+        li.textContent = 'Избранное пусто';
+        favBox.appendChild(li);
+    }
+    else {
+        for (const it of items) {
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = it.path;
+            a.textContent = it.label || it.path;
+            li.appendChild(a);
+            favBox.appendChild(li);
+        }
+    }
+}
+
+function updateFavToggle() {
+    const btn = document.querySelector('[data-fav-toggle]');
+    if (!btn)
+        return;
+    const path = btn.dataset.path || window.location.pathname;
+    const exists = userFavorites.items?.some((it) => it.path === path);
+    btn.setAttribute('aria-pressed', exists ? 'true' : 'false');
+}
+
+export function initFavoriteToggle() {
+    const btn = document.querySelector('[data-fav-toggle]');
+    if (!btn)
+        return;
+    btn.addEventListener('click', async (ev) => {
+        ev.preventDefault();
+        const path = btn.dataset.path || window.location.pathname;
+        const label = btn.dataset.label || path;
+        let items = userFavorites.items || [];
+        const idx = items.findIndex((it) => it.path === path);
+        if (idx >= 0) {
+            items.splice(idx, 1);
+        }
+        else {
+            items.push({ label, path, position: items.length + 1 });
+        }
+        userFavorites.items = items.map((it, i) => (Object.assign(Object.assign({}, it), { position: i + 1 })));
+        try {
+            await fetch(`${API_BASE}/user/settings/favorites`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ value: userFavorites }),
+            });
+        }
+        catch (_a) {
+            // ignore
+        }
+        renderFavorites();
+        updateFavToggle();
+    });
+}
+
 export async function loadUserSettings() {
     try {
         const resp = await fetch(`${API_BASE}/user/settings?keys=dashboard_layout,favorites`, { credentials: 'include' });
         if (!resp.ok)
             return;
         const data = await resp.json();
-        const favBox = document.querySelector('[data-fav-box]');
-        if (favBox) {
-            const items = (data.favorites?.items || []).sort((a, b) => (a.position || 0) - (b.position || 0));
-            favBox.innerHTML = '';
-            if (!items.length) {
-                const li = document.createElement('li');
-                li.className = 'muted';
-                li.textContent = 'Избранное пусто';
-                favBox.appendChild(li);
-            }
-            else {
-                for (const it of items) {
-                    const li = document.createElement('li');
-                    const a = document.createElement('a');
-                    a.href = it.path;
-                    a.textContent = it.label || it.path;
-                    li.appendChild(a);
-                    favBox.appendChild(li);
-                }
-            }
-        }
+        userFavorites = data.favorites || { v: 1, items: [] };
+        renderFavorites();
+        updateFavToggle();
     }
     catch (e) {
         // ignore
@@ -122,6 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initDashboardCompact();
     initPersonaHeader();
     initCardLinks();
+    initFavoriteToggle();
     loadUserSettings();
 });
 (function(){
