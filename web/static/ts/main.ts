@@ -120,6 +120,70 @@ export function initProfileEditForm() {
   });
 }
 
+let userFavorites: { v: number; items: any[] } = { v: 1, items: [] };
+
+function renderFavorites() {
+  const favBox = document.querySelector('[data-fav-box]') as HTMLUListElement | null;
+  if (!favBox) return;
+  const items = (userFavorites.items || []).sort(
+    (a: any, b: any) => (a.position || 0) - (b.position || 0),
+  );
+  favBox.innerHTML = '';
+  if (!items.length) {
+    const li = document.createElement('li');
+    li.className = 'muted';
+    li.textContent = 'Избранное пусто';
+    favBox.appendChild(li);
+  } else {
+    for (const it of items) {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = it.path;
+      a.textContent = it.label || it.path;
+      li.appendChild(a);
+      favBox.appendChild(li);
+    }
+  }
+}
+
+function updateFavToggle() {
+  const btn = document.querySelector('[data-fav-toggle]') as HTMLButtonElement | null;
+  if (!btn) return;
+  const path = btn.dataset.path || window.location.pathname;
+  const exists = userFavorites.items?.some((it: any) => it.path === path);
+  btn.setAttribute('aria-pressed', exists ? 'true' : 'false');
+}
+
+export function initFavoriteToggle() {
+  const btn = document.querySelector('[data-fav-toggle]') as HTMLButtonElement | null;
+  if (!btn) return;
+  btn.addEventListener('click', async (ev) => {
+    ev.preventDefault();
+    const path = btn.dataset.path || window.location.pathname;
+    const label = btn.dataset.label || path;
+    let items = userFavorites.items || [];
+    const idx = items.findIndex((it: any) => it.path === path);
+    if (idx >= 0) {
+      items.splice(idx, 1);
+    } else {
+      items.push({ label, path, position: items.length + 1 });
+    }
+    userFavorites.items = items.map((it: any, i: number) => ({ ...it, position: i + 1 }));
+    try {
+      await fetch(`${API_BASE}/user/settings/favorites`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ value: userFavorites }),
+      });
+    } catch {
+      // ignore
+    }
+    renderFavorites();
+    updateFavToggle();
+  });
+}
+
 export async function loadUserSettings() {
   try {
     const resp = await fetch(
@@ -128,28 +192,9 @@ export async function loadUserSettings() {
     );
     if (!resp.ok) return;
     const data = await resp.json();
-    const favBox = document.querySelector('[data-fav-box]') as HTMLUListElement | null;
-    if (favBox) {
-      const items = (data.favorites?.items || []).sort(
-        (a: any, b: any) => (a.position || 0) - (b.position || 0)
-      );
-      favBox.innerHTML = '';
-      if (!items.length) {
-        const li = document.createElement('li');
-        li.className = 'muted';
-        li.textContent = 'Избранное пусто';
-        favBox.appendChild(li);
-      } else {
-        for (const it of items) {
-          const li = document.createElement('li');
-          const a = document.createElement('a');
-          a.href = it.path;
-          a.textContent = it.label || it.path;
-          li.appendChild(a);
-          favBox.appendChild(li);
-        }
-      }
-    }
+    userFavorites = data.favorites || { v: 1, items: [] };
+    renderFavorites();
+    updateFavToggle();
   } catch (e) {
     // ignore
   }
@@ -170,5 +215,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initAdminMenu();
   initProfileEditForm();
   initDashboardCompact();
+  initFavoriteToggle();
   loadUserSettings();
 });
