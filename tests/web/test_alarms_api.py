@@ -29,7 +29,7 @@ async def client():
     await engine.dispose()
 
 
-async def _prepare_item():
+async def _prepare_item(item_owner: int | None = 1):
     async with db.async_session() as session:  # type: ignore
         async with session.begin():
             user = TgUser(telegram_id=1, first_name="tg")
@@ -39,7 +39,7 @@ async def _prepare_item():
             await session.flush()
             now = utcnow()
             item = CalendarItem(
-                owner_id=1,
+                owner_id=item_owner,
                 area_id=area.id,
                 title="Event",
                 start_at=now + timedelta(hours=1),
@@ -77,7 +77,6 @@ async def test_alarm_time_bounds(client: AsyncClient):
         cookies=cookies,
     )
     assert resp.status_code == 400
-
     over = end_at + timedelta(minutes=1)
     resp = await client.post(
         f"/api/v1/calendar/items/{item_id}/alarms",
@@ -85,3 +84,16 @@ async def test_alarm_time_bounds(client: AsyncClient):
         cookies=cookies,
     )
     assert resp.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_create_alarm_item_without_owner(client: AsyncClient):
+    item_id, _ = await _prepare_item(item_owner=None)
+    cookies = {"telegram_id": "1"}
+    trigger = utcnow() + timedelta(hours=1, minutes=30)
+    resp = await client.post(
+        f"/api/v1/calendar/items/{item_id}/alarms",
+        json={"trigger_at": trigger.isoformat()},
+        cookies=cookies,
+    )
+    assert resp.status_code == 201

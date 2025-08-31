@@ -5,8 +5,9 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
+from sqlalchemy import select
 
-from core.models import TgUser, Alarm, CalendarItem
+from core.models import TgUser, Alarm, CalendarItem, Area
 from core.services.alarm_service import AlarmService
 from core.utils import utcnow
 from web.dependencies import get_current_tg_user
@@ -61,8 +62,17 @@ async def create_alarm(
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     async with AlarmService() as service:
-        item = await service.session.get(CalendarItem, item_id)
-        if not item or item.owner_id != current_user.telegram_id:
+        stmt = (
+            select(CalendarItem)
+            .join(Area, CalendarItem.area_id == Area.id)
+            .where(
+                CalendarItem.id == item_id,
+                Area.owner_id == current_user.telegram_id,
+            )
+        )
+        result = await service.session.execute(stmt)
+        item = result.scalar_one_or_none()
+        if not item:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         now = utcnow()
         if payload.trigger_at <= now:
