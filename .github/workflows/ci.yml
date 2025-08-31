@@ -7,6 +7,9 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+permissions:
+  contents: write  # нужно для пуша revert-коммита в rollback
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -43,32 +46,34 @@ jobs:
         run: pytest -q
 
   deploy:
-    # деплоим только пуши в main; запускаем даже если job test упал
+    # деплоим только пуши в main; деплой стартует даже если тесты "красные"
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: [test]
     runs-on: ubuntu-latest
-    continue-on-error: true
     concurrency:
       group: deploy-main
       cancel-in-progress: true
+
+    outputs:
+      health: ${{ steps.export_health.outputs.health }}
+
     steps:
-      - name: "Add server host key"
+      - name: Add server host key
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
 
-      - name: "SSH: pull & restart (soft-fail)"
+      - name: SSH: pull & restart
+        id: restart
         uses: appleboy/ssh-action@v1.0.0
-        continue-on-error: true
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
-          script_stop: false
+          script_stop: true
           script: |
             set -euo pipefail
-
-            # --- обновление репозитория (ошибки не фатальны) ---
+            # --- обновление репозитория ---
             sudo -u deploy bash -lc '
               set -euo pipefail
               cd /sd/intdata
@@ -77,19 +82,230 @@ jobs:
                 git remote set-url origin git@github.com:LeoTechRu/intData.git
               fi
               git config --global --add safe.directory /sd/intdata || true
-              git stash push -u -m "ci-autostash $(date -Iseconds)" || true
-              git fetch --prune origin || true
-              git reset --hard origin/main || true
-            ' || true
+              git fetch --prune origin
+              git reset --hard origin/main
+            '
+            # --- рестарт сервисов ---
+            sudo -n systemctl restart intdata-bot
+            sudo -n systemctl restart intdata-web
 
-            # --- рестарт сервисов (ошибки не фатальны) ---
-            sudo -n systemctl restart intdata-bot || true
-            sudo -n systemctl restart intdata-web || true
+      - name: SSH: health-check (soft)
+        id: health
+        uses: appleboy/ssh-action@v1.0.0
+        continue-on-error: true
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          script_stop: false
+          script: |
+            set -Eeuo pipefail
+            # статус systemd
+            sudo -n systemctl is-active --quiet intdata-web
+            sudo -n systemctl is-active --quiet intdata-bot
 
-            # --- статусы (не валят шаг) ---
-            systemctl is-active --quiet intdata-bot || echo "WARN: intdata-bot inactive"
-            systemctl is-active --quiet intdata-web || echo "WARN: intdata-web inactive"
+            # HTTP-проверка FastAPI (локальный порт)
+            tries=6
+            ok=0
+            for i in $(seq 1 $tries); do
+              if curl -fsS --max-time 5 http://127.0.0.1:5800/auth >/dev/null; then
+                ok=1; break
+              fi
+              sleep 5
+            done
 
-      - name: "Deploy summary (always)"
+            if [ "$ok" -eq 1 ]; then
+              echo "HEALTH_OK"
+              exit 0
+            else
+              echo "HEALTH_FAIL"
+              exit 1
+            fi
+
+      - name: Export health result
+        id: export_health
         if: ${{ always() }}
-        run: echo "Deploy finished (check logs above)."
+        run: |
+          if [[ "${{ steps.health.outcome }}" == "success" ]]; then
+            echo "health=ok" >> "$GITHUB_OUTPUT"
+          else
+            echo "health=fail" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy summary
+        if: ${{ always() }}
+        run: echo "Deploy done. Health = ${{ steps.export_health.outputs.health }}"
+
+  rollback:
+    # Срабатывает, если деплой «красный» (result=failure) ИЛИ health=fail
+    if: ${{ always() && (needs.deploy.result == 'failure' || needs.deploy.outputs.health == 'fail') && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-main
+      cancel-in-progress: true
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Guard: avoid rollback loop
+        id: guard
+        run: |
+          last_msg="$(git log -1 --pretty=%B || true)"
+          {
+            echo "last_msg<<EOF"
+            echo "$last_msg"
+            echo "EOF"
+          } >> "$GITHUB_ENV"
+          if echo "$last_msg" | grep -qi '\[auto-rollback\]'; then
+            echo "Already an auto-rollback commit. Skipping to avoid loops."
+            echo "do_rollback=no" >> "$GITHUB_ENV"
+          else
+            echo "do_rollback=yes" >> "$GITHUB_ENV"
+          fi
+
+      # --- ДВОЙНАЯ ПРОВЕРКА ПЕРЕД ОТКАТОМ (анти-ложный откат) ---
+      - name: SSH: double-check health (hard)
+        id: doublecheck
+        uses: appleboy/ssh-action@v1.0.0
+        continue-on-error: true
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          script_stop: false
+          script: |
+            set -Eeuo pipefail
+            ok=1
+            sudo -n systemctl is-active --quiet intdata-web || ok=0
+            sudo -n systemctl is-active --quiet intdata-bot || ok=0
+            curl -fsS --max-time 7 http://127.0.0.1:5800/auth >/dev/null || ok=0
+            if [ "$ok" -eq 1 ]; then
+              echo "DOUBLECHECK_OK"
+              exit 0
+            else
+              echo "DOUBLECHECK_FAIL"
+              exit 1
+            fi
+
+      - name: Decide rollback flag
+        id: decide
+        if: ${{ always() }}
+        run: |
+          # по умолчанию прежнее решение из guard
+          want="${{ env.do_rollback }}"
+          # если двойная проверка прошла — откат не нужен
+          if [[ "${{ steps.doublecheck.outcome }}" == "success" ]]; then
+            want="no"
+          fi
+          echo "do_rollback=${want}" >> "$GITHUB_ENV"
+          echo "Rollback decision: ${want}"
+
+      # --- Сбор логов в Summary перед откатом ---
+      - name: SSH: collect remote logs
+        id: collectlogs
+        if: ${{ env.do_rollback == 'yes' && steps.doublecheck.outcome == 'failure' }}
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            OUT=/tmp/intdata_ci_logs.txt
+            {
+              echo "=== systemctl status intdata-web ==="
+              sudo -n systemctl status intdata-web --no-pager || true
+              echo
+              echo "=== systemctl status intdata-bot ==="
+              sudo -n systemctl status intdata-bot --no-pager || true
+              echo
+              echo "=== journalctl (last 300 lines) ==="
+              sudo -n journalctl -u intdata-web -u intdata-bot --no-pager -n 300 || true
+              echo
+              echo "=== netstat 5800 (if available) ==="
+              command -v ss >/dev/null && ss -ltnp | grep ':5800' || true
+            } > "$OUT"
+            echo "::notice::Logs saved to $OUT"
+
+      - name: SCP: download logs artifact
+        if: ${{ env.do_rollback == 'yes' && steps.doublecheck.outcome == 'failure' }}
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          source: /tmp/intdata_ci_logs.txt
+          target: ./  # загрузим в корень рабочей директории
+
+      - name: Attach logs to Step Summary
+        if: ${{ env.do_rollback == 'yes' && steps.doublecheck.outcome == 'failure' }}
+        run: |
+          echo "## Remote service logs before rollback" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo '```text' >> "$GITHUB_STEP_SUMMARY"
+          sed -n '1,500p' intdata_ci_logs.txt >> "$GITHUB_STEP_SUMMARY" || true
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      # --- Сам откат (если всё ещё нужно) ---
+      - name: Create revert commit
+        if: ${{ env.do_rollback == 'yes' && steps.doublecheck.outcome == 'failure' }}
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # HEAD — merge?
+          parents="$(git rev-list --parents -n 1 HEAD)"
+          n=$(echo "$parents" | wc -w)
+          if [ "$n" -ge 3 ]; then
+            echo "Reverting MERGE commit with -m 1…"
+            git revert --no-edit -m 1 HEAD
+          else
+            echo "Reverting regular commit…"
+            git revert --no-edit HEAD
+          fi
+
+          git commit --amend -m "$(git log -1 --pretty=%B)
+
+[auto-rollback]"
+          git push origin HEAD:main
+
+      - name: SSH: pull reverted & restart
+        if: ${{ env.do_rollback == 'yes' && steps.doublecheck.outcome == 'failure' }}
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            sudo -u deploy bash -lc '
+              set -euo pipefail
+              cd /sd/intdata
+              git fetch --prune origin
+              git reset --hard origin/main
+            '
+            sudo -n systemctl restart intdata-bot
+            sudo -n systemctl restart intdata-web
+
+      - name: SSH: health-check after rollback
+        if: ${{ env.do_rollback == 'yes' && steps.doublecheck.outcome == 'failure' }}
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          script_stop: true
+        # если и это упадёт — пусть джоба упадёт, будет видно
+          script: |
+            set -Eeuo pipefail
+            sudo -n systemctl is-active --quiet intdata-web
+            sudo -n systemctl is-active --quiet intdata-bot
+            curl -fsS --max-time 7 http://127.0.0.1:5800/auth >/dev/null
+            echo "ROLLBACK_HEALTH_OK"
