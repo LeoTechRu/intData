@@ -33,7 +33,13 @@ async def test_service_upsert_and_get():
         svc = UserSettingsService(session)
         await svc.upsert(user.id, "favorites", data)
         loaded = await svc.get(user.id, "favorites")
-    assert loaded == data
+        assert loaded == data
+
+        # second upsert should update existing record without IntegrityError
+        data2 = {"v": 2, "items": [{"label": "A", "path": "/a", "position": 1}]}
+        await svc.upsert(user.id, "favorites", data2)
+        loaded = await svc.get(user.id, "favorites")
+    assert loaded == data2
 
 
 def test_repair_migrates_favorites():
@@ -98,8 +104,17 @@ async def test_api_defaults_and_put(monkeypatch):
         json={"value": new_val},
     )
     assert res.status_code == 200
+
+    # repeated PUT should overwrite the value
+    new_val2 = {"v": 1, "items": [{"label": "Other", "path": "/o", "position": 1}]}
+    res = client.put(
+        "/api/v1/user/settings/favorites",
+        json={"value": new_val2},
+    )
+    assert res.status_code == 200
+
     res = client.get("/api/v1/user/settings/favorites")
-    assert res.json()["value"] == new_val
+    assert res.json()["value"] == new_val2
 
 
 def test_no_runtime_utils_imports():
