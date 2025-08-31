@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Автоматическое создание таблицы `app_settings`, исключающей ошибки при её отсутствии.
+- Создание таблицы `user_settings` в repair-скрипте, что предотвращает падения при чтении настроек.
 
 ### Removed
 - Удалён устаревший API напоминаний и связанные сервисы.

@@ -29,6 +29,55 @@ def _table_exists(conn: Connection, name: str) -> bool:
             return False
 
 
+def ensure_user_settings_table(conn: Connection) -> bool:
+    """Create ``user_settings`` table if missing.
+
+    Returns ``True`` if the table was created.
+    """
+    if _table_exists(conn, "user_settings"):
+        return False
+
+    dialect = conn.dialect.name
+    if dialect == "sqlite":
+        conn.execute(
+            sa.text(
+                """
+                CREATE TABLE IF NOT EXISTS user_settings (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id BIGINT NOT NULL,
+                    key VARCHAR(64) NOT NULL,
+                    value JSON NOT NULL,
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE (user_id, key)
+                )
+                """
+            )
+        )
+    else:
+        conn.execute(
+            sa.text(
+                """
+                CREATE TABLE IF NOT EXISTS user_settings (
+                    id BIGSERIAL PRIMARY KEY,
+                    user_id BIGINT NOT NULL REFERENCES users_web(id) ON DELETE CASCADE,
+                    key VARCHAR(64) NOT NULL,
+                    value JSONB NOT NULL,
+                    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                    UNIQUE (user_id, key)
+                )
+                """
+            )
+        )
+        conn.execute(
+            sa.text(
+                "CREATE INDEX IF NOT EXISTS idx_user_settings_user ON user_settings(user_id)"
+            )
+        )
+
+    logger.info("ensure_user_settings_table: created")
+    return True
+
+
 def _get_default_area(conn: Connection, owner_id: uuid.UUID | int | None):
     if owner_id is None or not _table_exists(conn, "areas"):
         return None
@@ -224,6 +273,8 @@ def _migrate_favorites(conn: Connection) -> None:
     """Backfill favorites from legacy ``users_favorites`` table."""
     if not _table_exists(conn, "users_favorites"):
         return
+    if not _table_exists(conn, "user_settings"):
+        return
     rows = conn.execute(
         sa.text(
             "SELECT owner_id, label, path, position "
@@ -259,6 +310,7 @@ def _migrate_favorites(conn: Connection) -> None:
 def run_repair(conn: Connection) -> None:
     """Perform backfill and repair tasks."""
     stats: dict[str, object] = {}
+    stats["user_settings_created"] = ensure_user_settings_table(conn)
     stats["default_areas"] = ensure_default_areas(conn)
     stats["projects_area"] = backfill_projects_area(conn)
     tr_stats = backfill_tasks_resources(conn)
