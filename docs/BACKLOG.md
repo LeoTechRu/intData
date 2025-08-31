@@ -37,6 +37,7 @@
 - **Google Sync**: `syncToken`, `channels.watch` (`resource_id`, `channel_id`, `expiration`), `extendedProperties.private`.
 - **Telegram**: уведомления по проектным каналам (`chat_id < 0`), правила `on_create`, `on_change_time`, `pre_due`, `digest_weekly`.
 - **Tasks** наследует `area_id` проекта; дефолтная Area «Нераспределённое» (per user/workspace).
+- **Subjective overrides**: `para_overrides(owner, entity_type, entity_id, override_project_id?, override_area_id?)` позволяют пользователю видеть сущности в другой области без дублирования данных.
 - **Таймер**: один активный на пользователя (`UNIQUE` индекс `WHERE stopped_at IS NULL`).
 
 ## Эпики
@@ -210,6 +211,7 @@
 
 **Модель/DDL**
 - `tasks(id=calendar_items.id, project_id?, area_id?, status, priority, tags[]; CHECK(project_id OR area_id); триггер наследования area_id из projects)`
+- `para_overrides` учитываются при определении `effective_area_id(viewer, entity)`.
 - `time_entries(id, task_id, user_id, started_at, stopped_at, duration_sec STORED, note, source, billable; UNIQUE(active timer per user) WHERE stopped_at IS NULL)`
 
 **API**
