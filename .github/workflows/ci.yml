@@ -30,6 +30,8 @@ jobs:
           sudo apt-get install -y ripgrep
 
       - name: Install dependencies
+        env:
+          PIP_DISABLE_PIP_VERSION_CHECK: '1'
         run: |
           python -m pip install --upgrade pip
           pip install --quiet -r requirements.txt
@@ -50,10 +52,8 @@ jobs:
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: [test]
     runs-on: ubuntu-latest
-    concurrency:
-      group: deploy-main
-      cancel-in-progress: true
 
+    # job-outputs должны быть объявлены до steps
     outputs:
       health: ${{ steps.export_health.outputs.health }}
 
@@ -141,9 +141,6 @@ jobs:
     if: ${{ always() && (needs.deploy.result == 'failure' || needs.deploy.outputs.health == 'fail') && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: [deploy]
     runs-on: ubuntu-latest
-    concurrency:
-      group: deploy-main
-      cancel-in-progress: true
     steps:
       - name: Checkout (full history)
         uses: actions/checkout@v4
@@ -195,9 +192,7 @@ jobs:
         id: decide
         if: ${{ always() }}
         run: |
-          # по умолчанию прежнее решение из guard
           want="${{ env.do_rollback }}"
-          # если двойная проверка прошла — откат не нужен
           if [[ "${{ steps.doublecheck.outcome }}" == "success" ]]; then
             want="no"
           fi
@@ -240,7 +235,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
           source: /tmp/intdata_ci_logs.txt
-          target: ./  # загрузим в корень рабочей директории
+          target: ./
 
       - name: Attach logs to Step Summary
         if: ${{ env.do_rollback == 'yes' && steps.doublecheck.outcome == 'failure' }}
@@ -302,7 +297,6 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_KEY }}
           script_stop: true
-        # если и это упадёт — пусть джоба упадёт, будет видно
           script: |
             set -Eeuo pipefail
             sudo -n systemctl is-active --quiet intdata-web
