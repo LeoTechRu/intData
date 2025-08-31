@@ -64,10 +64,10 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
   fi
 fi
 
-# 6) Миграции (если используется Alembic)
-if command -v alembic >/dev/null 2>&1 && [[ -f alembic.ini ]]; then
-  echo "[i] running alembic upgrade head"
-  alembic upgrade head || echo "[i] alembic upgrade skipped/failed (no versions?)"
+# 6) Миграции базы данных (если есть скрипт)
+if python -c "import importlib; importlib.import_module('core.db.migrate')" >/dev/null 2>&1; then
+  echo "[i] running core.db.migrate"
+  python -m core.db.migrate || echo "[i] migration script skipped/failed"
 fi
 
 # 7) Тесты

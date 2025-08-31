@@ -40,7 +40,7 @@
 2. Как разработчик, я реализую CHECK-инвариант PARA и необходимые индексы.
 
 **Acceptance Criteria**
-- `alembic upgrade head` создаёт таблицы с внешними ключами и индексами по `(project_id, area_id, start_ts)`.
+- `python -m core.db.migrate` создаёт таблицы с внешними ключами и индексами по `(project_id, area_id, start_ts)`.
 - Вставка `calendar_item` с обоими NULL (`project_id` и `area_id`) завершается ошибкой CHECK.
 
 ### E3: API (FastAPI): `/calendar/items`, `/calendar/agenda`, `/calendar/feed.ics`, `/projects/{id}/notifications`
