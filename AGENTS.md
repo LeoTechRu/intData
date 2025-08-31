@@ -10,16 +10,48 @@
 - `tests/`: end-to-end and unit tests across subsystems.
 - /tests - Директория для тестов приложения без прямого влияния на функциональность приложения.
 - /utils - Директория для вспомогательных утилит напрямую не влияющих на функциональность приложения.
+- Runtime boundaries (жёстко):
+  - Всё, что обязательно для работы на рантайме, живёт в **/core** (модели, сервисы, валидаторы, резолверы, инициализация БД).
+  - **/utils** — только опциональные скрипты (линтеры, дампы). Удаление **/utils** не должно ломать приложение.
+  - `web/` и `bot/` импортируют бизнес-логику только из `core/services`.
+
+## Инициализация БД (без Alembic)
+- Источник правды по схеме: идемпотентные DDL в **`core/db/ddl/*.sql`** (только `CREATE/ALTER/INDEX IF NOT EXISTS`).
+- Единый фасад: **`core/db/init_app.py:init_app_once(env)`** — вызывается и в `web`, и в `bot` до регистрации роутов/старта бота.
+- Порядок внутри `init_app_once`: `run_bootstrap_sql()` → `run_repair()` → *(опционально)* `create_models_for_dev()` (только при `DEV_INIT_MODELS=1` и если не шёл bootstrap).
+- Защита от гонок: PostgreSQL advisory-lock.
+- ENV-флаги:
+  ```
+  DB_BOOTSTRAP=1        # прогон core/db/ddl/*.sql
+  DB_REPAIR=1           # backfill/наследование/миграции данных
+  DEV_INIT_MODELS=0     # только для локалки/тестов; не заменяет DDL
+  ```
+
+## PARA-first инварианты и интеграции
+- Project обязан иметь **Area**.
+- Task/Resource обязаны иметь **Project ИЛИ Area**; при наличии Project → **area наследуется** от проекта.
+- Tasks = `CalendarItem(kind='task')`; **напоминания** живут внутри календаря (аналог `VALARM`); дублирующих напоминаний в задачах нет.
+- Быстрый ввод: всё без контейнера падает в дефолтную **Area «Нераспределённое»**, потом можно перекинуть.
+- **Subjective overrides**: персонифицированные привязки Project/Task/Resource к другой Area/Project для конкретного пользователя без дублирования сущностей.
+- В тестах: запрет на runtime-импорты из `utils/*`; проверка, что entrypoints зовут только `init_app_once()`.
+
+## User-Settings (кастомизация дашборда)
+- Одна расширяемая таблица **`user_settings`** (K/V JSONB): ключи `dashboard_layout`, `favorites` и др. в будущем.
+- Перенос `users_favorites` → `user_settings` (`key='favorites'`) выполняется в **`core/db/repair.py`** (идемпотентно).
+- API: `GET /api/v1/user/settings`, `GET/PUT /api/v1/user/settings/{key}`.
+- UI: режим «Настроить дашборд» (drag-n-drop, resize); дефолтные раскладки — фолбэк, если записи нет.
 
 ## Build, Test, and Development Commands
 - Create venv: `python -m venv venv && source ./venv/bin/activate`
 - Install deps: `pip install --quiet -r requirements.txt`
 - Run tests: `pytest -q` (requires local PostgreSQL on `127.0.0.1:5432`)
 - Lint: `flake8` (if configured)
+- Перед запуском сервисов вызывается `init_app_once(env)` в entrypoints `web` и `bot`.
+- После изменения схемы обновляйте DDL-файлы (`core/db/ddl/*`) и прогоняйте тесты: `pytest -q`.
 
 ## Security & Configuration
 - Use `.env` (see `.env.example`) and never commit secrets.
-- Required vars: `TG_BOT_TOKEN`, `TG_BOT_USERNAME`, `PUBLIC_URL`, `SESSION_MAX_AGE`, `ADMIN_TELEGRAM_IDS`, DB settings.
+- Required vars: `TG_BOT_TOKEN`, `TG_BOT_USERNAME`, `PUBLIC_URL`, `SESSION_MAX_AGE`, `ADMIN_TELEGRAM_IDS`, DB settings, `DB_BOOTSTRAP`, `DB_REPAIR`, `DEV_INIT_MODELS`.
 - Tests: create `.env.test` (ignored) and export vars, e.g.:
   ```bash
   cat > .env.test <<'EOF'
@@ -30,6 +62,7 @@
   EOF
   set -a; source .env.test; set +a
   ```
+- Не использовать Alembic в текущей конфигурации; миграции выполняются через DDL + repair.
 
 ## Coding Style & Naming Conventions
 - Python, async/await where used; prefer f-strings; add type hints.
@@ -45,7 +78,9 @@
 
 ## Commit & Pull Request Guidelines
 - Commits: clear, imperative summary (why + what). Update `requirements.txt` when adding deps; adjust `.env.example` and `README.md` when env/behavior changes.
-- PRs: concise description, linked issues, setup notes, screenshots for UI changes. Ensure CI/tests pass.
+- Типы коммитов: `feat(core/db|services)`, `feat(web|bot)`, `chore(core/db/ddl|env)`, `docs(backlog|changelog)`.
+- PRs: concise description, linked issues, setup notes, screenshots for UI changes. Ensure CI/tests pass. В описании PR добавляйте ссылки на `docs/BACKLOG.md` и `docs/CHANGELOG.md`.
+- PR чек-лист: скриншоты UI при изменениях; ссылки на docs/BACKLOG.md (SSoT) и docs/CHANGELOG.md.
 
 ## Agent-Specific Instructions
 - Work from repo root, activate venv, install deps, then implement.
