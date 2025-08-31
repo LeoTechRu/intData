@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write  # нужен для пуша revert-коммита
+  contents: write  # пушим авто-откат
 
 jobs:
   test:
@@ -48,12 +48,10 @@ jobs:
         run: pytest -q
 
   deploy:
-    # деплоим только пуши в main; стартует даже если тесты "красные"
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: [test]
     runs-on: ubuntu-latest
 
-    # <<-- важно: outputs объявляем на уровне job, до steps
     outputs:
       health: ${{ steps.export_health.outputs.health }}
 
@@ -73,7 +71,6 @@ jobs:
           script_stop: true
           script: |
             set -euo pipefail
-            # --- обновление репозитория ---
             sudo -u deploy bash -lc '
               set -euo pipefail
               cd /sd/intdata
@@ -85,7 +82,6 @@ jobs:
               git fetch --prune origin
               git reset --hard origin/main
             '
-            # --- рестарт сервисов ---
             sudo -n systemctl restart intdata-bot
             sudo -n systemctl restart intdata-web
 
@@ -100,11 +96,8 @@ jobs:
           script_stop: false
           script: |
             set -Eeuo pipefail
-            # статус systemd
             sudo -n systemctl is-active --quiet intdata-web
             sudo -n systemctl is-active --quiet intdata-bot
-
-            # HTTP-проверка FastAPI (локальный порт)
             tries=6
             ok=0
             for i in $(seq 1 $tries); do
@@ -113,7 +106,6 @@ jobs:
               fi
               sleep 5
             done
-
             if [ "$ok" -eq 1 ]; then
               echo "HEALTH_OK"
               exit 0
@@ -137,11 +129,10 @@ jobs:
         run: echo "Deploy done. Health = ${{ steps.export_health.outputs.health }}"
 
   rollback:
-    # откатываем, если job deploy упал ИЛИ его health=fail (и это пуш в main)
+    # Откат: если сам deploy зафейлился ИЛИ health=fail (только push в main)
     if: ${{ (needs.deploy.result == 'failure' || needs.deploy.outputs.health == 'fail') && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: [deploy]
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout (full history)
         uses: actions/checkout@v4
@@ -165,7 +156,6 @@ jobs:
             echo "do_rollback=yes" >> "$GITHUB_ENV"
           fi
 
-      # второй чек на реальном сервере, чтобы избежать ложных откатов
       - name: SSH: double-check health (hard)
         id: doublecheck
         uses: appleboy/ssh-action@v1.0.0
@@ -252,7 +242,6 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # HEAD — merge?
           parents="$(git rev-list --parents -n 1 HEAD)"
           n=$(echo "$parents" | wc -w)
           if [ "$n" -ge 3 ]; then
