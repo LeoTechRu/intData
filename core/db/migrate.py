@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Simple SQL migration runner.
 
-Applies all .sql files from db/migrations in alphabetical order.
-Writes applied filenames to schema_migrations table.
+Applies all .sql files from ``core/db/migrations`` in alphabetical order
+and writes applied filenames to the ``schema_migrations`` table.
 """
 from __future__ import annotations
 

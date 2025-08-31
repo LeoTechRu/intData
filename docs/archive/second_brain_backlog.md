@@ -72,7 +72,7 @@
 ## MR‑план
 
 1) MR‑1 Foundations (миграции/модели)
-- Файлы: `migrations/versions/20250829_02..06`, `core/models.py`
+- Файлы: `core/db/migrations/20250829_02..06`, `core/models.py`
 - DoD: миграции применяются; приложение поднимается; тесты не падают.
 
 2) MR‑2 Services (ядро PARA)
