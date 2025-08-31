@@ -74,31 +74,41 @@ document.addEventListener('DOMContentLoaded', ()=>{
   fetchEvents();
 });
 
-function addEventRow(){
+function addEventRow(e){
   if(document.querySelector('tr.new-event')) return;
+  e.stopPropagation();
   const list = document.getElementById('event-list');
-  const trTitle = document.createElement('tr');
-  trTitle.className = 'new-event';
-  trTitle.innerHTML = '<td></td><td colspan="4"><input name="title" type="text" placeholder="Название" required class="w-100"></td>';
-  const trDesc = document.createElement('tr');
-  trDesc.className = 'new-event';
-  trDesc.innerHTML = '<td></td><td colspan="4"><textarea name="description" rows="2" placeholder="Описание"></textarea></td>';
-  const trTime = document.createElement('tr');
-  trTime.className = 'new-event';
-  trTime.innerHTML = '<td></td><td><input name="start_at" type="datetime-local" required></td><td><input name="end_at" type="datetime-local"></td><td colspan="2"><button class="button save-event" type="button">Сохранить</button> <button class="button cancel-event" type="button">Отмена</button></td>';
-  list.prepend(trTime); list.prepend(trDesc); list.prepend(trTitle);
-  trTime.querySelector('.save-event').addEventListener('click', async ()=>{
-    const title = trTitle.querySelector('input[name=title]').value;
-    const description = trDesc.querySelector('textarea[name=description]').value;
-    const startVal = trTime.querySelector('input[name=start_at]').value;
-    const endVal = trTime.querySelector('input[name=end_at]').value;
+  const tr = document.createElement('tr');
+  tr.className = 'new-event';
+  tr.innerHTML = '<td></td>'+
+    '<td><input name="title" type="text" placeholder="Название" required class="w-100"><br><textarea name="description" rows="2" placeholder="Описание"></textarea></td>'+
+    '<td><input name="start_at" type="datetime-local" required></td>'+
+    '<td><input name="end_at" type="datetime-local"></td>'+
+    '<td><button class="button save-event" type="button">Сохранить</button></td>';
+  list.prepend(tr);
+
+  const removeForm = () => {
+    tr.remove();
+    document.removeEventListener('click', outsideClick);
+  };
+
+  const outsideClick = (evt) => {
+    if(tr.contains(evt.target)) return;
+    removeForm();
+  };
+
+  document.addEventListener('click', outsideClick);
+
+  tr.querySelector('.save-event').addEventListener('click', async (evt)=>{
+    evt.stopPropagation();
+    const title = tr.querySelector('input[name=title]').value;
+    const description = tr.querySelector('textarea[name=description]').value;
+    const startVal = tr.querySelector('input[name=start_at]').value;
+    const endVal = tr.querySelector('input[name=end_at]').value;
     const payload = {title, start_at: new Date(startVal).toISOString(), end_at: endVal ? new Date(endVal).toISOString() : null, description: description || null};
     const resp = await fetch('/api/v1/calendar', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload)});
     if(resp.ok){ fetchEvents(); }
-    trTitle.remove(); trDesc.remove(); trTime.remove();
-  });
-  trTime.querySelector('.cancel-event').addEventListener('click', ()=>{
-    trTitle.remove(); trDesc.remove(); trTime.remove();
+    removeForm();
   });
 }
 
