@@ -16,7 +16,7 @@ from core.services.telegram_user_service import TelegramUserService
 
 async def main() -> None:
     """Run bot polling with middleware and routers."""
-    init_app_once(env)
+    await init_app_once(env)
 
     dp.message.middleware(LoggerMiddleware(bot))
     dp.callback_query.middleware(LoggerMiddleware(bot))

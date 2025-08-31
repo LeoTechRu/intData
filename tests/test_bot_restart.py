@@ -18,7 +18,11 @@ def test_bot_reports_restart(monkeypatch):
 
     fake_service = FakeService()
     monkeypatch.setattr(bot_main, "TelegramUserService", lambda: fake_service)
-    monkeypatch.setattr(bot_main, "init_app_once", lambda env: None)
+
+    async def fake_init_app_once(env):
+        return None
+
+    monkeypatch.setattr(bot_main, "init_app_once", fake_init_app_once)
 
     fake_dp = SimpleNamespace(
         message=SimpleNamespace(middleware=lambda *a, **k: None),
