@@ -7,12 +7,19 @@ from uuid import UUID
 from sqlalchemy import insert, select, update
 
 from core import db
-from core.settings_store import app_settings
+from core.settings_store import app_settings, metadata
 from core.logger import logger
+
+
+async def _ensure_table() -> None:
+    """Create the ``app_settings`` table if it does not exist."""
+    async with db.engine.begin() as conn:  # type: ignore[attr-defined]
+        await conn.run_sync(metadata.create_all)
 
 
 async def get_settings_by_prefix(prefix: str) -> Dict[str, str]:
     """Fetch settings with keys starting with the prefix."""
+    await _ensure_table()
     async with db.async_session() as session:  # type: ignore
         result = await session.execute(
             select(app_settings.c.key, app_settings.c.value).where(
@@ -28,6 +35,7 @@ async def upsert_settings(
     """Insert or update settings items, marking them as non-secret."""
     if not items:
         return
+    await _ensure_table()
     now = datetime.utcnow()
     async with db.async_session() as session:  # type: ignore
         async with session.begin():
