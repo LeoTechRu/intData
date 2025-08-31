@@ -262,7 +262,11 @@ document.addEventListener('click', (e)=>{
 });
 
 const hash = (location.hash||'').replace('#','');
-activate(hash && forms[hash] ? hash : 'login');
+let defaultTab = 'login';
+for (const [name, form] of Object.entries(forms)){
+  if (form && !form.classList.contains('is-hidden')){ defaultTab = name; break; }
+}
+activate(hash && forms[hash] ? hash : defaultTab);
 })();
 
 // ===== Popover widgets =====
