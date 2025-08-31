@@ -98,16 +98,9 @@ def render_auth(
     status_code: int | None = None,
     config_warnings: list[dict] | None = None,
 ):
-    origin = f"{request.url.scheme}://{request.url.netloc}".rstrip("/")
-    tg_login_url = None
+    tg_bot_username = None
     if S.TG_LOGIN_ENABLED and S.TG_BOT_USERNAME:
-        tg_login_url = (
-            "https://oauth.telegram.org/auth"
-            f"?bot={S.TG_BOT_USERNAME}"
-            f"&origin={origin}"
-            "&embed=1&request_access=write"
-            "&return_to=/auth/telegram"
-        )
+        tg_bot_username = S.TG_BOT_USERNAME
     return templates.TemplateResponse(
         request,
         "auth.html",
@@ -118,7 +111,7 @@ def render_auth(
             "form_errors_json": json.dumps(form_errors or {}, ensure_ascii=False),
             "flash": flash,
             "config_warnings": config_warnings or _config_diagnostics(request),
-            "tg_login_url": tg_login_url,
+            "tg_bot_username": tg_bot_username,
         },
         status_code=status_code or 200,
     )
@@ -361,15 +354,17 @@ async def login(
                 request,
                 active="register",
                 form_values={"username": username},
-                flash="Invalid credentials",
-                status_code=400,
+                flash="Пользователь не найден. Зарегистрируйтесь.",
             )
         return render_auth(
             request,
             active="login",
             form_values={"username": username},
-            form_errors={"username": "Неверный логин или пароль", "password": "Неверный логин или пароль"},
-            flash="Invalid credentials",
+            form_errors={
+                "username": "Неверный логин или пароль",
+                "password": "Неверный логин или пароль",
+            },
+            flash="Неверный логин или пароль",
             status_code=400,
         )
     if user.role == "ban":

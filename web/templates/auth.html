@@ -67,11 +67,16 @@
           <div class="g-recaptcha" data-sitekey="{{ RECAPTCHA_SITE_KEY }}"></div>
           {% endif %}
 
-          {% if TG_LOGIN_ENABLED and tg_login_url %}
-            <a class="btn telegram full" href="{{ tg_login_url }}">Войти через Telegram</a>
-            <div class="or">или</div>
-          {% endif %}
           <button class="btn primary full" type="submit">Вход</button>
+          {% if TG_LOGIN_ENABLED and tg_bot_username %}
+            <div class="or">или</div>
+            <script async src="https://telegram.org/js/telegram-widget.js?22"
+                    data-telegram-login="{{ tg_bot_username }}"
+                    data-size="large"
+                    data-userpic="false"
+                    data-request-access="write"
+                    data-auth-url="/auth/tg/callback"></script>
+          {% endif %}
 
           {% if flash %}
             <div class="auth-alert">{{ flash }}</div>
