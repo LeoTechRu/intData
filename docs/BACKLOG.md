@@ -19,6 +19,7 @@
   - [E12: Calendar/Alarms Fusion («Сегодня» — общий список)](#e12-calendaralarms-fusion-сегодня--общий-список)
   - [E13: Tasks & Time (PARA-first)](#e13-tasks--time-para-first)
   - [E14: Insights & Reports (ревью Areas, фокус-часы)](#e14-insights--reports-ревью-areas-фокус-часы)
+  - [E15: User-configurable dashboard (user_settings)](#e15-user-configurable-dashboard-user_settings)
 - [MR-план](#mr-план)
 - [Definition of Done](#definition-of-done)
 - [Appendix: Notes from merge](#appendix-notes-from-merge)
@@ -248,6 +249,13 @@
 - Виджет «Areas due for review» учитывает `review_interval_days`.
 - Отчёт по фокус‑часам агрегирует `TimeEntry` по Project/Area.
 - Отчёт по графу показывает коэффициент связности.
+
+### E15: User-configurable dashboard (user_settings)
+**Acceptance Criteria**
+- Настройки пользователя хранятся в таблице `user_settings` (ключ/значение JSONB).
+- Избранное перенесено в `user_settings(key='favorites')` и доступно через меню.
+- Раскладка дашборда сохраняется в `user_settings(key='dashboard_layout')`.
+- API `/api/v1/user/settings` позволяет читать и обновлять отдельные ключи.
 
 ## MR-план
 1. MR-1 Foundations (миграции/модели) — DoD: миграции применяются; приложение поднимается; тесты не падают.

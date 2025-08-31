@@ -32,6 +32,7 @@ from .routes import (
     api_router,
     API_PREFIX,
 )
+from .routes.api_user_settings import router as user_settings_api
 from core.db import engine
 from core.db.init_app import init_app_once
 from core.env import env
@@ -108,6 +109,7 @@ tags_metadata = [
     {"name": "app-settings", "description": "Application settings API"},
     {"name": "auth", "description": "Authentication API"},
     {"name": "user", "description": "User favorites API"},
+    {"name": "user-settings", "description": "User settings API"},
 ]
 
 app = FastAPI(
@@ -253,3 +255,4 @@ app.include_router(admin_settings_ui.router, include_in_schema=False)
 
 # Подключение всех API под единым префиксом
 app.include_router(api_router, prefix=API_PREFIX)
+app.include_router(user_settings_api)

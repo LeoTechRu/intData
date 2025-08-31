@@ -7,6 +7,7 @@ from .db import bcrypt
 
 from .utils import utcnow
 
+import sqlalchemy as sa
 from sqlalchemy import (
     BigInteger,
     Boolean,
@@ -171,6 +172,31 @@ class UserFavorite(Base):
     __table_args__ = (
         UniqueConstraint("owner_id", "path"),
         Index("ix_users_favorites_owner_position", "owner_id", "position"),
+    )
+
+
+class UserSettings(Base):
+    __tablename__ = "user_settings"
+
+    id = sa.Column(
+        sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+        primary_key=True,
+        autoincrement=True,
+    )
+    user_id = sa.Column(
+        sa.BigInteger, sa.ForeignKey("users_web.id", ondelete="CASCADE"), nullable=False
+    )
+    key = sa.Column(sa.String(64), nullable=False)
+    value = sa.Column(
+        sa.dialects.postgresql.JSONB().with_variant(sa.JSON(), "sqlite"),
+        nullable=False,
+    )
+    updated_at = sa.Column(
+        sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
+    )
+
+    __table_args__ = (
+        sa.UniqueConstraint("user_id", "key", name="uq_user_settings_user_key"),
     )
 
 class Group(Base):  # Группа

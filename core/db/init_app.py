@@ -30,6 +30,7 @@ def create_models_for_dev() -> None:
 
 
 def init_app_once(env) -> None:
+    """One-stop database initialization for web and bot processes."""
     global _init_done
     if _init_done:
         return

@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- user_settings table for extensible per-user preferences.
+- API `/api/v1/user/settings` to read and write settings.
+- Repair step to migrate legacy favorites into user_settings.
 - Простые SQL-миграции и раннер `core/db/migrate.py` с таблицами календаря и уведомлений.
 - Асинхронный бэкенд на aiogram + SQLAlchemy с подключением к PostgreSQL.
 - Модели пользователей, групп, каналов и настроек логирования.
