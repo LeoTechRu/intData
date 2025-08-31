@@ -6,7 +6,7 @@ from typing import Dict
 import httpx
 
 from fastapi import APIRouter, HTTPException, Request, Form, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from ..template_env import templates
 from ..security.cookies import set_auth_cookies
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
@@ -272,44 +272,28 @@ async def auth_get(request: Request):
 
 @router.get("/login", include_in_schema=False)
 async def login_redirect():
-    return RedirectResponse("/auth#login", status_code=302)
-
-
-@router.get("/register", include_in_schema=False)
-async def register_redirect():
-    return RedirectResponse("/auth#register", status_code=302)
-
-
-@router.get("/restore", include_in_schema=False)
-async def restore_redirect():
-    return RedirectResponse("/auth#restore", status_code=302)
+    return RedirectResponse("/auth", status_code=302)
 
 
 @router.post("/auth/restore")
 @router.post("/restore")
 async def restore_password(
     request: Request,
-    email: str = Form(...),
-    form_ts: str = Form(""),
-    hp_url: str = Form(""),
+    username: str = Form(...),
 ):
-    """Password recovery request (stub).
-
-    Logs the request and renders the restore tab with a flash message.
-    """
-    # Basic honeypot/anti-spam: ignore if hidden field is filled
-    if hp_url:
-        return render_auth(request, active="restore", form_values={"email": email})
-
+    """Send password reset email if user exists and has email."""
+    async with WebUserService() as service:
+        user = await service.get_by_username(username)
+    if not user:
+        return JSONResponse({"detail": "Пользователь не найден"}, status_code=404)
+    if not user.email:
+        return JSONResponse({"detail": "У пользователя не указан email"}, status_code=400)
     try:
-        log_event(request, "restore_req", None, {"email": email})
+        log_event(request, "restore_req", user, {"email": user.email})
     except Exception:
         pass
-    return render_auth(
-        request,
-        active="restore",
-        form_values={"email": email},
-        flash="Если email существует — отправили ссылку для восстановления.",
+    return JSONResponse(
+        {"detail": "Если email существует — отправили ссылку для восстановления."}
     )
 
 
@@ -329,12 +313,56 @@ async def login(
             flash="reCAPTCHA validation failed",
             status_code=400,
         )
-    exists = None
     try:
         async with WebUserService() as service:
             user = await service.authenticate(username, password)
             if not user:
-                exists = await service.get_by_username(username)
+                existing = await service.get_by_username(username)
+                if existing:
+                    try:
+                        log_event(request, "login_fail", None, {"username": username})
+                    except Exception:
+                        pass
+                    return render_auth(
+                        request,
+                        active="login",
+                        form_values={"username": username},
+                        form_errors={
+                            "username": "Неверный логин или пароль",
+                            "password": "Неверный логин или пароль",
+                        },
+                        flash="Неверный логин или пароль",
+                        status_code=400,
+                    )
+                # register new user
+                try:
+                    new_user = await service.register(username=username, password=password)
+                except ValueError:
+                    return render_auth(
+                        request,
+                        active="login",
+                        form_values={"username": username},
+                        flash="Не удалось создать пользователя",
+                        status_code=400,
+                    )
+                telegram_id = request.cookies.get("telegram_id")
+                if telegram_id:
+                    async with TelegramUserService() as tsvc:
+                        tg_user = await tsvc.get_user_by_telegram_id(int(telegram_id))
+                    await service.link_telegram(new_user.id, tg_user.id)
+                try:
+                    log_event(request, "register_ok", new_user)
+                except Exception:
+                    pass
+                response = RedirectResponse(
+                    f"/profile/{new_user.username}?edit=1",
+                    status_code=status.HTTP_303_SEE_OTHER,
+                )
+                if telegram_id:
+                    set_auth_cookies(response, web_user_id=new_user.id, telegram_id=telegram_id)
+                else:
+                    set_auth_cookies(response, web_user_id=new_user.id)
+                return response
     except Exception as exc:  # pragma: no cover - defensive
         return render_auth(
             request,
@@ -343,29 +371,6 @@ async def login(
             form_errors={"username": "Technical error", "password": str(exc)},
             flash=f"Technical error: {exc}",
             status_code=500,
-        )
-    if not user:
-        try:
-            log_event(request, "login_fail", None, {"username": username})
-        except Exception:
-            pass
-        if not exists:
-            return render_auth(
-                request,
-                active="register",
-                form_values={"username": username},
-                flash="Пользователь не найден. Зарегистрируйтесь.",
-            )
-        return render_auth(
-            request,
-            active="login",
-            form_values={"username": username},
-            form_errors={
-                "username": "Неверный логин или пароль",
-                "password": "Неверный логин или пароль",
-            },
-            flash="Неверный логин или пароль",
-            status_code=400,
         )
     if user.role == "ban":
         response = RedirectResponse("/ban", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
@@ -377,33 +382,6 @@ async def login(
     except Exception:
         pass
     return login_user(request, user)
-
-
-@router.post("/auth/register")
-@router.post("/register")
-async def register(
-    request: Request,
-    username: str = Form(...),
-    password: str = Form(...),
-    email: str | None = Form(None),
-    phone: str | None = Form(None),
-    g_recaptcha_response: str | None = Form(None, alias="g-recaptcha-response"),
-):
-    if not await verify_recaptcha_token(g_recaptcha_response):
-        return render_auth(
-            request,
-            active="register",
-            form_values={"username": username, "email": email},
-            flash="reCAPTCHA validation failed",
-            status_code=400,
-        )
-    async with WebUserService() as service:
-        try:
-            await service.register(username=username, password=password, email=email, phone=phone)
-        except ValueError:
-            from fastapi.responses import JSONResponse
-            return JSONResponse({"detail": "username taken"}, status_code=400)
-    return RedirectResponse("/auth", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.api_route("/auth/logout", methods=["GET", "POST"])
@@ -448,9 +426,7 @@ async def telegram_callback(request: Request):
         except Exception:
             pass
         return response
-    response = RedirectResponse(
-        "/auth/create_web_account", status_code=status.HTTP_303_SEE_OTHER
-    )
+    response = RedirectResponse("/auth", status_code=status.HTTP_303_SEE_OTHER)
     set_auth_cookies(response, telegram_id=telegram_id)
     return response
 
@@ -504,37 +480,3 @@ async def magic_consume(request: Request, token: str):
     return login_user(request, user)
 
 
-@router.get("/auth/create_web_account", response_class=HTMLResponse)
-async def create_web_account_page(request: Request) -> HTMLResponse:
-    telegram_id = request.cookies.get("telegram_id")
-    if not telegram_id:
-        return RedirectResponse("/auth", status_code=status.HTTP_303_SEE_OTHER)
-    # Unified auth page: open the register tab
-    return RedirectResponse("/auth#register", status_code=status.HTTP_303_SEE_OTHER)
-
-
-@router.post("/auth/create_web_account")
-async def create_web_account(
-    request: Request,
-    action: str = Form(...),
-    username: str = Form(""),
-    password: str = Form(""),
-):
-    telegram_id = request.cookies.get("telegram_id")
-    if not telegram_id:
-        return RedirectResponse("/auth", status_code=status.HTTP_303_SEE_OTHER)
-    if action == "cancel":
-        response = RedirectResponse("/auth", status_code=status.HTTP_303_SEE_OTHER)
-        response.delete_cookie("telegram_id", path="/")
-        return response
-    async with WebUserService() as wsvc:
-        try:
-            web_user = await wsvc.register(username=username, password=password)
-        except ValueError as exc:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
-        async with TelegramUserService() as tsvc:
-            tg_user = await tsvc.get_user_by_telegram_id(int(telegram_id))
-        await wsvc.link_telegram(web_user.id, tg_user.id)
-    response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
-    set_auth_cookies(response, web_user_id=web_user.id, telegram_id=telegram_id)
-    return response

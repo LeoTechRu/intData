@@ -43,7 +43,6 @@
                   data-request-access="write"
                   data-auth-url="/auth/tg/callback"></script>
         </div>
-        <div class="or">или</div>
       {% endif %}
 
       <section class="auth-forms">
@@ -52,7 +51,7 @@
         {% endif %}
 
         <!-- LOGIN -->
-        <form action="/auth/login" method="post" class="auth-form form-login{% if active_tab!='login' %} is-hidden{% endif %}" data-validate="login" novalidate>
+        <form action="/auth/login" method="post" class="auth-form form-login" data-validate="login" novalidate>
           {{ csrf_input|safe if csrf_input is defined }}
           <label class="field">
             <input class="control" type="text" name="username" autocomplete="username" required placeholder="Ваш логин" value="{{ form_values.username or '' }}">
@@ -72,7 +71,7 @@
               <input type="checkbox" name="remember_me" value="1">
               <span>Запомнить меня</span>
             </label>
-            <a class="link small" href="#restore" data-tab-jump="restore">Напомнить</a>
+            <button class="link small remind-btn" type="button">Напомнить</button>
           </div>
 
           {% if RECAPTCHA_SITE_KEY %}
@@ -80,64 +79,10 @@
           {% endif %}
 
           <button class="btn primary full" type="submit">Вход</button>
-          <div class="or">или</div>
-          <button class="btn full" type="button" data-tab-jump="register">Регистрация</button>
 
           {% if flash %}
             <div class="auth-alert">{{ flash }}</div>
           {% endif %}
-        </form>
-
-        <!-- REGISTER -->
-        <form action="/auth/register" method="post" class="auth-form form-register{% if active_tab!='register' %} is-hidden{% endif %}" data-validate="register" novalidate>
-          {{ csrf_input|safe if csrf_input is defined }}
-
-          <label class="field">
-            <input class="control" type="text" name="username" autocomplete="username" required placeholder="Придумайте логин" value="{{ form_values.username or '' }}">
-            <div class="error-text" data-for="username"></div>
-          </label>
-
-          <label class="field">
-            <input class="control" type="email" name="email" autocomplete="email" required placeholder="Введите Email" value="{{ form_values.email or '' }}">
-            <div class="error-text" data-for="email"></div>
-          </label>
-
-          <label class="field pwd-field">
-            <div class="control-with-action">
-              <input class="control" type="password" name="password" autocomplete="new-password" required placeholder="Создайте пароль">
-              <button type="button" class="link tiny toggle-password" aria-label="Показать/скрыть пароль">👁</button>
-            </div>
-            <div class="error-text" data-for="password"></div>
-            <div class="pwd-meter" aria-hidden="true"><i></i></div>
-            <div class="pwd-hint">Минимум 8 символов. Лучше: буквы в разных регистрах, цифры и символы.</div>
-          </label>
-
-          <label class="field">
-            <input class="control" type="password" name="password2" autocomplete="new-password" required placeholder="Повторите пароль">
-            <div class="error-text" data-for="password2"></div>
-          </label>
-
-          {% if RECAPTCHA_SITE_KEY %}
-          <div class="g-recaptcha" data-sitekey="{{ RECAPTCHA_SITE_KEY }}"></div>
-          {% endif %}
-
-          <button class="btn primary full" type="submit">Регистрация</button>
-        </form>
-
-        <!-- RESTORE -->
-        <form action="/auth/restore" method="post" class="auth-form form-restore{% if active_tab!='restore' %} is-hidden{% endif %}" data-validate="restore" novalidate>
-          {{ csrf_input|safe if csrf_input is defined }}
-          <input type="hidden" name="form_ts" value="{{ now_ts }}">
-
-          <label class="field">
-            <input class="control" type="email" name="email" required placeholder="Введите Email" value="{{ form_values.email or '' }}">
-            <div class="error-text" data-for="email"></div>
-          </label>
-
-          <button class="btn primary full" type="submit">Отправить ссылку</button>
-          <div class="or">или</div>
-          <button class="btn full" type="submit" formaction="/auth/magic/request">Войти по магической ссылке</button>
-          <p class="muted small" style="margin-top:10px">Мы пришлём письмо со ссылкой для смены пароля (если такой аккаунт существует).</p>
         </form>
 
       </section>

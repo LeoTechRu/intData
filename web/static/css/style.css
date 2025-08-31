@@ -632,7 +632,6 @@ body.compact .admin-panel {
 .btn.telegram{ background:#229ED9; color:#fff; }
 .btn.telegram:hover{ filter:brightness(.96); }
 
-.or{ text-align:center; color:#6b7280; font-size:14px; margin:14px 0; }
 
 .social-row{ display:flex; gap:12px; justify-content:center; margin-top:8px; }
 .social{ width:40px; height:40px; border-radius:8px; display:inline-block; }
@@ -644,7 +643,7 @@ body.compact .admin-panel {
 /* alerts */
 .auth-alert{ margin-top:12px; padding:10px 12px; background:#fffbea; border:1px solid #f3e8a1; border-radius:8px; color:#7c6d1f; }
 
-.tg-btn-wrapper{ display:flex; justify-content:center; }
+.tg-btn-wrapper{ display:flex; justify-content:center; width:100%; margin:0 auto 20px; }
 
 /* tiny icon for telegram button (reuses sprite if exists) */
 .icon{ width:18px; height:18px; }
