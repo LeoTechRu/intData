@@ -240,39 +240,29 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 })();
 
-// auth: tab switcher on /auth
+// auth: form switcher on /auth
 (function(){
-const tabs = Array.from(document.querySelectorAll('.auth-tabs .tab'));
 const forms = {
-login: document.querySelector('.form-login'),
-register: document.querySelector('.form-register'),
-restore: document.querySelector('.form-restore'),
+  login: document.querySelector('.form-login'),
+  register: document.querySelector('.form-register'),
+  restore: document.querySelector('.form-restore'),
 };
-if (!tabs.length || !forms.login) return;
+if (!forms.login) return;
 
 function activate(name){
-Object.keys(forms).forEach(k=>{
-forms[k]?.classList.toggle('is-hidden', k!==name);
-});
-tabs.forEach(t=>{
-t.classList.toggle('is-active', t.dataset.tab===name);
-t.setAttribute('aria-selected', String(t.dataset.tab===name));
-});
-// для закладки и глубоких ссылок
-if (location.hash !== '#'+name) history.replaceState(null,'','#'+name);
+  Object.keys(forms).forEach(k=>{
+    forms[k]?.classList.toggle('is-hidden', k!==name);
+  });
+  if (location.hash !== '#'+name) history.replaceState(null,'','#'+name);
 }
 
-// клики по табам
 document.addEventListener('click', (e)=>{
-const t = e.target.closest('.auth-tabs .tab');
-const j = e.target.closest('[data-tab-jump]');
-if (t){ e.preventDefault(); activate(t.dataset.tab); }
-if (j){ e.preventDefault(); activate(j.dataset.tabJump); }
+  const j = e.target.closest('[data-tab-jump]');
+  if (j){ e.preventDefault(); activate(j.dataset.tabJump); }
 });
 
-// при загрузке из hash
 const hash = (location.hash||'').replace('#','');
-if (hash && forms[hash]) activate(hash); else activate('login');
+activate(hash && forms[hash] ? hash : 'login');
 })();
 
 // ===== Popover widgets =====

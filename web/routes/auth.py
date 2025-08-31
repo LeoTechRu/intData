@@ -325,9 +325,12 @@ async def login(
             flash="reCAPTCHA validation failed",
             status_code=400,
         )
+    exists = None
     try:
         async with WebUserService() as service:
             user = await service.authenticate(username, password)
+            if not user:
+                exists = await service.get_by_username(username)
     except Exception as exc:  # pragma: no cover - defensive
         return render_auth(
             request,
@@ -342,6 +345,14 @@ async def login(
             log_event(request, "login_fail", None, {"username": username})
         except Exception:
             pass
+        if not exists:
+            return render_auth(
+                request,
+                active="register",
+                form_values={"username": username},
+                flash="Invalid credentials",
+                status_code=400,
+            )
         return render_auth(
             request,
             active="login",

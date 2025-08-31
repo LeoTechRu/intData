@@ -42,3 +42,16 @@
   document.querySelectorAll('.form-register input[name="password"], .auth-form input[name="password"][autocomplete="new-password"]').forEach(bind);
 })();
 
+(function(){
+  const field = document.querySelector('.form-register .pwd-field');
+  if (!field) return;
+  const input = field.querySelector('input[name="password"]');
+  const hint = field.querySelector('.pwd-hint');
+  if (!input || !hint) return;
+  function show(){ field.classList.add('show-hint'); }
+  function hide(){ field.classList.remove('show-hint'); }
+  input.addEventListener('focus', show);
+  input.addEventListener('input', show);
+  input.addEventListener('blur', hide);
+})();
+
