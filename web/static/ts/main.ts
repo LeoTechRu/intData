@@ -121,6 +121,7 @@ export function initProfileEditForm() {
 }
 
 let userFavorites: { v: number; items: any[] } = { v: 1, items: [] };
+let dashboardLayout: any = { v: 1, layouts: {}, hidden: [] };
 
 function renderFavorites() {
   const favBox = document.querySelector('[data-fav-box]') as HTMLUListElement | null;
@@ -197,8 +198,10 @@ export async function loadUserSettings() {
     if (!resp.ok) return;
     const data = await resp.json();
     userFavorites = data.favorites || { v: 1, items: [] };
+    dashboardLayout = data.dashboard_layout || dashboardLayout;
     renderFavorites();
     updateFavToggle();
+    applyDashboardLayout();
   } catch (e) {
     // ignore
   }
@@ -210,6 +213,17 @@ export async function saveDashboardLayout(layout: any) {
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
     body: JSON.stringify({ value: layout }),
+  });
+  dashboardLayout = layout;
+  applyDashboardLayout();
+}
+
+function applyDashboardLayout() {
+  const hidden = dashboardLayout?.hidden || [];
+  document.querySelectorAll('[data-widget]').forEach((el) => {
+    const key = (el as HTMLElement).dataset.widget;
+    if (!key) return;
+    (el as HTMLElement).hidden = hidden.includes(key);
   });
 }
 

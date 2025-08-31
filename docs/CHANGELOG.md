@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - user_settings table for extensible per-user preferences.
 - API `/api/v1/user/settings` to read and write settings.
 - Repair step to migrate legacy favorites into user_settings.
+- Возможность управлять избранными пунктами меню на странице `/settings`.
 - Простые SQL-миграции и раннер `core/db/migrate.py` с таблицами календаря и уведомлений.
 - Асинхронный бэкенд на aiogram + SQLAlchemy с подключением к PostgreSQL.
 - Модели пользователей, групп, каналов и настроек логирования.
@@ -34,7 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Кнопка «Добавить напоминание» для событий календаря и проверка времени напоминаний.
 - Простейший DDL-раннер `core/scripts/db_bootstrap.py` и файлы `core/db/ddl/*`.
 - Утилита резервного копирования БД `core/scripts/db_dump.py` (pg_dump), путь и префикс настраиваются через `.env`.
-- Страница `/settings/dashboard` с первичными настройками дашборда и подсказками.
 
 ### Changed
 - Унифицирована работа с паролями через обёртку `core.db.bcrypt` и `WebUserService`.
@@ -46,12 +46,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Объединён бэклог из `docs/backlog/second_brain_backlog.md` в `BACKLOG.md`; добавлен эпик E13 Tasks & Time.
 - Улучшен веб-интерфейс календаря: добавление событий и напоминаний внутри таблицы, отображение существующих напоминаний.
 - Логика миграций и модуль базы данных перенесены в `core/db` для общего использования.
+- Настройки дашборда перенесены на страницу `/settings`.
 
 ### Fixed
 
 - Автоматическое создание таблицы `app_settings`, исключающей ошибки при её отсутствии.
 - Создание таблицы `user_settings` в repair-скрипте, что предотвращает падения при чтении настроек.
 - Приведена к асинхронной `init_app_once`, что устраняет ошибку MissingGreenlet при подключении через `asyncpg`.
+- Исправлено отключение виджетов дашборда через пользовательские настройки.
 
 ### Removed
 - Удалён устаревший API напоминаний и связанные сервисы.
@@ -59,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Исправлена авторизация через Telegram (создание `TgUser`, проверка `WebUser`, куки) и тесты.
 - В тестах исправлены параметры редиректов (`follow_redirects`).
 - Исправлена ошибка отсутствующего столбца `projects.status` в базе данных.
+- Удалена страница `/settings/dashboard`.
 - Переведены валидаторы конфигурации на синтаксис `field_validator` Pydantic v2, устранены предупреждения устаревания.
 - Swagger UI снова доступен на `/api`, статические файлы не редиректятся на `/api/v1`.
 - `GET /auth/logout` корректно завершает сессию; браузеры получают favicon по `/favicon.ico`.

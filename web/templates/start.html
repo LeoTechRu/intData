@@ -3,13 +3,10 @@
 
 {% block content %}
   <div class="has-dashboard">
-    <div class="dashboard-settings-link" style="text-align:right;margin-bottom:1rem;">
-      <a class="btn-plain" href="/settings/dashboard">Настроить дашборд</a>
-    </div>
     <div class="dashboard">
 
       {# — Профиль #}
-      <section class="card span-2 profile-widget" id="card-profile">
+      <section class="card span-2 profile-widget" id="card-profile" data-widget="profile_card">
           <div class="profile-header">
             <div class="profile-avatar" aria-hidden="true">
               <svg class="icon-lg"><use href="#i-user"/></svg>
@@ -81,7 +78,7 @@
 
       {# — Таймлайн дня #}
       {% set events = day_timeline or [] %}
-      <section class="card span-2">
+      <section class="card span-2" data-widget="today">
         <div class="card-title">Сегодня</div>
         <div class="timeline">
           {% for event in events %}
@@ -96,7 +93,7 @@
         </div>
       </section>
 
-      <section class="card" data-href="/notes">
+      <section class="card" data-href="/notes" data-widget="quick_note">
         <div class="card-title">Заметки</div>
         <form id="quick-note-form" class="stack gap-2">
           <textarea name="content" rows="3" placeholder="Быстрая заметка..." required></textarea>
@@ -109,7 +106,7 @@
 
       {# — KPI ряд: примеры (могут прийти из контекста) #}
       {% set delta = kpi_focus_week_delta or 0 %}
-      <section class="card">
+      <section class="card" data-widget="focus_week">
         <div class="card-title">Фокус за неделю</div>
         <div class="kpi">
           <div>
@@ -125,7 +122,7 @@
       </section>
 
       {% set delta = kpi_goals_delta or 0 %}
-      <section class="card">
+      <section class="card" data-widget="goals">
         <div class="card-title">Достижения</div>
         <div class="kpi">
           <div>
@@ -141,7 +138,7 @@
       </section>
 
       {% set delta = kpi_focused_hours_delta or 0 %}
-      <section class="card">
+      <section class="card" data-widget="focused_hours">
         <div class="card-title">Сфокусированные часы</div>
         <div class="kpi">
           <div>
@@ -157,7 +154,7 @@
       </section>
 
       {% set delta = kpi_health_delta or 0 %}
-      <section class="card">
+      <section class="card" data-widget="health">
         <div class="card-title">Здоровье</div>
         <div class="kpi">
           <div>
@@ -173,11 +170,11 @@
       </section>
 
       {# — Графики/плейсхолдеры #}
-      <section class="card span-2">
+      <section class="card span-2" data-widget="activity">
         <div class="card-title">Активность по дням</div>
         <div class="chart-placeholder"></div>
       </section>
-      <section class="card span-2">
+      <section class="card span-2" data-widget="energy">
         <div class="card-title">Сон / энергия</div>
         <div class="chart-placeholder"></div>
       </section>
@@ -186,7 +183,7 @@
       {% set groups_owned = owned_groups|map(attribute='title')|list %}
       {% set groups_items = groups_owned|map('string')|list %}
       {% set items = owned_groups or [] %}
-      <section class="card">
+      <section class="card" data-widget="leader_groups">
         <div class="card-title">Руководите группами</div>
         <div class="list">
           {% for item in items %}
@@ -201,7 +198,7 @@
       </section>
 
       {% set items = member_groups or [] %}
-      <section class="card">
+      <section class="card" data-widget="member_groups">
         <div class="card-title">Состоите в группах</div>
         <div class="list">
           {% for item in items %}
@@ -216,7 +213,7 @@
       </section>
 
       {% set items = owned_projects or [] %}
-      <section class="card">
+      <section class="card" data-widget="owned_projects">
         <div class="card-title">Ваши проекты</div>
         <div class="list">
           {% for item in items %}
@@ -231,7 +228,7 @@
       </section>
 
       {% set items = member_projects or [] %}
-      <section class="card">
+      <section class="card" data-widget="member_projects">
         <div class="card-title">Участвуете в проектах</div>
         <div class="list">
           {% for item in items %}
@@ -247,7 +244,7 @@
 
       {# — Виджеты следующих этапов разработки #}
       {% set items = upcoming_tasks or [] %}
-      <section class="card" data-href="/tasks">
+      <section class="card" data-href="/tasks" data-widget="upcoming_tasks">
         <div class="card-title">Предстоящие задачи</div>
         <div class="list">
           {% for item in items %}
@@ -262,7 +259,7 @@
       </section>
 
       {% set items = upcoming_alarms or [] %}
-      <section class="card" data-href="/calendar">
+      <section class="card" data-href="/calendar" data-widget="reminders">
         <div class="card-title">Напоминания</div>
         <div class="list">
           {% for item in items %}
@@ -277,7 +274,7 @@
       </section>
 
       {% set items = upcoming_events or [] %}
-      <section class="card" data-href="/calendar">
+      <section class="card" data-href="/calendar" data-widget="next_events">
         <div class="card-title">Ближайшие события</div>
         <div class="list">
           {% for item in items %}
@@ -292,7 +289,7 @@
       </section>
 
       {% set items = habit_list or [] %}
-      <section class="card">
+      <section class="card" data-widget="habits">
         <div class="card-title">Привычки</div>
         <div class="list">
           {% for item in items %}

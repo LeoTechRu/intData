@@ -2,9 +2,38 @@
 {% block title %}Настройки{% endblock %}
 {% block content %}
 <div class="ui-layout">
-    <div id="main-content">
-        <h1>Настройки</h1>
-        <p>Раздел настроек находится в разработке.</p>
-    </div>
+  <div id="main-content">
+    <h1>Настройки</h1>
+    <form id="dashboard-settings-form" class="stack gap-4">
+      {% for w in dashboard_widgets %}
+      <div class="row items-center gap-2">
+        <label class="flex items-center gap-2">
+          <input type="checkbox" name="{{ w.key }}" checked>
+          <span>{{ w.label }}</span>
+        </label>
+      </div>
+      {% endfor %}
+      <div class="row gap-2">
+        <button class="btn btn-primary" type="submit">Сохранить</button>
+      </div>
+    </form>
+
+    <h2>Избранное меню</h2>
+    <form id="favorites-settings-form" class="stack gap-4">
+      {% for p in favorite_pages %}
+      <div class="row items-center gap-2">
+        <label class="flex items-center gap-2">
+          <input type="checkbox" name="{{ p.path }}" data-label="{{ p.label }}">
+          <span>{{ p.label }}</span>
+        </label>
+      </div>
+      {% endfor %}
+      <div class="row gap-2">
+        <button class="btn btn-primary" type="submit">Сохранить</button>
+      </div>
+    </form>
+  </div>
 </div>
+<script type="module" src="{{ url_for('static', path='js/dashboard-settings.js') }}"></script>
 {% endblock %}
+
