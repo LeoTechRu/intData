@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write  # для пуша revert-коммита
+  contents: write  # нужен для пуша revert-коммита
 
 jobs:
   test:
@@ -52,6 +52,10 @@ jobs:
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: [test]
     runs-on: ubuntu-latest
+
+    # <<-- важно: outputs объявляем на уровне job, до steps
+    outputs:
+      health: ${{ steps.export_health.outputs.health }}
 
     steps:
       - name: Add server host key
@@ -132,14 +136,12 @@ jobs:
         if: ${{ always() }}
         run: echo "Deploy done. Health = ${{ steps.export_health.outputs.health }}"
 
-    outputs:
-      health: ${{ steps.export_health.outputs.health }}
-
   rollback:
-    # Срабатывает, если деплой упал ИЛИ health=fail
+    # откатываем, если job deploy упал ИЛИ его health=fail (и это пуш в main)
     if: ${{ (needs.deploy.result == 'failure' || needs.deploy.outputs.health == 'fail') && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: [deploy]
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout (full history)
         uses: actions/checkout@v4
@@ -163,7 +165,7 @@ jobs:
             echo "do_rollback=yes" >> "$GITHUB_ENV"
           fi
 
-      # --- ДВОЙНАЯ ПРОВЕРКА ПЕРЕД ОТКАТОМ ---
+      # второй чек на реальном сервере, чтобы избежать ложных откатов
       - name: SSH: double-check health (hard)
         id: doublecheck
         uses: appleboy/ssh-action@v1.0.0
@@ -199,7 +201,6 @@ jobs:
           echo "Rollback decision: ${want}"
 
       - name: SSH: collect remote logs
-        id: collectlogs
         if: ${{ env.do_rollback == 'yes' && steps.doublecheck.outcome == 'failure' }}
         uses: appleboy/ssh-action@v1.0.0
         with:
