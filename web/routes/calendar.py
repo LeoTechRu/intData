@@ -288,34 +288,6 @@ async def delete_item(
     return None
 
 
-@router.post("/items/{item_id}/alarms", status_code=status.HTTP_201_CREATED)
-async def create_alarm_placeholder(
-    item_id: int, current_user: TgUser | None = Depends(get_current_tg_user)
-):
-    """Placeholder for adding alarms to calendar items."""
-
-    if not current_user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Alarms are not implemented yet",
-    )
-
-
-@router.delete("/items/{item_id}/alarms/{alarm_id}")
-async def delete_alarm_placeholder(
-    item_id: int,
-    alarm_id: int,
-    current_user: TgUser | None = Depends(get_current_tg_user),
-):
-    """Placeholder for deleting alarms from calendar items."""
-
-    if not current_user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Alarms are not implemented yet",
-    )
 
 
 @router.get("/agenda", response_model=List[CalendarItemResponse])
