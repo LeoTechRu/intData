@@ -98,6 +98,16 @@ def render_auth(
     status_code: int | None = None,
     config_warnings: list[dict] | None = None,
 ):
+    origin = f"{request.url.scheme}://{request.url.netloc}".rstrip("/")
+    tg_login_url = None
+    if S.TG_LOGIN_ENABLED and S.TG_BOT_USERNAME:
+        tg_login_url = (
+            "https://oauth.telegram.org/auth"
+            f"?bot={S.TG_BOT_USERNAME}"
+            f"&origin={origin}"
+            "&embed=1&request_access=write"
+            "&return_to=/auth/telegram"
+        )
     return templates.TemplateResponse(
         request,
         "auth.html",
@@ -108,6 +118,7 @@ def render_auth(
             "form_errors_json": json.dumps(form_errors or {}, ensure_ascii=False),
             "flash": flash,
             "config_warnings": config_warnings or _config_diagnostics(request),
+            "tg_login_url": tg_login_url,
         },
         status_code=status_code or 200,
     )

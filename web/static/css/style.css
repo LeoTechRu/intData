@@ -603,12 +603,13 @@ body.compact .admin-panel {
 /* === auth pages === */
 .auth-page{ background:#262930 linear-gradient(135deg,#2b2f37 0%,#20232a 60%,#1d1f26 100%); min-height:100svh; color:#111827; }
 
-.auth-hero{ min-height:calc(100svh - 60px); display:grid; place-items:center; padding:20px; }
-.auth-brand{ text-align:center; margin-bottom:24px; }
+.auth-hero{ min-height:100svh; padding:16vh 20px 20px; display:flex; flex-direction:column; align-items:center; }
+.auth-brand{ text-align:center; margin:0 0 24px; }
 .auth-brand .brand-name{ font-size:32px; font-weight:800; color:#f5f5f7; }
 .auth-brand .brand-tagline{ margin-top:6px; color:#e5e7eb; }
 .auth-card{
-  width:min(720px, 92vw); background:#f1f5f9; border-radius:14px;
+  margin-top:8vh;
+  width:min(420px, 92vw); background:#f1f5f9; border-radius:14px;
   box-shadow:0 16px 50px rgba(0,0,0,.35); padding:0; overflow:hidden;
 }
 
@@ -616,16 +617,13 @@ body.compact .admin-panel {
 .auth-form{ padding:20px; background:#f8fafc; border-top:1px solid #e5e7eb; }
 .field{ display:block; margin:12px 0; }
 .label{ display:block; font-size:14px; color:#6b7280; margin-bottom:6px; }
-.control{ width:100%; border:1px solid #d1d5db; border-radius:8px; padding:12px 14px; background:#fff; outline:none; }
+.control{ width:100%; border:1px solid #d1d5db; border-radius:8px; padding:12px 14px; background:#fff; outline:none; box-sizing:border-box; }
 .control:focus{ border-color:#a78bfa; box-shadow:0 0 0 3px rgba(167,139,250,.25); }
 .control-with-action{ position:relative; display:flex; align-items:center; }
 .control-with-action .control{ padding-right:44px; }
 .control-with-action .toggle-password{ position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:0; cursor:pointer; color:#6b7280; }
-.checkbox{ display:flex; align-items:center; gap:8px; margin:10px 0 18px; }
-.checkbox .right{ margin-left:auto; }
-.login-actions{ display:flex; align-items:center; gap:12px; margin-top:12px; }
-.or-inline{ color:#6b7280; font-size:14px; }
-.login-actions .tg-login{ display:flex; }
+.checkbox{ display:flex; align-items:center; gap:8px; margin:0; }
+.login-extra{ display:flex; justify-content:space-between; align-items:center; margin:10px 0 18px; }
 
 .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; border:0; border-radius:8px; padding:12px 16px; cursor:pointer; text-decoration:none; font-weight:700; }
 .btn.full{ width:100%; }
