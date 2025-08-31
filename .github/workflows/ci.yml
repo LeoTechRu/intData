@@ -1,14 +1,20 @@
+# yamllint disable rule:line-length
+---
 name: CI
 
-on:
+"on":
   push:
-    branches: [main, master]
+    branches:
+      - main
+      - master
   pull_request:
-    branches: [main, master]
-  workflow_dispatch:
+    branches:
+      - main
+      - master
+  workflow_dispatch: {}
 
 permissions:
-  contents: write  # нужно для пуша авто-отката
+  contents: write  # нужно для пуша revert-коммита в rollback
 
 jobs:
   test:
@@ -22,7 +28,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install system deps (ripgrep for tests)
         run: |
@@ -46,9 +52,9 @@ jobs:
         run: pytest -q
 
   deploy:
-    # деплоим только пуши в main; деплой стартует даже если тесты "покраснели"
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-    needs: [test]
+    needs:
+      - test
     runs-on: ubuntu-latest
     concurrency:
       group: deploy-main
@@ -73,21 +79,23 @@ jobs:
           script_stop: true
           script: |
             set -euo pipefail
-            # --- обновление репозитория ---
+            # Update repo
             sudo -u deploy bash -lc '
               set -euo pipefail
               cd /sd/intdata
-              mkdir -p ~/.ssh && ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+              mkdir -p ~/.ssh
+              ssh-keyscan -H github.com >> ~/.ssh/known_hosts
               if git remote get-url origin | grep -q "^https://"; then
-                git remote set-url origin git@github.com:LeoTechRu/intData.git
+                git remote set-url origin                   git@github.com:LeoTechRu/intData.git
               fi
               git config --global --add safe.directory /sd/intdata || true
               git fetch --prune origin
               git reset --hard origin/main
             '
-            # --- рестарт сервисов ---
-            sudo -n systemctl restart intdata-bot || true
-            sudo -n systemctl restart intdata-web || true
+
+            # Restart services
+            sudo -n systemctl restart intdata-bot
+            sudo -n systemctl restart intdata-web
 
       - name: SSH: health-check (soft)
         id: health
@@ -100,16 +108,18 @@ jobs:
           script_stop: false
           script: |
             set -Eeuo pipefail
-            # статус systemd
+
+            # Check systemd states
             sudo -n systemctl is-active --quiet intdata-web
             sudo -n systemctl is-active --quiet intdata-bot
 
-            # HTTP-проверка FastAPI (локальный порт; при желании проверь https://intdata.pro/)
+            # HTTP health (local FastAPI port)
             tries=6
             ok=0
-            for i in $(seq 1 $tries); do
-              if curl -fsS --max-time 5 http://127.0.0.1:5800/auth >/dev/null; then
-                ok=1; break
+            for i in $(seq 1 "$tries"); do
+              if curl -fsS --max-time 5                    http://127.0.0.1:5800/auth >/dev/null; then
+                ok=1
+                break
               fi
               sleep 5
             done
@@ -126,7 +136,7 @@ jobs:
         id: export_health
         if: ${{ always() }}
         run: |
-          if [ "${{ steps.health.outcome }}" = "success" ]; then
+          if [[ "${{ steps.health.outcome }}" == "success" ]]; then
             echo "health=ok" >> "$GITHUB_OUTPUT"
           else
             echo "health=fail" >> "$GITHUB_OUTPUT"
@@ -134,12 +144,17 @@ jobs:
 
       - name: Deploy summary
         if: ${{ always() }}
-        run: echo "Deploy done. Health = ${{ steps.export_health.outputs.health }}"
+        run: echo "Deploy done. Health=${{ steps.export_health.outputs.health }}"
 
   rollback:
-    # триггерим только при health=fail после деплоя
-    if: ${{ needs.deploy.result != 'skipped' && needs.deploy.outputs.health == 'fail' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-    needs: [deploy]
+    if: >-
+      ${{
+        needs.deploy.outputs.health == 'fail' &&
+        github.event_name == 'push' &&
+        github.ref == 'refs/heads/main'
+      }}
+    needs:
+      - deploy
     runs-on: ubuntu-latest
     concurrency:
       group: deploy-main
@@ -156,41 +171,27 @@ jobs:
         id: guard
         run: |
           last_msg="$(git log -1 --pretty=%B || true)"
+          echo "last_msg<<'EOF'" >> "$GITHUB_ENV"
+          echo "$last_msg" >> "$GITHUB_ENV"
+          echo "EOF" >> "$GITHUB_ENV"
           if echo "$last_msg" | grep -qi '\[auto-rollback\]'; then
-            echo "do_rollback=no" >> "$GITHUB_OUTPUT"
+            echo "Already an auto-rollback commit. Skipping."
+            echo "do_rollback=no" >> "$GITHUB_ENV"
           else
-            echo "do_rollback=yes" >> "$GITHUB_OUTPUT"
+            echo "do_rollback=yes" >> "$GITHUB_ENV"
           fi
 
-      - name: SSH: verify hard health one more time
-        id: hard_health
-        if: ${{ steps.guard.outputs.do_rollback == 'yes' }}
-        uses: appleboy/ssh-action@v1.0.0
-        continue-on-error: true
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_KEY }}
-          script_stop: false
-          script: |
-            set -Eeuo pipefail
-            sudo -n systemctl is-active --quiet intdata-web
-            sudo -n systemctl is-active --quiet intdata-bot
-            curl -fsS --max-time 5 http://127.0.0.1:5800/auth >/dev/null
-
       - name: Create revert commit
-        if: ${{ steps.guard.outputs.do_rollback == 'yes' && steps.hard_health.outcome != 'success' }}
+        if: ${{ env.do_rollback == 'yes' }}
         run: |
           set -euo pipefail
 
           git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email             "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Определим: HEAD — merge?
+          # Detect if HEAD is a merge commit (>= 2 parents)
           parents="$(git rev-list --parents -n 1 HEAD)"
-          # количество хэшей: 1 = сам коммит, 2 = обычный, 3+ = merge
           n=$(echo "$parents" | wc -w)
-
           if [ "$n" -ge 3 ]; then
             echo "Reverting MERGE commit with -m 1…"
             git revert --no-edit -m 1 HEAD
@@ -199,7 +200,7 @@ jobs:
             git revert --no-edit HEAD
           fi
 
-          # Пометим автооткат, чтобы не зациклиться
+          # Tag commit to prevent loops
           git commit --amend -m "$(git log -1 --pretty=%B)
 
 [auto-rollback]"
@@ -207,7 +208,7 @@ jobs:
           git push origin HEAD:main
 
       - name: SSH: pull reverted & restart
-        if: ${{ steps.guard.outputs.do_rollback == 'yes' && steps.hard_health.outcome != 'success' }}
+        if: ${{ env.do_rollback == 'yes' }}
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -222,11 +223,11 @@ jobs:
               git fetch --prune origin
               git reset --hard origin/main
             '
-            sudo -n systemctl restart intdata-bot || true
-            sudo -n systemctl restart intdata-web || true
+            sudo -n systemctl restart intdata-bot
+            sudo -n systemctl restart intdata-web
 
       - name: SSH: health-check after rollback
-        if: ${{ steps.guard.outputs.do_rollback == 'yes' && steps.hard_health.outcome != 'success' }}
+        if: ${{ env.do_rollback == 'yes' }}
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -237,5 +238,5 @@ jobs:
             set -Eeuo pipefail
             sudo -n systemctl is-active --quiet intdata-web
             sudo -n systemctl is-active --quiet intdata-bot
-            curl -fsS --max-time 5 http://127.0.0.1:5800/auth >/dev/null
+            curl -fsS --max-time 5               http://127.0.0.1:5800/auth >/dev/null
             echo "ROLLBACK_HEALTH_OK"
