@@ -51,14 +51,11 @@ export async function initPersonaHeader() {
 
   const badge = document.createElement('span');
   badge.className = 'persona-badge';
-  badge.textContent = texts.label;
-
-  const btn = document.createElement('button');
-  btn.className = 'persona-name';
-  btn.type = 'button';
-  btn.textContent = shortName(user);
-  btn.setAttribute('aria-haspopup', 'dialog');
-  btn.setAttribute('aria-expanded', 'false');
+  badge.textContent = shortName(user);
+  badge.setAttribute('role', 'button');
+  badge.tabIndex = 0;
+  badge.setAttribute('aria-haspopup', 'dialog');
+  badge.setAttribute('aria-expanded', 'false');
 
   const pop = document.createElement('div');
   pop.id = 'persona-popover';
@@ -82,20 +79,20 @@ export async function initPersonaHeader() {
   slogan.textContent = texts.slogan;
   pop.appendChild(slogan);
 
-  btn.addEventListener('click', (e) => {
+  badge.addEventListener('click', (e) => {
     e.stopPropagation();
     const isOpen = !pop.hidden;
     pop.hidden = isOpen;
-    btn.setAttribute('aria-expanded', String(!isOpen));
+    badge.setAttribute('aria-expanded', String(!isOpen));
   });
 
   document.addEventListener('click', (e) => {
     if (!wrap.contains(e.target) && !pop.hidden) {
       pop.hidden = true;
-      btn.setAttribute('aria-expanded', 'false');
+      badge.setAttribute('aria-expanded', 'false');
     }
   });
 
-  wrap.append(badge, btn, pop);
+  wrap.append(badge, pop);
   mount.appendChild(wrap);
 }
