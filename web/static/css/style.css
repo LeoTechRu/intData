@@ -803,13 +803,11 @@ body:not(.debug) .profile-menu.force-hidden{ display:none !important; }
 
 /* Подправим текст-бренд для читабельности — опционально */
 .app-header .brand-text {
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: .2px;
   line-height: 1;
-  /* цвет под светлую/тёмную темы — подставь свои токены, если есть */
-  color: var(--header-brand-fg, #1f1f1f);
+  color: inherit;
 }
-:root[data-theme="dark"] .app-header .brand-text { color: #fff; }
 
 /* На случай, если где-то был «badge» с рамкой вокруг бренда */
 .app-header .brand-badge,
