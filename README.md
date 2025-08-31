@@ -85,7 +85,7 @@ PUT  /api/v1/user/settings/{key}   # body: { "value": { ... } }
 - PARA‑инвариант: у `CalendarItem/Task/TimeEntry` всегда указан `project_id` **или** `area_id`; у задач с проектом `area_id` наследуется.
 
 ### Инициализация БД (без Alembic)
-При старте `web` и `bot` вызывается единая функция **`core/db/init_app.init_app_once()`**, которая:
+При старте `web` и `bot` вызывается единая функция **`core/db/init_app.init_app_once()`** (в коде вызывается с `await`), которая:
 1) применяет idempotent DDL из `core/db/ddl/*.sql`,
 2) выполняет `repair` (перенос favorites, дефолтные Areas и т.д.),
 3) при локальной разработке (флаг `DEV_INIT_MODELS=1`) может вызвать `create_all()` — это только фолбэк.
@@ -184,7 +184,7 @@ uvicorn main:app --host 0.0.0.0 --port 5800
 uvicorn web:app --host 0.0.0.0 --port 5800
 ```
 
-При старте `bot` и `web` модулей выполняется `core.db.init_app.init_app_once(env)`:
+При старте `bot` и `web` модулей выполняется `await core.db.init_app.init_app_once(env)`:
 при `DB_BOOTSTRAP=1` применяются DDL из `core/db/ddl`, затем ремонт `run_repair`.
 
 Навигация по UI:

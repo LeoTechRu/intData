@@ -24,11 +24,10 @@ def _advisory_unlock(conn: Connection, key: int) -> None:
         pass
 
 
-def create_models_for_dev() -> None:
-    Base.metadata.create_all(bind=engine.sync_engine)
+def _create_models(conn: Connection) -> None:
+    Base.metadata.create_all(bind=conn)
 
-
-def init_app_once(env) -> None:
+async def init_app_once(env) -> None:
     """One-stop database initialization for web and bot processes."""
     global _init_done
     if _init_done:
@@ -36,20 +35,20 @@ def init_app_once(env) -> None:
     if not (env.DB_BOOTSTRAP or env.DB_REPAIR or env.DEV_INIT_MODELS):
         _init_done = True
         return
-    with engine.sync_engine.begin() as conn:
+    async with engine.begin() as conn:
         key = 0x5EED1DB
-        have_lock = _advisory_lock(conn, key)
+        have_lock = await conn.run_sync(_advisory_lock, key)
         if not have_lock:
             return
         try:
             did_bootstrap = False
             if env.DB_BOOTSTRAP:
-                run_bootstrap_sql(conn)
+                await conn.run_sync(run_bootstrap_sql)
                 did_bootstrap = True
             if env.DB_REPAIR:
-                run_repair(conn)
+                await conn.run_sync(run_repair)
             if env.DEV_INIT_MODELS and not did_bootstrap:
-                create_models_for_dev()
+                await conn.run_sync(_create_models)
         finally:
-            _advisory_unlock(conn, key)
+            await conn.run_sync(_advisory_unlock, key)
     _init_done = True

@@ -55,7 +55,7 @@ async def lifespan(app: FastAPI):
     stop_event = None
     task = None
     try:
-        init_app_once(env)
+        await init_app_once(env)
         logger.info("Lifespan startup: init_app_once() completed")
 
         password = None

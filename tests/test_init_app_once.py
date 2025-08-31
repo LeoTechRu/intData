@@ -3,6 +3,7 @@ from __future__ import annotations
 import threading
 from pathlib import Path
 import threading
+import asyncio
 
 import pytest
 import importlib
@@ -14,23 +15,23 @@ from core.env import env
 
 @pytest.fixture()
 def dummy_engine(monkeypatch):
-    class DummyConn:
+    class DummySyncConn:
         def execute(self, *a, **k):
             pass
 
-    class DummySync:
-        def begin(self):
-            class Ctx:
-                def __enter__(self_inner):
-                    return DummyConn()
+    class DummyConn:
+        async def __aenter__(self):
+            return self
 
-                def __exit__(self_inner, exc_type, exc, tb):
-                    pass
+        async def __aexit__(self, exc_type, exc, tb):
+            pass
 
-            return Ctx()
+        async def run_sync(self, fn, *a, **kw):
+            return fn(DummySyncConn(), *a, **kw)
 
     class DummyEngine:
-        sync_engine = DummySync()
+        def begin(self):
+            return DummyConn()
 
     engine = DummyEngine()
     monkeypatch.setattr(db_engine, "engine", engine)
@@ -38,7 +39,8 @@ def dummy_engine(monkeypatch):
     return engine
 
 
-def test_init_app_once_idempotent(dummy_engine, monkeypatch):
+@pytest.mark.asyncio
+async def test_init_app_once_idempotent(dummy_engine, monkeypatch):
     env.DB_BOOTSTRAP = True
     env.DB_REPAIR = False
     env.DEV_INIT_MODELS = False
@@ -50,13 +52,16 @@ def test_init_app_once_idempotent(dummy_engine, monkeypatch):
     monkeypatch.setattr(init_app, "run_bootstrap_sql", fake_bootstrap)
     monkeypatch.setattr(init_app, "run_repair", lambda conn: None)
     monkeypatch.setattr(init_app, "_init_done", False)
+    monkeypatch.setattr(init_app, "_advisory_lock", lambda c, k: True)
+    monkeypatch.setattr(init_app, "_advisory_unlock", lambda c, k: None)
 
-    init_app.init_app_once(env)
-    init_app.init_app_once(env)
+    await init_app.init_app_once(env)
+    await init_app.init_app_once(env)
     assert calls["count"] == 1
 
 
-def test_init_app_once_parallel(dummy_engine, monkeypatch):
+@pytest.mark.asyncio
+async def test_init_app_once_parallel(dummy_engine, monkeypatch):
     env.DB_BOOTSTRAP = True
     env.DB_REPAIR = False
     env.DEV_INIT_MODELS = False
@@ -69,12 +74,27 @@ def test_init_app_once_parallel(dummy_engine, monkeypatch):
     monkeypatch.setattr(init_app, "run_repair", lambda conn: None)
     monkeypatch.setattr(init_app, "_init_done", False)
 
-    def worker():
-        init_app.init_app_once(env)
+    lock = threading.Lock()
+    state = {"locked": False}
 
-    t1 = threading.Thread(target=worker)
-    t2 = threading.Thread(target=worker)
-    t1.start(); t2.start(); t1.join(); t2.join()
+    def fake_lock(conn, key):
+        with lock:
+            if state["locked"]:
+                return False
+            state["locked"] = True
+            return True
+
+    def fake_unlock(conn, key):
+        with lock:
+            state["locked"] = False
+
+    monkeypatch.setattr(init_app, "_advisory_lock", fake_lock)
+    monkeypatch.setattr(init_app, "_advisory_unlock", fake_unlock)
+
+    async def worker():
+        await init_app.init_app_once(env)
+
+    await asyncio.gather(worker(), worker())
     assert calls["count"] == 1
 
 
