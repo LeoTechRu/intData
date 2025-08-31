@@ -4,7 +4,7 @@ from pathlib import Path
 
 from core.utils import utcnow
 
-LOG_PATH = Path(os.getenv("AUTH_LOG_PATH", "/sd/intdata/var/auth.log"))
+LOG_PATH = Path(os.getenv("AUTH_LOG_PATH", "/sd/intdata/.logs/auth.log"))
 
 
 def log_event(request, event: str, user=None, extra: dict | None = None):
