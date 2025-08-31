@@ -40,7 +40,7 @@
         {% endif %}
 
         <!-- LOGIN -->
-        <form action="/login" method="post" class="auth-form form-login{% if active_tab!='login' %} is-hidden{% endif %}" data-validate="login" novalidate>
+        <form action="/auth/login" method="post" class="auth-form form-login{% if active_tab!='login' %} is-hidden{% endif %}" data-validate="login" novalidate>
           {{ csrf_input|safe if csrf_input is defined }}
           <label class="field">
             <input class="control" type="text" name="username" autocomplete="username" required placeholder="Ваш логин" value="{{ form_values.username or '' }}">
@@ -52,36 +52,26 @@
               <input class="control" type="password" name="password" autocomplete="current-password" required placeholder="Введите пароль">
               <button type="button" class="link tiny toggle-password" aria-label="Показать/скрыть пароль">👁</button>
             </div>
-            <a class="link small" href="#restore" data-tab-jump="restore">напомнить</a>
             <div class="error-text" data-for="password"></div>
           </label>
 
-          <label class="checkbox">
-            <input type="checkbox" name="remember_me" value="1">
-            <span>Запомнить меня</span>
-          </label>
+          <div class="login-extra">
+            <label class="checkbox">
+              <input type="checkbox" name="remember_me" value="1">
+              <span>Запомнить меня</span>
+            </label>
+            <a class="link small" href="#restore" data-tab-jump="restore">Напомнить</a>
+          </div>
 
           {% if RECAPTCHA_SITE_KEY %}
           <div class="g-recaptcha" data-sitekey="{{ RECAPTCHA_SITE_KEY }}"></div>
           {% endif %}
 
-          {% if TG_LOGIN_ENABLED %}
-            <div class="login-actions">
-              <div class="tg-login">
-                <script async src="https://telegram.org/js/telegram-widget.js?22"
-                        data-telegram-login="{{ TG_TG_BOT_USERNAME or 'intDataBot' }}"
-                        data-size="large"
-                        data-userpic="false"
-                        data-request-access="write"
-                        data-auth-url="/auth/telegram"
-                        data-lang="ru"></script>
-              </div>
-              <span class="or-inline">или</span>
-              <button class="btn primary" type="submit">Вход</button>
-            </div>
-          {% else %}
-            <button class="btn primary full" type="submit">Вход</button>
+          {% if TG_LOGIN_ENABLED and tg_login_url %}
+            <a class="btn telegram full" href="{{ tg_login_url }}">Войти через Telegram</a>
+            <div class="or">или</div>
           {% endif %}
+          <button class="btn primary full" type="submit">Вход</button>
 
           {% if flash %}
             <div class="auth-alert">{{ flash }}</div>
@@ -89,7 +79,7 @@
         </form>
 
         <!-- REGISTER -->
-        <form action="/register" method="post" class="auth-form form-register{% if active_tab!='register' %} is-hidden{% endif %}" data-validate="register" novalidate>
+        <form action="/auth/register" method="post" class="auth-form form-register{% if active_tab!='register' %} is-hidden{% endif %}" data-validate="register" novalidate>
           {{ csrf_input|safe if csrf_input is defined }}
 
           <label class="field">
@@ -125,10 +115,9 @@
         </form>
 
         <!-- RESTORE -->
-        <form action="/restore" method="post" class="auth-form form-restore{% if active_tab!='restore' %} is-hidden{% endif %}" data-validate="restore" novalidate>
+        <form action="/auth/restore" method="post" class="auth-form form-restore{% if active_tab!='restore' %} is-hidden{% endif %}" data-validate="restore" novalidate>
           {{ csrf_input|safe if csrf_input is defined }}
           <input type="hidden" name="form_ts" value="{{ now_ts }}">
-          <div class="hp-wrap" aria-hidden="true"><input type="text" name="hp_url" tabindex="-1" autocomplete="off"></div>
 
           <label class="field">
             <input class="control" type="email" name="email" required placeholder="Введите Email" value="{{ form_values.email or '' }}">
