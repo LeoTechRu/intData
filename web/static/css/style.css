@@ -771,6 +771,7 @@ body:not(.debug) .profile-menu.force-hidden{ display:none !important; }
 }
 
 .fav-toggle{margin-left:4px;background:transparent;border:0;cursor:pointer;font-size:1.1em;line-height:1;}
+.fav-toggle[aria-pressed="true"]{color:#f59e0b;}
 
 /* === Header brand: bigger mark, no ring, better alignment === */
 

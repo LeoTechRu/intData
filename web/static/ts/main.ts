@@ -137,9 +137,11 @@ function renderFavorites() {
   } else {
     for (const it of items) {
       const li = document.createElement('li');
+      li.setAttribute('role', 'none');
       const a = document.createElement('a');
       a.href = it.path;
       a.textContent = it.label || it.path;
+      a.setAttribute('role', 'menuitem');
       li.appendChild(a);
       favBox.appendChild(li);
     }
@@ -152,6 +154,8 @@ function updateFavToggle() {
   const path = btn.dataset.path || window.location.pathname;
   const exists = userFavorites.items?.some((it: any) => it.path === path);
   btn.setAttribute('aria-pressed', exists ? 'true' : 'false');
+  btn.textContent = exists ? '★' : '☆';
+  btn.setAttribute('aria-label', exists ? 'Убрать из избранного' : 'Добавить в избранное');
 }
 
 export function initFavoriteToggle() {
