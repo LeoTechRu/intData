@@ -1,4 +1,5 @@
 import asyncio
+import os
 from sqlalchemy import select
 
 from core import db
@@ -11,7 +12,12 @@ from core.models import (
     NotificationChannel,
 )
 from core.utils import utcnow
-from .TG_BOT import TelegramBotClient
+try:  # pragma: no cover - fallback для окружений без бота
+    from .TG_BOT import TelegramBotClient
+except Exception:  # pragma: no cover
+    class TelegramBotClient:  # type: ignore
+        async def send_message(self, *args, **kwargs):
+            return None
 
 
 class ProjectNotificationWorker:
@@ -63,7 +69,28 @@ class ProjectNotificationWorker:
             text = f"{item.title} — {item.start_at:%Y-%m-%d %H:%M}"
             await self.bot.send_message(chat_id, text, silent=False)
 
-    async def start(self) -> None:
+    async def start(self, stop_event: asyncio.Event | None = None) -> None:
+        """Запустить цикл опроса с необязательным сигналом остановки."""
+
         while True:
             await self.run_once()
-            await asyncio.sleep(self.poll_interval)
+            if stop_event is None:
+                await asyncio.sleep(self.poll_interval)
+            else:  # pragma: no branch - простая ветка ожидания
+                try:
+                    await asyncio.wait_for(
+                        stop_event.wait(), timeout=self.poll_interval
+                    )
+                    break
+                except asyncio.TimeoutError:
+                    continue
+
+
+def is_scheduler_enabled() -> bool:
+    """Флаг включения из окружения."""
+
+    return str(os.getenv("ENABLE_SCHEDULER", "0")).lower() in {
+        "1",
+        "true",
+        "yes",
+    }

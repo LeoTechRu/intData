@@ -8,7 +8,7 @@ from core.models import UserRole, WebUser, TgUser, TaskStatus
 from core.services.telegram_user_service import TelegramUserService
 from core.services.nexus_service import ProjectService, HabitService
 from core.services.task_service import TaskService
-from core.services.reminder_service import ReminderService
+from core.services.alarm_service import AlarmService
 from core.services.calendar_service import CalendarService
 from core.services.time_service import TimeService
 from core.utils import utcnow
@@ -89,14 +89,14 @@ async def index(
             week_ago = now - timedelta(days=7)
 
             tasks = []
-            reminders = []
+            alarms = []
             events = []
             entries = []
             if tg_user:
                 async with TaskService() as ts:
                     tasks = await ts.list_tasks(owner_id=tg_user.telegram_id)
-                async with ReminderService() as rs:
-                    reminders = await rs.list_reminders(
+                async with AlarmService() as asvc:
+                    alarms = await asvc.list_upcoming(
                         owner_id=tg_user.telegram_id
                     )
                 async with CalendarService() as cs:
@@ -129,12 +129,13 @@ async def index(
                     day_timeline.append(
                         {"time": e.start_at.strftime("%H:%M"), "text": e.title}
                     )
-            for r in reminders:
-                if r.remind_at.date() == today:
+            for a in alarms:
+                if a.trigger_at.date() == today:
+                    title = getattr(a.item, "title", "")
                     day_timeline.append(
                         {
-                            "time": r.remind_at.strftime("%H:%M"),
-                            "text": r.message,
+                            "time": a.trigger_at.strftime("%H:%M"),
+                            "text": title,
                         }
                     )
             day_timeline.sort(key=lambda x: x["time"])
@@ -149,13 +150,13 @@ async def index(
                 for t in tasks
                 if t.due_date and _aware(t.due_date) >= now
             ][:5]
-            upcoming_reminders = [
+            upcoming_alarms = [
                 {
-                    "title": r.message,
-                    "subtitle": r.remind_at.strftime("%H:%M"),
+                    "title": getattr(a.item, "title", ""),
+                    "subtitle": a.trigger_at.strftime("%H:%M"),
                 }
-                for r in reminders
-                if _aware(r.remind_at) >= now
+                for a in alarms
+                if _aware(a.trigger_at) >= now
             ][:5]
             upcoming_events = [
                 {
@@ -203,7 +204,7 @@ async def index(
                 "kpi_health_delta": kpi_health_delta,
                 "day_timeline": day_timeline,
                 "upcoming_tasks": upcoming_tasks,
-                "upcoming_reminders": upcoming_reminders,
+                "upcoming_alarms": upcoming_alarms,
                 "upcoming_events": upcoming_events,
                 "habit_list": habit_list,
                 "page_title": "Дашборд",

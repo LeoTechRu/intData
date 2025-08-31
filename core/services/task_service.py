@@ -11,13 +11,11 @@ from core import db
 from core.models import (
     Task,
     TaskStatus,
-    Reminder,
     TaskCheckpoint,
     ScheduleException,
     Project,
     Area,
 )
-from core.services.reminder_service import ReminderService
 from core.services.time_service import TimeService
 from sqlalchemy import func
 
@@ -156,22 +154,6 @@ class TaskService:
         task.status = TaskStatus.done
         await self.session.flush()
         return task
-
-    async def add_reminder(
-        self, task_id: int, message: str, remind_at
-    ) -> Reminder | None:
-        """Attach a reminder to the specified task."""
-
-        task = await self.session.get(Task, task_id)
-        if task is None:
-            return None
-        reminder_service = ReminderService(self.session)
-        return await reminder_service.create_reminder(
-            owner_id=task.owner_id,
-            message=message,
-            remind_at=remind_at,
-            task_id=task.id,
-        )
 
     async def add_checkpoint(
         self, task_id: int, name: str, completed: bool = False

@@ -33,8 +33,8 @@ from core.db import engine, init_models
 from core.services.web_user_service import WebUserService
 from core.services.telegram_user_service import TelegramUserService
 from core.models import LogLevel
-from core.services.notification_service import (
-    run_reminder_dispatcher,
+from core.services.project_notification_worker import (
+    ProjectNotificationWorker,
     is_scheduler_enabled,
 )
 from . import para_schemas  # noqa: F401
@@ -62,14 +62,13 @@ async def lifespan(app: FastAPI):
                     f"test user created:\nusername: test\npassword: {password}",
                 )
 
-        # Запускаем фоновый диспетчер напоминаний при включённом флаге
+        # Запускаем фоновый воркер уведомлений при включённом флаге
         if is_scheduler_enabled():
             import asyncio
 
             stop_event = asyncio.Event()
-            task = asyncio.create_task(
-                run_reminder_dispatcher(poll_interval=60.0, stop_event=stop_event)
-            )
+            worker = ProjectNotificationWorker(poll_interval=60.0)
+            task = asyncio.create_task(worker.start(stop_event))
 
         yield
         logger.info("Lifespan startup: completed")
@@ -83,7 +82,7 @@ async def lifespan(app: FastAPI):
             try:
                 await task
             except Exception:
-                logger.exception("Reminder dispatcher task raised during shutdown")
+                logger.exception("Notification worker task raised during shutdown")
         try:
             await engine.dispose()
             logger.info("Lifespan shutdown: engine disposed")
