@@ -51,7 +51,8 @@ export async function initPersonaHeader() {
 
   const badge = document.createElement('span');
   badge.className = 'persona-badge';
-  badge.textContent = shortName(user);
+  badge.textContent = texts.label || shortName(user);
+  badge.title = shortName(user);
   badge.setAttribute('role', 'button');
   badge.tabIndex = 0;
   badge.setAttribute('aria-haspopup', 'dialog');
