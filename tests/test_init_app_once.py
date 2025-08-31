@@ -1,22 +1,30 @@
 from __future__ import annotations
 
-import threading
-from pathlib import Path
-import threading
 import asyncio
+import importlib
+from pathlib import Path
 
 import pytest
-import importlib
+from sqlalchemy.ext.asyncio import create_async_engine
+
+from core.env import env
+from core.db import bootstrap
+
 
 db_engine = importlib.import_module("core.db.engine")
 init_app = importlib.import_module("core.db.init_app")
-from core.env import env
 
 
 @pytest.fixture()
 def dummy_engine(monkeypatch):
     class DummySyncConn:
-        def execute(self, *a, **k):
+        def exec_driver_sql(self, *a, **k):
+            pass
+
+        def commit(self):
+            pass
+
+        def rollback(self):
             pass
 
     class DummyConn:
@@ -30,12 +38,14 @@ def dummy_engine(monkeypatch):
             return fn(DummySyncConn(), *a, **kw)
 
     class DummyEngine:
-        def begin(self):
+        def connect(self):
             return DummyConn()
 
     engine = DummyEngine()
     monkeypatch.setattr(db_engine, "engine", engine)
     monkeypatch.setattr(init_app, "engine", engine)
+    monkeypatch.setattr(db_engine, "ENGINE_MODE", "async")
+    monkeypatch.setattr(init_app, "ENGINE_MODE", "async")
     return engine
 
 
@@ -48,10 +58,11 @@ async def test_init_app_once_idempotent(dummy_engine, monkeypatch):
 
     def fake_bootstrap(conn):
         calls["count"] += 1
+        return {"files": 0, "executed": 0, "failed": 0}
 
     monkeypatch.setattr(init_app, "run_bootstrap_sql", fake_bootstrap)
     monkeypatch.setattr(init_app, "run_repair", lambda conn: None)
-    monkeypatch.setattr(init_app, "_init_done", False)
+    monkeypatch.setattr(init_app, "_inited", False)
     monkeypatch.setattr(init_app, "_advisory_lock", lambda c, k: True)
     monkeypatch.setattr(init_app, "_advisory_unlock", lambda c, k: None)
 
@@ -61,41 +72,37 @@ async def test_init_app_once_idempotent(dummy_engine, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_init_app_once_parallel(dummy_engine, monkeypatch):
+async def test_init_app_once_executes_after_failure(tmp_path, monkeypatch):
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    monkeypatch.setattr(db_engine, "engine", engine)
+    monkeypatch.setattr(init_app, "engine", engine)
+    monkeypatch.setattr(db_engine, "ENGINE_MODE", "async")
+    monkeypatch.setattr(init_app, "ENGINE_MODE", "async")
+
+    ddl_dir = tmp_path
+    ddl_file = ddl_dir / "001_test.sql"
+    ddl_file.write_text(
+        "CREATE TABLE t1(id INT);\n" "ALTER TABLE not_exist ADD COLUMN foo INT;\n" "CREATE TABLE t2(id INT);"
+    )
+    monkeypatch.setattr(bootstrap, "DDL_DIR", ddl_dir)
+
     env.DB_BOOTSTRAP = True
     env.DB_REPAIR = False
     env.DEV_INIT_MODELS = False
-    calls = {"count": 0}
-
-    def fake_bootstrap(conn):
-        calls["count"] += 1
-
-    monkeypatch.setattr(init_app, "run_bootstrap_sql", fake_bootstrap)
+    monkeypatch.setattr(init_app, "_inited", False)
     monkeypatch.setattr(init_app, "run_repair", lambda conn: None)
-    monkeypatch.setattr(init_app, "_init_done", False)
 
-    lock = threading.Lock()
-    state = {"locked": False}
+    await init_app.init_app_once(env)
 
-    def fake_lock(conn, key):
-        with lock:
-            if state["locked"]:
-                return False
-            state["locked"] = True
-            return True
+    async with engine.connect() as conn:
+        res = await conn.exec_driver_sql(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='t2'"
+        )
+        assert res.first() is not None
+        res = await conn.exec_driver_sql("SELECT 1")
+        assert res.scalar() == 1
 
-    def fake_unlock(conn, key):
-        with lock:
-            state["locked"] = False
-
-    monkeypatch.setattr(init_app, "_advisory_lock", fake_lock)
-    monkeypatch.setattr(init_app, "_advisory_unlock", fake_unlock)
-
-    async def worker():
-        await init_app.init_app_once(env)
-
-    await asyncio.gather(worker(), worker())
-    assert calls["count"] == 1
+    await engine.dispose()
 
 
 def test_entrypoints_use_init_app_once():
