@@ -278,8 +278,20 @@ async def cmd_group(message: Message):
             return
         members = await user_service.get_group_members(chat.id)
         if members:
-            member_list = "\n".join([m.full_display_name or m.first_name for m in members])
-            await message.answer(f"Участники группы '{chat_title}':\n{member_list}")
+            member_list = "\n".join(
+                [
+                    (
+                        m.bot_settings.get("full_display_name")
+                        if isinstance(m.bot_settings, dict)
+                        and m.bot_settings.get("full_display_name")
+                        else f"{m.first_name} {m.last_name or ''}".strip()
+                    )
+                    for m in members
+                ]
+            )
+            await message.answer(
+                f"Участники группы '{chat_title}':\n{member_list}"
+            )
         else:
             await message.answer("Группа пока пуста.")
 
