@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 logger = logging.getLogger(__name__)
 
 from base import Base
+from .bootstrap import run_bootstrap
 
 load_dotenv()
 

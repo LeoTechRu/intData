@@ -1,10 +1,11 @@
 # /sd/intdata/bot/main.py
 import asyncio
 import logging
+import os
 
 from aiogram.exceptions import TelegramNetworkError
 
-from core.db import bot, dp
+from core.db import bot, dp, run_bootstrap
 from bot.handlers.telegram import user_router, group_router, router
 from bot.handlers.note import router as note_router
 from bot.handlers.habit import router as habit_router
@@ -15,6 +16,12 @@ from core.services.telegram_user_service import TelegramUserService
 
 async def main() -> None:
     """Run bot polling with middleware and routers."""
+    if os.getenv("DB_BOOTSTRAP", "1") == "1":
+        try:
+            run_bootstrap()
+        except Exception:  # pragma: no cover - log and continue
+            logging.exception("DB bootstrap failed")
+
     dp.message.middleware(LoggerMiddleware(bot))
     dp.callback_query.middleware(LoggerMiddleware(bot))
     dp.include_router(user_router)
