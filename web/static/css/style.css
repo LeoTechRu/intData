@@ -49,6 +49,16 @@ h1 { font-size: var(--font-size-xl); }
   padding: var(--spacing);
 }
 
+.ui-layout.calendar-layout {
+  max-width: none;
+  width: max-content;
+}
+
+.ui-layout.calendar-layout .card,
+.ui-layout.calendar-layout .ui-table {
+  width: max-content;
+}
+
 button,
 .button {
   background-color: var(--color-accent-turquoise);
