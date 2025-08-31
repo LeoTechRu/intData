@@ -1,5 +1,7 @@
 // Example TypeScript entry point with modular structure
 
+import { API_BASE } from './services/apiBase.js';
+
 const _origFetch = window.fetch;
 window.fetch = async (input: RequestInfo, init: RequestInit = {}) => {
   const resp = await _origFetch(input, { ...init, redirect: 'manual' });
@@ -118,10 +120,55 @@ export function initProfileEditForm() {
   });
 }
 
+export async function loadUserSettings() {
+  try {
+    const resp = await fetch(
+      `${API_BASE}/user/settings?keys=dashboard_layout,favorites`,
+      { credentials: 'include' }
+    );
+    if (!resp.ok) return;
+    const data = await resp.json();
+    const favBox = document.querySelector('[data-fav-box]') as HTMLUListElement | null;
+    if (favBox) {
+      const items = (data.favorites?.items || []).sort(
+        (a: any, b: any) => (a.position || 0) - (b.position || 0)
+      );
+      favBox.innerHTML = '';
+      if (!items.length) {
+        const li = document.createElement('li');
+        li.className = 'muted';
+        li.textContent = 'Избранное пусто';
+        favBox.appendChild(li);
+      } else {
+        for (const it of items) {
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = it.path;
+          a.textContent = it.label || it.path;
+          li.appendChild(a);
+          favBox.appendChild(li);
+        }
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+}
+
+export async function saveDashboardLayout(layout: any) {
+  await fetch(`${API_BASE}/user/settings/dashboard_layout`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ value: layout }),
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   enableAccessibility();
   initProfileMenu();
   initAdminMenu();
   initProfileEditForm();
   initDashboardCompact();
+  loadUserSettings();
 });

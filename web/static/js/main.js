@@ -74,12 +74,55 @@ export function initCardLinks() {
 import { initPersonaHeader } from './persona-header.js';
 import { API_BASE } from './services/apiBase.js';
 
+export async function loadUserSettings() {
+    try {
+        const resp = await fetch(`${API_BASE}/user/settings?keys=dashboard_layout,favorites`, { credentials: 'include' });
+        if (!resp.ok)
+            return;
+        const data = await resp.json();
+        const favBox = document.querySelector('[data-fav-box]');
+        if (favBox) {
+            const items = (data.favorites?.items || []).sort((a, b) => (a.position || 0) - (b.position || 0));
+            favBox.innerHTML = '';
+            if (!items.length) {
+                const li = document.createElement('li');
+                li.className = 'muted';
+                li.textContent = 'Избранное пусто';
+                favBox.appendChild(li);
+            }
+            else {
+                for (const it of items) {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = it.path;
+                    a.textContent = it.label || it.path;
+                    li.appendChild(a);
+                    favBox.appendChild(li);
+                }
+            }
+        }
+    }
+    catch (e) {
+        // ignore
+    }
+}
+
+export async function saveDashboardLayout(layout) {
+    await fetch(`${API_BASE}/user/settings/dashboard_layout`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ value: layout }),
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     enableAccessibility();
     initProfileEditForm();
     initDashboardCompact();
     initPersonaHeader();
     initCardLinks();
+    loadUserSettings();
 });
 (function(){
   function applyNoGridIfNeeded(){
@@ -448,90 +491,3 @@ activate(hash && forms[hash] ? hash : defaultTab);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') closeMenu(); });
 })();
 
-(function initFavorites(){
-  const menu = document.getElementById('profileMenu');
-  if (!menu) return;
-
-  const favBox = menu.querySelector('[data-fav-box]');
-  const toggles = Array.from(document.querySelectorAll('[data-fav-toggle]'));
-  if (!favBox && !toggles.length) return;
-
-  const api = {
-    list: () => fetch(`${API_BASE}/user/favorites`, {credentials:'same-origin'}).then(r=>r.json()),
-    add: (label, path) => fetch(`${API_BASE}/user/favorites`, {
-      method:'POST', headers:{'Content-Type':'application/json'}, credentials:'same-origin',
-      body: JSON.stringify({label, path})
-    }),
-    remove: (id) => fetch(`${API_BASE}/user/favorites/${id}`, {method:'DELETE', credentials:'same-origin'})
-  };
-
-  let cache = [];
-
-  function render(items){
-    if(!favBox) return;
-    favBox.innerHTML = '';
-    if (!items || !items.length){
-      const li = document.createElement('li');
-      li.className = 'muted';
-      li.textContent = 'Избранное пусто';
-      favBox.appendChild(li);
-      return;
-    }
-    for (const it of items){
-      const li = document.createElement('li');
-      const a = document.createElement('a');
-      a.href = it.path;
-      a.setAttribute('role','menuitem');
-      a.textContent = it.label || it.path;
-      li.appendChild(a);
-      favBox.appendChild(li);
-    }
-  }
-
-  function updateToggles(){
-    toggles.forEach(btn => {
-      const path = btn.dataset.path || location.pathname;
-      const found = cache.find(it => it.path === path);
-      if (found){
-        btn.textContent = '★';
-        btn.dataset.id = found.id;
-        btn.classList.add('is-fav');
-        btn.setAttribute('aria-label','Убрать из избранного');
-        btn.setAttribute('aria-pressed','true');
-      } else {
-        btn.textContent = '☆';
-        btn.dataset.id = '';
-        btn.classList.remove('is-fav');
-        btn.setAttribute('aria-label','Добавить в избранное');
-        btn.setAttribute('aria-pressed','false');
-      }
-    });
-  }
-
-  api.list().then(items => { cache = items || []; updateToggles(); }).catch(()=>{});
-
-  document.addEventListener('click', (e)=>{
-    const btn = e.target.closest('[data-fav-toggle]');
-    if (!btn) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const id = btn.dataset.id;
-    const path = btn.dataset.path || location.pathname;
-    const label = btn.dataset.label || document.title;
-    btn.classList.add('is-busy');
-    if (id){
-      api.remove(id).then(()=>{ cache = cache.filter(it => String(it.id) !== String(id)); updateToggles(); render(cache); }).catch(()=>{}).finally(()=>btn.classList.remove('is-busy'));
-    } else {
-      api.add(label, path).then(r=>{ if(r.status===409) return null; return r.json(); }).then(it=>{ if(it){ cache.push(it); updateToggles(); render(cache); } }).catch(()=>{}).finally(()=>btn.classList.remove('is-busy'));
-    }
-  });
-
-  const btn = document.getElementById('profileBtn');
-  if (btn && favBox){
-    btn.addEventListener('click', () => {
-      if (menu.classList.contains('is-open')){
-        api.list().then(items => { cache = items || []; render(cache); updateToggles(); }).catch(()=>render([]));
-      }
-    });
-  }
-})();
