@@ -14,7 +14,7 @@
         <button id="add-event-btn" class="button" type="button">Добавить событие</button>
       </div>
       <table class="ui-table">
-        <thead><tr><th>ID</th><th>Название</th><th>Начало</th><th>Конец</th><th>Напоминания</th></tr></thead>
+        <thead><tr><th>ID</th><th>Название</th><th>Описание</th><th>Начало</th><th>Конец</th><th>Напоминания</th></tr></thead>
         <tbody id="event-list"></tbody>
       </table>
       <div id="event-empty" class="text-muted" style="display:none; padding:8px;">Событий пока нет</div>
@@ -42,24 +42,33 @@ async function fetchEvents(){
   for (const e of data){
     const start = new Date(e.start_at).toLocaleString();
     const end = e.end_at ? new Date(e.end_at).toLocaleString() : '';
+    const desc = e.description || '';
+    const shortDesc = desc.length > 30 ? desc.slice(0,30)+'…' : desc;
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${e.id}</td><td>${e.title}</td><td>${start}</td><td>${end}</td>` +
+    tr.innerHTML = `<td>${e.id}</td><td>${e.title}</td><td title="${desc.replace(/"/g,'&quot;')}">${shortDesc}</td><td>${start}</td><td>${end}</td>` +
       `<td><div class="alarm-list"></div><button class="button add-alarm" data-id="${e.id}" data-end="${e.end_at || ''}">Добавить</button></td>`;
     list.appendChild(tr);
-    fetchAlarms(e.id, tr.querySelector('.alarm-list'));
+    const alarmList = tr.querySelector('.alarm-list');
+    const addBtn = tr.querySelector('button.add-alarm');
+    fetchAlarms(e.id, alarmList, addBtn);
   }
 }
 
-async function fetchAlarms(itemId, container){
+async function fetchAlarms(itemId, container, btn){
   const resp = await fetch(`/api/v1/calendar/items/${itemId}/alarms`, {credentials:'include'});
-  if(!resp.ok) return;
+  if(!resp.ok) return [];
   const alarms = await resp.json();
   container.innerHTML = '';
+  const titles = [];
   for(const a of alarms){
+    const t = new Date(a.trigger_at).toLocaleString();
     const span = document.createElement('div');
-    span.textContent = new Date(a.trigger_at).toLocaleString();
+    span.textContent = t;
     container.appendChild(span);
+    titles.push(t);
   }
+  if(btn) btn.title = titles.length ? titles.join('\n') : 'Нет напоминаний';
+  return alarms;
 }
 
 function toLocalValue(date){
@@ -81,7 +90,8 @@ function addEventRow(e){
   const tr = document.createElement('tr');
   tr.className = 'new-event';
   tr.innerHTML = '<td></td>'+
-    '<td><input name="title" type="text" placeholder="Название" required class="w-100"><br><textarea name="description" rows="2" placeholder="Описание"></textarea></td>'+
+    '<td><input name="title" type="text" placeholder="Название" required class="w-100"></td>'+
+    '<td><textarea name="description" rows="2" placeholder="Описание" class="w-100"></textarea></td>'+
     '<td><input name="start_at" type="datetime-local" required></td>'+
     '<td><input name="end_at" type="datetime-local"></td>'+
     '<td><button class="button save-event" type="button">Сохранить</button></td>';
@@ -120,26 +130,41 @@ function handleEventListClick(e){
 }
 
 function showAlarmForm(btn){
-  const cell = btn.parentElement;
-  if(cell.querySelector('.alarm-form')) return;
-  const form = document.createElement('div');
-  form.className = 'alarm-form';
+  if(document.querySelector('.alarm-popup')) return;
+  const overlay = document.createElement('div');
+  overlay.className = 'alarm-popup';
+  overlay.style = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;';
+  const box = document.createElement('div');
+  box.style = 'background:#fff;padding:20px;border-radius:4px;min-width:250px;';
+  const existing = document.createElement('div');
+  existing.className = 'mb-2';
+  box.appendChild(existing);
+  fetchAlarms(btn.dataset.id, existing, btn);
   const input = document.createElement('input');
   input.type = 'datetime-local';
   input.min = toLocalValue(new Date());
   const endAt = btn.dataset.end ? new Date(btn.dataset.end) : null;
   if(endAt) input.max = toLocalValue(endAt);
+  box.appendChild(input);
   const save = document.createElement('button');
   save.textContent = 'Сохранить';
   save.className = 'button';
-  form.appendChild(input);
-  form.appendChild(save);
-  cell.appendChild(form);
+  save.style = 'margin-left:8px;';
+  box.appendChild(save);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  const remove = () => overlay.remove();
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) remove(); });
+
   save.addEventListener('click', async ()=>{
     const payload = {trigger_at: new Date(input.value).toISOString()};
     const resp = await fetch(`/api/v1/calendar/items/${btn.dataset.id}/alarms`, {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload)});
-    if(resp.ok){ fetchAlarms(btn.dataset.id, cell.querySelector('.alarm-list')); }
-    form.remove();
+    if(resp.ok){
+      const cell = btn.parentElement;
+      fetchAlarms(btn.dataset.id, cell.querySelector('.alarm-list'), btn);
+    }
+    remove();
   });
   input.focus();
 }
