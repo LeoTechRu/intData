@@ -48,8 +48,14 @@ class WebUserService:
         return await self.session.get(WebUser, user_id)
 
     async def get_by_username(self, username: str) -> Optional[WebUser]:
+        """Fetch a user by username case-insensitively.
+
+        The database stores the username with the original casing, but lookups
+        and uniqueness checks should not depend on letter case.  We therefore
+        normalise the input and compare using ``lower`` on both sides."""
+        normalized = username.lower()
         result = await self.session.execute(
-            select(WebUser).where(WebUser.username == username)
+            select(WebUser).where(func.lower(WebUser.username) == normalized)
         )
         return result.scalar_one_or_none()
 

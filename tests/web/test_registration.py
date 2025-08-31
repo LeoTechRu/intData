@@ -20,3 +20,21 @@ async def test_register_duplicate_username(client: AsyncClient) -> None:
     )
     assert resp2.status_code == 400
     assert "Неверный" in resp2.text
+
+
+@pytest.mark.asyncio
+async def test_register_duplicate_username_case_insensitive(client: AsyncClient) -> None:
+    resp1 = await client.post(
+        "/auth/login",
+        data={"username": "alice", "password": "secret"},
+        follow_redirects=False,
+    )
+    assert resp1.status_code == 303
+
+    resp2 = await client.post(
+        "/auth/login",
+        data={"username": "ALIce", "password": "other"},
+        follow_redirects=False,
+    )
+    assert resp2.status_code == 400
+    assert "Неверный" in resp2.text

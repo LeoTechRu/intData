@@ -22,6 +22,7 @@ from sqlalchemy import (
     JSON,
     UniqueConstraint,
     Index,
+    func,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
@@ -93,6 +94,11 @@ class WebUser(Base):
     updated_at = Column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
+
+    __table_args__ = (
+        Index("ix_users_web_username_ci", func.lower(username), unique=True),
+    )
+
     telegram_accounts = relationship(
         "TgUser",
         secondary="users_web_tg",

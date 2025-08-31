@@ -104,6 +104,29 @@ async def test_login_nonexistent_user_creates_account(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_login_case_insensitive_existing_user(client: AsyncClient):
+    resp1 = await client.post(
+        "/auth/login",
+        data={"username": "alice", "password": "secret"},
+        follow_redirects=False,
+    )
+    assert resp1.status_code == 303
+
+    resp2 = await client.post(
+        "/auth/login",
+        data={"username": "ALICE", "password": "secret"},
+        follow_redirects=False,
+    )
+    assert resp2.status_code == 303
+    assert resp2.headers["location"] == "/"
+
+    async with WebUserService() as wsvc:
+        users = await wsvc.list_users()
+    assert len(users) == 1
+    assert users[0].username == "alice"
+
+
+@pytest.mark.asyncio
 async def test_login_internal_error_shows_detail(monkeypatch, client: AsyncClient):
     async def broken_auth(self, username: str, password: str):
         raise RuntimeError("DB down")
