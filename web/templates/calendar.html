@@ -8,31 +8,11 @@
     {% endif %}
     <div class="ui-notice">Создавайте события и просматривайте календарь.</div>
 
-    <section class="card" style="margin-bottom:1rem;">
-      <div class="card-title">Новое событие</div>
-      <form id="event-form" class="ui-form">
-        <label>
-          <div>Название</div>
-          <input type="text" name="title" required placeholder="Событие">
-        </label>
-        <label>
-          <div>Начало</div>
-          <input type="datetime-local" name="start_at" required>
-        </label>
-        <label>
-          <div>Конец</div>
-          <input type="datetime-local" name="end_at">
-        </label>
-        <label>
-          <div>Описание</div>
-          <textarea name="description" rows="3" placeholder="Описание события"></textarea>
-        </label>
-        <button class="button" type="submit">Добавить</button>
-      </form>
-    </section>
-
     <section class="card">
-      <div class="card-title">Мои события</div>
+      <div class="card-title" style="display:flex; align-items:center;">
+        <span style="flex:1">Мои события</span>
+        <button id="add-event-btn" class="button" type="button">Добавить событие</button>
+      </div>
       <table class="ui-table">
         <thead><tr><th>ID</th><th>Название</th><th>Начало</th><th>Конец</th><th>Напоминания</th></tr></thead>
         <tbody id="event-list"></tbody>
@@ -64,32 +44,23 @@ async function fetchEvents(){
     const end = e.end_at ? new Date(e.end_at).toLocaleString() : '';
     const tr = document.createElement('tr');
     tr.innerHTML = `<td>${e.id}</td><td>${e.title}</td><td>${start}</td><td>${end}</td>` +
-      `<td><button class="button" data-id="${e.id}" data-end="${e.end_at || ''}">Добавить</button></td>`;
+      `<td><div class="alarm-list"></div><button class="button add-alarm" data-id="${e.id}" data-end="${e.end_at || ''}">Добавить</button></td>`;
     list.appendChild(tr);
+    fetchAlarms(e.id, tr.querySelector('.alarm-list'));
   }
 }
 
-document.addEventListener('DOMContentLoaded', ()=>{
-  const form = document.getElementById('event-form');
-  form.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const fd = new FormData(form);
-    const payload = {
-      title: fd.get('title'),
-      start_at: new Date(fd.get('start_at')).toISOString(),
-      end_at: fd.get('end_at') ? new Date(fd.get('end_at')).toISOString() : null,
-      description: fd.get('description') || null
-    };
-    const resp = await fetch('/api/v1/calendar', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      credentials:'include',
-      body: JSON.stringify(payload)
-    });
-    if (resp.ok){ form.reset(); fetchEvents(); }
-  });
-  fetchEvents();
-});
+async function fetchAlarms(itemId, container){
+  const resp = await fetch(`/api/v1/calendar/items/${itemId}/alarms`, {credentials:'include'});
+  if(!resp.ok) return;
+  const alarms = await resp.json();
+  container.innerHTML = '';
+  for(const a of alarms){
+    const span = document.createElement('div');
+    span.textContent = new Date(a.trigger_at).toLocaleString();
+    container.appendChild(span);
+  }
+}
 
 function toLocalValue(date){
   const off = date.getTimezoneOffset();
@@ -97,29 +68,70 @@ function toLocalValue(date){
   return d.toISOString().slice(0,16);
 }
 
-document.getElementById('event-list').addEventListener('click', (e)=>{
-  const btn = e.target.closest('button[data-id]');
-  if(!btn) return;
-  const itemId = btn.dataset.id;
-  const endAt = btn.dataset.end ? new Date(btn.dataset.end) : null;
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.getElementById('add-event-btn').addEventListener('click', addEventRow);
+  document.getElementById('event-list').addEventListener('click', handleEventListClick);
+  fetchEvents();
+});
+
+function addEventRow(){
+  if(document.querySelector('tr.new-event')) return;
+  const list = document.getElementById('event-list');
+  const trTitle = document.createElement('tr');
+  trTitle.className = 'new-event';
+  trTitle.innerHTML = '<td></td><td colspan="4"><input name="title" type="text" placeholder="Название" required class="w-100"></td>';
+  const trDesc = document.createElement('tr');
+  trDesc.className = 'new-event';
+  trDesc.innerHTML = '<td></td><td colspan="4"><textarea name="description" rows="2" placeholder="Описание"></textarea></td>';
+  const trTime = document.createElement('tr');
+  trTime.className = 'new-event';
+  trTime.innerHTML = '<td></td><td><input name="start_at" type="datetime-local" required></td><td><input name="end_at" type="datetime-local"></td><td colspan="2"><button class="button save-event" type="button">Сохранить</button> <button class="button cancel-event" type="button">Отмена</button></td>';
+  list.prepend(trTime); list.prepend(trDesc); list.prepend(trTitle);
+  trTime.querySelector('.save-event').addEventListener('click', async ()=>{
+    const title = trTitle.querySelector('input[name=title]').value;
+    const description = trDesc.querySelector('textarea[name=description]').value;
+    const startVal = trTime.querySelector('input[name=start_at]').value;
+    const endVal = trTime.querySelector('input[name=end_at]').value;
+    const payload = {title, start_at: new Date(startVal).toISOString(), end_at: endVal ? new Date(endVal).toISOString() : null, description: description || null};
+    const resp = await fetch('/api/v1/calendar', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload)});
+    if(resp.ok){ fetchEvents(); }
+    trTitle.remove(); trDesc.remove(); trTime.remove();
+  });
+  trTime.querySelector('.cancel-event').addEventListener('click', ()=>{
+    trTitle.remove(); trDesc.remove(); trTime.remove();
+  });
+}
+
+function handleEventListClick(e){
+  const addBtn = e.target.closest('button.add-alarm');
+  if(addBtn){
+    showAlarmForm(addBtn);
+  }
+}
+
+function showAlarmForm(btn){
+  const cell = btn.parentElement;
+  if(cell.querySelector('.alarm-form')) return;
+  const form = document.createElement('div');
+  form.className = 'alarm-form';
   const input = document.createElement('input');
   input.type = 'datetime-local';
   input.min = toLocalValue(new Date());
+  const endAt = btn.dataset.end ? new Date(btn.dataset.end) : null;
   if(endAt) input.max = toLocalValue(endAt);
-  input.style.position = 'absolute';
-  btn.after(input);
-  input.addEventListener('change', async ()=>{
+  const save = document.createElement('button');
+  save.textContent = 'Сохранить';
+  save.className = 'button';
+  form.appendChild(input);
+  form.appendChild(save);
+  cell.appendChild(form);
+  save.addEventListener('click', async ()=>{
     const payload = {trigger_at: new Date(input.value).toISOString()};
-    const resp = await fetch(`/api/v1/calendar/items/${itemId}/alarms`, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      credentials:'include',
-      body: JSON.stringify(payload)
-    });
-    input.remove();
+    const resp = await fetch(`/api/v1/calendar/items/${btn.dataset.id}/alarms`, {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload)});
+    if(resp.ok){ fetchAlarms(btn.dataset.id, cell.querySelector('.alarm-list')); }
+    form.remove();
   });
-  input.showPicker?.();
   input.focus();
-});
+}
 </script>
 {% endblock %}
