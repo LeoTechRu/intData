@@ -39,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Автоматическое создание таблицы `app_settings`, исключающей ошибки при её отсутствии.
+
 ### Removed
 - Удалён устаревший API напоминаний и связанные сервисы.
 - Исправлены сравнения уровней логирования после перехода на `IntEnum`.

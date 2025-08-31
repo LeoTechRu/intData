@@ -55,6 +55,7 @@
 - `GET /calendar/agenda?from=2025-05-01&to=2025-05-07` отдаёт элементы в диапазоне.
 - Открытие `/calendar/feed.ics` в внешнем календаре показывает VEVENT с VALARM.
 - `GET /projects/42/notifications` отдаёт список каналов.
+- Таблица `app_settings` создаётся автоматически при первом обращении к API.
 
 ### E4: Синхронизация с Google Calendar
 **User Stories**
