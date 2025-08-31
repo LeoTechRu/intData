@@ -5,14 +5,12 @@
 - `bot/`: Telegram bot (aiogram) handlers, FSM states, routers. Import business logic from `core`, do not duplicate it.
 - `web/`: FastAPI app routes, templates, dependencies. Reuse `core` services.
 - `tests/`: end-to-end and unit tests across subsystems.
-- `deploy/systemd/`: systemd unit files; `./deploy/install_services.sh` installs/restarts services.
 
 ## Build, Test, and Development Commands
 - Create venv: `python -m venv venv && source ./venv/bin/activate`
 - Install deps: `pip install --quiet -r requirements.txt`
 - Run tests: `pytest -q` (requires local PostgreSQL on `127.0.0.1:5432`)
 - Lint: `flake8` (if configured)
-- Deploy services: `./deploy/install_services.sh` (loads `.env`, restarts `intdata-bot` and `intdata-web`)
 
 ## Security & Configuration
 - Use `.env` (see `.env.example`) and never commit secrets.
