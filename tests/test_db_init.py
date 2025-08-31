@@ -2,14 +2,17 @@ import pytest
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import inspect
+import importlib
 
 import core.db as db
+db_engine = importlib.import_module("core.db.engine")
 
 
 @pytest.mark.asyncio
 async def test_init_models_creates_tables():
     engine = create_async_engine("sqlite+aiosqlite:///:memory:?cache=shared")
     db.engine = engine
+    db_engine.engine = engine
     db.async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
     await db.init_models()
     async with engine.begin() as conn:

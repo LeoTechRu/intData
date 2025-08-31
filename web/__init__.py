@@ -12,7 +12,6 @@ from fastapi.openapi.docs import (
     get_swagger_ui_html,
     get_swagger_ui_oauth2_redirect_html,
 )
-import os
 
 from .routes import (
     admin as admin_ui,
@@ -33,7 +32,9 @@ from .routes import (
     api_router,
     API_PREFIX,
 )
-from core.db import engine, init_models, run_bootstrap
+from core.db import engine
+from core.db.init_app import init_app_once
+from core.env import env
 from core.services.web_user_service import WebUserService
 from core.services.telegram_user_service import TelegramUserService
 from core.models import LogLevel
@@ -53,14 +54,8 @@ async def lifespan(app: FastAPI):
     stop_event = None
     task = None
     try:
-        if os.getenv("DB_BOOTSTRAP", "1") == "1":
-            try:
-                run_bootstrap()
-            except Exception:  # pragma: no cover - log and continue
-                logger.exception("DB bootstrap failed")
-
-        await init_models()
-        logger.info("Lifespan startup: init_models() completed")
+        init_app_once(env)
+        logger.info("Lifespan startup: init_app_once() completed")
 
         password = None
         async with WebUserService() as wsvc:
