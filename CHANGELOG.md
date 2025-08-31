@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - REST-эндпоинты `/api/v1/app-settings` и загрузка динамических персон UI через `app_settings`.
 - Персонализированная шапка с названием системы и подсказкой в зависимости от роли.
 - Форма добавления напоминаний в веб-интерфейсе календаря.
+- Кнопка «Добавить напоминание» для событий календаря и проверка времени напоминаний.
 
 ### Changed
 - Унифицирована работа с паролями через обёртку `core.db.bcrypt` и `WebUserService`.
@@ -39,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Объединён бэклог из `docs/backlog/second_brain_backlog.md` в `BACKLOG.md`; добавлен эпик E13 Tasks & Time.
 
 ### Fixed
+
+- Автоматическое создание таблицы `app_settings`, исключающей ошибки при её отсутствии.
 
 ### Removed
 - Удалён устаревший API напоминаний и связанные сервисы.

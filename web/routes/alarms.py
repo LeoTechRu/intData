@@ -6,8 +6,9 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from core.models import TgUser, Alarm
+from core.models import TgUser, Alarm, CalendarItem
 from core.services.alarm_service import AlarmService
+from core.utils import utcnow
 from web.dependencies import get_current_tg_user
 
 
@@ -60,6 +61,20 @@ async def create_alarm(
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     async with AlarmService() as service:
+        item = await service.session.get(CalendarItem, item_id)
+        if not item or item.owner_id != current_user.telegram_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        now = utcnow()
+        if payload.trigger_at <= now:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot set alarm in the past",
+            )
+        if item.end_at and payload.trigger_at >= item.end_at:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot set alarm after event end",
+            )
         alarm = await service.create_alarm(item_id=item_id, trigger_at=payload.trigger_at)
     return AlarmResponse.from_model(alarm)
 
