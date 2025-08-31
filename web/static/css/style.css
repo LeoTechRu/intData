@@ -195,8 +195,7 @@ button,
 }
 
 .persona-wrapper{display:flex;align-items:center;gap:8px;margin-left:12px;position:relative;}
-.persona-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;background:#efe8ff;color:#5a3ec8;}
-.persona-name{background:transparent;border:0;cursor:pointer;font-size:14px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
+.persona-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;background:#efe8ff;color:#5a3ec8;cursor:pointer;}
 .persona-popover{position:absolute;top:56px;left:12px;z-index:1000;min-width:320px;background:#fff;color:#333;border:1px solid #eaeaea;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:12px 14px;}
 .persona-popover-title{font-weight:700;margin-bottom:6px;}
 .persona-popover-text{font-size:13px;line-height:1.35;margin-bottom:8px;color:#444;}
