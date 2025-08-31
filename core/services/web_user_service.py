@@ -3,9 +3,10 @@ from __future__ import annotations
 from typing import Optional, Any, Union, List
 from datetime import datetime
 import secrets
-from sqlalchemy import select
+from sqlalchemy import select, text, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 
 from core import db
 from core.models import WebUser, TgUser, WebTgLink, UserRole
@@ -67,7 +68,20 @@ class WebUserService:
             username=username, password_hash=hashed, email=email, phone=phone
         )
         self.session.add(user)
-        await self.session.flush()
+        try:
+            await self.session.flush()
+        except IntegrityError:
+            # Attempt to fix potential sequence desynchronization and retry
+            await self.session.rollback()
+            user.id = None
+            result = await self.session.execute(select(func.max(WebUser.id)))
+            next_id = (result.scalar() or 0) + 1
+            await self.session.execute(
+                text("SELECT setval('users_web_id_seq', :nid, true)"),
+                {"nid": next_id},
+            )
+            self.session.add(user)
+            await self.session.flush()
         return user
 
     async def authenticate(

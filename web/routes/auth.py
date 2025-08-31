@@ -289,6 +289,9 @@ async def restore_password(
     if not user.email:
         return JSONResponse({"detail": "У пользователя не указан email"}, status_code=400)
     try:
+        token = serializer.dumps({"email": user.email, "kind": "magic"})
+        magic_url = f"{os.getenv('APP_BASE_URL','https://intdata.pro')}/auth/magic?token={token}"
+        await send_magic_email(user.email, magic_url)
         log_event(request, "restore_req", user, {"email": user.email})
     except Exception:
         pass
@@ -319,6 +322,14 @@ async def login(
             if not user:
                 existing = await service.get_by_username(username)
                 if existing:
+                    if existing.email:
+                        try:
+                            token = serializer.dumps({"email": existing.email, "kind": "magic"})
+                            magic_url = f"{os.getenv('APP_BASE_URL','https://intdata.pro')}/auth/magic?token={token}"
+                            await send_magic_email(existing.email, magic_url)
+                            log_event(request, "restore_req", existing, {"email": existing.email})
+                        except Exception:
+                            pass
                     try:
                         log_event(request, "login_fail", None, {"username": username})
                     except Exception:

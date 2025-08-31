@@ -643,7 +643,7 @@ body.compact .admin-panel {
 /* alerts */
 .auth-alert{ margin-top:12px; padding:10px 12px; background:#fffbea; border:1px solid #f3e8a1; border-radius:8px; color:#7c6d1f; }
 
-.tg-btn-wrapper{ display:flex; justify-content:center; width:100%; margin:0 auto 20px; }
+.tg-btn-wrapper{ display:flex; justify-content:center; width:100%; margin:20px auto; }
 
 /* tiny icon for telegram button (reuses sprite if exists) */
 .icon{ width:18px; height:18px; }
