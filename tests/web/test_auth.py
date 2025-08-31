@@ -93,10 +93,10 @@ async def test_middleware_allows_authenticated(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_login_invalid_credentials_shows_error(client: AsyncClient):
+async def test_login_nonexistent_user_suggests_registration(client: AsyncClient):
     resp = await client.post("/auth/login", data={"username": "nope", "password": "bad"})
-    assert resp.status_code == 400
-    assert "Invalid credentials" in resp.text
+    assert resp.status_code == 200
+    assert "зарегистр" in resp.text.lower()
 
 
 @pytest.mark.asyncio
