@@ -6,7 +6,6 @@ from sqlalchemy.engine import Connection
 from .bootstrap import run_bootstrap_sql
 from .repair import run_repair
 from .engine import engine, Base
-from core.env import env
 
 _init_done = False
 
@@ -43,11 +42,13 @@ def init_app_once(env) -> None:
         if not have_lock:
             return
         try:
+            did_bootstrap = False
             if env.DB_BOOTSTRAP:
                 run_bootstrap_sql(conn)
+                did_bootstrap = True
             if env.DB_REPAIR:
                 run_repair(conn)
-            if env.DEV_INIT_MODELS and not env.DB_BOOTSTRAP:
+            if env.DEV_INIT_MODELS and not did_bootstrap:
                 create_models_for_dev()
         finally:
             _advisory_unlock(conn, key)
