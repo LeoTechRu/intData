@@ -9,7 +9,6 @@ def test_openapi_tags_present():
     names = {t["name"] for t in r.json().get("tags", [])}
     expected = {
         "tasks",
-        "reminders",
         "calendar",
         "notes",
         "time",

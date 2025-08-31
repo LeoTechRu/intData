@@ -54,22 +54,6 @@
     },
     {
       "method": "GET",
-      "path": "/api/v1/reminders/today"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/reminders"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/reminders"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/reminders/{reminder_id}/done"
-    },
-    {
-      "method": "GET",
       "path": "/api/v1/notes"
     },
     {
