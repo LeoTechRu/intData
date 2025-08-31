@@ -93,10 +93,14 @@ async def test_middleware_allows_authenticated(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_login_nonexistent_user_suggests_registration(client: AsyncClient):
-    resp = await client.post("/auth/login", data={"username": "nope", "password": "bad"})
-    assert resp.status_code == 200
-    assert "зарегистр" in resp.text.lower()
+async def test_login_nonexistent_user_creates_account(client: AsyncClient):
+    resp = await client.post(
+        "/auth/login",
+        data={"username": "nope", "password": "bad"},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 303
+    assert resp.headers["location"].startswith("/profile/nope")
 
 
 @pytest.mark.asyncio
@@ -120,17 +124,18 @@ async def test_telegram_registration_flow(client: AsyncClient):
     data["hash"] = _generate_hash(data)
     resp = await client.post("/auth/tg/callback", data=data)
     assert resp.status_code == 303
-    assert resp.headers["location"] == "/auth/create_web_account"
+    assert resp.headers["location"] == "/auth"
     assert client.cookies.get("telegram_id") == "999"
     async with TelegramUserService() as tsvc:
         assert await tsvc.get_user_by_telegram_id(999) is not None
 
     resp2 = await client.post(
-        "/auth/create_web_account",
-        data={"action": "create", "username": "reguser", "password": "pass"},
+        "/auth/login",
+        data={"username": "reguser", "password": "pass"},
+        follow_redirects=False,
     )
     assert resp2.status_code == 303
-    assert resp2.headers["location"] == "/"
+    assert resp2.headers["location"].startswith("/profile/reguser")
     assert client.cookies.get("web_user_id") is not None
     assert client.cookies.get("telegram_id") == "999"
 
