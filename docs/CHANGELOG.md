@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Кнопка «Добавить напоминание» для событий календаря и проверка времени напоминаний.
 - Простейший DDL-раннер `core/scripts/db_bootstrap.py` и файлы `core/db/ddl/*`.
 - Утилита резервного копирования БД `core/scripts/db_dump.py` (pg_dump), путь и префикс настраиваются через `.env`.
+- Страница `/settings/dashboard` с первичными настройками дашборда и подсказками.
 
 ### Changed
 - Унифицирована работа с паролями через обёртку `core.db.bcrypt` и `WebUserService`.
