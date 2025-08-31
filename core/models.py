@@ -297,27 +297,6 @@ class Task(Base):
 
 
 # ---------------------------------------------------------------------------
-# Reminder model
-# ---------------------------------------------------------------------------
-
-class Reminder(Base):
-    """Simple reminder item owned by a telegram user."""
-
-    __tablename__ = "reminders"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
-    task_id = Column(Integer, ForeignKey("tasks.id"))
-    message = Column(String(500), nullable=False)
-    remind_at = Column(DateTime(timezone=True), nullable=False)
-    is_done = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), default=utcnow)
-    updated_at = Column(
-        DateTime(timezone=True), default=utcnow, onupdate=utcnow
-    )
-
-
-# ---------------------------------------------------------------------------
 # CalendarEvent model
 # ---------------------------------------------------------------------------
 
@@ -703,6 +682,9 @@ class CalendarItem(Base):
     status = Column(Enum(CalendarItemStatus), default=CalendarItemStatus.planned)
     created_at = Column(DateTime(timezone=True), default=utcnow)
     updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    alarms = relationship(
+        "Alarm", backref="item", cascade="all, delete-orphan"
+    )
 
 
 class Alarm(Base):

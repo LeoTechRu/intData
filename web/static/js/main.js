@@ -360,19 +360,18 @@ if (hash && forms[hash]) activate(hash); else activate('login');
       });
     }
     if (key==='rc'){
-      const rem = q('#wReminders'); const ev = q('#wEvents'); if (!rem || !ev) return;
-      rem.innerHTML = ev.innerHTML = '…';
-      let R=[], C=[];
+      const ev = q('#wEvents'); if (!ev) return;
+      ev.innerHTML = '…';
+      let C=[];
       try{ const r=await fetch('/api/v1/calendar',  {credentials:'same-origin'}); const data=await r.json(); C = Array.isArray(data)? data.filter(x=> (x.start_at||'').startsWith(todayISO())):[]; }catch{}
       const fill = (ul, arr, empty)=>{ ul.innerHTML = arr.length? '' : `<li class="muted">${empty}</li>`;
         arr.slice(0,6).forEach(x=>{
           const li=document.createElement('li');
-          const time = x.remind_at? fmtTime(x.remind_at) : (x.start_at? fmtTime(x.start_at):'');
-          li.innerHTML=`<span>${x.title||x.message||''}</span><span class="due">${time}</span>`;
+          const time = x.start_at? fmtTime(x.start_at):'';
+          li.innerHTML=`<span>${x.title||''}</span><span class="due">${time}</span>`;
           ul.appendChild(li);
         });
       };
-      fill(rem, R, 'Напоминаний нет');
       fill(ev,  C, 'Событий нет');
     }
     if (key==='notes'){

@@ -13,7 +13,8 @@ from core.models import (
     UserRole,
     Task,
     TaskStatus,
-    Reminder,
+    CalendarItem,
+    Alarm,
     CalendarEvent,
     TimeEntry,
 )
@@ -36,18 +37,19 @@ class FakeTaskService:
         ]
 
 
-class FakeReminderService:
+class FakeAlarmService:
     async def __aenter__(self):
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
         pass
 
-    async def list_reminders(self, owner_id=None):
+    async def list_upcoming(self, owner_id=None, limit=None):
         now = utcnow()
-        return [
-            Reminder(id=1, owner_id=owner_id, message="Drink water", remind_at=now + timedelta(minutes=30))
-        ]
+        item = CalendarItem(id=1, owner_id=owner_id, title="Drink water", start_at=now)
+        alarm = Alarm(id=1, item_id=1, trigger_at=now + timedelta(minutes=30))
+        alarm.item = item
+        return [alarm]
 
 
 class FakeCalendarService:
@@ -118,7 +120,7 @@ def client(monkeypatch):
     monkeypatch.setattr(index, "TelegramUserService", FakeTgService)
     monkeypatch.setattr(index, "ProjectService", FakeProjectService)
     monkeypatch.setattr(index, "TaskService", FakeTaskService)
-    monkeypatch.setattr(index, "ReminderService", FakeReminderService)
+    monkeypatch.setattr(index, "AlarmService", FakeAlarmService)
     monkeypatch.setattr(index, "CalendarService", FakeCalendarService)
     monkeypatch.setattr(index, "TimeService", FakeTimeService)
 
