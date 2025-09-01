@@ -11,7 +11,7 @@ from core.services.nexus_service import HabitService
 from web.dependencies import get_current_tg_user
 
 
-router = APIRouter(prefix="/api/v1/habits", tags=["habits"])
+router = APIRouter(prefix="/habits", tags=["habits"])
 
 
 class HabitCreate(BaseModel):
@@ -111,3 +111,6 @@ async def delete_habit(habit_id: int, current_user: TgUser | None = Depends(get_
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
         await service.delete(habit_id)
     return None
+
+# Alias for centralized API mounting
+api = router

@@ -16,7 +16,7 @@ from web.dependencies import get_current_tg_user, get_current_web_user
 from ..template_env import templates
 
 
-router = APIRouter(tags=["calendar"])
+router = APIRouter(prefix="/calendar", tags=["calendar"])
 ui_router = APIRouter(
     prefix="/calendar",
     tags=["calendar"],

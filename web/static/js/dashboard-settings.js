@@ -5,8 +5,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let layout = { v: 1, layouts: {}, widgets: [], hidden: [] };
   let favorites = { v: 1, items: [] };
+  const B = window.API_BASE;
   try {
-    const resp = await fetch('/api/v1/user/settings?keys=dashboard_layout,favorites', {
+    const resp = await fetch(`${B}/user/settings?keys=dashboard_layout,favorites`, {
       credentials: 'same-origin'
     });
     if (resp.ok) {
@@ -38,7 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       delete layout.hidden;
       if (typeof layout.layouts !== 'object') layout.layouts = {};
       try {
-        await fetch('/api/v1/user/settings/dashboard_layout', {
+        await fetch(`${B}/user/settings/dashboard_layout`, {
           method: 'PUT',
           credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },
@@ -75,7 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
       favorites.items = items;
       try {
-        await fetch('/api/v1/user/settings/favorites', {
+        await fetch(`${B}/user/settings/favorites`, {
           method: 'PUT',
           credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },

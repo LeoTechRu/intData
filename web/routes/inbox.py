@@ -11,7 +11,7 @@ from web.dependencies import get_current_tg_user, get_current_web_user
 from ..template_env import templates
 
 
-router = APIRouter(tags=["inbox"])
+router = APIRouter(prefix="/inbox", tags=["inbox"])
 ui_router = APIRouter(prefix="/inbox", tags=["inbox"], include_in_schema=False)
 
 

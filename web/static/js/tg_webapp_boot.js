@@ -10,7 +10,7 @@
   var initData = (Telegram.WebApp && Telegram.WebApp.initData) || '';
   if (!initData) return;
 
-  fetch('/api/v1/auth/tg-webapp/exchange', {
+  fetch(`${window.API_BASE}/auth/tg-webapp/exchange`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },

@@ -132,12 +132,13 @@
     </div>
 </div>
 <script>
+const B = window.API_BASE;
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.tg-role').forEach(sel => {
         sel.addEventListener('change', async e => {
             const id = e.target.dataset.tgId;
             const role = e.target.value;
-            await fetch(`/api/v1/admin/role/${id}?role=${role}`, {method: 'POST'});
+            await fetch(`${B}/admin/role/${id}?role=${role}`, {method: 'POST'});
             location.reload();
         });
     });
@@ -145,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sel.addEventListener('change', async e => {
             const id = e.target.dataset.userId;
             const role = e.target.value;
-            await fetch(`/api/v1/admin/web/role/${id}?role=${role}`, {method: 'POST'});
+            await fetch(`${B}/admin/web/role/${id}?role=${role}`, {method: 'POST'});
             location.reload();
         });
     });
@@ -153,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', async e => {
             const webId = e.target.dataset.web;
             const tgId = e.target.dataset.tg;
-            await fetch(`/api/v1/admin/web/unlink?web_user_id=${webId}&tg_user_id=${tgId}`, {method: 'POST'});
+            await fetch(`${B}/admin/web/unlink?web_user_id=${webId}&tg_user_id=${tgId}`, {method: 'POST'});
             location.reload();
         });
     });
@@ -163,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const select = document.getElementById(`link-select-${webId}`);
             const tgId = select.value;
             if (!tgId) return;
-            await fetch(`/api/v1/admin/web/link?web_user_id=${webId}&tg_user_id=${tgId}`, {method: 'POST'});
+            await fetch(`${B}/admin/web/link?web_user_id=${webId}&tg_user_id=${tgId}`, {method: 'POST'});
             location.reload();
         });
     });
@@ -175,7 +176,7 @@ async function patch(url, data){
 }
 document.getElementById('adm-branding')?.addEventListener('submit', async (e)=>{
   e.preventDefault(); const fd = new FormData(e.currentTarget);
-  const ok = await patch('/api/v1/admin/settings/branding', {
+  const ok = await patch(`${B}/admin/settings/branding`, {
     BRAND_NAME: fd.get('BRAND_NAME'), PUBLIC_URL: fd.get('PUBLIC_URL'), BOT_LANDING_URL: fd.get('BOT_LANDING_URL')
   });
   document.getElementById('adm-msg').textContent = ok ? 'Сохранено' : 'Ошибка сохранения';
@@ -183,13 +184,13 @@ document.getElementById('adm-branding')?.addEventListener('submit', async (e)=>{
 });
 document.getElementById('adm-telegram')?.addEventListener('submit', async (e)=>{
   e.preventDefault(); const fd = new FormData(e.currentTarget);
-  const ok = await patch('/api/v1/admin/settings/telegram', {
+  const ok = await patch(`${B}/admin/settings/telegram`, {
     TG_LOGIN_ENABLED: !!fd.get('TG_LOGIN_ENABLED'), TG_BOT_USERNAME: (fd.get('TG_BOT_USERNAME')||'').toString().trim()||null, TG_BOT_TOKEN: (fd.get('TG_BOT_TOKEN')||'').toString().trim()||null
   });
   document.getElementById('adm-msg').textContent = ok ? 'Сохранено' : 'Ошибка сохранения';
 });
 async function restart(target){
-  const r = await fetch('/api/v1/admin/restart?target='+encodeURIComponent(target), {method:'POST', credentials:'include'});
+  const r = await fetch(`${B}/admin/restart?target=`+encodeURIComponent(target), {method:'POST', credentials:'include'});
   const j = await r.json().catch(()=>({}));
   document.getElementById('adm-msg').textContent = j.ok ? `Рестарт ${target} выполнен` : `Ошибка рестарта ${target}: ${j.error||j.stderr||j.code}`;
 }

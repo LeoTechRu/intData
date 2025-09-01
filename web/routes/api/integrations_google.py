@@ -14,7 +14,7 @@ from core.services import (
 from web.config import S
 from web.dependencies import get_current_web_user
 
-router = APIRouter()
+router = APIRouter(prefix="/integrations/google", tags=["integrations"])
 
 
 @router.get("/connect")

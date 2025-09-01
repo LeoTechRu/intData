@@ -8,7 +8,7 @@ from core.models import UserRole
 from web.config import S
 
 
-router = APIRouter(tags=["admin"])
+router = APIRouter(prefix="/admin/settings", tags=["admin"])
 
 
 class BrandingIn(BaseModel):

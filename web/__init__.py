@@ -8,10 +8,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.openapi.docs import (
-    get_swagger_ui_html,
-    get_swagger_ui_oauth2_redirect_html,
-)
+from fastapi.openapi.docs import get_swagger_ui_html
 
 from .routes import (
     admin as admin_ui,
@@ -30,9 +27,7 @@ from .routes import (
     resources,
     inbox,
     api_router,
-    API_PREFIX,
 )
-from .routes.api_user_settings import router as user_settings_api
 from core.db import engine
 from core.db.engine import ENGINE_MODE
 from core.db.init_app import init_app_once
@@ -111,6 +106,7 @@ tags_metadata = [
     {"name": "auth", "description": "Authentication API"},
     {"name": "user", "description": "User favorites API"},
     {"name": "user-settings", "description": "User settings API"},
+    {"name": "habits", "description": "Habits API"},
 ]
 
 app = FastAPI(
@@ -118,10 +114,10 @@ app = FastAPI(
     title="Intelligent Data Pro API",
     docs_url=None,
     redoc_url=None,
-    openapi_url="/api/openapi.json",
+    openapi_url="/api/v1/openapi.json",
     openapi_tags=tags_metadata,
     redirect_slashes=False,
-    servers=[{"url": API_PREFIX}],
+    servers=[{"url": "/api/v1"}],
 )
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -138,13 +134,11 @@ async def favicon() -> FileResponse:
 @app.get("/api", include_in_schema=False)
 async def swagger_ui():
     return get_swagger_ui_html(
-        openapi_url="/api/openapi.json", title="Intelligent Data Pro API - Swagger UI"
+        openapi_url="/api/v1/openapi.json",
+        title="API v1 - Swagger UI",
     )
 
 
-@app.get("/api/swagger-ui/oauth2-redirect", include_in_schema=False)
-async def swagger_redirect():
-    return get_swagger_ui_oauth2_redirect_html()
 
 app.add_middleware(
     CORSMiddleware,
@@ -213,11 +207,19 @@ async def auth_middleware(request: Request, call_next):
     # Allow public API docs endpoints
     if (
         path == "/api"
-        or path.startswith("/api/swagger-ui")
-        or path == "/api/openapi.json"
+        or path == "/api/v1/openapi.json"
         or path == "/api/v1/auth/tg-webapp/exchange"
     ):
         return await call_next(request)
+
+    if path.startswith("/api/swagger-ui"):
+        return await call_next(request)
+
+    if path.startswith("/api/") and not path.startswith("/api/v1/"):
+        dest = f"/api/v1/{path[5:]}"
+        if request.url.query:
+            dest += f"?{request.url.query}"
+        return RedirectResponse(dest, status_code=308)
 
     # Allow other API paths to return their own status codes
     if path.startswith("/api/"):
@@ -238,6 +240,14 @@ async def auth_middleware(request: Request, call_next):
     return RedirectResponse(f"/auth?next={quote(next_url, safe='')}")
 
 
+@app.middleware("http")
+async def api_version_header(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/api/"):
+        response.headers["X-API-Version"] = "v1"
+    return response
+
+
 app.include_router(index.router, include_in_schema=False)
 app.include_router(profile.router, include_in_schema=False)
 app.include_router(settings.router, include_in_schema=False)
@@ -255,5 +265,4 @@ app.include_router(admin_ui.router, prefix="/admin", include_in_schema=False)
 app.include_router(admin_settings_ui.router, include_in_schema=False)
 
 # Подключение всех API под единым префиксом
-app.include_router(api_router, prefix=API_PREFIX)
-app.include_router(user_settings_api)
+app.include_router(api_router, prefix="/api/v1")

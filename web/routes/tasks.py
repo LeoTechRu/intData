@@ -13,7 +13,7 @@ from core.models import WebUser
 from ..template_env import templates
 
 
-router = APIRouter(tags=["tasks"])
+router = APIRouter(prefix="/tasks", tags=["tasks"])
 ui_router = APIRouter(prefix="/tasks", tags=["tasks"], include_in_schema=False)
 
 
