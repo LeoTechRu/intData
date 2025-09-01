@@ -67,7 +67,16 @@ class AreaService:
         slug = await self._unique_slug(owner_id, base)
         mp_prefix = parent.mp_path if parent else ''
         mp_path = f"{mp_prefix}{slug}."
-        a = Area(owner_id=owner_id, name=name, parent_id=parent_id, slug=slug, mp_path=mp_path, depth=depth, is_active=True)
+        a = Area(
+            owner_id=owner_id,
+            name=name,
+            title=name,
+            parent_id=parent_id,
+            slug=slug,
+            mp_path=mp_path,
+            depth=depth,
+            is_active=True,
+        )
         self.session.add(a)
         await self.session.flush()
         return a

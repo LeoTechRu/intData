@@ -409,6 +409,7 @@ class Area(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
     name = Column(String(255), nullable=False)
+    title = Column(String(255), nullable=False, default="")
     type = Column(Enum(AreaType))
     color = Column(String(7))
     context_map = Column(JSON, default=dict)
