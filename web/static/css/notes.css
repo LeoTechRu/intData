@@ -5,7 +5,9 @@
   align-items:start;
 }
 
-.note-card{ background:var(--note-bg); color:var(--note-fg); border-radius:12px; box-shadow:var(--shadow-sm); padding:12px }
+.note-card{ background:var(--note-bg); color:var(--note-fg); }
+
+.note-card .js-pin.is-active{ color:#2563eb; }
 
 .note-yellow{ --note-bg:#FEF3C7; --note-fg:#111 }
 .note-mint{ --note-bg:#DCFCE7; --note-fg:#111 }
