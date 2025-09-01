@@ -23,6 +23,7 @@ CREATE TABLE areas (
 	id SERIAL NOT NULL, 
 	owner_id BIGINT, 
 	name VARCHAR(255) NOT NULL, 
+	title VARCHAR(255) NOT NULL, 
 	type areatype, 
 	color VARCHAR(7), 
 	context_map JSON, 

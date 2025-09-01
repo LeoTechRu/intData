@@ -1,8 +1,8 @@
 {
   "version": 1,
   "dialect": "postgresql",
-  "generated_at": "2025-09-01T19:06:43Z",
-  "metadata_hash": "a23168628efe5662b371c53c4c16729639ecd87d3a1d6ff02a4ad9afd0300156",
+  "generated_at": "2025-09-01T19:19:13Z",
+  "metadata_hash": "6ca27e979a9d55f2f6854545551d2dae8132d999e798357393e5cfab513b8a56",
   "enums": [
     {
       "name": "activitytype",
@@ -421,6 +421,16 @@
         {
           "name": "slug",
           "type": "VARCHAR",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "",
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(255)",
           "nullable": false,
           "primary_key": false,
           "autoincrement": true,

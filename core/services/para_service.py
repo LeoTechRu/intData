@@ -46,12 +46,14 @@ class ParaService:
         owner_id: int,
         name: str,
         *,
+        title: str | None = None,
         color: str | None = None,
         review_interval_days: int = 7,
     ) -> Area:
         area = Area(
             owner_id=owner_id,
             name=name,
+            title=title or name,
             color=color,
             review_interval_days=review_interval_days,
             is_active=True,
