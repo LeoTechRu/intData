@@ -3,6 +3,7 @@ from pathlib import Path
 from urllib.parse import quote
 from contextlib import asynccontextmanager
 import logging
+import os
 
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse, FileResponse
@@ -40,6 +41,7 @@ from core.services.project_notification_worker import (
     is_scheduler_enabled,
 )
 from . import para_schemas  # noqa: F401
+from tools.schema_export import check as check_schema
 
 
 logger = logging.getLogger(__name__)
@@ -53,6 +55,13 @@ async def lifespan(app: FastAPI):
     try:
         await init_app_once(env)
         logger.info("Lifespan startup: init_app_once() completed")
+
+        if os.getenv("STRICT_SCHEMA", "0") == "1":
+            ok = check_schema()
+            if not ok:
+                logger.warning(
+                    "DB schema is out of date with models. Run: python -m tools.schema_export generate"
+                )
 
         password = None
         async with WebUserService() as wsvc:

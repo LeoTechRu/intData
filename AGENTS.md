@@ -78,6 +78,19 @@
 - Test naming: `tests/test_*.py`; mirror module layout.
 - Run locally: `pytest -q`. Fix failing tests before merging.
 
+## Обязательное правило: схема БД (source of truth)
+
+- Любые изменения `core/models.py` или Alembic-миграций **требуют** обновления схемы БД.
+- Генерация:
+  ```bash
+  python -m tools.schema_export generate
+  git add core/db/SCHEMA.json core/db/SCHEMA.sql
+  git commit -m "chore(db): update SCHEMA after model changes"
+  ```
+- CI проверяет актуальность командой `python -m tools.schema_export check`. PR не пройдёт, если забыли обновить.
+
+SCHEMA.json является единой «точкой истины» структуры БД (таблицы, поля, индексы, констрейнты, enum).
+
 ## Commit & Pull Request Guidelines
 - Commits: clear, imperative summary (why + what). Update `requirements.txt` when adding deps; adjust `.env.example` and `README.md` when env/behavior changes.
 - Типы коммитов: `feat(core/db|services)`, `feat(web|bot)`, `chore(core/db/ddl|env)`, `docs(backlog|changelog)`.
