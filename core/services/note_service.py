@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from typing import List, Optional
+from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -33,13 +34,32 @@ class NoteService:
             await self.session.close()
 
     async def create_note(
-        self, owner_id: int, content: str, *, area_id: int, project_id: int | None = None
+        self,
+        owner_id: int,
+        content: str,
+        *,
+        area_id: int,
+        project_id: int | None = None,
+        title: str | None = None,
+        color: str | None = None,
     ) -> Note:
+        max_order_stmt = (
+            select(func.max(Note.order_index))
+            .where(
+                Note.owner_id == owner_id,
+                Note.area_id == area_id,
+                Note.project_id == project_id,
+            )
+        )
+        max_order = (await self.session.execute(max_order_stmt)).scalar() or 0
         note = Note(
             owner_id=owner_id,
+            title=title,
             content=content,
             area_id=area_id,
             project_id=project_id,
+            color=color,
+            order_index=max_order + 1,
         )
         self.session.add(note)
         await self.session.flush()
@@ -51,7 +71,11 @@ class NoteService:
         *,
         area_id: int | None = None,
         project_id: int | None = None,
+        pinned: bool | None = None,
+        archived: bool | None = False,
         q: str | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
     ) -> List[Note]:
         stmt = (
             select(Note)
@@ -62,8 +86,19 @@ class NoteService:
             stmt = stmt.where(Note.area_id == area_id)
         if project_id is not None:
             stmt = stmt.where(Note.project_id == project_id)
+        if pinned is not None:
+            stmt = stmt.where(Note.pinned == pinned)
+        if archived is not None:
+            stmt = stmt.where(
+                Note.archived_at.is_not(None) if archived else Note.archived_at.is_(None)
+            )
         if q:
             stmt = stmt.where(Note.content.ilike(f"%{q}%"))
+        stmt = stmt.order_by(Note.pinned.desc(), Note.order_index)
+        if limit is not None:
+            stmt = stmt.limit(limit)
+        if offset is not None:
+            stmt = stmt.offset(offset)
         result = await self.session.execute(stmt)
         return result.scalars().all()
     async def get_note(self, note_id: int) -> Note | None:
@@ -78,6 +113,10 @@ class NoteService:
         content: str | None = None,
         area_id: int | None = None,
         project_id: int | None = None,
+        title: str | None = None,
+        color: str | None = None,
+        pinned: bool | None = None,
+        archived_at: datetime | None = None,
     ) -> Note | None:
         """Update note fields and return the updated note."""
 
@@ -90,6 +129,14 @@ class NoteService:
             note.area_id = area_id
         if project_id is not None:
             note.project_id = project_id
+        if title is not None:
+            note.title = title
+        if color is not None:
+            note.color = color
+        if pinned is not None:
+            note.pinned = pinned
+        if archived_at is not None:
+            note.archived_at = archived_at
         await self.session.flush()
         return note
 
@@ -113,6 +160,33 @@ class NoteService:
         note.archived_at = utcnow()
         await self.session.flush()
         return True
+
+    async def unarchive(self, note_id: int, *, owner_id: int) -> bool:
+        note = await self.session.get(Note, note_id)
+        if note is None or note.owner_id != owner_id:
+            return False
+        note.archived_at = None
+        await self.session.flush()
+        return True
+
+    async def reorder(
+        self,
+        owner_id: int,
+        *,
+        area_id: int | None = None,
+        project_id: int | None = None,
+        ids: List[int],
+    ) -> None:
+        for idx, nid in enumerate(ids):
+            note = await self.session.get(Note, nid)
+            if note is None or note.owner_id != owner_id:
+                continue
+            if area_id is not None:
+                note.area_id = area_id
+            if project_id is not None:
+                note.project_id = project_id
+            note.order_index = idx
+        await self.session.flush()
 
     async def backlinks(self, note_id: int) -> List[Link]:
         """Return links targeting this note (reference backlinks)."""

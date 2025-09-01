@@ -69,3 +69,24 @@ async def test_update_note(session):
     updated = await service.update_note(note.id, content="New")
     assert updated is not None
     assert updated.content == "New"
+
+
+@pytest.mark.asyncio
+async def test_pin_archive_reorder(session):
+    service = NoteService(session)
+    area = Area(owner_id=1, name="R")
+    session.add(area)
+    await session.flush()
+    n1 = await service.create_note(owner_id=1, content="A", area_id=area.id)
+    n2 = await service.create_note(owner_id=1, content="B", area_id=area.id)
+    await service.update_note(n1.id, pinned=True)
+    pinned = await service.list_notes(owner_id=1, pinned=True)
+    assert [n.id for n in pinned] == [n1.id]
+    await service.archive(n1.id, owner_id=1)
+    archived = await service.list_notes(owner_id=1, archived=True)
+    assert [n.id for n in archived] == [n1.id]
+    await service.unarchive(n1.id, owner_id=1)
+    await service.update_note(n1.id, pinned=False)
+    await service.reorder(owner_id=1, area_id=area.id, project_id=None, ids=[n2.id, n1.id])
+    ordered = await service.list_notes(owner_id=1)
+    assert [n.id for n in ordered] == [n2.id, n1.id]

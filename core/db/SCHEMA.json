@@ -1,8 +1,8 @@
 {
   "version": 1,
   "dialect": "postgresql",
-  "generated_at": "2025-09-01T18:55:12Z",
-  "metadata_hash": "2bf248607b0ec5e5016199e23b8798a3bc14c77b3f3e4f1750086c8fdac80e00",
+  "generated_at": "2025-09-01T19:06:43Z",
+  "metadata_hash": "a23168628efe5662b371c53c4c16729639ecd87d3a1d6ff02a4ad9afd0300156",
   "enums": [
     {
       "name": "activitytype",
@@ -1693,6 +1693,16 @@
           "comment": ""
         },
         {
+          "name": "color",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
           "name": "container_id",
           "type": "INTEGER",
           "nullable": true,
@@ -1743,12 +1753,32 @@
           "comment": ""
         },
         {
+          "name": "order_index",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": 0,
+          "server_default": null,
+          "comment": ""
+        },
+        {
           "name": "owner_id",
           "type": "BIGINT",
           "nullable": true,
           "primary_key": false,
           "autoincrement": true,
           "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "pinned",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": false,
           "server_default": null,
           "comment": ""
         },
@@ -1764,7 +1794,7 @@
         },
         {
           "name": "title",
-          "type": "VARCHAR(255)",
+          "type": "TEXT",
           "nullable": true,
           "primary_key": false,
           "autoincrement": true,

@@ -68,9 +68,48 @@ async def test_notes_crud(client: AsyncClient):
     assert len(items) == 2
     assert any(n.get("project") for n in items)
 
+    first_id, second_id = [n["id"] for n in items]
+
+    # Pin first note
+    resp = await client.patch(
+        f"/api/v1/notes/{first_id}", json={"pinned": True}, cookies=cookies
+    )
+    assert resp.json()["pinned"] is True
+    resp = await client.get(
+        "/api/v1/notes", params={"pinned": True}, cookies=cookies
+    )
+    assert [n["id"] for n in resp.json()] == [first_id]
+
+    # Archive first note
+    resp = await client.post(
+        f"/api/v1/notes/{first_id}/archive", cookies=cookies
+    )
+    assert resp.status_code == 204
+    resp = await client.get("/api/v1/notes", cookies=cookies)
+    assert [n["id"] for n in resp.json()] == [second_id]
+    resp = await client.get(
+        "/api/v1/notes", params={"archived": True}, cookies=cookies
+    )
+    assert [n["id"] for n in resp.json()] == [first_id]
+    await client.post(
+        f"/api/v1/notes/{first_id}/unarchive", cookies=cookies
+    )
+    await client.patch(
+        f"/api/v1/notes/{first_id}", json={"pinned": False}, cookies=cookies
+    )
+
+    # Reorder notes
+    resp = await client.post(
+        "/api/v1/notes/reorder",
+        json={"area_id": inbox_area_id, "ids": [second_id, first_id]},
+        cookies=cookies,
+    )
+    assert resp.status_code == 204
+    resp = await client.get("/api/v1/notes", cookies=cookies)
+    assert [n["id"] for n in resp.json()] == [second_id, first_id]
+
     # Delete second note
-    note_id = items[1]["id"]
-    resp = await client.delete(f"/api/v1/notes/{note_id}", cookies=cookies)
+    resp = await client.delete(f"/api/v1/notes/{second_id}", cookies=cookies)
     assert resp.status_code == 204
 
     resp = await client.get("/api/v1/notes", cookies=cookies)

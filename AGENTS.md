@@ -107,6 +107,7 @@ SCHEMA.json является единой «точкой истины» стру
 ## Agent-Specific Instructions
 - Work from repo root, activate venv, install deps, then implement.
 - Keep changes minimal and aligned with existing style. Always finish with: `source ./venv/bin/activate && pip install --quiet -r requirements.txt && pytest -q`.
+- Changes to note models or endpoints require updating `core/db/SCHEMA.*` via `python -m tools.schema_export generate`; OpenAPI is served at `/api/v1/openapi.json` and used in tests.
 
 # AGENTS: правила работы с бэклогом и ченджлогом
 
