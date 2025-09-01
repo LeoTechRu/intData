@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const favForm = document.getElementById('favorites-settings-form');
   if (!dashForm && !favForm) return;
 
-  let layout = { v: 1, layouts: {}, hidden: [] };
+  let layout = { v: 1, layouts: {}, widgets: [], hidden: [] };
   let favorites = { v: 1, items: [] };
   try {
     const resp = await fetch('/api/v1/user/settings?keys=dashboard_layout,favorites', {
@@ -12,23 +12,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (resp.ok) {
       const data = await resp.json();
       // Merge with defaults to avoid missing keys
-      layout = Object.assign({ v: 1, layouts: {}, hidden: [] }, data.dashboard_layout || {});
+      layout = Object.assign({ v: 1, layouts: {}, widgets: [], hidden: [] }, data.dashboard_layout || {});
       favorites = Object.assign({ v: 1, items: [] }, data.favorites || {});
     }
   } catch {}
 
   if (dashForm) {
     dashForm.querySelectorAll('input[type="checkbox"]').forEach((input) => {
-      input.checked = !layout.hidden.includes(input.name);
+      if (Array.isArray(layout.widgets) && layout.widgets.length) {
+        input.checked = layout.widgets.includes(input.name);
+      } else if (Array.isArray(layout.hidden) && layout.hidden.length) {
+        input.checked = !layout.hidden.includes(input.name);
+      } else {
+        input.checked = true;
+      }
     });
 
     dashForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const hidden = [];
+      const widgets = [];
       dashForm.querySelectorAll('input[type="checkbox"]').forEach((input) => {
-        if (!input.checked) hidden.push(input.name);
+        if (input.checked) widgets.push(input.name);
       });
-      layout.hidden = hidden;
+      layout.widgets = widgets;
+      delete layout.hidden;
       if (typeof layout.layouts !== 'object') layout.layouts = {};
       try {
         await fetch('/api/v1/user/settings/dashboard_layout', {

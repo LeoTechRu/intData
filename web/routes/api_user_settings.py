@@ -45,7 +45,7 @@ DEFAULT_DASHBOARD_LAYOUT = {
         "md": [],
         "sm": [],
     },
-    "hidden": [],
+    "widgets": [],
 }
 
 
