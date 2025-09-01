@@ -2,7 +2,7 @@
 {% block title %}Админ{% endblock %}
 {% block content %}
 <div class="ui-layout">
-    <div id="main-content">
+    <main id="main-content" tabindex="-1">
         <section id="users-web" class="card">
             <div class="card-title">Web users</div>
             {% if users_web %}
@@ -129,7 +129,7 @@
               <div id="adm-msg" class="muted" style="margin-top:8px;"></div>
             </section>
         </section>
-    </div>
+    </main>
 </div>
 <script>
 const B = window.API_BASE;

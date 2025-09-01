@@ -2,7 +2,7 @@
 {% block title %}Inbox{% endblock %}
 {% block content %}
 <div class="ui-layout">
-  <div id="main-content">
+  <main id="main-content" tabindex="-1">
     <section class="card">
       <div class="card-title">Входящие заметки</div>
       <table class="ui-table">
@@ -11,7 +11,7 @@
       </table>
       <div id="inbox-empty" class="text-muted" style="display:none; padding:8px;">Пусто</div>
     </section>
-  </div>
+  </main>
 </div>
 <script>
 const B = window.API_BASE;
