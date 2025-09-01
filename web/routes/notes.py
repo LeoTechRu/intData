@@ -5,10 +5,10 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
 from pydantic import BaseModel
 
-from core.models import Note, TgUser, ContainerType
+from core.models import Note, TgUser, ContainerType, WebUser
 from core.services.note_service import NoteService
+from core.services.para_service import ParaService
 from web.dependencies import get_current_tg_user, get_current_web_user
-from core.models import WebUser
 from ..template_env import templates
 
 
@@ -17,20 +17,44 @@ ui_router = APIRouter(prefix="/notes", tags=["notes"], include_in_schema=False)
 
 
 class NoteCreate(BaseModel):
-    """Payload for creating a note."""
-
     content: str
+    area_id: Optional[int] = None
+    project_id: Optional[int] = None
+
+
+class NoteUpdate(BaseModel):
+    content: Optional[str] = None
+    area_id: Optional[int] = None
+    project_id: Optional[int] = None
+
+
+class AreaOut(BaseModel):
+    id: int
+    name: str
+    slug: Optional[str] = None
+
+
+class ProjectOut(BaseModel):
+    id: int
+    name: str
 
 
 class NoteResponse(BaseModel):
-    """Representation of a note."""
-
     id: int
     content: str
+    area: AreaOut
+    project: Optional[ProjectOut] = None
 
     @classmethod
     def from_model(cls, note: Note) -> "NoteResponse":
-        return cls(id=note.id, content=note.content)
+        area = note.area
+        project = note.project
+        return cls(
+            id=note.id,
+            content=note.content,
+            area=AreaOut(id=area.id, name=area.name, slug=getattr(area, "slug", None)),
+            project=ProjectOut(id=project.id, name=project.name) if project else None,
+        )
 
 
 class NoteAssign(BaseModel):
@@ -41,16 +65,19 @@ class NoteAssign(BaseModel):
 @router.get("", response_model=List[NoteResponse])
 async def list_notes(
     current_user: TgUser | None = Depends(get_current_tg_user),
-    container_type: Optional[ContainerType] = Query(default=None),
-    container_id: Optional[int] = Query(default=None),
-    include_sub: Optional[int] = Query(default=0),
+    area_id: Optional[int] = Query(default=None),
+    project_id: Optional[int] = Query(default=None),
+    q: Optional[str] = Query(default=None),
 ):
-    """List notes for the current user."""
-
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     async with NoteService() as service:
-        notes = await service.list_notes(owner_id=current_user.telegram_id, container_type=container_type, container_id=container_id, include_sub=bool(include_sub))
+        notes = await service.list_notes(
+            owner_id=current_user.telegram_id,
+            area_id=area_id,
+            project_id=project_id,
+            q=q,
+        )
     return [NoteResponse.from_model(n) for n in notes]
 
 
@@ -67,12 +94,36 @@ async def create_note(
 
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    area_id = payload.area_id
+    if area_id is None:
+        async with ParaService() as psvc:
+            areas = await psvc.list_areas(owner_id=current_user.telegram_id)
+            inbox = next(
+                (
+                    a
+                    for a in areas
+                    if (getattr(a, "slug", "") or "").lower() == "inbox"
+                    or a.name.lower() == "входящие"
+                ),
+                None,
+            )
+            if inbox is None:
+                inbox = await psvc.create_area(
+                    owner_id=current_user.telegram_id, name="Входящие"
+                )
+                inbox.slug = "inbox"
+                await psvc.session.flush()
+            area_id = inbox.id
     async with NoteService() as service:
         note = await service.create_note(
             owner_id=current_user.telegram_id,
             content=payload.content,
+            area_id=area_id,
+            project_id=payload.project_id,
         )
-    return NoteResponse.from_model(note)
+        await service.session.refresh(note, attribute_names=["area", "project"])
+        result = NoteResponse.from_model(note)
+    return result
 
 
 @router.post("/{note_id}/assign", response_model=NoteResponse)
@@ -128,33 +179,42 @@ async def delete_note(
 @router.put("/{note_id}", response_model=NoteResponse)
 async def update_note(
     note_id: int,
-    payload: NoteCreate,
+    payload: NoteUpdate,
     current_user: TgUser | None = Depends(get_current_tg_user),
 ):
-    """Update a note owned by the current user."""
-
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     async with NoteService() as service:
         note = await service.get_note(note_id)
         if note is None or note.owner_id != current_user.telegram_id:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-        note = await service.update_note(note_id, payload.content)
-    return NoteResponse.from_model(note)
+        note = await service.update_note(
+            note_id,
+            content=payload.content,
+            area_id=payload.area_id,
+            project_id=payload.project_id,
+        )
+        await service.session.refresh(note, attribute_names=["area", "project"])
+        result = NoteResponse.from_model(note)
+    return result
 
 
 @ui_router.get("")
 async def notes_page(
     request: Request,
     current_user: WebUser | None = Depends(get_current_web_user),
+    tg_user: TgUser | None = Depends(get_current_tg_user),
 ):
-    """Render simple UI for notes with role-aware header."""
-
+    notes = []
+    if tg_user:
+        async with NoteService() as svc:
+            notes = await svc.list_notes(owner_id=tg_user.telegram_id)
     context = {
         "current_user": current_user,
         "current_role_name": getattr(current_user, "role", ""),
         "is_admin": getattr(current_user, "role", "") == "admin",
         "page_title": "Заметки",
+        "notes": notes,
     }
     return templates.TemplateResponse(request, "notes.html", context)
 

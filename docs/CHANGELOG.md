@@ -36,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Кнопка «Добавить напоминание» для событий календаря и проверка времени напоминаний.
 - Простейший DDL-раннер `core/scripts/db_bootstrap.py` и файлы `core/db/ddl/*`.
 - Утилита резервного копирования БД `core/scripts/db_dump.py` (pg_dump), путь и префикс настраиваются через `.env`.
+- Notes now require `area_id` and optional `project_id`; API `/api/v1/notes` returns area/project data.
+- Страница `/notes` отображает адаптивные карточки с быстрым созданием и редактированием.
 
 ### Changed
 - Унифицирована работа с паролями через обёртку `core.db.bcrypt` и `WebUserService`.

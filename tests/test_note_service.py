@@ -5,6 +5,7 @@ from sqlalchemy.orm import sessionmaker
 
 from base import Base
 from core.services.note_service import NoteService
+from core.models import Area
 
 
 @pytest_asyncio.fixture
@@ -22,7 +23,10 @@ async def session():
 @pytest.mark.asyncio
 async def test_note_creation_and_listing(session):
     service = NoteService(session)
-    note = await service.create_note(owner_id=1, content="Hello")
+    area = Area(owner_id=1, name="Inbox")
+    session.add(area)
+    await session.flush()
+    note = await service.create_note(owner_id=1, content="Hello", area_id=area.id)
     assert note.id is not None
     notes = await service.list_notes(owner_id=1)
     assert len(notes) == 1
@@ -32,8 +36,12 @@ async def test_note_creation_and_listing(session):
 @pytest.mark.asyncio
 async def test_list_notes_filters_by_owner(session):
     service = NoteService(session)
-    await service.create_note(owner_id=1, content="A")
-    await service.create_note(owner_id=2, content="B")
+    a1 = Area(owner_id=1, name="A1")
+    a2 = Area(owner_id=2, name="A2")
+    session.add_all([a1, a2])
+    await session.flush()
+    await service.create_note(owner_id=1, content="A", area_id=a1.id)
+    await service.create_note(owner_id=2, content="B", area_id=a2.id)
     notes_owner1 = await service.list_notes(owner_id=1)
     assert len(notes_owner1) == 1
     assert notes_owner1[0].content == "A"
@@ -42,7 +50,10 @@ async def test_list_notes_filters_by_owner(session):
 @pytest.mark.asyncio
 async def test_delete_note(session):
     service = NoteService(session)
-    note = await service.create_note(owner_id=1, content="Temp")
+    area = Area(owner_id=1, name="X")
+    session.add(area)
+    await session.flush()
+    note = await service.create_note(owner_id=1, content="Temp", area_id=area.id)
     deleted = await service.delete_note(note.id)
     assert deleted is True
     assert await service.list_notes(owner_id=1) == []
@@ -51,7 +62,10 @@ async def test_delete_note(session):
 @pytest.mark.asyncio
 async def test_update_note(session):
     service = NoteService(session)
-    note = await service.create_note(owner_id=1, content="Old")
-    updated = await service.update_note(note.id, "New")
+    area = Area(owner_id=1, name="Z")
+    session.add(area)
+    await session.flush()
+    note = await service.create_note(owner_id=1, content="Old", area_id=area.id)
+    updated = await service.update_note(note.id, content="New")
     assert updated is not None
     assert updated.content == "New"

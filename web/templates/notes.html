@@ -1,92 +1,54 @@
 {% extends "base.html" %}
-{% block title %}Заметки{% endblock %}
 {% block content %}
-<div class="ui-layout">
-  <main id="main-content" tabindex="-1">
-    <div class="ui-notice">Создавайте заметки и удаляйте ненужные.</div>
+<section class="page" aria-labelledby="h-notes">
+  <h1 id="h-notes">Заметки</h1>
 
-    <section class="card" style="margin-bottom:1rem;">
-      <div class="card-title">Новая заметка</div>
-      <form id="note-form" class="ui-form">
-        <label>
-          <div>Текст</div>
-          <textarea name="content" rows="3" required placeholder="Введите заметку"></textarea>
-        </label>
-        <button class="button" type="submit">Добавить</button>
-      </form>
-    </section>
+  <!-- Быстрая заметка -->
+  <form id="quick-note" class="c-card" style="margin-block:12px">
+    <textarea name="content" rows="2" placeholder="Быстрая заметка..." required></textarea>
+    <div class="c-card__bottom">
+      <div class="chips">
+        <select name="area_id" aria-label="Область">
+          <!-- options из /api/v1/areas -->
+        </select>
+        <select name="project_id" aria-label="Проект (опционально)">
+          <option value="">Без проекта</option>
+        </select>
+      </div>
+      <button class="ui-iconbtn" type="submit" data-tooltip="Сохранить" aria-label="Сохранить">
+        <svg><use href="#i-check"/></svg>
+      </button>
+    </div>
+  </form>
 
-    <section class="card">
-      <div class="card-title">Мои заметки</div>
-      <table class="ui-table">
-        <thead><tr><th>ID</th><th>Содержимое</th><th></th></tr></thead>
-        <tbody id="note-list"></tbody>
-      </table>
-      <div id="note-empty" class="text-muted" style="display:none; padding:8px;">Заметок пока нет</div>
-    </section>
-  </main>
-</div>
+  <!-- Сетка карточек -->
+  <div id="notes-grid" class="cards-grid" aria-live="polite">
+    {% for n in notes %}
+    <article class="c-card" data-note-id="{{n.id}}">
+      <div class="c-card__top">
+        <button class="ui-iconbtn ui-iconbtn--danger js-del" aria-label="Удалить" data-tooltip="Удалить">
+          <svg><use href="#i-trash"/></svg>
+        </button>
+      </div>
 
-<script>
-const B = window.API_BASE;
-async function fetchNotes(){
-  const resp = await fetch(`${B}/notes`, {credentials:'include'});
-  if (!resp.ok){
-    document.getElementById('note-empty').textContent = 'Требуется вход и связанный Telegram-аккаунт';
-    document.getElementById('note-empty').style.display = 'block';
-    return;
-  }
-  const data = await resp.json();
-  const list = document.getElementById('note-list');
-  list.innerHTML = '';
-  if (!data.length){
-    document.getElementById('note-empty').style.display='block';
-    return;
-  }
-  document.getElementById('note-empty').style.display='none';
-  for (const n of data){
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${n.id}</td><td>${n.content}</td><td>
-      <button class="button" data-action="edit" data-id="${n.id}">Редактировать</button>
-      <button class="button" data-action="delete" data-id="${n.id}">Удалить</button>
-    </td>`;
-    list.appendChild(tr);
-  }
-}
+      <div class="c-card__content">{{ n.content }}</div>
 
-document.addEventListener('DOMContentLoaded', ()=>{
-  const form = document.getElementById('note-form');
-  form.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const fd = new FormData(form);
-    const payload = {content: fd.get('content')};
-    const resp = await fetch(`${B}/notes`, {
-      method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload)
-    });
-    if (resp.ok){ form.reset(); fetchNotes(); }
-  });
-  fetchNotes();
-});
+      <div class="c-card__bottom">
+        <div class="chips">
+          <span class="chip chip--area"    title="Область">{{ n.area.name }}</span>
+          {% if n.project %}<span class="chip chip--project" title="Проект">{{ n.project.name }}</span>{% endif %}
+        </div>
+        <button class="ui-iconbtn js-edit" aria-label="Редактировать" data-tooltip="Редактировать">
+          <svg><use href="#i-edit"/></svg>
+        </button>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
 
-document.addEventListener('click', async (e)=>{
-  const btn = e.target.closest('button[data-action][data-id]');
-  if (!btn) return;
-  const id = btn.dataset.id;
-  if (btn.dataset.action === 'delete'){
-    const resp = await fetch(`${B}/notes/${id}`, {method:'DELETE', credentials:'include'});
-    if (resp.ok){ fetchNotes(); }
-  } else if (btn.dataset.action === 'edit'){
-    const current = btn.closest('tr').children[1].textContent;
-    const content = prompt('Изменить заметку', current);
-    if (content === null) return;
-    const resp = await fetch(`${B}/notes/${id}`, {
-      method:'PUT',
-      headers:{'Content-Type':'application/json'},
-      credentials:'include',
-      body: JSON.stringify({content})
-    });
-    if (resp.ok){ fetchNotes(); }
-  }
-});
-</script>
+{% block scripts %}
+  <script type="module" src="/static/js/ui/confirm.js"></script>
+  <script type="module" src="/static/js/notes.js"></script>
 {% endblock %}

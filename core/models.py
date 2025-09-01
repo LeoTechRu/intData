@@ -498,6 +498,8 @@ class Note(Base):
     owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
     title = Column(String(255))
     content = Column(Text, nullable=False)
+    area_id = Column(Integer, ForeignKey("areas.id"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.id"))
     container_type = Column(Enum(ContainerType))
     container_id = Column(Integer)
     archived_at = Column(DateTime(timezone=True))
@@ -505,6 +507,9 @@ class Note(Base):
     updated_at = Column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
+
+    area = relationship("Area")
+    project = relationship("Project")
 
 
 class Archive(Base):

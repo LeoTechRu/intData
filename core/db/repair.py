@@ -124,6 +124,27 @@ def ensure_default_areas(conn: Connection) -> int:
     return created
 
 
+def backfill_notes_area(conn: Connection) -> int:
+    """Assign default area to notes missing one."""
+    if not _table_exists(conn, "notes"):
+        return 0
+    rows = conn.execute(
+        sa.text("SELECT id, owner_id FROM notes WHERE area_id IS NULL")
+    ).fetchall()
+    updated = 0
+    for note_id, owner_id in rows:
+        area_id = _get_default_area(conn, owner_id)
+        if area_id is None:
+            continue
+        conn.execute(
+            sa.text("UPDATE notes SET area_id=:a WHERE id=:n"),
+            {"a": area_id, "n": note_id},
+        )
+        updated += 1
+    logger.info("backfill_notes_area: updated=%s", updated)
+    return updated
+
+
 def backfill_projects_area(conn: Connection) -> int:
     """Assign default area to projects without one."""
     if not _table_exists(conn, "projects"):
@@ -333,6 +354,7 @@ def run_repair(conn: Connection) -> dict[str, object]:
 
     _step("user_settings_created", ensure_user_settings_table)
     _step("default_areas", ensure_default_areas)
+    _step("notes_area", backfill_notes_area)
     _step("projects_area", backfill_projects_area)
     _step("tasks_resources", backfill_tasks_resources)
     _step("time_entries", backfill_time_entries)

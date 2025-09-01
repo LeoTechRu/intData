@@ -1,8 +1,8 @@
 {
   "version": 1,
   "dialect": "postgresql",
-  "generated_at": "2025-09-01T17:13:15Z",
-  "metadata_hash": "5884d502de806cb8c3485882fe2115247ffbf1b2b03e582ab42e4e429b46c8b7",
+  "generated_at": "2025-09-01T18:55:12Z",
+  "metadata_hash": "2bf248607b0ec5e5016199e23b8798a3bc14c77b3f3e4f1750086c8fdac80e00",
   "enums": [
     {
       "name": "activitytype",
@@ -1683,6 +1683,16 @@
           "comment": ""
         },
         {
+          "name": "area_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
           "name": "container_id",
           "type": "INTEGER",
           "nullable": true,
@@ -1743,6 +1753,16 @@
           "comment": ""
         },
         {
+          "name": "project_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
           "name": "title",
           "type": "VARCHAR(255)",
           "nullable": true,
@@ -1770,11 +1790,35 @@
         {
           "name": null,
           "columns": [
+            "area_id"
+          ],
+          "ref_table": "areas",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
             "owner_id"
           ],
           "ref_table": "users_tg",
           "ref_columns": [
             "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "project_id"
+          ],
+          "ref_table": "projects",
+          "ref_columns": [
+            "id"
           ],
           "ondelete": null,
           "onupdate": null

@@ -79,6 +79,12 @@
 - Test naming: `tests/test_*.py`; mirror module layout.
 - Run locally: `pytest -q`. Fix failing tests before merging.
 
+## UI Cards
+- Используем `.c-card` и `.cards-grid`; иконки — через спрайт `partials/icons.svg`.
+- Кнопки-иконки оформляем классом `.ui-iconbtn` и атрибутом `data-tooltip`.
+- Удаление подтверждаем через `confirmDialog` из `/static/js/ui/confirm.js`.
+- Заметки обязаны иметь `area_id`; `project_id` опционален, по умолчанию используется Inbox.
+
 ## Обязательное правило: схема БД (source of truth)
 
 - Любые изменения `core/models.py` или Alembic-миграций **требуют** обновления схемы БД.
