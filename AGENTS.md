@@ -72,6 +72,7 @@
 - Table names: prefix by module; user-related tables use `users_` (e.g., `users_tg`).
 - Branding: use “Intelligent Data Pro” for product/headers; bot is “@intDataBot”. Default links to `https://intdata.pro/` and bot to `https://intdata.pro/bot`.
 - Language: prioritize Russian-speaking users. All user-facing texts (bot/web) default to Russian; keep code identifiers/comments in English. Add i18n only when needed, with Russian as the primary locale.
+- Frontend updates must maintain a unified responsive layout so the application remains comfortable on widescreen monitors, square displays, narrow phones, and any other screen sizes.
 
 ## Testing Guidelines
 - Framework: `pytest` with a running PostgreSQL.
