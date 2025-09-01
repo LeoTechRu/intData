@@ -193,13 +193,17 @@ CREATE TABLE notes (
 	owner_id BIGINT, 
 	title VARCHAR(255), 
 	content TEXT NOT NULL, 
+	area_id INTEGER NOT NULL, 
+	project_id INTEGER, 
 	container_type containertype, 
 	container_id INTEGER, 
 	archived_at TIMESTAMP WITH TIME ZONE, 
 	created_at TIMESTAMP WITH TIME ZONE, 
 	updated_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 
-	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id)
+	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id), 
+	FOREIGN KEY(area_id) REFERENCES areas (id), 
+	FOREIGN KEY(project_id) REFERENCES projects (id)
 );
 
 CREATE TABLE notification_channels (

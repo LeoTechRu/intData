@@ -6,6 +6,7 @@ from typing import List, Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from core import db
 from core.models import Note, ContainerType, Link, LinkType, Area, ContainerType, Link, LinkType
@@ -31,40 +32,38 @@ class NoteService:
                 await self.session.rollback()
             await self.session.close()
 
-    async def create_note(self, owner_id: int, content: str) -> Note:
-        note = Note(owner_id=owner_id, content=content)
+    async def create_note(
+        self, owner_id: int, content: str, *, area_id: int, project_id: int | None = None
+    ) -> Note:
+        note = Note(
+            owner_id=owner_id,
+            content=content,
+            area_id=area_id,
+            project_id=project_id,
+        )
         self.session.add(note)
         await self.session.flush()
         return note
 
     async def list_notes(
         self,
-        owner_id: Optional[int] = None,
+        owner_id: int,
         *,
-        container_type: ContainerType | None = None,
-        container_id: int | None = None,
-        include_sub: bool = False,
+        area_id: int | None = None,
+        project_id: int | None = None,
+        q: str | None = None,
     ) -> List[Note]:
-        stmt = select(Note)
-        if owner_id is not None:
-            stmt = stmt.where(Note.owner_id == owner_id)
-        if container_type is not None:
-            stmt = stmt.where(Note.container_type == container_type)
-            if container_type == ContainerType.area and container_id is not None and include_sub:
-                node = await self.session.get(Area, container_id)
-                if node:
-                    from sqlalchemy import or_
-                    stmt = (
-                        select(Note)
-                        .join(Area, Area.id == Note.container_id)
-                        .where(Note.owner_id == owner_id)
-                        .where(Note.container_type == ContainerType.area)
-                        .where(or_(Area.mp_path == node.mp_path, Area.mp_path.like(node.mp_path + '%')))
-                    )
-                    result = await self.session.execute(stmt)
-                    return result.scalars().all()
-            if container_id is not None and not include_sub:
-                stmt = stmt.where(Note.container_id == container_id)
+        stmt = (
+            select(Note)
+            .options(selectinload(Note.area), selectinload(Note.project))
+            .where(Note.owner_id == owner_id)
+        )
+        if area_id is not None:
+            stmt = stmt.where(Note.area_id == area_id)
+        if project_id is not None:
+            stmt = stmt.where(Note.project_id == project_id)
+        if q:
+            stmt = stmt.where(Note.content.ilike(f"%{q}%"))
         result = await self.session.execute(stmt)
         return result.scalars().all()
     async def get_note(self, note_id: int) -> Note | None:
@@ -72,13 +71,25 @@ class NoteService:
 
         return await self.session.get(Note, note_id)
 
-    async def update_note(self, note_id: int, content: str) -> Note | None:
-        """Update note content and return the updated note."""
+    async def update_note(
+        self,
+        note_id: int,
+        *,
+        content: str | None = None,
+        area_id: int | None = None,
+        project_id: int | None = None,
+    ) -> Note | None:
+        """Update note fields and return the updated note."""
 
         note = await self.session.get(Note, note_id)
         if note is None:
             return None
-        note.content = content
+        if content is not None:
+            note.content = content
+        if area_id is not None:
+            note.area_id = area_id
+        if project_id is not None:
+            note.project_id = project_id
         await self.session.flush()
         return note
 

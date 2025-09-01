@@ -8,6 +8,7 @@
     <link rel="mask-icon" href="{{ url_for('static', path='img/brand/mask.svg') }}" color="#a78bfa">
     <meta name="theme-color" content="#1f2937">
     <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/ui.css') }}">
     <style>
         .skip-link:not(:focus){
             position:absolute;
@@ -46,5 +47,6 @@
     <script>window.__LP_AUTH={{ 'true' if current_user else 'false' }};</script>
     <script src="{{ url_for('static', path='js/tg_webapp_boot.js') }}" defer></script>
     {% endif %}
+    {% include "partials/icons.svg" %}
 </body>
 </html>
