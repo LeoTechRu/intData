@@ -2,7 +2,7 @@
 {% block title %}Areas{% endblock %}
 {% block content %}
 <div class="ui-layout">
-  <div id="main-content">
+  <main id="main-content" tabindex="-1">
     <section class="card" style="margin-bottom:1rem;">
       <div class="card-title">Новая область (Area)</div>
       <form id="area-form" class="ui-form">
@@ -25,7 +25,7 @@
       </table>
       <div id="area-empty" class="text-muted" style="display:none; padding:8px;">Нет областей</div>
     </section>
-  </div>
+  </main>
 </div>
 <script>
 const B = window.API_BASE;

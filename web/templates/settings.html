@@ -2,7 +2,7 @@
 {% block title %}Настройки{% endblock %}
 {% block content %}
 <div class="ui-layout">
-  <div id="main-content">
+  <main id="main-content" tabindex="-1">
     <div class="grid grid-2">
       <section class="card stack gap-4">
         <h2>Виджеты дашборда</h2>
@@ -38,7 +38,7 @@
         </form>
       </section>
     </div>
-  </div>
+  </main>
 </div>
 <script type="module" src="{{ url_for('static', path='js/dashboard-settings.js') }}"></script>
 {% endblock %}

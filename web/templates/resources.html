@@ -2,7 +2,7 @@
 {% block title %}Resources{% endblock %}
 {% block content %}
 <div class="ui-layout">
-  <div id="main-content">
+  <main id="main-content" tabindex="-1">
     <section class="card" style="margin-bottom:1rem;">
       <div class="card-title">Новый ресурс</div>
       <form id="resource-form" class="ui-form">
@@ -19,7 +19,7 @@
       </table>
       <div id="resource-empty" class="text-muted" style="display:none; padding:8px;">Нет ресурсов</div>
     </section>
-  </div>
+  </main>
 </div>
 <script>
 const B = window.API_BASE;

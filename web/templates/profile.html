@@ -2,7 +2,7 @@
 {% block title %}Профиль{% endblock %}
 {% block content %}
 <div class="ui-layout">
-  <div id="main-content">
+  <main id="main-content" tabindex="-1">
     {% if editing %}
     <div class="card">
       <div class="card-body">
@@ -51,6 +51,6 @@
       </div>
     </div>
     {% endif %}
-  </div>
+  </main>
 </div>
 {% endblock %}

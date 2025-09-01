@@ -2,7 +2,7 @@
 {% block title %}Календарь{% endblock %}
 {% block content %}
 <div class="ui-layout calendar-layout">
-  <div id="main-content">
+  <main id="main-content" tabindex="-1">
     {% if CALENDAR_V2_ENABLED %}
     <div class="ui-notice">новый календарь</div>
     {% endif %}
@@ -19,7 +19,7 @@
       </table>
       <div id="event-empty" class="text-muted" style="display:none; padding:8px;">Событий пока нет</div>
     </section>
-  </div>
+  </main>
 </div>
 
 <script>

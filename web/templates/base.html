@@ -2,15 +2,37 @@
 <html lang="ru">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}{{ BRAND_NAME }}{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', path='img/brand/favicon.svg') }}">
     <link rel="mask-icon" href="{{ url_for('static', path='img/brand/mask.svg') }}" color="#a78bfa">
     <meta name="theme-color" content="#1f2937">
     <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+    <style>
+        .skip-link:not(:focus){
+            position:absolute;
+            left:-1000px;
+            top:auto;
+            width:1px;
+            height:1px;
+            overflow:hidden;
+        }
+        .skip-link:focus{
+            left:0;
+            top:0;
+            width:auto;
+            height:auto;
+            padding:1rem;
+            background:#1f2937;
+            color:#fff;
+            z-index:1000;
+        }
+    </style>
     <script>window.API_BASE = "/api/v1";</script>
     <script type="module" src="{{ url_for('static', path='js/main.js') }}"></script>
 </head>
 <body>
+    <a href="#main-content" class="skip-link">Перейти к содержимому</a>
     {% include "_icons.html" %}
     <header class="top-bar app-header">
         {% if not auth_page %}
