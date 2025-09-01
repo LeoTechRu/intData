@@ -188,7 +188,7 @@
 - `GET /api/v1/inbox/notes` возвращает все входящие и неархивные заметки.
 - `POST /api/v1/notes/{id}/assign {container_type, container_id}` переносит заметку в Project/Area/Resource.
 - P2•S — Веб‑клиппер через bookmarklet.
-- Страница `/notes` показывает заметки в виде карточек с чипами Areas/Projects и быстрым добавлением в Inbox.
+- Страница `/notes` отображает цветные карточки в стиле Google Keep с чипами Areas/Projects, быстрым добавлением и закреплением.
 
 ### E11: Search & Retrieval (поиск, бэклинки, wikilinks, граф)
 **User Stories**

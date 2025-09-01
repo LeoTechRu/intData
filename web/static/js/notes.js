@@ -1,5 +1,7 @@
 import { confirmDialog } from '/static/js/ui/confirm.js';
 
+const COLORS = ['note-yellow','note-mint','note-blue','note-pink','note-gray'];
+
 async function api(url, opts){ const r = await fetch(url, {credentials:'same-origin', ...opts}); if(!r.ok) throw new Error(await r.text()); return r.json().catch(()=>({})); }
 
 async function loadAreas(){
@@ -13,8 +15,9 @@ async function loadProjects(area_id){
 
 function noteCardHTML(n){
   return `
-  <article class="c-card note-card ${n.color||''}" data-note-id="${n.id}">
+  <article class="c-card note-card ${n.color||''}" data-note-id="${n.id}" data-pinned="${n.pinned?1:0}">
     <div class="c-card__top">
+      <button class="ui-iconbtn js-pin${n.pinned?' is-active':''}" aria-label="${n.pinned?'Открепить':'Закрепить'}" data-tooltip="${n.pinned?'Открепить':'Закрепить'}"><svg><use href="#i-pin"/></svg></button>
       <button class="ui-iconbtn ui-iconbtn--danger js-del" aria-label="Удалить" data-tooltip="Удалить"><svg><use href="#i-trash"/></svg></button>
     </div>
     <div class="c-card__content">${(n.content||'').replace(/</g,'&lt;')}</div>
@@ -54,11 +57,12 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     form.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const fd = new FormData(form);
-      const payload = {
-        content: (fd.get('content')||'').toString().trim(),
-        area_id: Number(fd.get('area_id')),
-        project_id: fd.get('project_id') ? Number(fd.get('project_id')) : null
-      };
+        const payload = {
+          content: (fd.get('content')||'').toString().trim(),
+          area_id: Number(fd.get('area_id')),
+          project_id: fd.get('project_id') ? Number(fd.get('project_id')) : null,
+          color: COLORS[Math.floor(Math.random()*COLORS.length)]
+        };
       if (!payload.content) return;
       const created = await api('/api/v1/notes', {
         method:'POST',
@@ -77,6 +81,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   grid.addEventListener('click', async (e)=>{
     const del = e.target.closest('.js-del');
     const ed  = e.target.closest('.js-edit');
+    const pin = e.target.closest('.js-pin');
     const card = e.target.closest('.c-card');
     if (!card) return;
     const id = card.dataset.noteId;
@@ -121,6 +126,16 @@ document.addEventListener('DOMContentLoaded', async ()=>{
         ta.replaceWith(Object.assign(document.createElement('div'),{className:'c-card__content', textContent: content}));
         panel.replaceChildren(left, ed);
       });
+    }
+
+    if (pin){
+      const newPinned = card.dataset.pinned !== '1';
+      await api(`/api/v1/notes/${id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({pinned:newPinned}) });
+      card.dataset.pinned = newPinned ? '1' : '0';
+      pin.classList.toggle('is-active', newPinned);
+      pin.setAttribute('aria-label', newPinned ? 'Открепить' : 'Закрепить');
+      pin.dataset.tooltip = newPinned ? 'Открепить' : 'Закрепить';
+      if(newPinned){ grid.prepend(card); } else { grid.append(card); }
     }
   });
 });
