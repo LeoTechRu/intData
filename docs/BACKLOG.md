@@ -20,6 +20,7 @@
   - [E13: Tasks & Time (PARA-first)](#e13-tasks--time-para-first)
   - [E14: Insights & Reports (ревью Areas, фокус-часы)](#e14-insights--reports-ревью-areas-фокус-часы)
   - [E15: User-configurable dashboard (user_settings)](#e15-user-configurable-dashboard-user_settings)
+  - [E16: Habits](#e16-habits)
 - [MR-план](#mr-план)
 - [Definition of Done](#definition-of-done)
 - [Appendix: Notes from merge](#appendix-notes-from-merge)
@@ -261,6 +262,16 @@
 - API `/api/v1/user/settings` позволяет читать и обновлять отдельные ключи.
 - UI страница `/settings` позволяет включать и скрывать виджеты дашборда.
 - На странице `/settings` можно включать или отключать пункты избранного меню с учётом роли пользователя.
+
+### E16: Habits
+**User Stories**
+1. Как пользователь, я отмечаю выполнение привычек и вижу прогресс на странице `/habits`.
+
+**Tasks**
+- P0•S — Страница `/habits`: список, создание, отметка прогресса.
+
+**Acceptance Criteria**
+- Открытие `/habits` отображает привычки пользователя и позволяет отмечать выполнение за сегодня.
 
 ## MR-план
 1. MR-1 Foundations (миграции/модели) — DoD: миграции применяются; приложение поднимается; тесты не падают.

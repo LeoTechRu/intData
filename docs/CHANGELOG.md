@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Цвет заметок, закрепление, архив и сортировка drag-and-drop.
 - Эндпоинты `/api/v1/notes/{id}/archive`, `/api/v1/notes/{id}/unarchive`, `/api/v1/notes/reorder`.
 - Привычки требуют `area_id` (проект опционален); `/api/v1/habits` возвращает данные области и проекта, по умолчанию используется «Входящие».
+- Страница `/habits` с простым интерфейсом для управления привычками.
 
 ### Changed
 - Унифицирована работа с паролями через обёртку `core.db.bcrypt` и `WebUserService`.
