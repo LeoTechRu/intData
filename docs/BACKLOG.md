@@ -89,6 +89,7 @@
 - P0•S — Alembic: `20250829_04_areas_resource_archive` (review_interval_days, is_active, archived_at).
 - P0•M — Alembic: `20250829_05_tasks_links_area` (project_id, area_id, estimate_minutes, индексы).
 - P0•M — Alembic: `20250829_06_time_entries_inheritance` (project_id, area_id, activity_type, billable, source, индексы).
+- P0•S — Машиночитаемая схема БД и автопроверка (`tools/schema_export`, CI).
 
 **Acceptance Criteria**
 - `python -m core.db.migrate` создаёт таблицы с внешними ключами и индексами по `(project_id, area_id, start_ts)`.

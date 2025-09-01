@@ -1,0 +1,3982 @@
+{
+  "version": 1,
+  "dialect": "postgresql",
+  "generated_at": "2025-09-01T17:13:15Z",
+  "metadata_hash": "5884d502de806cb8c3485882fe2115247ffbf1b2b03e582ab42e4e429b46c8b7",
+  "enums": [
+    {
+      "name": "activitytype",
+      "values": [
+        "admin",
+        "break_",
+        "learning",
+        "rest",
+        "work"
+      ]
+    },
+    {
+      "name": "areatype",
+      "values": [
+        "career",
+        "education",
+        "finance",
+        "health",
+        "personal"
+      ]
+    },
+    {
+      "name": "calendaritemstatus",
+      "values": [
+        "cancelled",
+        "done",
+        "planned"
+      ]
+    },
+    {
+      "name": "channeltype",
+      "values": [
+        "channel",
+        "supergroup"
+      ]
+    },
+    {
+      "name": "containertype",
+      "values": [
+        "area",
+        "project",
+        "resource"
+      ]
+    },
+    {
+      "name": "grouptype",
+      "values": [
+        "channel",
+        "group",
+        "private",
+        "public",
+        "supergroup"
+      ]
+    },
+    {
+      "name": "linktype",
+      "values": [
+        "attachment",
+        "dependency",
+        "hierarchy",
+        "metadata",
+        "reference",
+        "temporal"
+      ]
+    },
+    {
+      "name": "loglevel",
+      "values": [
+        "DEBUG",
+        "ERROR",
+        "INFO"
+      ]
+    },
+    {
+      "name": "metrictype",
+      "values": [
+        "binary",
+        "count",
+        "percent"
+      ]
+    },
+    {
+      "name": "notificationchannelkind",
+      "values": [
+        "email",
+        "telegram"
+      ]
+    },
+    {
+      "name": "okrstatus",
+      "values": [
+        "active",
+        "completed",
+        "pending"
+      ]
+    },
+    {
+      "name": "projectstatus",
+      "values": [
+        "active",
+        "completed",
+        "paused"
+      ]
+    },
+    {
+      "name": "taskstatus",
+      "values": [
+        "done",
+        "in_progress",
+        "todo"
+      ]
+    },
+    {
+      "name": "timesource",
+      "values": [
+        "import_",
+        "manual",
+        "timer"
+      ]
+    }
+  ],
+  "tables": {
+    "alarms": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "is_sent",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": false,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "item_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "trigger_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "item_id"
+          ],
+          "ref_table": "calendar_items",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "archives": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "archived_at",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "source_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "source_type",
+          "type": "VARCHAR(50)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "owner_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "areas": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "archived_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "color",
+          "type": "VARCHAR(7)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "context_map",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "depth",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": 0,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": true,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "mp_path",
+          "type": "VARCHAR",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "",
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "parent_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "review_interval",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "review_interval_days",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": 7,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "slug",
+          "type": "VARCHAR",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "",
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "type",
+          "type": "areatype",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "owner_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "parent_id"
+          ],
+          "ref_table": "areas",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "calendar_events": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "description",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "end_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "start_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "owner_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "calendar_items": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "area_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "end_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "project_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "start_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "calendaritemstatus",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "planned",
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "area_id"
+          ],
+          "ref_table": "areas",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "owner_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "project_id"
+          ],
+          "ref_table": "projects",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "channels": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "description",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "participants_count",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": 0,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "telegram_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "type",
+          "type": "channeltype",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "channel",
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "username",
+          "type": "VARCHAR(32)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "owner_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [
+        {
+          "name": null,
+          "columns": [
+            "telegram_id"
+          ]
+        }
+      ],
+      "indexes": [],
+      "checks": []
+    },
+    "gcal_links": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "access_token",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "calendar_id",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "refresh_token",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "owner_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "groups": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "description",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "participants_count",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": 0,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "telegram_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "type",
+          "type": "grouptype",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "private",
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "owner_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [
+        {
+          "name": null,
+          "columns": [
+            "telegram_id"
+          ]
+        }
+      ],
+      "indexes": [],
+      "checks": []
+    },
+    "habits": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "description",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "end_date",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "frequency",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "daily",
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "metrics",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "progress",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "schedule",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "start_date",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "owner_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "interfaces": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "config",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "owner_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "key_results": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "current_value",
+          "type": "FLOAT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": 0.0,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "description",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "metric_type",
+          "type": "metrictype",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "okr_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "target_value",
+          "type": "FLOAT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "weight",
+          "type": "FLOAT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": 1.0,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "okr_id"
+          ],
+          "ref_table": "okrs",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "limits": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "expires_at",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "resource",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "value",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "owner_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "links": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "decay",
+          "type": "FLOAT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": 1.0,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "link_type",
+          "type": "linktype",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "source_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "source_type",
+          "type": "VARCHAR(50)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "target_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "target_type",
+          "type": "VARCHAR(50)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "weight",
+          "type": "FLOAT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": 1.0,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "log_settings": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "chat_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "level",
+          "type": "loglevel",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": 40,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "notes": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "archived_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "container_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "container_type",
+          "type": "containertype",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "content",
+          "type": "TEXT",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "owner_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "notification_channels": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "address",
+          "type": "JSON",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": true,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "kind",
+          "type": "notificationchannelkind",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "owner_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "notification_triggers": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "alarm_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "dedupe_key",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "next_fire_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "rule",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "alarm_id"
+          ],
+          "ref_table": "alarms",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [
+        {
+          "name": null,
+          "columns": [
+            "dedupe_key"
+          ]
+        }
+      ],
+      "indexes": [],
+      "checks": []
+    },
+    "notifications": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "dedupe_key",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "sent_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [],
+      "unique_constraints": [
+        {
+          "name": null,
+          "columns": [
+            "dedupe_key"
+          ]
+        }
+      ],
+      "indexes": [],
+      "checks": []
+    },
+    "okrs": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "confidence",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": 0,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "description",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "objective",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "period_end",
+          "type": "DATE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "period_start",
+          "type": "DATE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "okrstatus",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "pending",
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "owner_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "perms": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "description",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [],
+      "unique_constraints": [
+        {
+          "name": null,
+          "columns": [
+            "name"
+          ]
+        }
+      ],
+      "indexes": [],
+      "checks": []
+    },
+    "project_notifications": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "channel_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "is_enabled",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": true,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "project_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "rules",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "channel_id"
+          ],
+          "ref_table": "notification_channels",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "project_id"
+          ],
+          "ref_table": "projects",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "projects": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "archived_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "area_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "cognitive_cost",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "description",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "end_date",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "metrics",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "neural_priority",
+          "type": "FLOAT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "schedule",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "slug",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "start_date",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "projectstatus",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "active",
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "area_id"
+          ],
+          "ref_table": "areas",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "owner_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "resources": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "archived_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "content",
+          "type": "VARCHAR(2000)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "meta",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "type",
+          "type": "VARCHAR(50)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "owner_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "roles": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "description",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "level",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": 0,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [],
+      "unique_constraints": [
+        {
+          "name": null,
+          "columns": [
+            "name"
+          ]
+        }
+      ],
+      "indexes": [],
+      "checks": []
+    },
+    "schedule_exceptions": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "date",
+          "type": "DATE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "reason",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "task_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "task_id"
+          ],
+          "ref_table": "tasks",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "task_checkpoints": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "completed",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": false,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "completed_at",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "task_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "task_id"
+          ],
+          "ref_table": "tasks",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "tasks": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "area_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "cognitive_cost",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "custom_properties",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "description",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "due_date",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "estimate_minutes",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "excluded_dates",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "neural_priority",
+          "type": "FLOAT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "project_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "recurrence",
+          "type": "VARCHAR(50)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "repeat_config",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "reschedule_count",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": 0,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "schedule_type",
+          "type": "VARCHAR(50)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "taskstatus",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "todo",
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "area_id"
+          ],
+          "ref_table": "areas",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "owner_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "project_id"
+          ],
+          "ref_table": "projects",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "time_entries": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "activity_type",
+          "type": "activitytype",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "work",
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "area_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "billable",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": true,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "description",
+          "type": "VARCHAR(500)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "end_time",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "project_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "source",
+          "type": "timesource",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "timer",
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "start_time",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "task_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "area_id"
+          ],
+          "ref_table": "areas",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "owner_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "project_id"
+          ],
+          "ref_table": "projects",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "task_id"
+          ],
+          "ref_table": "tasks",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "user_group": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "group_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "is_moderator",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": false,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "is_owner",
+          "type": "BOOLEAN",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": false,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "joined_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "user_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "user_id",
+        "group_id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "group_id"
+          ],
+          "ref_table": "groups",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "user_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "user_roles": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "expires_at",
+          "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "role_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "role_id"
+          ],
+          "ref_table": "roles",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "user_id"
+          ],
+          "ref_table": "users_web",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "user_settings": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "key",
+          "type": "VARCHAR(64)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": "now()",
+          "comment": ""
+        },
+        {
+          "name": "user_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "value",
+          "type": "JSONB",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "user_id"
+          ],
+          "ref_table": "users_web",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "CASCADE",
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [
+        {
+          "name": "uq_user_settings_user_key",
+          "columns": [
+            "user_id",
+            "key"
+          ]
+        }
+      ],
+      "indexes": [],
+      "checks": []
+    },
+    "users_favorites": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "label",
+          "type": "VARCHAR(40)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "path",
+          "type": "VARCHAR(128)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "position",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": 0,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "owner_id"
+          ],
+          "ref_table": "users_web",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [
+        {
+          "name": null,
+          "columns": [
+            "owner_id",
+            "path"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_users_favorites_owner_position",
+          "columns": [
+            "owner_id",
+            "position"
+          ],
+          "unique": false
+        }
+      ],
+      "checks": []
+    },
+    "users_tg": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "bot_settings",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "first_name",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "ics_token_hash",
+          "type": "VARCHAR(64)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "language_code",
+          "type": "VARCHAR(10)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "last_name",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "role",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "single",
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "telegram_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "username",
+          "type": "VARCHAR(32)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [],
+      "unique_constraints": [
+        {
+          "name": null,
+          "columns": [
+            "telegram_id"
+          ]
+        },
+        {
+          "name": null,
+          "columns": [
+            "username"
+          ]
+        }
+      ],
+      "indexes": [],
+      "checks": []
+    },
+    "users_web": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "birthday",
+          "type": "DATE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "full_name",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "language",
+          "type": "VARCHAR(10)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "password_hash",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "phone",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "privacy_settings",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "role",
+          "type": "VARCHAR(20)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "single",
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "username",
+          "type": "VARCHAR(64)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [],
+      "unique_constraints": [
+        {
+          "name": null,
+          "columns": [
+            "username"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_users_web_username_ci",
+          "columns": [
+            "username"
+          ],
+          "unique": true
+        }
+      ],
+      "checks": []
+    },
+    "users_web_tg": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "link_type",
+          "type": "VARCHAR(50)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "tg_user_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "web_user_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "tg_user_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "web_user_id"
+          ],
+          "ref_table": "users_web",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [
+        {
+          "name": null,
+          "columns": [
+            "tg_user_id"
+          ]
+        }
+      ],
+      "indexes": [],
+      "checks": []
+    }
+  }
+}

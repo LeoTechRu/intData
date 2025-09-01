@@ -30,6 +30,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Check DB schema up-to-date
+        run: python -m tools.schema_export check
+
       - name: Run tests
         env:
           TG_BOT_TOKEN: "testtoken"

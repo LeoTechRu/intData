@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Машиночитаемая схема БД (`core/db/SCHEMA.*`) и утилита `tools.schema_export` с проверкой в CI.
 - user_settings table for extensible per-user preferences.
 - API `/api/v1/user/settings` to read and write settings.
 - Repair step to migrate legacy favorites into user_settings.
