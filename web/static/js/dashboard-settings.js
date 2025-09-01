@@ -11,8 +11,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     if (resp.ok) {
       const data = await resp.json();
-      layout = data.dashboard_layout || layout;
-      favorites = data.favorites || favorites;
+      // Merge with defaults to avoid missing keys
+      layout = Object.assign({ v: 1, layouts: {}, hidden: [] }, data.dashboard_layout || {});
+      favorites = Object.assign({ v: 1, items: [] }, data.favorites || {});
     }
   } catch {}
 
@@ -50,7 +51,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (favForm) {
     favForm.querySelectorAll('input[type="checkbox"]').forEach((input) => {
       const path = input.name;
-      input.checked = favorites.items.some((it) => it.path === path);
+      // If no favorites saved yet, select all by default
+      input.checked =
+        favorites.items.length === 0 || favorites.items.some((it) => it.path === path);
     });
 
     favForm.addEventListener('submit', async (e) => {

@@ -3,10 +3,10 @@
 {% block content %}
 <div class="ui-layout">
     <div id="main-content">
-        <section id="users-web">
-            <h1>Web users</h1>
+        <section id="users-web" class="card">
+            <div class="card-title">Web users</div>
             {% if users_web %}
-            <table border="1" cellpadding="4" cellspacing="0">
+            <table class="ui-table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -49,10 +49,10 @@
             {% endif %}
         </section>
 
-        <section id="users">
-            <h1>Telegram users</h1>
+        <section id="users" class="card" style="margin-top:1rem;">
+            <div class="card-title">Telegram users</div>
             {% if users_tg %}
-            <table border="1" cellpadding="4" cellspacing="0">
+            <table class="ui-table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -85,8 +85,8 @@
             {% endif %}
         </section>
 
-        <section id="groups">
-            <h1>Groups</h1>
+        <section id="groups" class="card" style="margin-top:1rem;">
+            <div class="card-title">Groups</div>
             <ul>
                 {% for item in groups %}
                 <li>
