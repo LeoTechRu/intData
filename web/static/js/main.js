@@ -75,7 +75,7 @@ import { initPersonaHeader } from './persona-header.js';
 import { API_BASE } from './services/apiBase.js';
 
 let userFavorites = { v: 1, items: [] };
-let dashboardLayout = { v: 1, layouts: {}, hidden: [] };
+let dashboardLayout = { v: 1, layouts: {}, widgets: [], hidden: [] };
 
 function renderFavorites() {
     const favBox = document.querySelector('[data-fav-box]');
@@ -176,12 +176,20 @@ export async function saveDashboardLayout(layout) {
 }
 
 function applyDashboardLayout() {
-    const hidden = (dashboardLayout === null || dashboardLayout === void 0 ? void 0 : dashboardLayout.hidden) || [];
+    const widgets = dashboardLayout === null || dashboardLayout === void 0 ? void 0 : dashboardLayout.widgets;
+    const hidden = dashboardLayout === null || dashboardLayout === void 0 ? void 0 : dashboardLayout.hidden;
     document.querySelectorAll('[data-widget]').forEach((el) => {
         const key = el.dataset.widget;
         if (!key)
             return;
-        el.hidden = hidden.includes(key);
+        let hide = false;
+        if (Array.isArray(widgets) && widgets.length > 0) {
+            hide = !widgets.includes(key);
+        }
+        else if (Array.isArray(hidden) && hidden.length > 0) {
+            hide = hidden.includes(key);
+        }
+        el.hidden = hide;
     });
 }
 

@@ -121,7 +121,7 @@ export function initProfileEditForm() {
 }
 
 let userFavorites: { v: number; items: any[] } = { v: 1, items: [] };
-let dashboardLayout: any = { v: 1, layouts: {}, hidden: [] };
+let dashboardLayout: any = { v: 1, layouts: {}, widgets: [], hidden: [] };
 
 function renderFavorites() {
   const favBox = document.querySelector('[data-fav-box]') as HTMLUListElement | null;
@@ -219,11 +219,18 @@ export async function saveDashboardLayout(layout: any) {
 }
 
 function applyDashboardLayout() {
-  const hidden = dashboardLayout?.hidden || [];
+  const widgets = dashboardLayout?.widgets;
+  const hidden = dashboardLayout?.hidden;
   document.querySelectorAll('[data-widget]').forEach((el) => {
     const key = (el as HTMLElement).dataset.widget;
     if (!key) return;
-    (el as HTMLElement).hidden = hidden.includes(key);
+    let hide = false;
+    if (Array.isArray(widgets) && widgets.length > 0) {
+      hide = !widgets.includes(key);
+    } else if (Array.isArray(hidden) && hidden.length > 0) {
+      hide = hidden.includes(key);
+    }
+    (el as HTMLElement).hidden = hide;
   });
 }
 

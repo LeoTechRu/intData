@@ -18,7 +18,7 @@ Expected JSON shapes::
         "columns": 12,
         "gutter": 12,
         "layouts": {"lg": [{"id": "profile_card", "x": 0, "y": 0, "w": 4, "h": 2}], ...},
-        "hidden": []
+        "widgets": []
     }
 """
 
