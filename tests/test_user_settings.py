@@ -85,7 +85,7 @@ async def test_api_defaults_and_put(monkeypatch):
         user = await wsvc.register(username="u_api", password="pw")
 
     app = FastAPI()
-    app.include_router(settings_router)
+    app.include_router(settings_router, prefix="/api/v1")
 
     def override_user():
         return WebUser(id=user.id, username="u_api")

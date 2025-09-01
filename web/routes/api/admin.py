@@ -6,7 +6,7 @@ from core.services.telegram_user_service import TelegramUserService
 from ...dependencies import role_required
 
 
-router = APIRouter(tags=["admin"])
+router = APIRouter(prefix="/admin", tags=["admin"])
 
 
 @router.post("/role/{telegram_id}")

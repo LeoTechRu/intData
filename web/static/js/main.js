@@ -346,7 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const content = (fd.get('content') || '').toString().trim();
     if (!content) return;
 
-    const r = await fetch('/api/v1/notes', {
+    const r = await fetch(`${API_BASE}/notes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -462,7 +462,7 @@ activate(hash && forms[hash] ? hash : defaultTab);
       const ul = q('#wTasksList'); if (!ul) return; ul.innerHTML='…';
       let items = [];
       try{
-        const r = await fetch('/api/v1/tasks', {credentials:'same-origin'});
+        const r = await fetch(`${API_BASE}/tasks`, {credentials:'same-origin'});
         const data = await r.json();
         items = Array.isArray(data) ? data.filter(t=> (t.due_date||'').startsWith(todayISO())) : [];
       }catch{}
@@ -478,7 +478,7 @@ activate(hash && forms[hash] ? hash : defaultTab);
       const ev = q('#wEvents'); if (!ev) return;
       ev.innerHTML = '…';
       let C=[];
-      try{ const r=await fetch('/api/v1/calendar',  {credentials:'same-origin'}); const data=await r.json(); C = Array.isArray(data)? data.filter(x=> (x.start_at||'').startsWith(todayISO())):[]; }catch{}
+      try{ const r=await fetch(`${API_BASE}/calendar`,  {credentials:'same-origin'}); const data=await r.json(); C = Array.isArray(data)? data.filter(x=> (x.start_at||'').startsWith(todayISO())):[]; }catch{}
       const fill = (ul, arr, empty)=>{ ul.innerHTML = arr.length? '' : `<li class="muted">${empty}</li>`;
         arr.slice(0,6).forEach(x=>{
           const li=document.createElement('li');
@@ -501,7 +501,7 @@ activate(hash && forms[hash] ? hash : defaultTab);
       const ta = q('#wNoteText');
       const text = (ta && ta.value || '').trim(); if (!text) return;
       try{
-        await fetch('/api/v1/notes', {
+        await fetch(`${API_BASE}/notes`, {
           method:'POST', credentials:'same-origin',
           headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ content: text })

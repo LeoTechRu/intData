@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Унифицирована работа с паролями через обёртку `core.db.bcrypt` и `WebUserService`.
+- API обслуживается под `/api/v1` с заголовком `X-API-Version`; старые пути `/api/*` редиректятся (308) на новую схему, Swagger доступен по `/api`.
 - `LogLevel` переведён на числовой `IntEnum` для корректных сравнений.
 - Обновлены шаблоны и хэндлеры под текущее API FastAPI/Starlette; переход на lifespan‑события.
 - API жёстко переведён на `/api/v1` без редиректов и хвостовых слэшей; старые `/api/*` возвращают `404`.

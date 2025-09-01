@@ -1,1 +1,1 @@
-export const API_BASE = "/api/v1";
+export const API_BASE = (window as any).API_BASE as string;

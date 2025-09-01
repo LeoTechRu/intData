@@ -23,8 +23,9 @@
 </div>
 
 <script>
+const B = window.API_BASE;
 async function fetchEvents(){
-  const resp = await fetch('/api/v1/calendar', {credentials:'include'});
+  const resp = await fetch(`${B}/calendar`, {credentials:'include'});
   if (!resp.ok){
     const empty = document.getElementById('event-empty');
     empty.textContent = 'Требуется вход и связанный Telegram-аккаунт';
@@ -55,7 +56,7 @@ async function fetchEvents(){
 }
 
 async function fetchAlarms(itemId, container, btn){
-  const resp = await fetch(`/api/v1/calendar/items/${itemId}/alarms`, {credentials:'include'});
+  const resp = await fetch(`${B}/calendar/items/${itemId}/alarms`, {credentials:'include'});
   if(!resp.ok) return [];
   const alarms = await resp.json();
   container.innerHTML = '';
@@ -116,7 +117,7 @@ function addEventRow(e){
     const startVal = tr.querySelector('input[name=start_at]').value;
     const endVal = tr.querySelector('input[name=end_at]').value;
     const payload = {title, start_at: new Date(startVal).toISOString(), end_at: endVal ? new Date(endVal).toISOString() : null, description: description || null};
-    const resp = await fetch('/api/v1/calendar', {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload)});
+    const resp = await fetch(`${B}/calendar`, {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload)});
     if(resp.ok){ fetchEvents(); }
     removeForm();
   });
@@ -159,7 +160,7 @@ function showAlarmForm(btn){
 
   save.addEventListener('click', async ()=>{
     const payload = {trigger_at: new Date(input.value).toISOString()};
-    const resp = await fetch(`/api/v1/calendar/items/${btn.dataset.id}/alarms`, {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload)});
+    const resp = await fetch(`${B}/calendar/items/${btn.dataset.id}/alarms`, {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload)});
     if(resp.ok){
       const cell = btn.parentElement;
       fetchAlarms(btn.dataset.id, cell.querySelector('.alarm-list'), btn);

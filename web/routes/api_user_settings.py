@@ -10,7 +10,7 @@ from core.services.user_settings_service import UserSettingsService
 from web.dependencies import get_current_web_user
 from .settings import FAVORITE_PAGES
 
-router = APIRouter(prefix="/api/v1/user/settings", tags=["user-settings"])
+router = APIRouter(prefix="/user/settings", tags=["user-settings"])
 
 DEFAULT_KEYS = ["dashboard_layout", "favorites"]
 
