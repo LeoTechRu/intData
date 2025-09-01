@@ -13,7 +13,7 @@ async function loadProjects(area_id){
 
 function noteCardHTML(n){
   return `
-  <article class="c-card" data-note-id="${n.id}">
+  <article class="c-card note-card ${n.color||''}" data-note-id="${n.id}">
     <div class="c-card__top">
       <button class="ui-iconbtn ui-iconbtn--danger js-del" aria-label="Удалить" data-tooltip="Удалить"><svg><use href="#i-trash"/></svg></button>
     </div>
@@ -29,7 +29,7 @@ function noteCardHTML(n){
 }
 
 document.addEventListener('DOMContentLoaded', async ()=>{
-  const grid = document.getElementById('notes-grid');
+  const grid = document.getElementById('notesGrid');
   const form = document.getElementById('quick-note');
   if (!grid) return;
 
@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 
       saveBtn.addEventListener('click', async ()=>{
         const content = ta.value.trim();
-        await api(`/api/v1/notes/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({content}) });
+        await api(`/api/v1/notes/${id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({content}) });
         ta.replaceWith(Object.assign(document.createElement('div'),{className:'c-card__content', textContent: content}));
         panel.replaceChildren(left, ed);
       });

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from typing import List, Optional
+from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status, Query
 from pydantic import BaseModel
 
 from core.models import Note, TgUser, ContainerType, WebUser
@@ -17,15 +18,21 @@ ui_router = APIRouter(prefix="/notes", tags=["notes"], include_in_schema=False)
 
 
 class NoteCreate(BaseModel):
+    title: Optional[str] = None
     content: str
     area_id: Optional[int] = None
     project_id: Optional[int] = None
+    color: Optional[str] = None
 
 
 class NoteUpdate(BaseModel):
+    title: Optional[str] = None
     content: Optional[str] = None
     area_id: Optional[int] = None
     project_id: Optional[int] = None
+    color: Optional[str] = None
+    pinned: Optional[bool] = None
+    archived_at: Optional[datetime] = None
 
 
 class AreaOut(BaseModel):
@@ -41,7 +48,12 @@ class ProjectOut(BaseModel):
 
 class NoteResponse(BaseModel):
     id: int
+    title: Optional[str] = None
     content: str
+    color: Optional[str] = None
+    pinned: bool = False
+    archived_at: Optional[datetime] = None
+    order_index: int
     area: AreaOut
     project: Optional[ProjectOut] = None
 
@@ -51,10 +63,21 @@ class NoteResponse(BaseModel):
         project = note.project
         return cls(
             id=note.id,
+            title=note.title,
             content=note.content,
+            color=note.color,
+            pinned=note.pinned,
+            archived_at=note.archived_at,
+            order_index=note.order_index,
             area=AreaOut(id=area.id, name=area.name, slug=getattr(area, "slug", None)),
             project=ProjectOut(id=project.id, name=project.name) if project else None,
         )
+
+
+class NoteReorder(BaseModel):
+    area_id: Optional[int] = None
+    project_id: Optional[int] = None
+    ids: List[int]
 
 
 class NoteAssign(BaseModel):
@@ -67,7 +90,11 @@ async def list_notes(
     current_user: TgUser | None = Depends(get_current_tg_user),
     area_id: Optional[int] = Query(default=None),
     project_id: Optional[int] = Query(default=None),
+    pinned: Optional[bool] = Query(default=None),
+    archived: bool = Query(default=False),
     q: Optional[str] = Query(default=None),
+    limit: int = Query(default=100),
+    offset: int = Query(default=0),
 ):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
@@ -76,7 +103,11 @@ async def list_notes(
             owner_id=current_user.telegram_id,
             area_id=area_id,
             project_id=project_id,
+            pinned=pinned,
+            archived=archived,
             q=q,
+            limit=limit,
+            offset=offset,
         )
     return [NoteResponse.from_model(n) for n in notes]
 
@@ -117,9 +148,11 @@ async def create_note(
     async with NoteService() as service:
         note = await service.create_note(
             owner_id=current_user.telegram_id,
+            title=payload.title,
             content=payload.content,
             area_id=area_id,
             project_id=payload.project_id,
+            color=payload.color,
         )
         await service.session.refresh(note, attribute_names=["area", "project"])
         result = NoteResponse.from_model(note)
@@ -176,7 +209,7 @@ async def delete_note(
         await service.delete_note(note_id)
 
 
-@router.put("/{note_id}", response_model=NoteResponse)
+@router.patch("/{note_id}", response_model=NoteResponse)
 async def update_note(
     note_id: int,
     payload: NoteUpdate,
@@ -190,13 +223,62 @@ async def update_note(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         note = await service.update_note(
             note_id,
+            title=payload.title,
             content=payload.content,
             area_id=payload.area_id,
             project_id=payload.project_id,
+            color=payload.color,
+            pinned=payload.pinned,
+            archived_at=payload.archived_at,
         )
         await service.session.refresh(note, attribute_names=["area", "project"])
         result = NoteResponse.from_model(note)
     return result
+
+
+@router.post("/{note_id}/archive", status_code=status.HTTP_204_NO_CONTENT)
+async def archive_note(
+    note_id: int,
+    current_user: TgUser | None = Depends(get_current_tg_user),
+):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    async with NoteService() as service:
+        ok = await service.archive(note_id, owner_id=current_user.telegram_id)
+        if not ok:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/{note_id}/unarchive", status_code=status.HTTP_204_NO_CONTENT)
+async def unarchive_note(
+    note_id: int,
+    current_user: TgUser | None = Depends(get_current_tg_user),
+):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    async with NoteService() as service:
+        ok = await service.unarchive(note_id, owner_id=current_user.telegram_id)
+        if not ok:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/reorder", status_code=status.HTTP_204_NO_CONTENT)
+async def reorder_notes(
+    payload: NoteReorder,
+    current_user: TgUser | None = Depends(get_current_tg_user),
+):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    async with NoteService() as service:
+        await service.reorder(
+            owner_id=current_user.telegram_id,
+            area_id=payload.area_id,
+            project_id=payload.project_id,
+            ids=payload.ids,
+        )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @ui_router.get("")

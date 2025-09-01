@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/notes.css') }}">
+{% endblock %}
 {% block content %}
 <section class="page" aria-labelledby="h-notes">
   <h1 id="h-notes">Заметки</h1>
@@ -22,9 +25,9 @@
   </form>
 
   <!-- Сетка карточек -->
-  <div id="notes-grid" class="cards-grid" aria-live="polite">
+  <div id="notesGrid" class="notes-grid cards-grid" aria-live="polite">
     {% for n in notes %}
-    <article class="c-card" data-note-id="{{n.id}}">
+    <article class="c-card note-card {{ n.color }}" data-note-id="{{n.id}}">
       <div class="c-card__top">
         <button class="ui-iconbtn ui-iconbtn--danger js-del" aria-label="Удалить" data-tooltip="Удалить">
           <svg><use href="#i-trash"/></svg>

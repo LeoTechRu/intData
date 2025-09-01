@@ -496,12 +496,15 @@ class Note(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
-    title = Column(String(255))
+    title = Column(Text)
     content = Column(Text, nullable=False)
     area_id = Column(Integer, ForeignKey("areas.id"), nullable=False)
     project_id = Column(Integer, ForeignKey("projects.id"))
     container_type = Column(Enum(ContainerType))
     container_id = Column(Integer)
+    color = Column(String(20))
+    pinned = Column(Boolean, default=False)
+    order_index = Column(Integer, default=0)
     archived_at = Column(DateTime(timezone=True))
     created_at = Column(DateTime(timezone=True), default=utcnow)
     updated_at = Column(

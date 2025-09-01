@@ -1,0 +1,14 @@
+.notes-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:12px;
+  align-items:start;
+}
+
+.note-card{ background:var(--note-bg); color:var(--note-fg); border-radius:12px; box-shadow:var(--shadow-sm); padding:12px }
+
+.note-yellow{ --note-bg:#FEF3C7; --note-fg:#111 }
+.note-mint{ --note-bg:#DCFCE7; --note-fg:#111 }
+.note-blue{ --note-bg:#DBEAFE; --note-fg:#111 }
+.note-pink{ --note-bg:#FCE7F3; --note-fg:#111 }
+.note-gray{ --note-bg:#F3F4F6; --note-fg:#111 }
