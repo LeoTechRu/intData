@@ -3,8 +3,9 @@ from __future__ import annotations
 
 from typing import Generic, TypeVar, Type, Optional, List
 
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from core import db
 from core.models import (
@@ -98,14 +99,43 @@ class HabitService(CRUDService[Habit]):
         super().__init__(Habit, session)
 
     async def create_habit(
-        self, owner_id: int, name: str, frequency: str = "daily"
+        self,
+        owner_id: int,
+        name: str,
+        frequency: str = "daily",
+        *,
+        area_id: int | None = None,
+        project_id: int | None = None,
     ) -> Habit:
         if frequency not in {"daily", "weekly", "monthly"}:
             raise ValueError("Invalid frequency")
-        return await self.create(owner_id=owner_id, name=name, frequency=frequency)
+        if project_id is not None:
+            project = await self.session.get(Project, project_id)
+            if project is None or project.owner_id != owner_id:
+                raise PermissionError("Project not found or belongs to different owner")
+            area_id = project.area_id
+        if area_id is None:
+            inbox = await self._ensure_inbox(owner_id)
+            area_id = inbox.id
+        return await self.create(
+            owner_id=owner_id,
+            name=name,
+            frequency=frequency,
+            area_id=area_id,
+            project_id=project_id,
+        )
 
     async def list_habits(self, owner_id: int) -> List[Habit]:
-        return await self.list(owner_id=owner_id)
+        stmt = (
+            select(Habit)
+            .where(Habit.owner_id == owner_id)
+            .options(
+                selectinload(Habit.area),
+                selectinload(Habit.project),
+            )
+        )
+        res = await self.session.execute(stmt)
+        return res.scalars().all()
 
     async def toggle_progress(self, habit_id: int, day: date) -> Habit | None:
         habit = await self.get(habit_id)
@@ -120,6 +150,20 @@ class HabitService(CRUDService[Habit]):
         if habit is None:
             return []
         return generate_calendar(habit, None)
+
+    async def _ensure_inbox(self, owner_id: int) -> Area:
+        stmt = select(Area).where(
+            Area.owner_id == owner_id,
+            or_(Area.slug == "inbox", Area.name.ilike("входящие")),
+        )
+        res = await self.session.execute(stmt)
+        inbox = res.scalar_one_or_none()
+        if inbox is None:
+            inbox = Area(owner_id=owner_id, name="Входящие", title="Входящие")
+            inbox.slug = "inbox"
+            self.session.add(inbox)
+            await self.session.flush()
+        return inbox
 
 
 class ResourceService(CRUDService[Resource]):

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -19,6 +19,19 @@ class HabitCreate(BaseModel):
 
     name: str
     frequency: str = Field(..., pattern="^(daily|weekly|monthly)$")
+    area_id: Optional[int] = None
+    project_id: Optional[int] = None
+
+
+class AreaOut(BaseModel):
+    id: int
+    name: str
+    slug: Optional[str] = None
+
+
+class ProjectOut(BaseModel):
+    id: int
+    name: str
 
 
 class HabitResponse(BaseModel):
@@ -26,18 +39,23 @@ class HabitResponse(BaseModel):
 
     id: int
     name: str
-    frequency: str | None
+    frequency: str
     progress: List[str]
+    area: AreaOut
+    project: Optional[ProjectOut] = None
 
     @classmethod
     def from_model(cls, habit: Habit) -> "HabitResponse":
-        schedule = habit.schedule or {}
-        metrics = habit.metrics or {}
+        progress = [k for k, v in (habit.progress or {}).items() if v]
+        area = habit.area
+        project = habit.project
         return cls(
             id=habit.id,
             name=habit.name,
-            frequency=schedule.get("frequency"),
-            progress=list(metrics.get("progress", [])),
+            frequency=habit.frequency,
+            progress=progress,
+            area=AreaOut(id=area.id, name=area.name, slug=getattr(area, "slug", None)),
+            project=ProjectOut(id=project.id, name=project.name) if project else None,
         )
 
 
@@ -50,7 +68,7 @@ async def list_habits(current_user: TgUser | None = Depends(get_current_tg_user)
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     async with HabitService() as service:
-        habits = await service.list(owner_id=current_user.telegram_id)
+        habits = await service.list_habits(owner_id=current_user.telegram_id)
     return [HabitResponse.from_model(h) for h in habits]
 
 
@@ -61,12 +79,14 @@ async def create_habit(
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     async with HabitService() as service:
-        habit = await service.create(
+        habit = await service.create_habit(
             owner_id=current_user.telegram_id,
             name=payload.name,
-            schedule={"frequency": payload.frequency},
-            metrics={"progress": []},
+            frequency=payload.frequency,
+            area_id=payload.area_id,
+            project_id=payload.project_id,
         )
+        await service.session.refresh(habit, attribute_names=["area", "project"])
     return HabitResponse.from_model(habit)
 
 
@@ -84,18 +104,8 @@ async def toggle_habit_progress(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         if habit.owner_id != current_user.telegram_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
-        if hasattr(service, "toggle_progress"):
-            updated = await service.toggle_progress(habit_id, payload.date)
-        else:
-            metrics = habit.metrics or {}
-            progress = metrics.get("progress", [])
-            date_str = payload.date.isoformat()
-            if date_str in progress:
-                progress.remove(date_str)
-            else:
-                progress.append(date_str)
-            metrics["progress"] = progress
-            updated = await service.update(habit_id, metrics=metrics)
+        updated = await service.toggle_progress(habit_id, payload.date)
+        await service.session.refresh(updated, attribute_names=["area", "project"])
     return HabitResponse.from_model(updated)
 
 

@@ -38,6 +38,7 @@
 - **Google Sync**: `syncToken`, `channels.watch` (`resource_id`, `channel_id`, `expiration`), `extendedProperties.private`.
 - **Telegram**: уведомления по проектным каналам (`chat_id < 0`), правила `on_create`, `on_change_time`, `pre_due`, `digest_weekly`.
 - **Tasks** наследует `area_id` проекта; дефолтная Area «Входящие» (per user/workspace, создаётся автоматически и не удаляется).
+- **Habits** требуют `area_id`, `project_id` опционален; при наличии проекта наследуют его `area_id`, по умолчанию используются «Входящие».
 - **Subjective overrides**: `para_overrides(owner, entity_type, entity_id, override_project_id?, override_area_id?)` позволяют пользователю видеть сущности в другой области без дублирования данных.
 - **Таймер**: один активный на пользователя (`UNIQUE` индекс `WHERE stopped_at IS NULL`).
 

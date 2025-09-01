@@ -452,6 +452,8 @@ class Habit(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
+    area_id = Column(Integer, ForeignKey("areas.id"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.id"))
     name = Column(String(255), nullable=False)
     description = Column(String(500))
     schedule = Column(JSON, default=dict)
@@ -462,6 +464,9 @@ class Habit(Base):
     end_date = Column(DateTime)
     created_at = Column(DateTime, default=utcnow)
     updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+
+    area = relationship("Area")
+    project = relationship("Project")
 
     def toggle_progress(self, day: date) -> None:
         today = date.today()

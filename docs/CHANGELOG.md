@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Визуал заметок в стиле Google Keep с цветными карточками и закреплением.
 - Цвет заметок, закрепление, архив и сортировка drag-and-drop.
 - Эндпоинты `/api/v1/notes/{id}/archive`, `/api/v1/notes/{id}/unarchive`, `/api/v1/notes/reorder`.
+- Привычки требуют `area_id` (проект опционален); `/api/v1/habits` возвращает данные области и проекта, по умолчанию используется «Входящие».
 
 ### Changed
 - Унифицирована работа с паролями через обёртку `core.db.bcrypt` и `WebUserService`.

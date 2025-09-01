@@ -1,8 +1,8 @@
 {
   "version": 1,
   "dialect": "postgresql",
-  "generated_at": "2025-09-01T19:19:13Z",
-  "metadata_hash": "6ca27e979a9d55f2f6854545551d2dae8132d999e798357393e5cfab513b8a56",
+  "generated_at": "2025-09-01T21:14:54Z",
+  "metadata_hash": "367fdda9f8fb0e555b000a30cb9c26809129331b8bcb08ad551bf454040166a8",
   "enums": [
     {
       "name": "activitytype",
@@ -1099,6 +1099,16 @@
       "comment": "",
       "columns": [
         {
+          "name": "area_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
           "name": "created_at",
           "type": "TIMESTAMP WITHOUT TIME ZONE",
           "nullable": true,
@@ -1189,6 +1199,16 @@
           "comment": ""
         },
         {
+          "name": "project_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
           "name": "schedule",
           "type": "JSON",
           "nullable": true,
@@ -1226,11 +1246,35 @@
         {
           "name": null,
           "columns": [
+            "area_id"
+          ],
+          "ref_table": "areas",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
             "owner_id"
           ],
           "ref_table": "users_tg",
           "ref_columns": [
             "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "project_id"
+          ],
+          "ref_table": "projects",
+          "ref_columns": [
+            "id"
           ],
           "ondelete": null,
           "onupdate": null
