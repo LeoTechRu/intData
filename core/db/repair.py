@@ -166,6 +166,42 @@ def backfill_projects_area(conn: Connection) -> int:
     return updated
 
 
+def backfill_habits_area(conn: Connection) -> int:
+    """Assign area to habits using project inheritance or default area."""
+    if not _table_exists(conn, "habits"):
+        return 0
+    try:
+        rows = conn.execute(
+            sa.text(
+                "SELECT id, owner_id, project_id, area_id FROM habits"
+            )
+        ).fetchall()
+    except Exception:
+        rows = []
+    updated = 0
+    for hid, owner_id, project_id, area_id in rows:
+        target_area = area_id
+        if project_id:
+            target_area = conn.execute(
+                sa.text("SELECT area_id FROM projects WHERE id=:p"),
+                {"p": project_id},
+            ).scalar()
+        elif area_id is None:
+            target_area = _get_default_area(conn, owner_id)
+        if target_area and target_area != area_id:
+            conn.execute(
+                sa.text("UPDATE habits SET area_id=:a WHERE id=:i"),
+                {"a": target_area, "i": hid},
+            )
+            updated += 1
+    try:
+        conn.execute(sa.text("ALTER TABLE habits ALTER COLUMN area_id SET NOT NULL"))
+    except Exception as exc:  # pragma: no cover - log and continue
+        logger.warning("habits area not null failed: %s", exc)
+    logger.info("backfill_habits_area: updated=%s", updated)
+    return updated
+
+
 def backfill_tasks_resources(conn: Connection) -> dict[str, int]:
     """Ensure tasks/resources inherit area from project or default area."""
     updated_ci = 0
@@ -356,6 +392,7 @@ def run_repair(conn: Connection) -> dict[str, object]:
     _step("default_areas", ensure_default_areas)
     _step("notes_area", backfill_notes_area)
     _step("projects_area", backfill_projects_area)
+    _step("habits_area", backfill_habits_area)
     _step("tasks_resources", backfill_tasks_resources)
     _step("time_entries", backfill_time_entries)
     _step("migrate_favorites", _migrate_favorites)

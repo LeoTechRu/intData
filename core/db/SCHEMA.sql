@@ -118,6 +118,8 @@ CREATE TABLE groups (
 CREATE TABLE habits (
 	id SERIAL NOT NULL, 
 	owner_id BIGINT, 
+	area_id INTEGER NOT NULL, 
+	project_id INTEGER, 
 	name VARCHAR(255) NOT NULL, 
 	description VARCHAR(500), 
 	schedule JSON, 
@@ -129,7 +131,9 @@ CREATE TABLE habits (
 	created_at TIMESTAMP WITHOUT TIME ZONE, 
 	updated_at TIMESTAMP WITHOUT TIME ZONE, 
 	PRIMARY KEY (id), 
-	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id)
+	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id), 
+	FOREIGN KEY(area_id) REFERENCES areas (id), 
+	FOREIGN KEY(project_id) REFERENCES projects (id)
 );
 
 CREATE TABLE interfaces (
