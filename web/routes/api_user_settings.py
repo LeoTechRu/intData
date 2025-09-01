@@ -5,23 +5,28 @@ from typing import Dict, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from core.models import WebUser
+from core.models import WebUser, UserRole
 from core.services.user_settings_service import UserSettingsService
 from web.dependencies import get_current_web_user
+from .settings import FAVORITE_PAGES
 
 router = APIRouter(prefix="/api/v1/user/settings", tags=["user-settings"])
 
 DEFAULT_KEYS = ["dashboard_layout", "favorites"]
 
-DEFAULT_FAVORITES = {
-    "v": 1,
-    "items": [
-        {"label": "Задачи", "path": "/tasks", "position": 1},
-        {"label": "Календарь", "path": "/calendar", "position": 2},
-        {"label": "Напоминания", "path": "/reminders", "position": 3},
-        {"label": "Время", "path": "/time", "position": 4},
-    ],
-}
+# Build default favorites dynamically based on accessible pages
+def _default_favorites(role: UserRole) -> dict:
+    items = []
+    for page in FAVORITE_PAGES:
+        if role >= page["min_role"]:
+            items.append(
+                {
+                    "label": page["label"],
+                    "path": page["path"],
+                    "position": len(items) + 1,
+                }
+            )
+    return {"v": 1, "items": items}
 
 DEFAULT_DASHBOARD_LAYOUT = {
     "v": 1,
@@ -56,12 +61,13 @@ async def list_settings(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     want = [k.strip() for k in keys.split(",")] if keys else DEFAULT_KEYS
     result: Dict[str, Dict | None] = {}
+    role_enum = UserRole[current_user.role] if getattr(current_user, "role", None) else UserRole.single
     async with UserSettingsService() as svc:
         for key in want:
             val = await svc.get(current_user.id, key)
             if val is None:
                 if key == "favorites":
-                    val = DEFAULT_FAVORITES
+                    val = _default_favorites(role_enum)
                 elif key == "dashboard_layout":
                     val = DEFAULT_DASHBOARD_LAYOUT
             result[key] = val
@@ -77,8 +83,9 @@ async def get_setting(
     async with UserSettingsService() as svc:
         value = await svc.get(current_user.id, key)
     if value is None:
+        role_enum = UserRole[current_user.role] if getattr(current_user, "role", None) else UserRole.single
         if key == "favorites":
-            value = DEFAULT_FAVORITES
+            value = _default_favorites(role_enum)
         elif key == "dashboard_layout":
             value = DEFAULT_DASHBOARD_LAYOUT
     return {"key": key, "value": value}
