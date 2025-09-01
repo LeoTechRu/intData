@@ -32,12 +32,12 @@
 - M5 Insights — P2•M — ревью Areas, отчёты по времени.
 
 ## Решения по архитектуре (ПРОЧНО)
-- **PARA-инвариант**: `project_id` OR `area_id` обязателен для каждого `CalendarItem`, `Task` и `TimeEntry`.
+- **PARA-инвариант**: `project_id` OR `area_id` обязателен для каждого `CalendarItem`, `Task` и `TimeEntry`; все сущности без контейнера попадают в системную область «Входящие».
 - **Alarm** — часть `CalendarItem` (эквивалент `VALARM`).
 - **Время**: UTC + `tzid`, поддержка `RRULE` без материализации бесконечного ряда.
 - **Google Sync**: `syncToken`, `channels.watch` (`resource_id`, `channel_id`, `expiration`), `extendedProperties.private`.
 - **Telegram**: уведомления по проектным каналам (`chat_id < 0`), правила `on_create`, `on_change_time`, `pre_due`, `digest_weekly`.
-- **Tasks** наследует `area_id` проекта; дефолтная Area «Нераспределённое» (per user/workspace).
+- **Tasks** наследует `area_id` проекта; дефолтная Area «Входящие» (per user/workspace, создаётся автоматически и не удаляется).
 - **Subjective overrides**: `para_overrides(owner, entity_type, entity_id, override_project_id?, override_area_id?)` позволяют пользователю видеть сущности в другой области без дублирования данных.
 - **Таймер**: один активный на пользователя (`UNIQUE` индекс `WHERE stopped_at IS NULL`).
 
@@ -184,7 +184,7 @@
 **Acceptance Criteria**
 - `/note` в боте создаёт заметку без контейнера.
 - Кнопка на UI создаёт заметку и отображает её в Inbox.
-- `GET /api/v1/inbox/notes` возвращает все нераспределённые и неархивные заметки.
+- `GET /api/v1/inbox/notes` возвращает все входящие и неархивные заметки.
 - `POST /api/v1/notes/{id}/assign {container_type, container_id}` переносит заметку в Project/Area/Resource.
 - P2•S — Веб‑клиппер через bookmarklet.
 
@@ -218,7 +218,7 @@
 **API**
 - `/tasks` CRUD (+ `/tasks/quick`)
 - `/tasks/{id}/alarms` → прокси в `/calendar/items/{id}/alarms`
-- `/time/start` (если нет `task_id` — создать задачу в «Нераспределённое» и запустить таймер)
+- `/time/start` (если нет `task_id` — создать задачу в «Входящие» и запустить таймер)
 - `/time/stop`, `/time/edit`, `/time/entries`, `/time/summary?group_by=(day|project|area|user)`
 - `/calendar/agenda?include_tasks=bool&only_scheduled=bool`
 
@@ -228,11 +228,11 @@
 - Один активный таймер на пользователя; авто-стоп по правилам.
 
 **Миграции/совместимость**
-- Конвертировать старые `/time` в `time_entries`, «висячие» логи — в задачи «Нераспределённое`.
+- Конвертировать старые `/time` в `time_entries`, «висячие» логи — в задачи «Входящие».
 - Мягкий редирект старых `/tasks` и `/time` на новые.
 
 **Acceptance Criteria**
-- [ ] старт «голого» таймера создаёт задачу в «Нераспределённое».
+- [ ] старт «голого» таймера создаёт задачу в «Входящие».
 - [ ] задача требует `project_id` или `area_id`; при указании проекта наследует `area_id`.
 - [ ] напоминания к задаче через `/calendar/items/{id}/alarms`.
 - [ ] флажок календаря `include_tasks/only_scheduled` работает.
@@ -269,7 +269,7 @@
 7. MR-7 Reports — DoD: сервис `ReviewService` + виджет «Areas due for review»; `GET /api/v1/areas/{id}/review_due` и счётчик на дашборде.
 
 ## Definition of Done
-- Inbox работает: нераспределённые заметки видны в `/inbox` и через `GET /api/v1/inbox/notes`.
+- Inbox работает: входящие заметки видны в `/inbox` и через `GET /api/v1/inbox/notes`.
 - `POST /api/v1/notes/{id}/assign` переносит заметку в Project/Area/Resource (исчезает из Inbox).
 - Project требует `area_id`; Task с `project_id` автоматически наследует `area_id`.
 - Тайм‑лог из задачи автоматически содержит `project_id/area_id`.

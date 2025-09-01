@@ -13,20 +13,20 @@ BEGIN
     RETURN;
   END IF;
 
-  -- для каждого owner_id в reminders — обеспечим дефолтную area (по названию)
+  -- для каждого owner_id в reminders — обеспечим системную area «Входящие»
   INSERT INTO areas (id, owner_id, title, is_active, created_at)
-  SELECT gen_random_uuid(), r.owner_id, 'Нераспределённое', TRUE, now()
+  SELECT gen_random_uuid(), r.owner_id, 'Входящие', TRUE, now()
   FROM (SELECT DISTINCT owner_id FROM reminders) r
   WHERE NOT EXISTS (
     SELECT 1 FROM areas a
-    WHERE a.owner_id = r.owner_id AND a.title IN ('Нераспределённое','Unassigned','Default','Inbox')
+    WHERE a.owner_id = r.owner_id AND a.title IN ('Входящие','Unassigned','Default','Inbox')
   );
 
   -- создаём calendar_items и alarms
   WITH default_areas AS (
     SELECT a.owner_id, a.id AS area_id
     FROM areas a
-    WHERE a.title IN ('Нераспределённое','Unassigned','Default','Inbox')
+    WHERE a.title IN ('Входящие','Unassigned','Default','Inbox')
   ),
   ins_items AS (
     INSERT INTO calendar_items (id, kind, title, area_id, due_at, created_at, updated_at)

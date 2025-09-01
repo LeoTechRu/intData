@@ -108,7 +108,7 @@
 ---
 
 ## Definition of Done (минимальный PoC)
-- Inbox работает: нераспределённые заметки видны в `/inbox` и через `GET /api/v1/inbox/notes`.
+- Inbox работает: входящие заметки видны в `/inbox` и через `GET /api/v1/inbox/notes`.
 - `POST /api/v1/notes/{id}/assign` переносит заметку в Project/Area/Resource (исчезает из Inbox).
 - Project требует `area_id`; Task с `project_id` автоматически синхронизирует `area_id`.
 - Тайм‑лог из задачи автоматически содержит `project_id/area_id`.

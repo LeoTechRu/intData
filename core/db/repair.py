@@ -10,7 +10,9 @@ from sqlalchemy.engine import Connection
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_AREA_TITLE = "Нераспределённое"
+# System default area for quick capture.
+# Created at startup if missing and cannot be administrated or deleted.
+DEFAULT_AREA_TITLE = "Входящие"
 
 
 def _table_exists(conn: Connection, name: str) -> bool:
@@ -91,7 +93,7 @@ def _get_default_area(conn: Connection, owner_id: uuid.UUID | int | None):
 
 
 def ensure_default_areas(conn: Connection) -> int:
-    """Ensure each owner has a default 'Нераспределённое' area."""
+    """Ensure each owner has a default 'Входящие' area."""
     owners: set[uuid.UUID | int] = set()
     tables = ["areas", "projects", "calendar_items", "resources", "tasks", "time_entries"]
     for table in tables:
