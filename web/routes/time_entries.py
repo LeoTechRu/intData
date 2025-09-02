@@ -43,6 +43,14 @@ class TimeEntryResponse(BaseModel):
         )
 
 
+class SummaryItem(BaseModel):
+    total_seconds: int
+    day: Optional[str] = None
+    project_id: Optional[int] = None
+    area_id: Optional[int] = None
+    owner_id: Optional[int] = None
+
+
 @router.post(
     "/start",
     response_model=TimeEntryResponse,
@@ -107,6 +115,24 @@ async def list_entries(
         entries = await service.list_entries_filtered(
             owner_id=current_user.telegram_id, area_id=area_id, include_sub=bool(include_sub), time_from=tf, time_to=tt)
     return [TimeEntryResponse.from_model(e) for e in entries]
+
+
+@router.get("/summary", response_model=List[SummaryItem], name="api:time_summary")
+async def time_summary(
+    group_by: str = Query("day"),
+    current_user: TgUser | None = Depends(get_current_tg_user),
+):
+    """Aggregate time entries for the current user."""
+
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    if group_by not in {"day", "project", "area", "user"}:
+        raise HTTPException(status_code=400, detail="invalid group_by")
+    async with TimeService() as service:
+        items = await service.summary(
+            owner_id=current_user.telegram_id, group_by=group_by
+        )
+    return items
 
 
 @router.get("/running", response_model=TimeEntryResponse | None, name="api:time_running")

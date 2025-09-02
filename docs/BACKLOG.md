@@ -247,7 +247,7 @@
 - [ ] задача требует `project_id` или `area_id`; при указании проекта наследует `area_id`.
 - [ ] напоминания к задаче через `/calendar/items/{id}/alarms`.
 - [ ] флажок календаря `include_tasks/only_scheduled` работает.
-- [ ] `/time/summary` даёт срезы по `project/area/day/user`.
+- [x] `/time/summary` даёт срезы по `project/area/day/user`.
 - [ ] не более одного активного таймера на пользователя.
 
 ### E14: Insights & Reports (ревью Areas, фокус-часы)
