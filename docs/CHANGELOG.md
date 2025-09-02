@@ -88,6 +88,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Добавлена миграция столбцов `area_id` и `project_id` для таблицы `habits`.
 - Кнопки заметок (редактирование, закрепление, удаление) стали кликабельными и работают по назначению.
 - PARA inheritance for newly created habits/dailies/rewards enforced in services and repair.
+- Habit ORM exposes `.area` and `.project`; `/habits` no longer responds 500 when listing habits.
+- Repair backfills `area_id` from project and warns when both `area_id` and `project_id` are NULL.
 
 ### Security
 - Access control on owner_id for habits/dailies/rewards and logs.

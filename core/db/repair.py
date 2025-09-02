@@ -187,6 +187,7 @@ def backfill_habits_area(conn: Connection) -> int:
                 {"p": project_id},
             ).scalar()
         elif area_id is None:
+            logger.warning("habit %s missing area and project", hid)
             target_area = _get_default_area(conn, owner_id)
         if target_area and target_area != area_id:
             conn.execute(
@@ -221,6 +222,7 @@ def backfill_dailies_area(conn: Connection) -> int:
                 {"p": project_id},
             ).scalar()
         elif area_id is None:
+            logger.warning("daily %s missing area and project", did)
             target_area = _get_default_area(conn, owner_id)
         if target_area and target_area != area_id:
             conn.execute(
@@ -255,6 +257,7 @@ def backfill_rewards_area(conn: Connection) -> int:
                 {"p": project_id},
             ).scalar()
         elif area_id is None:
+            logger.warning("reward %s missing area and project", rid)
             target_area = _get_default_area(conn, owner_id)
         if target_area and target_area != area_id:
             conn.execute(

@@ -465,6 +465,9 @@ class Habit(Base):
     archived_at = Column(DateTime(timezone=True))
     created_at = Column(DateTime(timezone=True), default=utcnow)
 
+    area = relationship("Area")
+    project = relationship("Project")
+
 
 class HabitLog(Base):
     __tablename__ = "habit_logs"
@@ -495,6 +498,9 @@ class Daily(Base):
     archived_at = Column(DateTime(timezone=True))
     created_at = Column(DateTime(timezone=True), default=utcnow)
 
+    area = relationship("Area")
+    project = relationship("Project")
+
 
 class DailyLog(Base):
     __tablename__ = "daily_logs"
@@ -521,6 +527,9 @@ class Reward(Base):
     project_id = Column(Integer, ForeignKey("projects.id"))
     archived_at = Column(DateTime(timezone=True))
     created_at = Column(DateTime(timezone=True), default=utcnow)
+
+    area = relationship("Area")
+    project = relationship("Project")
 
 
 class UserStats(Base):
