@@ -10,6 +10,7 @@ from core.models import TgUser
 from core.services.area_service import AreaService
 from core.services.para_service import ParaService
 from core.services.task_service import TaskService
+from core.services.note_service import NoteService
 
 try:
     from main import app  # type: ignore
@@ -67,3 +68,24 @@ async def test_tasks_include_subtree(client: AsyncClient):
     assert resp.status_code == 200
     tasks = [t['title'] for t in resp.json()]
     assert 'Squats' in tasks and 'Lights off' in tasks
+
+
+@pytest.mark.asyncio
+async def test_notes_include_subtree(client: AsyncClient):
+    owner = await _create_tg_user(telegram_id=102)
+    cookies = {"telegram_id": str(owner)}
+
+    async with AreaService() as asvc:
+        health = await asvc.create_area(owner_id=owner, name='Health')
+        fitness = await asvc.create_area(owner_id=owner, name='Fitness', parent_id=health.id)
+        sleep = await asvc.create_area(owner_id=owner, name='Sleep', parent_id=health.id)
+        strength = await asvc.create_area(owner_id=owner, name='Strength', parent_id=fitness.id)
+
+    async with NoteService() as nsvc:
+        await nsvc.create_note(owner_id=owner, content='Gym note', area_id=strength.id)
+        await nsvc.create_note(owner_id=owner, content='Sleep note', area_id=sleep.id)
+
+    resp = await client.get(f"/api/v1/notes?area_id={health.id}&include_sub=1", cookies=cookies)
+    assert resp.status_code == 200
+    titles = [n['title'] for n in resp.json()]
+    assert any('Gym note' in t for t in titles) and any('Sleep note' in t for t in titles)

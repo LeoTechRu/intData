@@ -99,6 +99,7 @@ async def list_notes(
     q: Optional[str] = Query(default=None),
     limit: int = Query(default=100),
     offset: int = Query(default=0),
+    include_sub: int | None = Query(default=0),
 ):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
@@ -106,6 +107,7 @@ async def list_notes(
         notes = await service.list_notes(
             owner_id=current_user.telegram_id,
             area_id=area_id,
+            include_sub=bool(include_sub),
             project_id=project_id,
             pinned=pinned,
             archived=archived,
