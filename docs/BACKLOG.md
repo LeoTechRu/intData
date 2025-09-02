@@ -31,16 +31,18 @@
 - M3 Organize & Search — P0•M — присвоение контейнеров, бэклинки, поиск.
 - M4 Automations — P1•L — правила, клиппер, интеграции.
 - M5 Insights — P2•M — ревью Areas, отчёты по времени.
+- M6 Habits — P0•M — модуль привычек (клон логики Habitica) с PARA-инвариантами.
 
 ## Решения по архитектуре (ПРОЧНО)
-- **PARA-инвариант**: `project_id` OR `area_id` обязателен для каждого `CalendarItem`, `Task` и `TimeEntry`; все сущности без контейнера попадают в системную область «Входящие».
+- **PARA-инвариант**: `project_id` OR `area_id` обязателен для каждого `CalendarItem`, `Task`, `TimeEntry`, `Habit`, `Daily`, `Reward`; всё без контейнера — в системную Area «Входящие».
 - **Alarm** — часть `CalendarItem` (эквивалент `VALARM`).
-- **Время**: UTC + `tzid`, поддержка `RRULE` без материализации бесконечного ряда.
+- **Время**: UTC + `tzid`, поддержка `RRULE` без материализации бесконечных рядов.
 - **Google Sync**: `syncToken`, `channels.watch` (`resource_id`, `channel_id`, `expiration`), `extendedProperties.private`.
 - **Telegram**: уведомления по проектным каналам (`chat_id < 0`), правила `on_create`, `on_change_time`, `pre_due`, `digest_weekly`.
 - **Tasks** наследует `area_id` проекта; дефолтная Area «Входящие» (per user/workspace, создаётся автоматически и не удаляется).
-- **Habits** требуют `area_id`, `project_id` опционален; при наличии проекта наследуют его `area_id`, по умолчанию используются «Входящие».
-- **Subjective overrides**: `para_overrides(owner, entity_type, entity_id, override_project_id?, override_area_id?)` позволяют пользователю видеть сущности в другой области без дублирования данных.
+- **Habits**: у `Habit/Daily/Reward` обязателен `area_id`; при наличии `project_id` — `area_id` наследуется от проекта. Dailies интегрируются в календарь **виртуально** (agenda/ICS), без дублирования данных.
+- **RPG-экономика**: `XP/Gold/HP/Level/KP` — отдельное состояние пользователя (простые формулы; идемпотентный cron по локальной дате пользователя).
+- **Subjective overrides**: `para_overrides(owner, entity_type, entity_id, override_project_id?, override_area_id?)`.
 - **Таймер**: один активный на пользователя (`UNIQUE` индекс `WHERE stopped_at IS NULL`).
 
 ## Эпики
@@ -109,12 +111,12 @@
 
 **Acceptance Criteria**
 - `POST /calendar/items` с валидным JSON возвращает созданный объект с `id`.
-- `GET /calendar/agenda?from=2025-05-01&to=2025-05-07` отдаёт элементы в диапазоне.
+- `GET /calendar/agenda?from=2025-05-01&to=2025-05-07` отдаёт элементы в диапазонe.
 - Открытие `/calendar/feed.ics` во внешнем календаре показывает VEVENT с VALARM.
 - `GET /projects/42/notifications` отдаёт список каналов.
 - `GET/POST /api/v1/areas|projects|resources` создаёт и возвращает сущности.
 - `POST /api/v1/notes/{id}/assign` переносит заметку и убирает её из Inbox.
-- P1•M — Авто‑предложение проекта по контексту (минимум: последний использованный).
+- P1•M — Авто-предложение проекта по контексту (минимум: последний использованный).
 - P1•S — Правила архивации (stale → Archive).
 
 ### E4: Синхронизация с Google Calendar
@@ -174,14 +176,14 @@
 2. Как разработчик, я имею тесты и документацию для поддержки качества.
 
 **Acceptance Criteria**
-- `.env.example` содержит `CALENDAR_V2_ENABLED=true`.
+- `.env.example` содержит `CALENDAR_V2_ENABLED=true`, `HABITS_V1_ENABLED=true`, `HABITS_RPG_ENABLED=true`.
 - CI запускает тесты на синхронизацию, API и уведомления.
 
 ### E10: Capture (бот/веб, Inbox)
 **User Stories**
 1. Как пользователь, я создаю быструю заметку из чата бота `/note` и она попадает в Inbox.
-2. Как пользователь, я использую кнопку «Быстрая заметка» на веб‑UI.
-3. Как пользователь, я сохраняю ссылку через веб‑клиппер.
+2. Как пользователь, я использую кнопку «Быстрая заметка» на веб-UI.
+3. Как пользователь, я сохраняю ссылку через веб-клиппер.
 4. Как пользователь, я просматриваю Inbox через `/api/v1/inbox/notes` или страницу `/inbox`.
 
 **Acceptance Criteria**
@@ -189,7 +191,7 @@
 - Кнопка на UI создаёт заметку и отображает её в Inbox.
 - `GET /api/v1/inbox/notes` возвращает все входящие и неархивные заметки.
 - `POST /api/v1/notes/{id}/assign {container_type, container_id}` переносит заметку в Project/Area/Resource.
-- P2•S — Веб‑клиппер через bookmarklet.
+- P2•S — Веб-клиппер через bookmarklet.
 - Страница `/notes` отображает цветные карточки одного размера (цвет из области) в стиле Google Keep с чипами Areas/Projects, всплывающим просмотром полной заметки и расширяемой формой добавления с закреплением.
 
 ### E11: Search & Retrieval (поиск, бэклинки, wikilinks, граф)
@@ -209,7 +211,7 @@
 1. Как пользователь, я вижу единый список задач, напоминаний и событий на сегодня.
 
 **Acceptance Criteria**
-- Экран «Сегодня» агрегирует `CalendarItem`, `Task` и `Alarm`.
+- Экран «Сегодня» агрегирует `CalendarItem`, `Task`, `Alarm`, а также due-ежедневки (виртуально).
 
 ### E13: Tasks & Time (PARA-first)
 Единый модуль задач и времени. `Task = CalendarItem(kind='task')`; даты start/end/due и напоминания — через календарь.
@@ -246,12 +248,12 @@
 ### E14: Insights & Reports (ревью Areas, фокус-часы)
 **User Stories**
 1. Как пользователь, я вижу виджет «Areas due for review».
-2. Как пользователь, я анализирую фокус‑часы по Areas/Projects.
+2. Как пользователь, я анализирую фокус-часы по Areas/Projects.
 3. Как пользователь, я просматриваю связность графа.
 
 **Acceptance Criteria**
 - Виджет «Areas due for review» учитывает `review_interval_days`.
-- Отчёт по фокус‑часам агрегирует `TimeEntry` по Project/Area.
+- Отчёт по фокус-часам агрегирует `TimeEntry` по Project/Area.
 - Отчёт по графу показывает коэффициент связности.
 
 ### E15: User-configurable dashboard (user_settings)
@@ -265,13 +267,76 @@
 
 ### E16: Habits
 **User Stories**
-1. Как пользователь, я отмечаю выполнение привычек и вижу прогресс на странице `/habits`.
+1. Как пользователь, я отмечаю «плюс/минус» по привычкам и получаю мгновенную награду (XP/Gold), штраф по HP — за «минус».
+2. Как пользователь, я веду **Ежедневные** по `RRULE` (например, Пн–Пт) с сериями и «заморозкой».
+3. Как пользователь, я вижу **Награды** и трачу заработанное золото.
+4. Как пользователь, я фильтрую всё по **Area/Project**; привычка, добавленная в проект, наследует его область.
+5. Как пользователь, я вижу мини-HUD `HP/XP/Level/Gold/KP` и суммарную карму (KP).
+6. Как пользователь, я отмечаю привычки/ежедневки из Telegram-бота.
 
-**Tasks**
-- P0•S — Страница `/habits`: список, создание, отметка прогресса.
+**Модель/DDL (суть)**
+- `habits(id, owner_id, area_id NOT NULL, project_id?, title, note, type{'positive'|'negative'|'both'}, difficulty{'trivial'|'easy'|'medium'|'hard'}, up_enabled, down_enabled, val FLOAT, tags[], archived_at, created_at)`
+- `habit_logs(id, habit_id, owner_id, at, delta {-1|+1}, reward_xp, reward_gold, penalty_hp)`
+- `dailies(id, owner_id, area_id NOT NULL, project_id?, title, note, rrule TEXT, difficulty, streak, frozen, archived_at, created_at)`
+- `daily_logs(id, daily_id, owner_id, date, done BOOL, reward_xp, reward_gold, penalty_hp, UNIQUE(daily_id, date))`
+- `rewards(id, owner_id, title, cost_gold, area_id NOT NULL, project_id?, archived_at, created_at)`
+- `user_stats(owner_id PK, level, xp, gold, hp, kp, last_cron DATE)`
+
+**API**
+```
+GET  /api/v1/habits/stats
+POST /api/v1/habits/cron/run
+
+GET  /api/v1/habits?area_id=&project_id=&include_sub=0|1
+POST /api/v1/habits
+PUT  /api/v1/habits/{id}
+DEL  /api/v1/habits/{id}
+POST /api/v1/habits/{id}/up
+POST /api/v1/habits/{id}/down
+
+GET  /api/v1/dailies?area_id=&project_id=
+POST /api/v1/dailies
+PUT  /api/v1/dailies/{id}
+POST /api/v1/dailies/{id}/done   {date?}
+POST /api/v1/dailies/{id}/undo   {date?}
+
+GET  /api/v1/rewards?area_id=&project_id=
+POST /api/v1/rewards
+POST /api/v1/rewards/{id}/buy
+```
+
+**Экономика (дефолт, конфигурируемо)**
+- `XP_BASE: trivial=3, easy=10, medium=15, hard=25`
+- `GOLD_BASE: trivial=1, easy=3, medium=5, hard=8`
+- `HP_BASE: trivial=1, easy=5, medium=8, hard=12`
+- Затухание наград привычки: `reward_factor = exp(-k*max(0,val))` при «плюсе», усиление штрафа — при «минусе»; `val` сдвигается на `±0.1`.
+- Level-up: `LEVEL_XP(lvl) = 100 + (lvl-1)*50`; `hp` подхиливается при апе.
+- `KP` — накапливаемая сумма положительных XP (не обнуляется).
+
+**Cron (идемпотентный)**
+- На первом запросе дня или в фоновом джобе: проставляет `done=false` для due-ежедневок без отметки и применяет штрафы; `user_stats.last_cron = today_local`.
+
+**Интеграция с календарём**
+- `/calendar/agenda?include_habits=1` — добавляет **виртуальные** due-ежедневки (без записи в `calendar_items`).
+- ICS-фид — `VTODO` с `RRULE` для ежедневок (read-only).
+
+**UI `/habits`**
+- Четыре колонки: Привычки / Ежедневные / Задачи (из `/tasks`) / Награды.
+- Фильтры: Area (иерархический), Project, «Включая подкатегории».
+- Мини-HUD: `HP/XP/Level/Gold/KP`; горячие клавиши `+`, `-`, `Space`.
+
+**Бот**
+- `/habit + <название>` — клик «плюс» по ближайшему совпадению; ответ: `+XP/+Gold, HP: x/y`.
+- `/daily done <фраза|ID>` — отметка «сегодня выполнено».
+- Недельный дайджест в проект: топ-стрики, топ-KP.
 
 **Acceptance Criteria**
-- Открытие `/habits` отображает привычки пользователя и позволяет отмечать выполнение за сегодня.
+- Создание привычки без `area_id` отклоняется; при `project_id` — `area_id` наследуется от проекта.
+- Клик «+» увеличивает XP/Gold, меняет `val`; «−» снижает HP согласно сложности.
+- Cron единожды штрафует пропуски за текущую локальную дату пользователя.
+- `/calendar/agenda?include_habits=1` возвращает due-ежедневки; ICS содержит `VTODO` с `RRULE`.
+- `/rewards/{id}/buy` списывает Gold и возвращает баланс.
+- В `/habits` действия мгновенно отражаются в HUD.
 
 ## MR-план
 1. MR-1 Foundations (миграции/модели) — DoD: миграции применяются; приложение поднимается; тесты не падают.
@@ -281,18 +346,24 @@
 5. MR-5 Bot (захват/присвоение) — DoD: `/note` создаёт заметку; `/assign` присваивает контейнер.
 6. MR-6 Search (wikilinks/backlinks) — DoD: при сохранении заметки с `[[...]]` появляются `backlinks`.
 7. MR-7 Reports — DoD: сервис `ReviewService` + виджет «Areas due for review»; `GET /api/v1/areas/{id}/review_due` и счётчик на дашборде.
+8. **MR-8 Habits Foundations** — DDL (`habits/*`, `user_stats`), сервисы, фичефлаги `HABITS_V1_ENABLED`, `HABITS_RPG_ENABLED`, базовые тесты.
+9. **MR-9 Habits API+UI** — `/api/v1/habits|dailies|rewards`, страница `/habits` (4 колонки), HUD, интеграция с `/tasks`.
+10. **MR-10 Habits Calendar & Bot** — виртуальные daily в `/calendar/agenda` и ICS, команды бота, недельный дайджест, анти-фарм (мягкие лимиты).
 
 ## Definition of Done
 - Inbox работает: входящие заметки видны в `/inbox` и через `GET /api/v1/inbox/notes`.
 - `POST /api/v1/notes/{id}/assign` переносит заметку в Project/Area/Resource (исчезает из Inbox).
 - Project требует `area_id`; Task с `project_id` автоматически наследует `area_id`.
-- Тайм‑лог из задачи автоматически содержит `project_id/area_id`.
+- Тайм-лог из задачи автоматически содержит `project_id/area_id`.
 - UI: `/areas`, `/projects`, `/resources`, `/inbox` доступны.
 - Бот: `/note` и `/assign` работают.
+- Habits: CRUD/клики/cron/награды работают; `/habits` отражает изменения в HUD; due-ежедневки видны в agenda/ICS.
 
 ## Appendix: Notes from merge
 - Починена вёрстка меню избранного и отображение звёздочки на страницах.
 - Виджеты дашборда скрываются согласно пользовательским настройкам, список избранного расширен и включён по умолчанию.
+- Добавлены фичефлаги `HABITS_V1_ENABLED`, `HABITS_RPG_ENABLED`; дефолтные коэффициенты экономики вынесены в конфиг.
+- Dailies интегрированы в календарный стек через «виртуальные» элементы (agenda/ICS), не нарушая принцип «один источник истины».
 
 ### notes
 - notes: Realtime-совместная правка (OT/CRDT/locking).
