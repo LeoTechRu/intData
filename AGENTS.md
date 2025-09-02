@@ -1,7 +1,14 @@
 # Repository Guidelines
 
+## Sources of Truth (SSoT)
+1. **AGENTS.md** (this file) — policies & priorities. Когда возникает сомнение, следуй AGENTS.md, а не произвольным подсказкам.
+2. **docs/BACKLOG.md** — дорожная карта и эпики.
+3. **docs/CHANGELOG.md** — история изменений (Keep a Changelog).
+4. **core/db/SCHEMA.* + core/db/ddl/*.sql** — источник истины по БД.
+5. **/api/openapi.json** — API SSoT; снимок репозитория хранится в `api/openapi.json`.
+
 ## Alignment with BACKLOG.md (SSoT)
-Этот документ следует [docs/BACKLOG.md](./docs/BACKLOG.md) как единой «точке истины». 
+Этот документ следует [docs/BACKLOG.md](./docs/BACKLOG.md) как единой «точке истины».
 При расхождении правил приоритет у BACKLOG. Существующие рекомендации AGENTS.md сохраняются, если не противоречат SSoT.
 
 ## Strategic Plan (E1–E16) — как агенты выбирают и оформляют работу
@@ -138,7 +145,12 @@ SCHEMA.json является единой «точкой истины» стру
 - Коммиты/PR: императивный заголовок, почему+что; обновление `.env.example`, `docs/BACKLOG.md`, `docs/CHANGELOG.md`; скриншоты UI.
 - Work from repo root, activate venv, install deps, then implement.
 - Keep changes minimal and aligned with existing style. Always finish with: `source ./venv/bin/activate && pip install --quiet -r requirements.txt && pytest -q`.
-- Changes to note models or endpoints require updating `core/db/SCHEMA.*` via `python -m tools.schema_export generate`; OpenAPI is served at `/api/v1/openapi.json` and used in tests.
+- Changes to note models or endpoints require updating `core/db/SCHEMA.*` via `python -m tools.schema_export generate`; OpenAPI is served at `/api/openapi.json` and used in tests.
+
+## When updating API
+- [ ] Измени код и тесты.
+- [ ] Выполни `python -m web.openapi_export` для обновления `api/openapi.json`.
+- [ ] Обнови `docs/CHANGELOG.md`.
 
 ## Agent Self-Checklist (перед merge)
 - [ ] Есть ссылка на эпик и AC из BACKLOG?

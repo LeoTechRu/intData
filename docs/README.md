@@ -64,10 +64,9 @@ python -m core.db.migrate && python -m core.db.repair
 
 ### Post-deploy checklist
 
-- [ ] Запустить: `python -m core.db.migrate && python -m core.db.repair`.
-- [ ] Зайти под web-пользователем без TG → `/habits` 200 OK, виден баннер и пустое состояние.
-- [ ] Привязать TG → `/habits` показывает HUD и списки; клики по привычкам работают.
-- [ ] Сделать два быстрых клика по привычке → второй запрос 429, UI показывает таймер.
-- [ ] Проверить `/calendar/agenda?include_habits=1` → видны виртуальные ежедневки.
-- [ ] Пройти `/api/v1/rewards/{id}/buy` с недостатком золота → 400.
-- [ ] Просмотреть CHANGELOG [Unreleased] — новые пункты присутствуют.
+- [ ] `python -m core.db.migrate && python -m core.db.repair`
+- [ ] Войти под web-пользователем без TG → `/habits` 200 OK, баннер CTA без блокирующего текста.
+- [ ] Привязать TG → `/habits` показывает HUD; up/down работают.
+- [ ] Два быстрых клика по привычке → второй запрос 429 с `Retry-After`, UI показывает обратный отсчёт.
+- [ ] `GET /api/openapi.json` загружается; файл `api/openapi.json` идентичен.
+- [ ] В `docs/CHANGELOG.md` под `[Unreleased]` присутствуют новые пункты Fixed/Changed/Security.
