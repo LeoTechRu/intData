@@ -50,7 +50,7 @@ async def _seed(owner_id: int, tg_id: int, area_id: int, project_id: int | None 
 @pytest.mark.asyncio
 async def test_habit_and_reward_flow(client: AsyncClient):
     await _seed(owner_id=1, tg_id=1, area_id=1, project_id=1)
-    cookies = {"telegram_id": "1"}
+    cookies = {"web_user_id": "1", "telegram_id": "1"}
 
     resp = await client.post(
         "/api/v1/habits",
@@ -116,7 +116,7 @@ async def test_habit_and_reward_flow(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_daily_and_cron(client: AsyncClient):
     await _seed(owner_id=2, tg_id=2, area_id=2)
-    cookies = {"telegram_id": "2"}
+    cookies = {"web_user_id": "2", "telegram_id": "2"}
 
     resp = await client.post(
         "/api/v1/dailies",
@@ -148,11 +148,44 @@ async def test_daily_and_cron(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_para_enforcement(client: AsyncClient):
     await _seed(owner_id=3, tg_id=3, area_id=3)
-    cookies = {"telegram_id": "3"}
+    cookies = {"web_user_id": "3", "telegram_id": "3"}
     resp = await client.post(
         "/api/v1/habits",
         json={"title": "H", "type": "positive", "difficulty": "easy"},
         cookies=cookies,
     )
     assert resp.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_up_requires_tg_link(client: AsyncClient):
+    await _seed(owner_id=4, tg_id=4, area_id=4)
+    cookies = {"web_user_id": "4", "telegram_id": "4"}
+    resp = await client.post(
+        "/api/v1/habits",
+        json={"title": "H", "type": "positive", "difficulty": "easy", "area_id": 4},
+        cookies=cookies,
+    )
+    habit_id = resp.json()["id"]
+    resp = await client.post(f"/api/v1/habits/{habit_id}/up", cookies={"web_user_id": "4"})
+    assert resp.status_code == 403
+    assert resp.json()["error"] == "tg_link_required"
+
+
+@pytest.mark.asyncio
+async def test_cooldown_returns_429(client: AsyncClient):
+    await _seed(owner_id=5, tg_id=5, area_id=5)
+    cookies = {"web_user_id": "5", "telegram_id": "5"}
+    resp = await client.post(
+        "/api/v1/habits",
+        json={"title": "H", "type": "positive", "difficulty": "easy", "area_id": 5},
+        cookies=cookies,
+    )
+    hid = resp.json()["id"]
+    await client.post(f"/api/v1/habits/{hid}/up", cookies=cookies)
+    resp = await client.post(f"/api/v1/habits/{hid}/up", cookies=cookies)
+    assert resp.status_code == 429
+    data = resp.json().get("detail", {})
+    assert data.get("error") == "cooldown"
+    assert data.get("retry_after", 0) > 0
 

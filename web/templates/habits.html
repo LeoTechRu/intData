@@ -2,6 +2,12 @@
 {% block content %}
 <section class="page" aria-labelledby="h-habits">
   <h1 id="h-habits">Привычки</h1>
+  {% if show_tg_cta %}
+  <div class="c-card c-card--warning" id="tg-link-banner">
+    Привяжите Telegram для начисления наград/штрафов и бота —
+    <a href="/settings#telegram-linking">Настройки</a>
+  </div>
+  {% endif %}
 
   <form id="habit-form" class="c-card" style="margin-block:12px">
     <input name="name" type="text" placeholder="Новая привычка" required>
@@ -23,6 +29,7 @@
 {% block scripts %}
 <script type="module">
 import {confirmDialog} from '/static/js/ui/confirm.js';
+import {handleHabitApiResponse} from '/static/js/habits_v1.js';
 const B = window.API_BASE;
 
 function percent(progress){
@@ -96,9 +103,10 @@ document.getElementById('habitGrid').addEventListener('click', async (e)=>{
   const id = card.dataset.id;
   if(e.target.closest('.js-toggle')){
     const today = new Date().toISOString().slice(0,10);
-    await fetch(`${B}/habits/${id}/toggle`, {
+    const resp = await fetch(`${B}/habits/${id}/toggle`, {
       method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({date: today})
     });
+    if (handleHabitApiResponse(resp, e.target.closest('button'))) return;
     load();
   } else if(e.target.closest('.js-del')){
     const ok = await confirmDialog({message:'Удалить привычку?'});
