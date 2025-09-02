@@ -411,7 +411,7 @@ class Area(Base):
     name = Column(String(255), nullable=False)
     title = Column(String(255), nullable=False, default="")
     type = Column(Enum(AreaType))
-    color = Column(String(7))
+    color = Column(String(7), nullable=False, default="#F1F5F9")
     context_map = Column(JSON, default=dict)
     review_interval = Column(Integer)
     review_interval_days = Column(Integer, default=7)
@@ -508,6 +508,7 @@ class Note(Base):
     project_id = Column(Integer, ForeignKey("projects.id"))
     container_type = Column(Enum(ContainerType))
     container_id = Column(Integer)
+    # Deprecated: note color now inherited from Area.color
     color = Column(String(20))
     pinned = Column(Boolean, default=False)
     order_index = Column(Integer, default=0)

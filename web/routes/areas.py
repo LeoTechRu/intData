@@ -64,6 +64,7 @@ async def create_area(payload: AreaCreate, current_user: TgUser | None = Depends
             owner_id=current_user.telegram_id,
             name=payload.name,
             parent_id=None,
+            color=payload.color,
         )
     return AreaResponse.from_model(area)
 

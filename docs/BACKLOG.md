@@ -193,6 +193,8 @@
 - `POST /api/v1/notes/{id}/assign {container_type, container_id}` переносит заметку в Project/Area/Resource.
 - P2•S — Веб-клиппер через bookmarklet.
 - Страница `/notes` отображает цветные карточки одного размера (цвет из области) в стиле Google Keep с чипами Areas/Projects, всплывающим просмотром полной заметки и расширяемой формой добавления с закреплением.
+- P2•S — Прокрасить все сущности системы по `areas.color` (использовать `getAreaColor`).
+- P2•M — Сделать `area_id` обязательным для `notes` и обеспечить backfill.
 
 ### E11: Search & Retrieval (поиск, бэклинки, wikilinks, граф)
 **User Stories**

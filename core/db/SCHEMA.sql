@@ -25,7 +25,7 @@ CREATE TABLE areas (
 	name VARCHAR(255) NOT NULL, 
 	title VARCHAR(255) NOT NULL, 
 	type areatype, 
-	color VARCHAR(7), 
+	color VARCHAR(7) NOT NULL, 
 	context_map JSON, 
 	review_interval INTEGER, 
 	review_interval_days INTEGER, 

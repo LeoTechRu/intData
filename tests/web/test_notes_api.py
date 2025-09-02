@@ -45,12 +45,14 @@ async def test_notes_crud(client: AsyncClient):
     assert resp.status_code == 201
     data = resp.json()
     assert data["area"]["name"] == "Входящие"
-
+    assert data["color"] == data["area"]["color"]
     inbox_area_id = data["area"]["id"]
 
     # Create area and project
-    resp = await client.post("/api/v1/areas", json={"name": "Area"}, cookies=cookies)
-    area_id = resp.json()["id"]
+    resp = await client.post("/api/v1/areas", json={"name": "Area", "color": "#ABCDEF"}, cookies=cookies)
+    area_resp = resp.json()
+    area_id = area_resp["id"]
+    assert area_resp["color"] == "#ABCDEF"
     resp = await client.post("/api/v1/projects", json={"name": "Proj", "area_id": area_id}, cookies=cookies)
     project_id = resp.json()["id"]
 
@@ -67,6 +69,7 @@ async def test_notes_crud(client: AsyncClient):
     items = resp.json()
     assert len(items) == 2
     assert any(n.get("project") for n in items)
+    assert all(n["color"] == n["area"]["color"] for n in items)
 
     first_id, second_id = [n["id"] for n in items]
 
