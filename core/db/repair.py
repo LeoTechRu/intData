@@ -202,6 +202,116 @@ def backfill_habits_area(conn: Connection) -> int:
     return updated
 
 
+def backfill_dailies_area(conn: Connection) -> int:
+    """Assign area to dailies using project inheritance or default area."""
+    if not _table_exists(conn, "dailies"):
+        return 0
+    try:
+        rows = conn.execute(
+            sa.text("SELECT id, owner_id, project_id, area_id FROM dailies")
+        ).fetchall()
+    except Exception:
+        rows = []
+    updated = 0
+    for did, owner_id, project_id, area_id in rows:
+        target_area = area_id
+        if project_id:
+            target_area = conn.execute(
+                sa.text("SELECT area_id FROM projects WHERE id=:p"),
+                {"p": project_id},
+            ).scalar()
+        elif area_id is None:
+            target_area = _get_default_area(conn, owner_id)
+        if target_area and target_area != area_id:
+            conn.execute(
+                sa.text("UPDATE dailies SET area_id=:a WHERE id=:i"),
+                {"a": target_area, "i": did},
+            )
+            updated += 1
+    try:
+        conn.execute(sa.text("ALTER TABLE dailies ALTER COLUMN area_id SET NOT NULL"))
+    except Exception as exc:  # pragma: no cover
+        logger.warning("dailies area not null failed: %s", exc)
+    logger.info("backfill_dailies_area: updated=%s", updated)
+    return updated
+
+
+def backfill_rewards_area(conn: Connection) -> int:
+    """Assign area to rewards using project inheritance or default area."""
+    if not _table_exists(conn, "rewards"):
+        return 0
+    try:
+        rows = conn.execute(
+            sa.text("SELECT id, owner_id, project_id, area_id FROM rewards")
+        ).fetchall()
+    except Exception:
+        rows = []
+    updated = 0
+    for rid, owner_id, project_id, area_id in rows:
+        target_area = area_id
+        if project_id:
+            target_area = conn.execute(
+                sa.text("SELECT area_id FROM projects WHERE id=:p"),
+                {"p": project_id},
+            ).scalar()
+        elif area_id is None:
+            target_area = _get_default_area(conn, owner_id)
+        if target_area and target_area != area_id:
+            conn.execute(
+                sa.text("UPDATE rewards SET area_id=:a WHERE id=:i"),
+                {"a": target_area, "i": rid},
+            )
+            updated += 1
+    try:
+        conn.execute(sa.text("ALTER TABLE rewards ALTER COLUMN area_id SET NOT NULL"))
+    except Exception as exc:  # pragma: no cover
+        logger.warning("rewards area not null failed: %s", exc)
+    logger.info("backfill_rewards_area: updated=%s", updated)
+    return updated
+
+
+def backfill_user_stats(conn: Connection) -> int:
+    """Ensure every user has a corresponding user_stats row."""
+    if not _table_exists(conn, "users_web"):
+        return 0
+    if not _table_exists(conn, "user_stats"):
+        try:
+            conn.execute(
+                sa.text(
+                    """
+                    CREATE TABLE IF NOT EXISTS user_stats (
+                        owner_id BIGINT PRIMARY KEY,
+                        level INTEGER DEFAULT 1,
+                        xp INTEGER DEFAULT 0,
+                        gold INTEGER DEFAULT 0,
+                        hp INTEGER DEFAULT 50,
+                        kp BIGINT DEFAULT 0,
+                        last_cron DATE
+                    )
+                    """
+                )
+            )
+        except Exception:
+            return 0
+    dialect = conn.dialect.name
+    rows = conn.execute(sa.text("SELECT id FROM users_web")).fetchall()
+    created = 0
+    for (uid,) in rows:
+        if dialect == "postgresql":
+            stmt = sa.text(
+                "INSERT INTO user_stats (owner_id) VALUES (:o) ON CONFLICT (owner_id) DO NOTHING"
+            )
+        else:
+            stmt = sa.text(
+                "INSERT OR IGNORE INTO user_stats (owner_id) VALUES (:o)"
+            )
+        res = conn.execute(stmt, {"o": uid})
+        if res.rowcount:
+            created += 1
+    logger.info("backfill_user_stats: created=%s", created)
+    return created
+
+
 def backfill_tasks_resources(conn: Connection) -> dict[str, int]:
     """Ensure tasks/resources inherit area from project or default area."""
     updated_ci = 0
@@ -393,6 +503,9 @@ def run_repair(conn: Connection) -> dict[str, object]:
     _step("notes_area", backfill_notes_area)
     _step("projects_area", backfill_projects_area)
     _step("habits_area", backfill_habits_area)
+    _step("dailies_area", backfill_dailies_area)
+    _step("rewards_area", backfill_rewards_area)
+    _step("user_stats", backfill_user_stats)
     _step("tasks_resources", backfill_tasks_resources)
     _step("time_entries", backfill_time_entries)
     _step("migrate_favorites", _migrate_favorites)

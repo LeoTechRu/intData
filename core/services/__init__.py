@@ -6,6 +6,7 @@ from .telegram_user_service import TelegramUserService
 from .time_service import TimeService
 from .web_user_service import WebUserService
 from .favorite_service import FavoriteService
+from .habits import HabitsService, DailiesService, HabitsCronService, UserStatsService
 from .sync_gcal import (
     generate_auth_url,
     exchange_code,
@@ -21,6 +22,10 @@ __all__ = [
     "TimeService",
     "WebUserService",
     "FavoriteService",
+    "HabitsService",
+    "DailiesService",
+    "HabitsCronService",
+    "UserStatsService",
     "generate_auth_url",
     "exchange_code",
     "save_gcal_link",

@@ -1,12 +1,18 @@
 import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+import sqlalchemy as sa
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
+from datetime import date
 
 import core.db as db
-from base import Base
-from core.services.nexus_service import HabitService
-from core.models import Area, Project
+from core.services.habits import (
+    DailiesService,
+    HabitsCronService,
+    HabitsService,
+    metadata,
+    dailies,
+)
 
 
 @pytest_asyncio.fixture
@@ -14,7 +20,14 @@ async def session_maker():
     engine = create_async_engine("sqlite+aiosqlite:///:memory:")
     async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.exec_driver_sql("CREATE TABLE users_web (id INTEGER PRIMARY KEY)")
+        await conn.exec_driver_sql(
+            "CREATE TABLE areas (id INTEGER PRIMARY KEY AUTOINCREMENT, owner_id INTEGER, title TEXT)"
+        )
+        await conn.exec_driver_sql(
+            "CREATE TABLE projects (id INTEGER PRIMARY KEY AUTOINCREMENT, owner_id INTEGER, area_id INTEGER)"
+        )
+        await conn.run_sync(metadata.create_all)
     db.async_session = async_session
     try:
         yield async_session
@@ -23,41 +36,69 @@ async def session_maker():
 
 
 @pytest.mark.asyncio
-async def test_habit_crud_and_toggle(session_maker):
-    async with HabitService() as svc:
-        h = await svc.create_habit(owner_id=123, name="Water", frequency="daily")
-        assert h.id is not None
-        inbox = await svc.session.get(Area, h.area_id)
-        assert inbox is not None and inbox.name == "Входящие"
-        area = Area(owner_id=123, name="Health", title="Health")
-        svc.session.add(area)
-        await svc.session.flush()
-        project = Project(owner_id=123, area_id=area.id, name="Fitness")
-        svc.session.add(project)
-        await svc.session.flush()
-        h2 = await svc.create_habit(
-            owner_id=123,
-            name="Run",
-            frequency="daily",
-            project_id=project.id,
+async def test_habit_up_down_and_para(session_maker):
+    async with HabitsService() as svc:
+        await svc.session.execute(sa.text("INSERT INTO users_web (id) VALUES (1)"))
+        await svc.session.execute(
+            sa.text("INSERT INTO areas (id, owner_id, title) VALUES (1,1,'A')")
         )
-        assert h2.project_id == project.id
-        assert h2.area_id == area.id
+        await svc.session.execute(
+            sa.text("INSERT INTO projects (id, owner_id, area_id) VALUES (1,1,1)")
+        )
+        hid = await svc.create_habit(
+            owner_id=1,
+            title="Test",
+            type="positive",
+            difficulty="easy",
+            project_id=1,
+        )
+        habit = await svc.get(hid)
+        assert habit["area_id"] == 1
+        res = await svc.up(hid, owner_id=1)
+        assert res is not None and res["xp"] > 0 and res["gold"] > 0
+        res2 = await svc.down(hid, owner_id=1)
+        assert res2 is not None and res2["hp_delta"] < 0
+        assert res2["new_val"] < res["new_val"]
 
-    async with HabitService() as svc:
-        habits = await svc.list_habits(owner_id=123)
-        assert len(habits) == 2
-        names = {habit.name for habit in habits}
-        assert {"Water", "Run"} <= names
 
-    # Toggle today's progress and verify it is stored
-    from datetime import date
+@pytest.mark.asyncio
+async def test_dailies_done_undo_streak(session_maker):
+    async with DailiesService() as svc:
+        await svc.session.execute(sa.text("INSERT INTO users_web (id) VALUES (2)"))
+        await svc.session.execute(
+            sa.text("INSERT INTO areas (id, owner_id, title) VALUES (2,2,'B')")
+        )
+        did = await svc.create_daily(
+            owner_id=2,
+            title="Daily",
+            rrule="FREQ=DAILY",
+            difficulty="easy",
+            area_id=2,
+        )
+        assert await svc.done(did, owner_id=2, on=date(2025, 1, 1)) is True
+        row = await svc.session.execute(
+            sa.select(dailies.c.streak).where(dailies.c.id == did)
+        )
+        assert row.scalar_one() == 1
+        assert await svc.done(did, owner_id=2, on=date(2025, 1, 2)) is True
+        row = await svc.session.execute(
+            sa.select(dailies.c.streak).where(dailies.c.id == did)
+        )
+        assert row.scalar_one() == 2
+        assert await svc.undo(did, owner_id=2, on=date(2025, 1, 2)) is True
+        row = await svc.session.execute(
+            sa.select(dailies.c.streak).where(dailies.c.id == did)
+        )
+        assert row.scalar_one() == 1
 
-    async with HabitService() as svc:
-        updated = await svc.toggle_progress(h.id, date.today())
-        assert updated is not None
-        # progress stored as mapping of ISO date -> bool
-        assert isinstance(updated.progress, dict)
-        iso = date.today().isoformat()
-        assert updated.progress.get(iso) is True
 
+@pytest.mark.asyncio
+async def test_cron_idempotence(session_maker):
+    async with HabitsCronService() as cron:
+        await cron.session.execute(sa.text("INSERT INTO users_web (id) VALUES (3)"))
+        ran = await cron.run(3, today=date(2025, 1, 1))
+        assert ran is True
+        stats = await cron.stats.get_or_create(3)
+        assert stats["last_cron"] == date(2025, 1, 1)
+        ran2 = await cron.run(3, today=date(2025, 1, 1))
+        assert ran2 is False

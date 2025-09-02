@@ -88,6 +88,39 @@ CREATE TABLE channels (
 	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id)
 );
 
+CREATE TABLE dailies (
+	id SERIAL NOT NULL, 
+	owner_id BIGINT, 
+	area_id INTEGER NOT NULL, 
+	project_id INTEGER, 
+	title VARCHAR(255) NOT NULL, 
+	note TEXT, 
+	rrule TEXT NOT NULL, 
+	difficulty VARCHAR(8) NOT NULL, 
+	streak INTEGER, 
+	frozen BOOLEAN, 
+	archived_at TIMESTAMP WITH TIME ZONE, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(owner_id) REFERENCES users_web (id), 
+	FOREIGN KEY(area_id) REFERENCES areas (id), 
+	FOREIGN KEY(project_id) REFERENCES projects (id)
+);
+
+CREATE TABLE daily_logs (
+	id SERIAL NOT NULL, 
+	daily_id INTEGER, 
+	owner_id BIGINT, 
+	date DATE NOT NULL, 
+	done BOOLEAN NOT NULL, 
+	reward_xp INTEGER, 
+	reward_gold INTEGER, 
+	penalty_hp INTEGER, 
+	PRIMARY KEY (id), 
+	CONSTRAINT ux_daily_date UNIQUE (daily_id, date), 
+	FOREIGN KEY(daily_id) REFERENCES dailies (id) ON DELETE CASCADE
+);
+
 CREATE TABLE gcal_links (
 	id SERIAL NOT NULL, 
 	owner_id BIGINT, 
@@ -115,23 +148,36 @@ CREATE TABLE groups (
 	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id)
 );
 
+CREATE TABLE habit_logs (
+	id SERIAL NOT NULL, 
+	habit_id INTEGER, 
+	owner_id BIGINT, 
+	at TIMESTAMP WITH TIME ZONE, 
+	delta INTEGER, 
+	reward_xp INTEGER, 
+	reward_gold INTEGER, 
+	penalty_hp INTEGER, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(habit_id) REFERENCES habits (id) ON DELETE CASCADE
+);
+
 CREATE TABLE habits (
 	id SERIAL NOT NULL, 
 	owner_id BIGINT, 
 	area_id INTEGER NOT NULL, 
 	project_id INTEGER, 
-	name VARCHAR(255) NOT NULL, 
-	description VARCHAR(500), 
-	schedule JSON, 
-	metrics JSON, 
-	frequency VARCHAR(20), 
-	progress JSON, 
-	start_date TIMESTAMP WITHOUT TIME ZONE, 
-	end_date TIMESTAMP WITHOUT TIME ZONE, 
-	created_at TIMESTAMP WITHOUT TIME ZONE, 
-	updated_at TIMESTAMP WITHOUT TIME ZONE, 
+	title VARCHAR(255) NOT NULL, 
+	note TEXT, 
+	type VARCHAR(8) NOT NULL, 
+	difficulty VARCHAR(8) NOT NULL, 
+	up_enabled BOOLEAN, 
+	down_enabled BOOLEAN, 
+	val FLOAT, 
+	tags JSON, 
+	archived_at TIMESTAMP WITH TIME ZONE, 
+	created_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 
-	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id), 
+	FOREIGN KEY(owner_id) REFERENCES users_web (id), 
 	FOREIGN KEY(area_id) REFERENCES areas (id), 
 	FOREIGN KEY(project_id) REFERENCES projects (id)
 );
@@ -319,6 +365,21 @@ CREATE TABLE resources (
 	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id)
 );
 
+CREATE TABLE rewards (
+	id SERIAL NOT NULL, 
+	owner_id BIGINT, 
+	title VARCHAR(255) NOT NULL, 
+	cost_gold INTEGER, 
+	area_id INTEGER NOT NULL, 
+	project_id INTEGER, 
+	archived_at TIMESTAMP WITH TIME ZONE, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(owner_id) REFERENCES users_web (id), 
+	FOREIGN KEY(area_id) REFERENCES areas (id), 
+	FOREIGN KEY(project_id) REFERENCES projects (id)
+);
+
 CREATE TABLE roles (
 	id SERIAL NOT NULL, 
 	name VARCHAR(50) NOT NULL, 
@@ -424,6 +485,18 @@ CREATE TABLE user_settings (
 	PRIMARY KEY (id), 
 	CONSTRAINT uq_user_settings_user_key UNIQUE (user_id, key), 
 	FOREIGN KEY(user_id) REFERENCES users_web (id) ON DELETE CASCADE
+);
+
+CREATE TABLE user_stats (
+	owner_id BIGINT NOT NULL, 
+	level INTEGER, 
+	xp INTEGER, 
+	gold INTEGER, 
+	hp INTEGER, 
+	kp BIGINT, 
+	last_cron DATE, 
+	PRIMARY KEY (owner_id), 
+	FOREIGN KEY(owner_id) REFERENCES users_web (id)
 );
 
 CREATE TABLE users_favorites (

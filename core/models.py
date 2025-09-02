@@ -26,7 +26,7 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID, ARRAY
 
 from base import Base
 
@@ -451,30 +451,88 @@ class Habit(Base):
     __tablename__ = "habits"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
+    owner_id = Column(BigInteger, ForeignKey("users_web.id"))
     area_id = Column(Integer, ForeignKey("areas.id"), nullable=False)
     project_id = Column(Integer, ForeignKey("projects.id"))
-    name = Column(String(255), nullable=False)
-    description = Column(String(500))
-    schedule = Column(JSON, default=dict)
-    metrics = Column(JSON, default=dict)
-    frequency = Column(String(20), default="daily")
-    progress = Column(JSON, default=dict)
-    start_date = Column(DateTime)
-    end_date = Column(DateTime)
-    created_at = Column(DateTime, default=utcnow)
-    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow)
+    title = Column(String(255), nullable=False)
+    note = Column(Text)
+    type = Column(String(8), nullable=False)
+    difficulty = Column(String(8), nullable=False)
+    up_enabled = Column(Boolean, default=True)
+    down_enabled = Column(Boolean, default=True)
+    val = Column(Float, default=0.0)
+    tags = Column(JSON)
+    archived_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), default=utcnow)
 
-    area = relationship("Area")
-    project = relationship("Project")
 
-    def toggle_progress(self, day: date) -> None:
-        today = date.today()
-        if day != today:
-            raise ValueError("Can only toggle progress for today")
-        key = day.isoformat()
-        self.progress = self.progress or {}
-        self.progress[key] = not self.progress.get(key, False)
+class HabitLog(Base):
+    __tablename__ = "habit_logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    habit_id = Column(Integer, ForeignKey("habits.id", ondelete="CASCADE"))
+    owner_id = Column(BigInteger)
+    at = Column(DateTime(timezone=True), default=utcnow)
+    delta = Column(Integer)
+    reward_xp = Column(Integer)
+    reward_gold = Column(Integer)
+    penalty_hp = Column(Integer)
+
+
+class Daily(Base):
+    __tablename__ = "dailies"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(BigInteger, ForeignKey("users_web.id"))
+    area_id = Column(Integer, ForeignKey("areas.id"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.id"))
+    title = Column(String(255), nullable=False)
+    note = Column(Text)
+    rrule = Column(Text, nullable=False)
+    difficulty = Column(String(8), nullable=False)
+    streak = Column(Integer, default=0)
+    frozen = Column(Boolean, default=False)
+    archived_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+
+
+class DailyLog(Base):
+    __tablename__ = "daily_logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    daily_id = Column(Integer, ForeignKey("dailies.id", ondelete="CASCADE"))
+    owner_id = Column(BigInteger)
+    date = Column(Date, nullable=False)
+    done = Column(Boolean, nullable=False)
+    reward_xp = Column(Integer)
+    reward_gold = Column(Integer)
+    penalty_hp = Column(Integer)
+    __table_args__ = (UniqueConstraint("daily_id", "date", name="ux_daily_date"),)
+
+
+class Reward(Base):
+    __tablename__ = "rewards"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    owner_id = Column(BigInteger, ForeignKey("users_web.id"))
+    title = Column(String(255), nullable=False)
+    cost_gold = Column(Integer)
+    area_id = Column(Integer, ForeignKey("areas.id"), nullable=False)
+    project_id = Column(Integer, ForeignKey("projects.id"))
+    archived_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+
+
+class UserStats(Base):
+    __tablename__ = "user_stats"
+
+    owner_id = Column(BigInteger, ForeignKey("users_web.id"), primary_key=True)
+    level = Column(Integer, default=1)
+    xp = Column(Integer, default=0)
+    gold = Column(Integer, default=0)
+    hp = Column(Integer, default=50)
+    kp = Column(BigInteger, default=0)
+    last_cron = Column(Date)
 
 
 class Resource(Base):
