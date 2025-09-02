@@ -21,6 +21,7 @@
   - [E14: Insights & Reports (ревью Areas, фокус-часы)](#e14-insights--reports-ревью-areas-фокус-часы)
   - [E15: User-configurable dashboard (user_settings)](#e15-user-configurable-dashboard-user_settings)
   - [E16: Habits](#e16-habits)
+  - [E17: Frontend modernization](#e17-frontend-modernization)
   - [E17: Frontend Modernization](#e17-frontend-modernization)
 - [MR-план](#mr-план)
 - [Definition of Done](#definition-of-done)
@@ -341,6 +342,12 @@ POST /api/v1/rewards/{id}/buy
 - `/rewards/{id}/buy` списывает Gold и возвращает баланс.
 - В `/habits` действия мгновенно отражаются в HUD.
 
+
+### E17: Frontend modernization
+See [frontend_modernization.md](./frontend_modernization.md).
+
+**Tasks**
+- [ ] E17a: базовая настройка ESLint, Prettier, Vitest и Testing Library в `web/`.
 ### E17: Frontend Modernization
 **User Stories**
 1. Как разработчик, я хочу единый современный фронтенд‑стек, чтобы страницы собирались одним тулчейном.

@@ -84,6 +84,7 @@
 - Install deps: `pip install --quiet -r requirements.txt`
 - Run tests: `pytest -q` (requires local PostgreSQL on `127.0.0.1:5432`)
 - Lint: `flake8` (if configured)
+- Frontend changes (`web/`) require `npm run lint` and `npm test`
 - Перед запуском сервисов вызывается `init_app_once(env)` в entrypoints `web` и `bot`.
 - После изменения схемы обновляйте DDL-файлы (`core/db/ddl/*`) и прогоняйте тесты: `pytest -q`.
 
