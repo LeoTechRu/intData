@@ -1519,6 +1519,63 @@
         "title": "StatsOut",
         "type": "object"
       },
+      "SummaryItem": {
+        "properties": {
+          "area_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area Id"
+          },
+          "day": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day"
+          },
+          "owner_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner Id"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "total_seconds": {
+            "title": "Total Seconds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total_seconds"
+        ],
+        "title": "SummaryItem",
+        "type": "object"
+      },
       "TaskCreate": {
         "description": "Payload for creating a task.",
         "properties": {
@@ -4750,6 +4807,54 @@
           }
         },
         "summary": "Api:Time Start",
+        "tags": [
+          "time"
+        ]
+      }
+    },
+    "/api/v1/time/summary": {
+      "get": {
+        "description": "Aggregate time entries for the current user.",
+        "operationId": "api_time_summary_api_v1_time_summary_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "group_by",
+            "required": false,
+            "schema": {
+              "default": "day",
+              "title": "Group By",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SummaryItem"
+                  },
+                  "title": "Response Api Time Summary Api V1 Time Summary Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api:Time Summary",
         "tags": [
           "time"
         ]

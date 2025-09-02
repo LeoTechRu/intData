@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from typing import List, Optional
+from collections import defaultdict
+
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -194,3 +196,43 @@ class TimeService:
             stmt = stmt.where(TimeEntry.start_time <= time_to)
         res = await self.session.execute(stmt)
         return res.scalars().all()
+
+    async def summary(self, *, owner_id: int | None = None, group_by: str = "day") -> list[dict]:
+        """Aggregate durations grouped by the specified field.
+
+        Durations are returned in seconds. ``group_by`` supports
+        ``day``, ``project``, ``area`` and ``user``.
+        """
+
+        if group_by not in {"day", "project", "area", "user"}:
+            raise ValueError("invalid group_by")
+        stmt = select(TimeEntry)
+        if owner_id is not None:
+            stmt = stmt.where(TimeEntry.owner_id == owner_id)
+        res = await self.session.execute(stmt)
+        entries = res.scalars().all()
+        totals: dict[str, int] = defaultdict(int)
+        for e in entries:
+            if not e.start_time or not e.end_time:
+                continue
+            dur = e.duration_seconds or 0
+            if group_by == "day":
+                key = e.start_time.date().isoformat()
+            elif group_by == "project":
+                key = str(e.project_id)
+            elif group_by == "area":
+                key = str(e.area_id)
+            else:
+                key = str(e.owner_id)
+            totals[key] += dur
+        result = []
+        for key, total in totals.items():
+            if group_by == "day":
+                result.append({"day": key, "total_seconds": total})
+            elif group_by == "project":
+                result.append({"project_id": None if key == "None" else int(key), "total_seconds": total})
+            elif group_by == "area":
+                result.append({"area_id": None if key == "None" else int(key), "total_seconds": total})
+            else:
+                result.append({"owner_id": int(key), "total_seconds": total})
+        return result

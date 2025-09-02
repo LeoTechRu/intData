@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Time summary endpoint `/api/v1/time/summary` for aggregating durations by day, project, area or user.
 - comprehensive test suite covering DB idempotency, PARA repair, OpenAPI snapshot parity and core habits/today/tasks/time flows.
 - Epic E17 "Frontend Modernization" в `docs/BACKLOG.md` (Next.js/Vite выбор, TS+Tailwind, перенос страниц, очистка legacy).
 - Машиночитаемая схема БД (`core/db/SCHEMA.*`) и утилита `tools.schema_export` с проверкой в CI.
