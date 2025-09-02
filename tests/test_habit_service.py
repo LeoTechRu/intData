@@ -13,6 +13,8 @@ from core.services.habits import (
     metadata,
     dailies,
 )
+from core.services.nexus_service import HabitService
+from core.models import Base, WebUser, Area, Project, Habit as HabitModel
 
 
 @pytest_asyncio.fixture
@@ -102,3 +104,49 @@ async def test_cron_idempotence(session_maker):
         assert stats["last_cron"] == date(2025, 1, 1)
         ran2 = await cron.run(3, today=date(2025, 1, 1))
         assert ran2 is False
+
+
+@pytest.mark.asyncio
+async def test_list_habits_preloads_area_project():
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+    async with engine.begin() as conn:
+        await conn.run_sync(
+            Base.metadata.create_all,
+            tables=[
+                WebUser.__table__,
+                Area.__table__,
+                Project.__table__,
+                HabitModel.__table__,
+            ],
+        )
+    db.async_session = async_session
+    async with HabitService() as svc:
+        await svc.session.execute(sa.insert(WebUser).values(id=4, username="u4"))
+        await svc.session.execute(
+            sa.insert(Area).values(id=4, owner_id=4, name="A", title="A")
+        )
+        await svc.session.execute(
+            sa.insert(Project).values(id=4, owner_id=4, area_id=4, name="P")
+        )
+        svc.session.add(
+            HabitModel(
+                owner_id=4,
+                area_id=4,
+                project_id=4,
+                title="H",
+                type="positive",
+                difficulty="easy",
+            )
+        )
+        await svc.session.flush()
+        habits = await svc.list_habits(owner_id=4)
+        assert len(habits) == 1
+        habit = habits[0]
+        from sqlalchemy import inspect
+
+        assert habit.area.id == 4
+        assert habit.project.id == 4
+        assert "area" not in inspect(habit).unloaded
+        assert "project" not in inspect(habit).unloaded
+    await engine.dispose()

@@ -33,6 +33,9 @@ ALTER TABLE habits ADD COLUMN IF NOT EXISTS tags TEXT[];
 ALTER TABLE habits ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
 ALTER TABLE habits ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();
 ALTER TABLE habits ALTER COLUMN area_id SET NOT NULL;
+ALTER TABLE habits
+    ADD CONSTRAINT IF NOT EXISTS fk_habits_area FOREIGN KEY (area_id) REFERENCES areas(id),
+    ADD CONSTRAINT IF NOT EXISTS fk_habits_project FOREIGN KEY (project_id) REFERENCES projects(id);
 
 CREATE INDEX IF NOT EXISTS idx_habits_owner_area ON habits(owner_id, area_id);
 CREATE INDEX IF NOT EXISTS idx_habits_project ON habits(project_id);
@@ -77,6 +80,9 @@ ALTER TABLE dailies ADD COLUMN IF NOT EXISTS frozen BOOLEAN NOT NULL DEFAULT FAL
 ALTER TABLE dailies ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
 ALTER TABLE dailies ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();
 ALTER TABLE dailies ALTER COLUMN area_id SET NOT NULL;
+ALTER TABLE dailies
+    ADD CONSTRAINT IF NOT EXISTS fk_dailies_area FOREIGN KEY (area_id) REFERENCES areas(id),
+    ADD CONSTRAINT IF NOT EXISTS fk_dailies_project FOREIGN KEY (project_id) REFERENCES projects(id);
 
 -- daily_logs
 CREATE TABLE IF NOT EXISTS daily_logs (
@@ -111,6 +117,9 @@ ALTER TABLE rewards ADD COLUMN IF NOT EXISTS project_id INTEGER REFERENCES proje
 ALTER TABLE rewards ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
 ALTER TABLE rewards ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();
 ALTER TABLE rewards ALTER COLUMN area_id SET NOT NULL;
+ALTER TABLE rewards
+    ADD CONSTRAINT IF NOT EXISTS fk_rewards_area FOREIGN KEY (area_id) REFERENCES areas(id),
+    ADD CONSTRAINT IF NOT EXISTS fk_rewards_project FOREIGN KEY (project_id) REFERENCES projects(id);
 CREATE INDEX IF NOT EXISTS idx_rewards_owner_area ON rewards(owner_id, area_id);
 
 -- user_stats table

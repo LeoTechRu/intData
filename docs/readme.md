@@ -22,3 +22,34 @@ Areas — управляемое дерево без ограничения гл
    - В ответе найдите поле `chat` → `id` (будет отрицательным числом).
 5. Используйте полученный `chat_id` в настройках канала, например при вызове
    `POST /api/v1/projects/{id}/notifications`.
+
+## Deployment Notes / Troubleshooting
+
+### Habit.area AttributeError
+
+На некоторых окружениях страница [/habits] приводила к `AttributeError: type object 'Habit' has no attribute 'area'`.
+Причина — в ORM‑модели `Habit` отсутствовали связи `area` и `project`, несмотря на наличие столбцов в БД.
+Сервис `list_habits` загружал связи через `selectinload`, что и вызывало падение.
+
+**Воспроизведение:** открыть `/habits` при включённом фича‑флаге `HABITS_V1_ENABLED`.
+
+**Исправление:** добавлены отношения в модели, DDL гарантирует FK на `areas`/`projects`,
+`core.db.repair` наследует `area_id` от проекта и логирует случаи, когда оба идентификатора отсутствуют.
+См. эпики [E16](./BACKLOG.md#e16-habits), [E12](./BACKLOG.md#e12-calendaralarms-fusion-сегодня--общий-список)
+и [E13](./BACKLOG.md#e13-tasks--time-para-first).
+
+### DB bootstrap / repair
+
+```bash
+python -m core.db.migrate && python -m core.db.repair
+```
+
+### Post-deploy checklist
+
+- [ ] Run DB bootstrap/repair: `python -m core.db.migrate && python -m core.db.repair`
+- [ ] Verify `habits.area_id`/`project_id` columns & FKs exist.
+- [ ] Open `/habits` as a new user → HTTP 200, empty state renders.
+- [ ] Trigger `/api/v1/habits/cron/run` for a user; run again (idempotent).
+- [ ] Check `/calendar/agenda?include_habits=1&from=YYYY-MM-DD&to=YYYY-MM-DD` returns virtual dailies.
+- [ ] Export `feed.ics` and confirm VTODO with RRULE for dailies.
+- [ ] Review `docs/CHANGELOG.md` entries merged under [Unreleased].
