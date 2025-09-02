@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core import db
 from core.config import config
+from .errors import CooldownError, InsufficientGoldError
 
 # SQLite-friendly table metadata used by tests and services
 metadata = sa.MetaData()
@@ -283,7 +284,10 @@ class HabitsService:
         if config.HABITS_ANTIFARM_ENABLED:
             last = habit.get("last_action_at")
             if last and (now - last).total_seconds() < habit["cooldown_sec"]:
-                raise ValueError("cooldown")
+                remaining = int(
+                    habit["cooldown_sec"] - (now - last).total_seconds()
+                )
+                raise CooldownError(max(1, remaining))
             today = now.date()
             res = await self.session.execute(
                 sa.select(sa.func.count())
@@ -342,7 +346,10 @@ class HabitsService:
         if config.HABITS_ANTIFARM_ENABLED:
             last = habit.get("last_action_at")
             if last and (now - last).total_seconds() < habit["cooldown_sec"]:
-                raise ValueError("cooldown")
+                remaining = int(
+                    habit["cooldown_sec"] - (now - last).total_seconds()
+                )
+                raise CooldownError(max(1, remaining))
         base_hp = config.HP_BASE[diff]
         hp = -base_hp
         new_val = val - config.VAL_STEP
@@ -610,6 +617,6 @@ class RewardsService:
         cost = row["cost_gold"]
         stats = await self.stats.get_or_create(owner_id)
         if stats["gold"] < cost:
-            raise ValueError("insufficient_gold")
+            raise InsufficientGoldError()
         new_stats = await self.stats.apply(owner_id, gold=-cost)
         return new_stats["gold"]

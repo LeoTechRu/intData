@@ -25,6 +25,16 @@ Areas — управляемое дерево без ограничения гл
 
 ## Deployment Notes / Troubleshooting
 
+### Troubleshooting /habits
+
+**Симптом:** страница `/habits` показывает «Требуется вход и связанный Telegram» при активной сессии.
+
+**Причина:** маршруты использовали `get_current_tg_user`, игнорируя веб‑сессию пользователя.
+
+**Решение:** новый резолвер `get_current_owner` обрабатывает куки веб‑пользователя и привязку Telegram. Страница `/habits` всегда возвращает `200 OK`, но действия записи требуют привязку и отвечают `403 tg_link_required`.
+
+**UI:** при ответе `429` клиент показывает уведомление «Кулдаун: повторите через N сек.» и временно блокирует кнопки.
+
 ### Habit.area AttributeError
 
 На некоторых окружениях страница [/habits] приводила к `AttributeError: type object 'Habit' has no attribute 'area'`.
@@ -54,11 +64,10 @@ python -m core.db.migrate && python -m core.db.repair
 
 ### Post-deploy checklist
 
-- [ ] Run DB bootstrap/repair: `python -m core.db.migrate && python -m core.db.repair`
-- [ ] Verify new columns: user_stats.daily_xp/daily_gold; habits.daily_limit/cooldown_sec/last_action_at; habit_logs.val_after.
-- [ ] Set env: `HABITS_ANTIFARM_ENABLED=true`, `HABITS_WEEKLY_DIGEST_ENABLED=true`, `DIGEST_WEEKLY_CRON="MON 08:00 Europe/Bucharest"`.
-- [ ] Open `/habits` → verify counters/cooldown appear; try rapid clicks → see cooldown; after daily_limit → reward 0.
-- [ ] Call `/api/v1/habits/leaderboard?scope=project&project_id=...&period=week` → returns leaders.
-- [ ] Trigger `/api/v1/habits/digest/run?scope=project&project_id=...&deliver=1` → message posted in Telegram.
-- [ ] Export CSV `/api/v1/habits/export?from=YYYY-MM-DD&to=YYYY-MM-DD` → correct headers and rows.
-- [ ] Review CHANGELOG under [Unreleased].
+- [ ] Запустить: `python -m core.db.migrate && python -m core.db.repair`.
+- [ ] Зайти под web-пользователем без TG → `/habits` 200 OK, виден баннер и пустое состояние.
+- [ ] Привязать TG → `/habits` показывает HUD и списки; клики по привычкам работают.
+- [ ] Сделать два быстрых клика по привычке → второй запрос 429, UI показывает таймер.
+- [ ] Проверить `/calendar/agenda?include_habits=1` → видны виртуальные ежедневки.
+- [ ] Пройти `/api/v1/rewards/{id}/buy` с недостатком золота → 400.
+- [ ] Просмотреть CHANGELOG [Unreleased] — новые пункты присутствуют.

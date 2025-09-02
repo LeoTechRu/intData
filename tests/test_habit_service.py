@@ -110,7 +110,8 @@ async def test_cooldown_enforced(session_maker):
             area_id=6,
         )
         await svc.up(hid, owner_id=6)
-        with pytest.raises(ValueError):
+        from core.services.errors import CooldownError
+        with pytest.raises(CooldownError):
             await svc.up(hid, owner_id=6)
 
 

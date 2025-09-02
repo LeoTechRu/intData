@@ -1,14 +1,12 @@
-"""Public API endpoints for Habitica-like module (habits/dailies/rewards)."""
-from __future__ import annotations
-
 from datetime import date
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Body, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from core.models import TgUser
+from core.auth.owner import OwnerCtx, get_current_owner
+from core.services.errors import CooldownError, InsufficientGoldError
 from core.services.habits import (
     HabitsService,
     DailiesService,
@@ -16,10 +14,13 @@ from core.services.habits import (
     UserStatsService,
     HabitsCronService,
 )
-from web.dependencies import get_current_tg_user
-
 
 router = APIRouter(tags=["habits"])
+
+TG_LINK_ERROR = {
+    "error": "tg_link_required",
+    "message": "Для этого действия нужно связать Telegram-аккаунт",
+}
 
 
 # ----------------------- Habits -----------------------
@@ -37,16 +38,18 @@ class HabitIn(BaseModel):
 @router.post("/habits", status_code=201)
 async def api_create_habit(
     payload: HabitIn,
-    current_user: TgUser | None = Depends(get_current_tg_user),
+    owner: OwnerCtx | None = Depends(get_current_owner),
 ):
-    if not current_user:
+    if owner is None:
         raise HTTPException(status_code=401)
+    if not owner.has_tg:
+        return JSONResponse(status_code=403, content=TG_LINK_ERROR)
     if payload.area_id is None and payload.project_id is None:
         raise HTTPException(status_code=400, detail="area_or_project_required")
     try:
         async with HabitsService() as svc:
             hid = await svc.create_habit(
-                owner_id=current_user.telegram_id,
+                owner_id=owner.owner_id,
                 title=payload.title,
                 type=payload.type,
                 difficulty=payload.difficulty,
@@ -62,12 +65,31 @@ async def api_create_habit(
 @router.post("/habits/{habit_id}/up")
 async def api_habit_up(
     habit_id: int,
-    current_user: TgUser | None = Depends(get_current_tg_user),
+    owner: OwnerCtx | None = Depends(get_current_owner),
 ):
-    if not current_user:
+    if owner is None:
         raise HTTPException(status_code=401)
-    async with HabitsService() as svc:
-        res = await svc.up(habit_id, owner_id=current_user.telegram_id)
+    if not owner.has_tg:
+        return JSONResponse(status_code=403, content=TG_LINK_ERROR)
+    try:
+        async with HabitsService() as svc:
+            res = await svc.up(habit_id, owner_id=owner.owner_id)
+    except CooldownError as e:
+        raise HTTPException(
+            status_code=429,
+            detail={"error": "cooldown", "retry_after": e.retry_after},
+            headers={"Retry-After": str(e.retry_after)},
+        )
+    except InsufficientGoldError:
+        raise HTTPException(status_code=400, detail={"error": "insufficient_gold"})
+    except ValueError as exc:
+        if str(exc) == "cooldown":
+            raise HTTPException(
+                status_code=429,
+                detail={"error": "cooldown", "retry_after": 0},
+                headers={"Retry-After": "0"},
+            )
+        raise HTTPException(status_code=400, detail={"error": str(exc)})
     if res is None:
         raise HTTPException(status_code=404)
     return res
@@ -76,33 +98,52 @@ async def api_habit_up(
 @router.post("/habits/{habit_id}/down")
 async def api_habit_down(
     habit_id: int,
-    current_user: TgUser | None = Depends(get_current_tg_user),
+    owner: OwnerCtx | None = Depends(get_current_owner),
 ):
-    if not current_user:
+    if owner is None:
         raise HTTPException(status_code=401)
-    async with HabitsService() as svc:
-        res = await svc.down(habit_id, owner_id=current_user.telegram_id)
+    if not owner.has_tg:
+        return JSONResponse(status_code=403, content=TG_LINK_ERROR)
+    try:
+        async with HabitsService() as svc:
+            res = await svc.down(habit_id, owner_id=owner.owner_id)
+    except CooldownError as e:
+        raise HTTPException(
+            status_code=429,
+            detail={"error": "cooldown", "retry_after": e.retry_after},
+            headers={"Retry-After": str(e.retry_after)},
+        )
+    except ValueError as exc:
+        if str(exc) == "cooldown":
+            raise HTTPException(
+                status_code=429,
+                detail={"error": "cooldown", "retry_after": 0},
+                headers={"Retry-After": "0"},
+            )
+        raise HTTPException(status_code=400, detail={"error": str(exc)})
     if res is None:
         raise HTTPException(status_code=404)
     return res
 
 
 @router.get("/habits/stats")
-async def api_stats(current_user: TgUser | None = Depends(get_current_tg_user)):
-    if not current_user:
+async def api_stats(owner: OwnerCtx | None = Depends(get_current_owner)):
+    if owner is None:
         raise HTTPException(status_code=401)
     async with UserStatsService() as svc:
-        stats = await svc.get_or_create(current_user.telegram_id)
+        stats = await svc.get_or_create(owner.owner_id)
     stats.pop("owner_id", None)
     return stats
 
 
 @router.post("/habits/cron/run")
-async def api_cron_run(current_user: TgUser | None = Depends(get_current_tg_user)):
-    if not current_user:
+async def api_cron_run(owner: OwnerCtx | None = Depends(get_current_owner)):
+    if owner is None:
         raise HTTPException(status_code=401)
+    if not owner.has_tg:
+        return JSONResponse(status_code=403, content=TG_LINK_ERROR)
     async with HabitsCronService() as svc:
-        ran = await svc.run(current_user.telegram_id)
+        ran = await svc.run(owner.owner_id)
     return {"ran": ran}
 
 
@@ -121,16 +162,18 @@ class DailyIn(BaseModel):
 @router.post("/dailies", status_code=201)
 async def api_create_daily(
     payload: DailyIn,
-    current_user: TgUser | None = Depends(get_current_tg_user),
+    owner: OwnerCtx | None = Depends(get_current_owner),
 ):
-    if not current_user:
+    if owner is None:
         raise HTTPException(status_code=401)
+    if not owner.has_tg:
+        return JSONResponse(status_code=403, content=TG_LINK_ERROR)
     if payload.area_id is None and payload.project_id is None:
         raise HTTPException(status_code=400, detail="area_or_project_required")
     try:
         async with DailiesService() as svc:
             did = await svc.create_daily(
-                owner_id=current_user.telegram_id,
+                owner_id=owner.owner_id,
                 title=payload.title,
                 rrule=payload.rrule,
                 difficulty=payload.difficulty,
@@ -151,13 +194,15 @@ class DatePayload(BaseModel):
 async def api_daily_done(
     daily_id: int,
     payload: DatePayload = Body(default=None),
-    current_user: TgUser | None = Depends(get_current_tg_user),
+    owner: OwnerCtx | None = Depends(get_current_owner),
 ):
-    if not current_user:
+    if owner is None:
         raise HTTPException(status_code=401)
+    if not owner.has_tg:
+        return JSONResponse(status_code=403, content=TG_LINK_ERROR)
     on = payload.date if payload else None
     async with DailiesService() as svc:
-        ok = await svc.done(daily_id, owner_id=current_user.telegram_id, on=on)
+        ok = await svc.done(daily_id, owner_id=owner.owner_id, on=on)
     if not ok:
         raise HTTPException(status_code=404)
     return {"ok": True}
@@ -167,13 +212,15 @@ async def api_daily_done(
 async def api_daily_undo(
     daily_id: int,
     payload: DatePayload = Body(default=None),
-    current_user: TgUser | None = Depends(get_current_tg_user),
+    owner: OwnerCtx | None = Depends(get_current_owner),
 ):
-    if not current_user:
+    if owner is None:
         raise HTTPException(status_code=401)
+    if not owner.has_tg:
+        return JSONResponse(status_code=403, content=TG_LINK_ERROR)
     on = payload.date if payload else None
     async with DailiesService() as svc:
-        ok = await svc.undo(daily_id, owner_id=current_user.telegram_id, on=on)
+        ok = await svc.undo(daily_id, owner_id=owner.owner_id, on=on)
     if not ok:
         raise HTTPException(status_code=404)
     return {"ok": True}
@@ -192,16 +239,18 @@ class RewardIn(BaseModel):
 @router.post("/rewards", status_code=201)
 async def api_create_reward(
     payload: RewardIn,
-    current_user: TgUser | None = Depends(get_current_tg_user),
+    owner: OwnerCtx | None = Depends(get_current_owner),
 ):
-    if not current_user:
+    if owner is None:
         raise HTTPException(status_code=401)
+    if not owner.has_tg:
+        return JSONResponse(status_code=403, content=TG_LINK_ERROR)
     if payload.area_id is None and payload.project_id is None:
         raise HTTPException(status_code=400, detail="area_or_project_required")
     try:
         async with RewardsService() as svc:
             rid = await svc.create(
-                owner_id=current_user.telegram_id,
+                owner_id=owner.owner_id,
                 title=payload.title,
                 cost_gold=payload.cost_gold,
                 area_id=payload.area_id,
@@ -214,26 +263,28 @@ async def api_create_reward(
 
 @router.get("/rewards")
 async def api_list_rewards(
-    current_user: TgUser | None = Depends(get_current_tg_user),
+    owner: OwnerCtx | None = Depends(get_current_owner),
 ):
-    if not current_user:
+    if owner is None:
         raise HTTPException(status_code=401)
     async with RewardsService() as svc:
-        rewards = await svc.list(current_user.telegram_id)
+        rewards = await svc.list(owner.owner_id)
     return rewards
 
 
 @router.post("/rewards/{reward_id}/buy")
 async def api_buy_reward(
     reward_id: int,
-    current_user: TgUser | None = Depends(get_current_tg_user),
+    owner: OwnerCtx | None = Depends(get_current_owner),
 ):
-    if not current_user:
+    if owner is None:
         raise HTTPException(status_code=401)
+    if not owner.has_tg:
+        return JSONResponse(status_code=403, content=TG_LINK_ERROR)
     try:
         async with RewardsService() as svc:
-            gold_after = await svc.buy(reward_id, owner_id=current_user.telegram_id)
-    except ValueError:
+            gold_after = await svc.buy(reward_id, owner_id=owner.owner_id)
+    except InsufficientGoldError:
         return JSONResponse(
             status_code=400, content={"error": "insufficient_gold"}
         )
@@ -244,4 +295,3 @@ async def api_buy_reward(
 
 # Alias for router include
 api = router
-
