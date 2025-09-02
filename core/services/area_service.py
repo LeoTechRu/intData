@@ -54,7 +54,7 @@ class AreaService:
     async def get(self, area_id: int) -> Area | None:
         return await self.session.get(Area, area_id)
 
-    async def create_area(self, owner_id: int, name: str, parent_id: int | None = None) -> Area:
+    async def create_area(self, owner_id: int, name: str, parent_id: int | None = None, *, color: str | None = None) -> Area:
         parent = None
         depth = 0
         if parent_id is not None:
@@ -76,6 +76,7 @@ class AreaService:
             mp_path=mp_path,
             depth=depth,
             is_active=True,
+            color=color or "#F1F5F9",
         )
         self.session.add(a)
         await self.session.flush()

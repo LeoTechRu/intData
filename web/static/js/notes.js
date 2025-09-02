@@ -1,4 +1,5 @@
 import { confirmDialog } from '/static/js/ui/confirm.js';
+import { loadAreas, getAreaColor } from '/static/js/area-cache.js';
 
 async function api(url, opts){
   const r = await fetch(url, {credentials:'same-origin', ...opts});
@@ -10,11 +11,24 @@ function escapeHtml(str){
   return (str||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/'/g,'&#39;');
 }
 
+function autoTextColor(hex){
+  hex = (hex||'').replace('#','');
+  if(hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+  if(hex.length!==6) return '#111827';
+  const r=parseInt(hex.slice(0,2),16);
+  const g=parseInt(hex.slice(2,4),16);
+  const b=parseInt(hex.slice(4,6),16);
+  const yiq = (r*299 + g*587 + b*114)/1000;
+  return yiq >= 128 ? '#111827' : '#fff';
+}
+
 function noteCardHTML(n){
   const title = n.title ? `<div class="note-card__title">${escapeHtml(n.title)}</div>` : '';
   const clamped = (n.content||'').length>200 ? ' note-card__body--clamped' : '';
+  const bg = n.color || getAreaColor(n.area_id);
+  const fg = autoTextColor(bg);
   return `
-  <article class="c-card note-card ${n.area?.color ? 'note--'+n.area.color : ''}" data-note-id="${n.id}" data-area-id="${n.area?.id||''}" data-project-id="${n.project?.id||''}" data-pinned="${n.pinned?1:0}" data-title="${escapeHtml(n.title||'')}">
+  <article class="c-card note-card" data-note-id="${n.id}" data-area-id="${n.area_id||''}" data-project-id="${n.project_id||''}" data-pinned="${n.pinned?1:0}" data-title="${escapeHtml(n.title||'')}" style="--note-bg:${bg};--note-fg:${fg};">
     <button type="button" class="icon-btn note-card__pin js-pin${n.pinned?' is-active':''}" aria-label="${n.pinned?'Открепить':'Закрепить'}" data-tooltip="${n.pinned?'Открепить':'Закрепить'}"><svg class="icon"><use href="/static/img/ui/icons.svg#pin"/></svg></button>
     <div class="note-card__body${clamped}">
       ${title}
@@ -73,7 +87,13 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   const grid = document.getElementById('notesGrid');
   const form = document.getElementById('quick-note');
   const noteDialog = document.getElementById('noteDialog');
+  await loadAreas();
   if(!grid) return;
+
+  document.querySelectorAll('.note-card').forEach(card=>{
+    const bg = card.style.getPropertyValue('--note-bg') || getAreaColor(card.dataset.areaId);
+    card.style.setProperty('--note-fg', autoTextColor(bg));
+  });
 
   if(form){
     const areaSel = form.querySelector('select[name="area_id"]');
@@ -81,7 +101,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     const contentTA = form.querySelector('textarea[name="content"]');
     const pinBtn = form.querySelector('.js-qn-pin');
     let pinned = false;
-    const areas = await api('/api/v1/areas?flat=1').catch(()=>[]);
+    const areas = await loadAreas();
     areaSel.innerHTML = areas.map(a=>`<option value="${a.id}" data-color="${a.color||''}">${a.name}</option>`).join('');
     const inbox = areas.find(a=> (a.slug||'').toLowerCase()==='inbox' || a.name.toLowerCase()==='входящие');
     if(inbox) areaSel.value = inbox.id;

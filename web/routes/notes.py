@@ -53,6 +53,9 @@ class NoteResponse(BaseModel):
     pinned: bool = False
     archived_at: Optional[datetime] = None
     order_index: int
+    area_id: int
+    project_id: Optional[int] = None
+    color: str
     area: AreaOut
     project: Optional[ProjectOut] = None
 
@@ -67,6 +70,9 @@ class NoteResponse(BaseModel):
             pinned=note.pinned,
             archived_at=note.archived_at,
             order_index=note.order_index,
+            area_id=area.id,
+            project_id=project.id if project else None,
+            color=getattr(area, "color", "#F1F5F9"),
             area=AreaOut(id=area.id, name=area.name, slug=getattr(area, "slug", None), color=getattr(area, "color", None)),
             project=ProjectOut(id=project.id, name=project.name) if project else None,
         )
@@ -141,6 +147,7 @@ async def create_note(
                     owner_id=current_user.telegram_id, name="Входящие"
                 )
                 inbox.slug = "inbox"
+                inbox.color = "#FFF8B8"
                 await psvc.session.flush()
             area_id = inbox.id
     async with NoteService() as service:

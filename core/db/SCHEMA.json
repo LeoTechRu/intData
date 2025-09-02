@@ -1,8 +1,8 @@
 {
   "version": 1,
   "dialect": "postgresql",
-  "generated_at": "2025-09-01T21:39:21Z",
-  "metadata_hash": "367fdda9f8fb0e555b000a30cb9c26809129331b8bcb08ad551bf454040166a8",
+  "generated_at": "2025-09-02T17:08:26Z",
+  "metadata_hash": "5d1364a49fecd381220764b69aa82858d1240aeae4adcf3eb4757a5ebee6f81f",
   "enums": [
     {
       "name": "activitytype",
@@ -301,10 +301,10 @@
         {
           "name": "color",
           "type": "VARCHAR(7)",
-          "nullable": true,
+          "nullable": false,
           "primary_key": false,
           "autoincrement": true,
-          "default": null,
+          "default": "#F1F5F9",
           "server_default": null,
           "comment": ""
         },

@@ -29,7 +29,7 @@
   <!-- Сетка карточек -->
   <div id="notesGrid" class="notes-grid" aria-live="polite">
     {% for n in notes %}
-    <article class="c-card note-card {% if n.area.color %}note--{{ n.area.color }}{% endif %}" data-note-id="{{n.id}}" data-area-id="{{ n.area.id }}" data-project-id="{{ n.project.id if n.project else '' }}" data-pinned="{{ 1 if n.pinned else 0 }}" data-title="{{ n.title or '' }}" data-content="{{ n.content }}">
+    <article class="c-card note-card" style="--note-bg: {{ n.area.color or '#F1F5F9' }};" data-note-id="{{n.id}}" data-area-id="{{ n.area.id }}" data-project-id="{{ n.project.id if n.project else '' }}" data-pinned="{{ 1 if n.pinned else 0 }}" data-title="{{ n.title or '' }}" data-content="{{ n.content }}">
       <button type="button" class="icon-btn note-card__pin js-pin{% if n.pinned %} is-active{% endif %}" aria-label="{{ 'Открепить' if n.pinned else 'Закрепить' }}" data-tooltip="{{ 'Открепить' if n.pinned else 'Закрепить' }}">
         <svg class="icon"><use href="/static/img/ui/icons.svg#pin"/></svg>
       </button>
