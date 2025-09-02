@@ -22,6 +22,7 @@
   - [E15: User-configurable dashboard (user_settings)](#e15-user-configurable-dashboard-user_settings)
   - [E16: Habits](#e16-habits)
   - [E17: Frontend modernization](#e17-frontend-modernization)
+  - [E17: Frontend Modernization](#e17-frontend-modernization)
 - [MR-план](#mr-план)
 - [Definition of Done](#definition-of-done)
 - [Appendix: Notes from merge](#appendix-notes-from-merge)
@@ -341,11 +342,28 @@ POST /api/v1/rewards/{id}/buy
 - `/rewards/{id}/buy` списывает Gold и возвращает баланс.
 - В `/habits` действия мгновенно отражаются в HUD.
 
+
 ### E17: Frontend modernization
 See [frontend_modernization.md](./frontend_modernization.md).
 
 **Tasks**
 - [ ] E17a: базовая настройка ESLint, Prettier, Vitest и Testing Library в `web/`.
+### E17: Frontend Modernization
+**User Stories**
+1. Как разработчик, я хочу единый современный фронтенд‑стек, чтобы страницы собирались одним тулчейном.
+2. Как пользователь, я хочу более быстрые и консистентные страницы после миграции.
+
+**Tasks**
+- P1•M — Исследовать и выбрать стек (Next.js или Vite), задокументировать решение.
+- P1•S — Настроить TypeScript и Tailwind в выбранном фреймворке, подготовить базовый layout.
+- P1•L — Поэтапно переносить страницы на новый стек (начать с `/inbox`), добавлять тесты и запись в `docs/CHANGELOG.md`.
+- P2•S — Удалять legacy‑шаблоны и скрипты после миграции, чистить `web/static` и пути в конфиге Tailwind.
+
+**Acceptance Criteria**
+- В репозитории зафиксировано решение (Next.js или Vite), `npm run dev` стартует без ошибок.
+- TypeScript и Tailwind собираются, базовый layout рендерится через новый стек.
+- Страница `/inbox` работает на новом стеке, покрыта тестами и отражена в `docs/CHANGELOG.md`.
+- Удалены шаблоны и статические файлы для перенесённых страниц, конфиг Tailwind смотрит на актуальные пути, `npm run build` проходит.
 
 ## MR-план
 1. MR-1 Foundations (миграции/модели) — DoD: миграции применяются; приложение поднимается; тесты не падают.

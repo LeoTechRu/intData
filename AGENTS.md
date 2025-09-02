@@ -31,6 +31,14 @@
   - **/utils** — только опциональные скрипты (линтеры, дампы). Удаление **/utils** не должно ломать приложение.
   - `web/` и `bot/` импортируют бизнес-логику только из `core/services`.
 
+### Frontend Guidelines
+- Базовый стек: **Next.js + TypeScript + Tailwind**; допустимо **React + Vite**, если стандарт соблюдён.
+- Код фронтенда размещается либо в `web/frontend/`, либо в отдельном `frontend/` (статика отдаётся через FastAPI).
+- Используем компонентный подход, запросы к API через **React Query** или **RTK Query**; все пути согласованы с `/api/v1/*`.
+- Интерфейсы обязательны к адаптивности; не допускаются дубликаты `<h1>`, заголовок задаётся через `MODULE_TITLE`.
+- Стандарты: **ESLint**, **Prettier**, **Vitest/Jest**; перед PR выполняются `npm run build`, `npm run dev`, `npm run lint`, `npm run test`.
+- Задачи по фронтенду согласуются с [docs/BACKLOG.md#e17-frontend-modernization](./docs/BACKLOG.md#e17-frontend-modernization) как единой SSoT.
+
 ## Инициализация БД (без Alembic)
 - Источник правды по схеме: идемпотентные DDL в **`core/db/ddl/*.sql`** (только `CREATE/ALTER/INDEX IF NOT EXISTS`).
 - Единый фасад: **`core/db/init_app.py:init_app_once(env)`** — вызывается и в `web`, и в `bot` до регистрации роутов/старта бота.
