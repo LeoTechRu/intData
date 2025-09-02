@@ -15,10 +15,10 @@ async function loadProjects(area_id){
 
 function noteCardHTML(n){
   return `
-  <article class="c-card note-card ${n.color||''}" data-note-id="${n.id}" data-pinned="${n.pinned?1:0}">
+  <article class="c-card note-card ${n.color||''}" data-note-id="${n.id}" data-area-id="${n.area?.id||''}" data-pinned="${n.pinned?1:0}">
     <div class="c-card__top">
-      <button class="ui-iconbtn js-pin${n.pinned?' is-active':''}" aria-label="${n.pinned?'Открепить':'Закрепить'}" data-tooltip="${n.pinned?'Открепить':'Закрепить'}"><svg><use href="#i-pin"/></svg></button>
-      <button class="ui-iconbtn ui-iconbtn--danger js-del" aria-label="Удалить" data-tooltip="Удалить"><svg><use href="#i-trash"/></svg></button>
+      <button type="button" class="ui-iconbtn js-pin${n.pinned?' is-active':''}" aria-label="${n.pinned?'Открепить':'Закрепить'}" data-tooltip="${n.pinned?'Открепить':'Закрепить'}"><svg><use href="#i-pin"/></svg></button>
+      <button type="button" class="ui-iconbtn ui-iconbtn--danger js-del" aria-label="Удалить" data-tooltip="Удалить"><svg><use href="#i-trash"/></svg></button>
     </div>
     <div class="c-card__content">${(n.content||'').replace(/</g,'&lt;')}</div>
     <div class="c-card__bottom">
@@ -26,7 +26,7 @@ function noteCardHTML(n){
         <span class="chip chip--area">${n.area?.name||'—'}</span>
         ${n.project ? `<span class="chip chip--project">${n.project.name}</span>` : ``}
       </div>
-      <button class="ui-iconbtn js-edit" aria-label="Редактировать" data-tooltip="Редактировать"><svg><use href="#i-edit"/></svg></button>
+      <button type="button" class="ui-iconbtn js-edit" aria-label="Редактировать" data-tooltip="Редактировать"><svg><use href="#i-edit"/></svg></button>
     </div>
   </article>`;
 }
@@ -36,13 +36,14 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   const form = document.getElementById('quick-note');
   if (!grid) return;
 
+  const areas = await loadAreas();
+  let inbox = areas.find(a => (a.slug||'').toLowerCase()==='inbox' || a.name.toLowerCase()==='входящие');
+
   // Инициализация селектов в форме
   if (form){
     const areaSel = form.querySelector('select[name="area_id"]');
     const projSel = form.querySelector('select[name="project_id"]');
-    const areas = await loadAreas();
     areaSel.innerHTML = areas.map(a=>`<option value="${a.id}" data-slug="${a.slug||''}">${a.name}</option>`).join('');
-    const inbox = areas.find(a => (a.slug||'').toLowerCase()==='inbox' || a.name.toLowerCase()==='входящие');
     if (inbox) areaSel.value = inbox.id;
 
     const refreshProjects = async () => {
@@ -57,12 +58,12 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     form.addEventListener('submit', async (e)=>{
       e.preventDefault();
       const fd = new FormData(form);
-        const payload = {
-          content: (fd.get('content')||'').toString().trim(),
-          area_id: Number(fd.get('area_id')),
-          project_id: fd.get('project_id') ? Number(fd.get('project_id')) : null,
-          color: COLORS[Math.floor(Math.random()*COLORS.length)]
-        };
+      const payload = {
+        content: (fd.get('content')||'').toString().trim(),
+        area_id: Number(fd.get('area_id')),
+        project_id: fd.get('project_id') ? Number(fd.get('project_id')) : null,
+        color: COLORS[Math.floor(Math.random()*COLORS.length)]
+      };
       if (!payload.content) return;
       const created = await api('/api/v1/notes', {
         method:'POST',
@@ -82,6 +83,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     const del = e.target.closest('.js-del');
     const ed  = e.target.closest('.js-edit');
     const pin = e.target.closest('.js-pin');
+    const areaChip = e.target.closest('.chip--area');
     const card = e.target.closest('.c-card');
     if (!card) return;
     const id = card.dataset.noteId;
@@ -105,9 +107,11 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 
       const panel = card.querySelector('.c-card__bottom');
       const saveBtn = document.createElement('button');
+      saveBtn.type='button';
       saveBtn.className='ui-iconbtn'; saveBtn.setAttribute('aria-label','Сохранить'); saveBtn.dataset.tooltip='Сохранить';
       saveBtn.innerHTML = `<svg><use href="#i-check"/></svg>`;
       const cancelBtn = document.createElement('button');
+      cancelBtn.type='button';
       cancelBtn.className='ui-iconbtn ui-iconbtn--muted'; cancelBtn.setAttribute('aria-label','Отмена'); cancelBtn.dataset.tooltip='Отмена';
       cancelBtn.innerHTML = `<svg><use href="#i-x"/></svg>`;
       const right = document.createElement('div');
@@ -136,6 +140,26 @@ document.addEventListener('DOMContentLoaded', async ()=>{
       pin.setAttribute('aria-label', newPinned ? 'Открепить' : 'Закрепить');
       pin.dataset.tooltip = newPinned ? 'Открепить' : 'Закрепить';
       if(newPinned){ grid.prepend(card); } else { grid.append(card); }
+      return;
+    }
+
+    if (areaChip){
+      const select = document.createElement('select');
+      select.innerHTML = areas.map(a=>`<option value="${a.id}">${a.name}</option>`).join('');
+      select.value = card.dataset.areaId || '';
+      areaChip.replaceWith(select);
+      select.focus();
+      const restore = ()=> select.replaceWith(areaChip);
+      select.addEventListener('blur', restore, {once:true});
+      select.addEventListener('change', async ()=>{
+        const aid = Number(select.value);
+        await api(`/api/v1/notes/${id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({area_id:aid}) });
+        card.dataset.areaId = aid;
+        const a = areas.find(x=>x.id===aid);
+        areaChip.textContent = a?.name || '—';
+        select.replaceWith(areaChip);
+      }, {once:true});
+      return;
     }
   });
 });

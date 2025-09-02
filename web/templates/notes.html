@@ -2,12 +2,12 @@
 {% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', path='css/notes.css') }}">
 {% endblock %}
+
 {% block content %}
-<section class="page" aria-labelledby="h-notes">
-  <h1 id="h-notes">Заметки</h1>
+<section class="page">
 
   <!-- Быстрая заметка -->
-  <form id="quick-note" class="c-card" style="margin-block:12px">
+  <form id="quick-note" class="c-card">
     <textarea name="content" rows="2" placeholder="Быстрая заметка..." required></textarea>
     <div class="c-card__bottom">
       <div class="chips">
@@ -27,12 +27,12 @@
   <!-- Сетка карточек -->
   <div id="notesGrid" class="notes-grid cards-grid" aria-live="polite">
     {% for n in notes %}
-    <article class="c-card note-card {{ n.color }}" data-note-id="{{n.id}}" data-pinned="{{ 1 if n.pinned else 0 }}">
+    <article class="c-card note-card {{ n.color }}" data-note-id="{{n.id}}" data-area-id="{{ n.area.id }}" data-pinned="{{ 1 if n.pinned else 0 }}">
       <div class="c-card__top">
-        <button class="ui-iconbtn js-pin{% if n.pinned %} is-active{% endif %}" aria-label="{{ 'Открепить' if n.pinned else 'Закрепить' }}" data-tooltip="{{ 'Открепить' if n.pinned else 'Закрепить' }}">
+        <button type="button" class="ui-iconbtn js-pin{% if n.pinned %} is-active{% endif %}" aria-label="{{ 'Открепить' if n.pinned else 'Закрепить' }}" data-tooltip="{{ 'Открепить' if n.pinned else 'Закрепить' }}">
           <svg><use href="#i-pin"/></svg>
         </button>
-        <button class="ui-iconbtn ui-iconbtn--danger js-del" aria-label="Удалить" data-tooltip="Удалить">
+        <button type="button" class="ui-iconbtn ui-iconbtn--danger js-del" aria-label="Удалить" data-tooltip="Удалить">
           <svg><use href="#i-trash"/></svg>
         </button>
       </div>
@@ -41,10 +41,10 @@
 
       <div class="c-card__bottom">
         <div class="chips">
-          <span class="chip chip--area"    title="Область">{{ n.area.name }}</span>
+          <span class="chip chip--area" title="Область">{{ n.area.name }}</span>
           {% if n.project %}<span class="chip chip--project" title="Проект">{{ n.project.name }}</span>{% endif %}
         </div>
-        <button class="ui-iconbtn js-edit" aria-label="Редактировать" data-tooltip="Редактировать">
+        <button type="button" class="ui-iconbtn js-edit" aria-label="Редактировать" data-tooltip="Редактировать">
           <svg><use href="#i-edit"/></svg>
         </button>
       </div>
