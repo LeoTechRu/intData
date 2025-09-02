@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import math
 from datetime import date, timedelta
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 import sqlalchemy as sa
 from sqlalchemy import insert, select, update, delete
@@ -235,6 +235,9 @@ class HabitsService:
                 note=note,
                 type=type,
                 difficulty=difficulty,
+                up_enabled=True,
+                down_enabled=True,
+                val=0.0,
             )
             .returning(habits.c.id)
         )
@@ -477,3 +480,81 @@ class HabitsCronService:
         )
         await self.session.flush()
         return True
+
+
+class RewardsService:
+    """Simple rewards store where gold can be exchanged for items."""
+
+    def __init__(self, session: Optional[AsyncSession] = None) -> None:
+        self.session = session
+        self._external = session is not None
+        self.stats = UserStatsService(session)
+
+    async def __aenter__(self) -> "RewardsService":
+        if self.session is None:
+            self.session = db.async_session()
+            self.stats.session = self.session
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        if not self._external:
+            if exc_type is None:
+                await self.session.commit()
+            else:
+                await self.session.rollback()
+            await self.session.close()
+
+    async def _resolve_area(
+        self, owner_id: int, area_id: Optional[int], project_id: Optional[int]
+    ) -> int:
+        if project_id is not None:
+            stmt = sa.text("SELECT area_id FROM projects WHERE id=:p")
+            area = await self.session.execute(stmt, {"p": project_id})
+            return area.scalar_one()
+        if area_id is None:
+            raise ValueError("area_id required")
+        return area_id
+
+    async def create(
+        self,
+        *,
+        owner_id: int,
+        title: str,
+        cost_gold: int,
+        area_id: Optional[int] = None,
+        project_id: Optional[int] = None,
+    ) -> int:
+        area_id = await self._resolve_area(owner_id, area_id, project_id)
+        stmt = (
+            insert(rewards)
+            .values(
+                owner_id=owner_id,
+                title=title,
+                cost_gold=cost_gold,
+                area_id=area_id,
+                project_id=project_id,
+            )
+            .returning(rewards.c.id)
+        )
+        res = await self.session.execute(stmt)
+        return res.scalar_one()
+
+    async def list(self, owner_id: int) -> List[Dict[str, Any]]:
+        res = await self.session.execute(
+            select(rewards).where(rewards.c.owner_id == owner_id)
+        )
+        return [dict(r) for r in res.mappings().all()]
+
+    async def buy(self, reward_id: int, owner_id: int) -> Optional[int]:
+        res = await self.session.execute(
+            select(rewards).where(rewards.c.id == reward_id)
+        )
+        row = res.mappings().first()
+        if not row or row["owner_id"] != owner_id:
+            return None
+        cost = row["cost_gold"]
+        stats = await self.stats.get_or_create(owner_id)
+        if stats["gold"] < cost:
+            raise ValueError("insufficient_gold")
+        new_stats = await self.stats.apply(owner_id, gold=-cost)
+        return new_stats["gold"]
