@@ -1,16 +1,17 @@
+"""OpenAPI snapshot parity tests."""
 import json
-from fastapi.testclient import TestClient
+from pathlib import Path
+
 from web import app
 
 
 def test_openapi_ssot():
-    c = TestClient(app)
-    r = c.get("/api/openapi.json")
-    assert r.status_code == 200
-    data = r.json()
-    names = {t["name"] for t in data.get("tags", [])}
+    """Runtime OpenAPI spec must match stored snapshot."""
+    runtime_spec = app.openapi()
+    snapshot = json.loads(Path("api/openapi.json").read_text(encoding="utf-8"))
+
+    runtime_tags = {t["name"] for t in runtime_spec.get("tags", [])}
     for tag in ["Habits", "Dailies", "Rewards", "Stats", "Calendar"]:
-        assert tag in names
-    with open("api/openapi.json", "r", encoding="utf-8") as f:
-        file_data = json.load(f)
-    assert file_data == data
+        assert tag in runtime_tags
+
+    assert runtime_spec == snapshot
