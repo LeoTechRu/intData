@@ -5,6 +5,17 @@
   align-items:start;
 }
 
+#quick-note{
+  max-inline-size:480px;
+  margin:24px auto;
+}
+#quick-note textarea{
+  inline-size:100%;
+  resize:vertical;
+}
+
+.chip--area{cursor:pointer;}
+
 .note-card{ background:var(--note-bg); color:var(--note-fg); }
 
 .note-card .js-pin.is-active{ color:#2563eb; }
