@@ -189,3 +189,33 @@ async def test_cooldown_returns_429(client: AsyncClient):
     assert data.get("error") == "cooldown"
     assert data.get("retry_after", 0) > 0
 
+
+@pytest.mark.asyncio
+async def test_habits_auth_and_cooldown(client: AsyncClient):
+    """GET works without Telegram link; second up returns 429 with header."""
+    await _seed(owner_id=6, tg_id=6, area_id=6)
+
+    # Web session without Telegram cookie should still list habits (empty)
+    resp = await client.get("/api/v1/habits", cookies={"web_user_id": "6"})
+    assert resp.status_code == 200
+
+    cookies = {"web_user_id": "6", "telegram_id": "6"}
+    resp = await client.post(
+        "/api/v1/habits",
+        json={"title": "H", "type": "positive", "difficulty": "easy", "area_id": 6},
+        cookies=cookies,
+    )
+    hid = resp.json()["id"]
+
+    # First up succeeds
+    resp = await client.post(f"/api/v1/habits/{hid}/up", cookies=cookies)
+    assert resp.status_code == 200
+
+    # Second up hits cooldown
+    resp = await client.post(f"/api/v1/habits/{hid}/up", cookies=cookies)
+    assert resp.status_code == 429
+    assert resp.headers.get("Retry-After") is not None
+    data = resp.json().get("detail", {})
+    assert data.get("error") == "cooldown"
+    assert data.get("retry_after", 0) > 0
+

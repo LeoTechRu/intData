@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Feature flags HABITS_V1_ENABLED, HABITS_RPG_ENABLED in .env.example.
 - Anti-farm mechanics: cooldown per habit, soft daily limit, exponential reward decay; daily_xp/daily_gold counters.
 - Notes API supports `include_sub=1` for listing notes in subareas.
+- Тест покрытия для `/api/v1/habits` проверки доступа без привязки Telegram и заголовка `Retry-After` при кулдауне.
 
 ### Changed
 - Унифицирована работа с паролями через обёртку `core.db.bcrypt` и `WebUserService`.
