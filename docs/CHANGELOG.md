@@ -48,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AGENTS.md aligned with BACKLOG (E1–E16, Habits module, PARA invariants, agent protocol, checklist).
 - Habitica-like module foundations: DDL for habits/habit_logs/dailies/daily_logs/rewards/user_stats.
 - Core services: HabitsService, DailiesService, HabitsCronService, UserStatsService.
-- API: /api/v1/habits*, /api/v1/dailies*, /api/v1/rewards*, /api/v1/habits/stats, /api/v1/habits/cron/run.
+- Public API for habits, dailies, rewards, stats and cron under `/api/v1/*`.
 - /habits page (4 columns), HUD, keyboard shortcuts; Telegram commands (/habit, /daily).
 - Feature flags HABITS_V1_ENABLED, HABITS_RPG_ENABLED in .env.example.
 
