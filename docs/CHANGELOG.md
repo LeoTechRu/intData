@@ -46,6 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Колонка `areas.color` с HEX-значением и дефолтом `#F1F5F9`; миграция с бэкфиллом.
 - Утилита `getAreaColor` в фронтенде для кеширования цветов областей.
 - AGENTS.md aligned with BACKLOG (E1–E16, Habits module, PARA invariants, agent protocol, checklist).
+- Habitica-like module foundations: DDL for habits/habit_logs/dailies/daily_logs/rewards/user_stats.
+- Core services: HabitsService, DailiesService, HabitsCronService, UserStatsService.
+- API: /api/v1/habits*, /api/v1/dailies*, /api/v1/rewards*, /api/v1/habits/stats, /api/v1/habits/cron/run.
+- /habits page (4 columns), HUD, keyboard shortcuts; Telegram commands (/habit, /daily).
+- Feature flags HABITS_V1_ENABLED, HABITS_RPG_ENABLED in .env.example.
 
 ### Changed
 - Унифицирована работа с паролями через обёртку `core.db.bcrypt` и `WebUserService`.
@@ -66,6 +71,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Страница `/notes` доработана: карточки фиксированного размера с цветом области, всплывающее окно для просмотра и новая форма быстрого ввода.
 - Цвет заметок наследуется от области; поле `notes.color` устарело и не используется.
 - В UI заметок удалён выбор цвета, карточки и чипы окрашиваются через CSS-переменные и авто-контраст.
+- /calendar/agenda теперь поддерживает `include_habits=1` (виртуальные ежедневки).
+- ICS feed экспортирует VTODO с RRULE для ежедневок (только чтение).
 
 ### Fixed
 
@@ -80,6 +87,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Исправлено создание системной области «Входящие» при быстром добавлении заметки.
 - Добавлена миграция столбцов `area_id` и `project_id` для таблицы `habits`.
 - Кнопки заметок (редактирование, закрепление, удаление) стали кликабельными и работают по назначению.
+- PARA inheritance for newly created habits/dailies/rewards enforced in services and repair.
+
+### Security
+- Access control on owner_id for habits/dailies/rewards and logs.
 
 ### Removed
 - Удалён устаревший API напоминаний и связанные сервисы.
