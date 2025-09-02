@@ -32,10 +32,14 @@ async def client():
 
 
 @pytest.mark.asyncio
-async def test_page_without_tg(client: AsyncClient):
+async def test_habits_auth_web_only(client: AsyncClient):
     async with db.async_session() as session:  # type: ignore
         async with session.begin():
             session.add(WebUser(id=10, username="u"))
     resp = await client.get("/habits", cookies={"web_user_id": "10"})
     assert resp.status_code == 200
-    assert "Привяжите Telegram" in resp.text
+    assert "Свяжите Telegram для наград" in resp.text
+    resp = await client.post("/api/v1/habits/1/up", cookies={"web_user_id": "10"})
+    assert resp.status_code == 403
+    data = resp.json().get("detail", {})
+    assert data.get("error") == "tg_link_required"

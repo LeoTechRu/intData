@@ -42,13 +42,19 @@ async def _resolve_web_user(request: Request) -> Optional[WebUser]:
 
 
 async def get_current_owner(request: Request) -> OwnerCtx | None:
-    cached = getattr(request.state, "owner_ctx", None)
+    """Resolve current owner from request cookies/headers.
+
+    Result is cached in ``request.state.owner`` to avoid duplicate DB hits
+    during a single request lifecycle (FastAPI dependency chain).
+    """
+
+    cached = getattr(request.state, "owner", None)
     if cached is not None:
         return cached
 
     web_user = await _resolve_web_user(request)
     if web_user is None:
-        request.state.owner_ctx = None
+        request.state.owner = None
         return None
 
     tg_user: Optional[TgUser] = None
@@ -71,5 +77,5 @@ async def get_current_owner(request: Request) -> OwnerCtx | None:
         tg_id=tg_user.telegram_id if tg_user else None,
         web_user_id=web_user.id,
     )
-    request.state.owner_ctx = ctx
+    request.state.owner = ctx
     return ctx
