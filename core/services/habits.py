@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import math
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from typing import Any, Dict, Optional, List
 
 import sqlalchemy as sa
@@ -29,6 +29,9 @@ habits = sa.Table(
     sa.Column("up_enabled", sa.Boolean, nullable=False, server_default=sa.true()),
     sa.Column("down_enabled", sa.Boolean, nullable=False, server_default=sa.true()),
     sa.Column("val", sa.Float, nullable=False, server_default="0"),
+    sa.Column("daily_limit", sa.Integer, nullable=False, server_default="10"),
+    sa.Column("cooldown_sec", sa.Integer, nullable=False, server_default="60"),
+    sa.Column("last_action_at", sa.DateTime(timezone=True)),
     sa.Column("tags", sa.JSON),
     sa.Column("archived_at", sa.DateTime(timezone=True)),
     sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
@@ -45,6 +48,7 @@ habit_logs = sa.Table(
     sa.Column("reward_xp", sa.Integer),
     sa.Column("reward_gold", sa.Integer),
     sa.Column("penalty_hp", sa.Integer),
+    sa.Column("val_after", sa.Float),
 )
 
 
@@ -104,6 +108,8 @@ user_stats = sa.Table(
     sa.Column("gold", sa.Integer, nullable=False, server_default="0"),
     sa.Column("hp", sa.Integer, nullable=False, server_default="50"),
     sa.Column("kp", sa.BigInteger, nullable=False, server_default="0"),
+    sa.Column("daily_xp", sa.Integer, nullable=False, server_default="0"),
+    sa.Column("daily_gold", sa.Integer, nullable=False, server_default="0"),
     sa.Column("last_cron", sa.Date),
 )
 
@@ -141,6 +147,8 @@ class UserStatsService:
             "gold": 0,
             "hp": config.HP_MAX,
             "kp": 0,
+            "daily_xp": 0,
+            "daily_gold": 0,
             "last_cron": None,
         }
 
@@ -163,6 +171,8 @@ class UserStatsService:
         gold_total = stats["gold"] + gold
         hp_total = stats["hp"] + hp_delta
         kp_total = stats["kp"] + kp
+        daily_xp_total = stats.get("daily_xp", 0) + max(xp, 0)
+        daily_gold_total = stats.get("daily_gold", 0) + max(gold, 0)
         while xp_total >= self.level_xp(level):
             xp_total -= self.level_xp(level)
             level += 1
@@ -170,7 +180,15 @@ class UserStatsService:
         await self.session.execute(
             update(user_stats)
             .where(user_stats.c.owner_id == owner_id)
-            .values(level=level, xp=xp_total, gold=gold_total, hp=hp_total, kp=kp_total)
+            .values(
+                level=level,
+                xp=xp_total,
+                gold=gold_total,
+                hp=hp_total,
+                kp=kp_total,
+                daily_xp=daily_xp_total,
+                daily_gold=daily_gold_total,
+            )
         )
         await self.session.flush()
         return {
@@ -179,6 +197,8 @@ class UserStatsService:
             "gold": gold_total,
             "hp": hp_total,
             "kp": kp_total,
+            "daily_xp": daily_xp_total,
+            "daily_gold": daily_gold_total,
         }
 
 
@@ -257,14 +277,40 @@ class HabitsService:
         val = habit["val"]
         base_xp = config.XP_BASE[diff]
         base_gold = config.GOLD_BASE[diff]
-        factor = 1.0
-        if config.HABITS_RPG_ENABLED:
+        now = datetime.utcnow()
+        xp = int(base_xp)
+        gold = int(base_gold)
+        if config.HABITS_ANTIFARM_ENABLED:
+            last = habit.get("last_action_at")
+            if last and (now - last).total_seconds() < habit["cooldown_sec"]:
+                raise ValueError("cooldown")
+            today = now.date()
+            res = await self.session.execute(
+                sa.select(sa.func.count())
+                .select_from(habit_logs)
+                .where(
+                    habit_logs.c.habit_id == habit_id,
+                    habit_logs.c.delta == 1,
+                    sa.func.date(habit_logs.c.at) == today,
+                )
+            )
+            n_today = int(res.scalar() or 0)
+            if config.HABITS_RPG_ENABLED:
+                factor = math.exp(-config.REWARD_DECAY_K * n_today)
+                xp = int(base_xp * factor)
+                gold = int(base_gold * factor)
+            if n_today >= habit["daily_limit"]:
+                xp = 0
+                gold = 0
+        elif config.HABITS_RPG_ENABLED:
             factor = math.exp(-config.REWARD_DECAY_K * max(0.0, val))
-        xp = int(base_xp * factor)
-        gold = int(base_gold * factor)
+            xp = int(base_xp * factor)
+            gold = int(base_gold * factor)
         new_val = val + config.VAL_STEP
         await self.session.execute(
-            update(habits).where(habits.c.id == habit_id).values(val=new_val)
+            update(habits)
+            .where(habits.c.id == habit_id)
+            .values(val=new_val, last_action_at=now)
         )
         await self.session.execute(
             insert(habit_logs).values(
@@ -274,6 +320,7 @@ class HabitsService:
                 reward_xp=xp,
                 reward_gold=gold,
                 penalty_hp=0,
+                val_after=new_val,
             )
         )
         stats = await self.stats.apply(owner_id, xp=xp, gold=gold, kp=xp)
@@ -291,11 +338,18 @@ class HabitsService:
             return None
         diff = habit["difficulty"]
         val = habit["val"]
+        now = datetime.utcnow()
+        if config.HABITS_ANTIFARM_ENABLED:
+            last = habit.get("last_action_at")
+            if last and (now - last).total_seconds() < habit["cooldown_sec"]:
+                raise ValueError("cooldown")
         base_hp = config.HP_BASE[diff]
         hp = -base_hp
         new_val = val - config.VAL_STEP
         await self.session.execute(
-            update(habits).where(habits.c.id == habit_id).values(val=new_val)
+            update(habits)
+            .where(habits.c.id == habit_id)
+            .values(val=new_val, last_action_at=now)
         )
         await self.session.execute(
             insert(habit_logs).values(
@@ -305,6 +359,7 @@ class HabitsService:
                 reward_xp=0,
                 reward_gold=0,
                 penalty_hp=base_hp,
+                val_after=new_val,
             )
         )
         stats = await self.stats.apply(owner_id, hp_delta=hp)
@@ -476,7 +531,7 @@ class HabitsCronService:
         await self.session.execute(
             update(user_stats)
             .where(user_stats.c.owner_id == owner_id)
-            .values(last_cron=today)
+            .values(last_cron=today, daily_xp=0, daily_gold=0)
         )
         await self.session.flush()
         return True

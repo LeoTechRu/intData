@@ -461,6 +461,9 @@ class Habit(Base):
     up_enabled = Column(Boolean, default=True)
     down_enabled = Column(Boolean, default=True)
     val = Column(Float, default=0.0)
+    daily_limit = Column(Integer, server_default="10")
+    cooldown_sec = Column(Integer, server_default="60")
+    last_action_at = Column(DateTime(timezone=True))
     tags = Column(JSON)
     archived_at = Column(DateTime(timezone=True))
     created_at = Column(DateTime(timezone=True), default=utcnow)
@@ -480,6 +483,7 @@ class HabitLog(Base):
     reward_xp = Column(Integer)
     reward_gold = Column(Integer)
     penalty_hp = Column(Integer)
+    val_after = Column(Float)
 
 
 class Daily(Base):
@@ -541,6 +545,8 @@ class UserStats(Base):
     gold = Column(Integer, default=0)
     hp = Column(Integer, default=50)
     kp = Column(BigInteger, default=0)
+    daily_xp = Column(Integer, server_default="0")
+    daily_gold = Column(Integer, server_default="0")
     last_cron = Column(Date)
 
 

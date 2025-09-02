@@ -44,12 +44,21 @@ Areas — управляемое дерево без ограничения гл
 python -m core.db.migrate && python -m core.db.repair
 ```
 
+### Weekly digests
+
+Включите недельные дайджесты привычек через переменные окружения
+`HABITS_WEEKLY_DIGEST_ENABLED=true` и `ENABLE_SCHEDULER=1`. Расписание
+задаётся строкой `DIGEST_WEEKLY_CRON`, например `"MON 08:00 Europe/Bucharest"`.
+Для отправки сообщений необходимо настроить `project_notifications` с
+привязанным Telegram‑чатом.
+
 ### Post-deploy checklist
 
 - [ ] Run DB bootstrap/repair: `python -m core.db.migrate && python -m core.db.repair`
-- [ ] Verify `habits.area_id`/`project_id` columns & FKs exist.
-- [ ] Open `/habits` as a new user → HTTP 200, empty state renders.
-- [ ] Trigger `/api/v1/habits/cron/run` for a user; run again (idempotent).
-- [ ] Check `/calendar/agenda?include_habits=1&from=YYYY-MM-DD&to=YYYY-MM-DD` returns virtual dailies.
-- [ ] Export `feed.ics` and confirm VTODO with RRULE for dailies.
-- [ ] Review `docs/CHANGELOG.md` entries merged under [Unreleased].
+- [ ] Verify new columns: user_stats.daily_xp/daily_gold; habits.daily_limit/cooldown_sec/last_action_at; habit_logs.val_after.
+- [ ] Set env: `HABITS_ANTIFARM_ENABLED=true`, `HABITS_WEEKLY_DIGEST_ENABLED=true`, `DIGEST_WEEKLY_CRON="MON 08:00 Europe/Bucharest"`.
+- [ ] Open `/habits` → verify counters/cooldown appear; try rapid clicks → see cooldown; after daily_limit → reward 0.
+- [ ] Call `/api/v1/habits/leaderboard?scope=project&project_id=...&period=week` → returns leaders.
+- [ ] Trigger `/api/v1/habits/digest/run?scope=project&project_id=...&deliver=1` → message posted in Telegram.
+- [ ] Export CSV `/api/v1/habits/export?from=YYYY-MM-DD&to=YYYY-MM-DD` → correct headers and rows.
+- [ ] Review CHANGELOG under [Unreleased].

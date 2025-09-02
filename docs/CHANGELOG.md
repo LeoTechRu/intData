@@ -51,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Public API for habits, dailies, rewards, stats and cron under `/api/v1/*`.
 - /habits page (4 columns), HUD, keyboard shortcuts; Telegram commands (/habit, /daily).
 - Feature flags HABITS_V1_ENABLED, HABITS_RPG_ENABLED in .env.example.
+- Anti-farm mechanics: cooldown per habit, soft daily limit, exponential reward decay; daily_xp/daily_gold counters.
 
 ### Changed
 - Унифицирована работа с паролями через обёртку `core.db.bcrypt` и `WebUserService`.
@@ -73,6 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - В UI заметок удалён выбор цвета, карточки и чипы окрашиваются через CSS-переменные и авто-контраст.
 - /calendar/agenda теперь поддерживает `include_habits=1` (виртуальные ежедневки).
 - ICS feed экспортирует VTODO с RRULE для ежедневок (только чтение).
+- `/api/v1/habits/stats` now includes `{daily_xp, daily_gold}`.
 
 ### Fixed
 

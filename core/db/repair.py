@@ -273,6 +273,62 @@ def backfill_rewards_area(conn: Connection) -> int:
     return updated
 
 
+def backfill_habits_antifarm(conn: Connection) -> dict[str, int]:
+    """Fill new anti-farm columns with sensible defaults and audit logs."""
+    updated_limit = 0
+    updated_cd = 0
+    updated_val = 0
+    if _table_exists(conn, "habits"):
+        try:
+            res = conn.execute(
+                sa.text(
+                    "UPDATE habits SET daily_limit=:dl WHERE daily_limit IS NULL"
+                ),
+                {"dl": 10},
+            )
+            updated_limit = res.rowcount or 0
+        except Exception:
+            pass
+        try:
+            res = conn.execute(
+                sa.text(
+                    "UPDATE habits SET cooldown_sec=:cd WHERE cooldown_sec IS NULL"
+                ),
+                {"cd": 60},
+            )
+            updated_cd = res.rowcount or 0
+        except Exception:
+            pass
+
+    if _table_exists(conn, "habit_logs") and _table_exists(conn, "habits"):
+        try:
+            rows = conn.execute(
+                sa.text(
+                    """
+                    SELECT hl.id, h.val FROM habit_logs hl
+                    JOIN habits h ON hl.habit_id = h.id
+                    WHERE hl.val_after IS NULL
+                    """
+                )
+            ).fetchall()
+            for log_id, val in rows:
+                conn.execute(
+                    sa.text(
+                        "UPDATE habit_logs SET val_after=:v WHERE id=:i"
+                    ),
+                    {"v": val, "i": log_id},
+                )
+            updated_val = len(rows)
+        except Exception:
+            pass
+
+    return {
+        "limits": updated_limit,
+        "cooldowns": updated_cd,
+        "val_after": updated_val,
+    }
+
+
 def backfill_user_stats(conn: Connection) -> int:
     """Ensure every user has a corresponding user_stats row."""
     if not _table_exists(conn, "users_web"):
@@ -508,6 +564,7 @@ def run_repair(conn: Connection) -> dict[str, object]:
     _step("habits_area", backfill_habits_area)
     _step("dailies_area", backfill_dailies_area)
     _step("rewards_area", backfill_rewards_area)
+    _step("habits_antifarm", backfill_habits_antifarm)
     _step("user_stats", backfill_user_stats)
     _step("tasks_resources", backfill_tasks_resources)
     _step("time_entries", backfill_time_entries)

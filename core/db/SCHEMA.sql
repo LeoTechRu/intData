@@ -157,6 +157,7 @@ CREATE TABLE habit_logs (
 	reward_xp INTEGER, 
 	reward_gold INTEGER, 
 	penalty_hp INTEGER, 
+	val_after FLOAT, 
 	PRIMARY KEY (id), 
 	FOREIGN KEY(habit_id) REFERENCES habits (id) ON DELETE CASCADE
 );
@@ -173,6 +174,9 @@ CREATE TABLE habits (
 	up_enabled BOOLEAN, 
 	down_enabled BOOLEAN, 
 	val FLOAT, 
+	daily_limit INTEGER DEFAULT '10', 
+	cooldown_sec INTEGER DEFAULT '60', 
+	last_action_at TIMESTAMP WITH TIME ZONE, 
 	tags JSON, 
 	archived_at TIMESTAMP WITH TIME ZONE, 
 	created_at TIMESTAMP WITH TIME ZONE, 
@@ -494,6 +498,8 @@ CREATE TABLE user_stats (
 	gold INTEGER, 
 	hp INTEGER, 
 	kp BIGINT, 
+	daily_xp INTEGER DEFAULT '0', 
+	daily_gold INTEGER DEFAULT '0', 
 	last_cron DATE, 
 	PRIMARY KEY (owner_id), 
 	FOREIGN KEY(owner_id) REFERENCES users_web (id)
