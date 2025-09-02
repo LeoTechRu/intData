@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- comprehensive test suite covering DB idempotency, PARA repair, OpenAPI snapshot parity and core habits/today/tasks/time flows.
 - Epic E17 "Frontend Modernization" в `docs/BACKLOG.md` (Next.js/Vite выбор, TS+Tailwind, перенос страниц, очистка legacy).
 - Машиночитаемая схема БД (`core/db/SCHEMA.*`) и утилита `tools.schema_export` с проверкой в CI.
 - user_settings table for extensible per-user preferences.
@@ -59,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Тест покрытия для `/api/v1/habits` проверки доступа без привязки Telegram и заголовка `Retry-After` при кулдауне.
 
 ### Changed
+- unified test fixtures and factories; OpenAPI snapshot test now enforces SSoT.
 - Унифицирована работа с паролями через обёртку `core.db.bcrypt` и `WebUserService`.
 - API обслуживается под `/api/v1` с заголовком `X-API-Version`; старые пути `/api/*` редиректятся (308) на новую схему, Swagger доступен по `/api`.
 - `LogLevel` переведён на числовой `IntEnum` для корректных сравнений.
@@ -84,6 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unified OpenAPI SSoT at `/api/openapi.json`; exporter produces `api/openapi.json`.
 
 ### Fixed
+- reduced test flakiness via deterministic time handling and confirmed cooldown paths mapping to 429.
 
 - Автоматическое создание таблицы `app_settings`, исключающей ошибки при её отсутствии.
 - Создание таблицы `user_settings` в repair-скрипте, что предотвращает падения при чтении настроек.

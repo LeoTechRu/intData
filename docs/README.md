@@ -79,3 +79,13 @@ python -m web.openapi_export
 - [ ] Два быстрых клика по привычке → второй запрос 429 с `Retry-After`, UI показывает обратный отсчёт.
 - [ ] `GET /api/openapi.json` загружается; файл `api/openapi.json` идентичен.
 - [ ] В `docs/CHANGELOG.md` под `[Unreleased]` присутствуют новые пункты Fixed/Changed/Security.
+
+## Testing
+
+Для запуска тестов требуется доступ к PostgreSQL, настройки берутся из `.env.test`.
+
+```bash
+pytest -q
+pytest -q -k habits
+RUN_SLOW=1 pytest -q
+```
