@@ -54,6 +54,15 @@ Areas — управляемое дерево без ограничения гл
 python -m core.db.migrate && python -m core.db.repair
 ```
 
+## OpenAPI SSoT & export
+
+Снимок API хранится в `api/openapi.json`. Для обновления файла после
+изменений эндпоинтов выполните:
+
+```bash
+python -m web.openapi_export
+```
+
 ### Weekly digests
 
 Включите недельные дайджесты привычек через переменные окружения

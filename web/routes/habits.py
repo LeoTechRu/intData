@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Request, status
+from fastapi.responses import RedirectResponse
 
 from core.auth.owner import OwnerCtx, get_current_owner
 from core.models import WebUser
@@ -16,7 +17,8 @@ async def habits_page(
     owner: OwnerCtx | None = Depends(get_current_owner),
 ):
     if owner is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        # redirect anonymous users to /auth, keeping status explicit
+        return RedirectResponse("/auth", status_code=status.HTTP_302_FOUND)
     habits = []
     if owner.has_tg:
         async with HabitService() as svc:
