@@ -10,6 +10,15 @@ from dataclasses import dataclass
 class Config:
     HABITS_V1_ENABLED: bool = os.getenv("HABITS_V1_ENABLED", "true").lower() == "true"
     HABITS_RPG_ENABLED: bool = os.getenv("HABITS_RPG_ENABLED", "true").lower() == "true"
+    HABITS_ANTIFARM_ENABLED: bool = (
+        os.getenv("HABITS_ANTIFARM_ENABLED", "true").lower() == "true"
+    )
+    HABITS_ANTIFARM_DEFAULT_LIMIT: int = int(
+        os.getenv("HABITS_ANTIFARM_DEFAULT_LIMIT", "10")
+    )
+    HABITS_ANTIFARM_DEFAULT_COOLDOWN: int = int(
+        os.getenv("HABITS_ANTIFARM_DEFAULT_COOLDOWN", "60")
+    )
     XP_BASE: dict[str, int] | None = None
     GOLD_BASE: dict[str, int] | None = None
     HP_BASE: dict[str, int] | None = None

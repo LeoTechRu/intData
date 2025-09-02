@@ -1,6 +1,7 @@
 import sqlalchemy as sa
 import pytest
 import pytest_asyncio
+import sqlalchemy as sa
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -63,6 +64,11 @@ async def test_habit_and_reward_flow(client: AsyncClient):
     )
     assert resp.status_code == 201
     habit_id = resp.json()["id"]
+    async with db.async_session() as session:  # type: ignore
+        await session.execute(
+            sa.update(habits).where(habits.c.id == habit_id).values(cooldown_sec=0)
+        )
+        await session.commit()
 
     resp = await client.post(f"/api/v1/habits/{habit_id}/up", cookies=cookies)
     assert resp.status_code == 200

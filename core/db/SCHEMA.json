@@ -1,8 +1,8 @@
 {
   "version": 1,
   "dialect": "postgresql",
-  "generated_at": "2025-09-02T17:51:40Z",
-  "metadata_hash": "ea6d16f32644f84bbfeb0cd47b27d80eee2ccb3f4b9e5e529efbea6272b0968c",
+  "generated_at": "2025-09-02T19:08:43Z",
+  "metadata_hash": "b95ad3719a2e6216153c133be107c161ad69fe2f0a6dc1b3028b092aa006e762",
   "enums": [
     {
       "name": "activitytype",
@@ -1459,6 +1459,16 @@
           "default": null,
           "server_default": null,
           "comment": ""
+        },
+        {
+          "name": "val_after",
+          "type": "FLOAT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
         }
       ],
       "primary_key": [
@@ -1506,6 +1516,16 @@
           "comment": ""
         },
         {
+          "name": "cooldown_sec",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": "60",
+          "comment": ""
+        },
+        {
           "name": "created_at",
           "type": "TIMESTAMP WITH TIME ZONE",
           "nullable": true,
@@ -1513,6 +1533,16 @@
           "autoincrement": true,
           "default": null,
           "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "daily_limit",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": "10",
           "comment": ""
         },
         {
@@ -1540,6 +1570,16 @@
           "type": "INTEGER",
           "nullable": false,
           "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "last_action_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
           "autoincrement": true,
           "default": null,
           "server_default": null,
@@ -4147,6 +4187,26 @@
     "user_stats": {
       "comment": "",
       "columns": [
+        {
+          "name": "daily_gold",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": "0",
+          "comment": ""
+        },
+        {
+          "name": "daily_xp",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": "0",
+          "comment": ""
+        },
         {
           "name": "gold",
           "type": "INTEGER",

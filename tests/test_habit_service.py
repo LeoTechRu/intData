@@ -1,4 +1,5 @@
 import pytest
+import pytest
 import pytest_asyncio
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -12,6 +13,7 @@ from core.services.habits import (
     HabitsService,
     metadata,
     dailies,
+    habits,
 )
 from core.services.nexus_service import HabitService
 from core.models import Base, WebUser, Area, Project, Habit as HabitModel
@@ -54,6 +56,9 @@ async def test_habit_up_down_and_para(session_maker):
             difficulty="easy",
             project_id=1,
         )
+        await svc.session.execute(
+            sa.update(habits).where(habits.c.id == hid).values(cooldown_sec=0)
+        )
         habit = await svc.get(hid)
         assert habit["area_id"] == 1
         res = await svc.up(hid, owner_id=1)
@@ -61,6 +66,77 @@ async def test_habit_up_down_and_para(session_maker):
         res2 = await svc.down(hid, owner_id=1)
         assert res2 is not None and res2["hp_delta"] < 0
         assert res2["new_val"] < res["new_val"]
+
+
+@pytest.mark.asyncio
+async def test_antifarm_decay_and_limit(session_maker):
+    async with HabitsService() as svc:
+        await svc.session.execute(sa.text("INSERT INTO users_web (id) VALUES (5)"))
+        await svc.session.execute(
+            sa.text("INSERT INTO areas (id, owner_id, title) VALUES (5,5,'A')")
+        )
+        hid = await svc.create_habit(
+            owner_id=5,
+            title="Farm",
+            type="positive",
+            difficulty="easy",
+            area_id=5,
+        )
+        await svc.session.execute(
+            sa.update(habits)
+            .where(habits.c.id == hid)
+            .values(cooldown_sec=0, daily_limit=2)
+        )
+        rewards = []
+        for _ in range(4):
+            res = await svc.up(hid, owner_id=5)
+            rewards.append((res["xp"], res["gold"]))
+        assert rewards[0][0] >= rewards[1][0] >= rewards[2][0]
+        assert rewards[2] == (0, 0) and rewards[3] == (0, 0)
+
+
+@pytest.mark.asyncio
+async def test_cooldown_enforced(session_maker):
+    async with HabitsService() as svc:
+        await svc.session.execute(sa.text("INSERT INTO users_web (id) VALUES (6)"))
+        await svc.session.execute(
+            sa.text("INSERT INTO areas (id, owner_id, title) VALUES (6,6,'A')")
+        )
+        hid = await svc.create_habit(
+            owner_id=6,
+            title="CD",
+            type="positive",
+            difficulty="easy",
+            area_id=6,
+        )
+        await svc.up(hid, owner_id=6)
+        with pytest.raises(ValueError):
+            await svc.up(hid, owner_id=6)
+
+
+@pytest.mark.asyncio
+async def test_negative_bypass_limit(session_maker):
+    async with HabitsService() as svc:
+        await svc.session.execute(sa.text("INSERT INTO users_web (id) VALUES (7)"))
+        await svc.session.execute(
+            sa.text("INSERT INTO areas (id, owner_id, title) VALUES (7,7,'A')")
+        )
+        hid = await svc.create_habit(
+            owner_id=7,
+            title="Neg",
+            type="positive",
+            difficulty="easy",
+            area_id=7,
+        )
+        await svc.session.execute(
+            sa.update(habits)
+            .where(habits.c.id == hid)
+            .values(daily_limit=1, cooldown_sec=0)
+        )
+        await svc.up(hid, owner_id=7)
+        await svc.up(hid, owner_id=7)
+        res = await svc.down(hid, owner_id=7)
+        assert res["hp_delta"] < 0
 
 
 @pytest.mark.asyncio
@@ -98,10 +174,12 @@ async def test_dailies_done_undo_streak(session_maker):
 async def test_cron_idempotence(session_maker):
     async with HabitsCronService() as cron:
         await cron.session.execute(sa.text("INSERT INTO users_web (id) VALUES (3)"))
+        await cron.stats.apply(3, xp=5, gold=5)
         ran = await cron.run(3, today=date(2025, 1, 1))
         assert ran is True
         stats = await cron.stats.get_or_create(3)
         assert stats["last_cron"] == date(2025, 1, 1)
+        assert stats["daily_xp"] == 0 and stats["daily_gold"] == 0
         ran2 = await cron.run(3, today=date(2025, 1, 1))
         assert ran2 is False
 
