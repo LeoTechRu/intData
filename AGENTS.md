@@ -1,5 +1,14 @@
 # Repository Guidelines
 
+## Alignment with BACKLOG.md (SSoT)
+Этот документ следует [docs/BACKLOG.md](./docs/BACKLOG.md) как единой «точке истины». 
+При расхождении правил приоритет у BACKLOG. Существующие рекомендации AGENTS.md сохраняются, если не противоречат SSoT.
+
+## Strategic Plan (E1–E16) — как агенты выбирают и оформляют работу
+- Любой MR должен ссылаться на эпик из BACKLOG (E1…E16) и соответствующие Acceptance Criteria.
+- Для новых подзадач: добавь их в BACKLOG под нужный эпик перед реализацией.
+- Особое внимание: E1 (PARA), E12 (единый «Сегодня»), E13 (Tasks & Time), E16 (Habits).
+
 ## Project Structure & Module Organization
 - `core/`: shared models, services, utils, logging. All logic reused by bot and web lives here.
 - /core - директория для общего переиспользуемого кода приложения (основного бэкенда) к которому может обращаться как фронтенд (/web), так и Telegram-бот (/bot).
@@ -27,7 +36,12 @@
   DEV_INIT_MODELS=0     # только для локалки/тестов; не заменяет DDL
   ```
 
-## PARA-first инварианты и интеграции
+## PARA-first Invariants (Must Not Break)
+- Любая сущность: `project_id` ИЛИ `area_id` (оба NULL — ошибка). При указании `project_id` — `area_id` наследуется.
+- Alarm — часть `CalendarItem` (VALARM эквивалент).
+- Время — UTC + `tzid`, повторы через `RRULE`, без материализации бесконечных рядов.
+- Один активный таймер на пользователя (UNIQUE WHERE `stopped_at IS NULL`).
+- Для `Habits/Dailies/Rewards` обязателен `area_id`; при `project_id` наследуем `area_id` проекта.
 - Project обязан иметь **Area**.
 - Task/Resource обязаны иметь **Project ИЛИ Area**; при наличии Project → **area наследуется** от проекта.
 - Любая сущность базы данных обязана иметь **Area**; во всех таблицах поле `area_id` обязательно (`NOT NULL`, по умолчанию системная область «Входящие»).
@@ -36,6 +50,13 @@
 - **Area «Входящие»** создаётся при запуске приложения (если отсутствует) и не может быть удалена или отредактирована через UI/админку.
 - **Subjective overrides**: персонифицированные привязки Project/Task/Resource к другой Area/Project для конкретного пользователя без дублирования сущностей.
 - В тестах: запрет на runtime-импорты из `utils/*`; проверка, что entrypoints зовут только `init_app_once()`.
+
+## Habits Module (Habitica-like) — правила реализации
+- Модель: `habits`, `habit_logs`, `dailies`, `daily_logs`, `rewards`, `user_stats` (см. BACKLOG E16).
+- Экономика: XP/Gold/HP/Level/KP; экспоненциальное затухание награды для частых «плюсов»; штрафы HP за «минусы»; idempotent cron по локальному дню.
+- API: `/api/v1/habits*`, `/api/v1/dailies*`, `/api/v1/rewards*`. Dailies интегрируются в календарь **виртуально** (agenda/ICS), без дублей в `calendar_items`.
+- UI `/habits`: 4 колонки (Привычки / Ежедневные / Задачи / Награды), фильтры Area/Project, HUD (HP/XP/Level/Gold/KP).
+- Бот: команды `/habit` и `/daily`, недельный дайджест.
 
 ## User-Settings (кастомизация дашборда)
 - Одна расширяемая таблица **`user_settings`** (K/V JSONB): ключи `dashboard_layout`, `favorites` и др. в будущем.
@@ -106,10 +127,33 @@ SCHEMA.json является единой «точкой истины» стру
 - PRs: concise description, linked issues, setup notes, screenshots for UI changes. Ensure CI/tests pass. В описании PR добавляйте ссылки на `docs/BACKLOG.md` и `docs/CHANGELOG.md`.
 - PR чек-лист: скриншоты UI при изменениях; ссылки на docs/BACKLOG.md (SSoT) и docs/CHANGELOG.md.
 
-## Agent-Specific Instructions
+## Work Protocol for Agents
+- К каждому изменению — ссылка на эпик/критерии в BACKLOG; поддержи/обнови BACKLOG при необходимости.
+- Бизнес-логика — только в `/core/services/*`. `/web` и `/bot` — тонкие слои.
+- Миграции БД: idempotent DDL в `/core/db/ddl/*.sql` + `repair`; если в проекте уже используется другая технология, следуем действующей и фиксируем это здесь, НЕ меняя платформу миграций в рамках правки AGENTS.
+- Экспорт схемы (`tools/schema_export`) обновлять при изменении моделей.
+- Все API — под `/api/v1/*`; обновить `/api/openapi.json`.
+- Фичефлаги: `CALENDAR_V2_ENABLED`, `HABITS_V1_ENABLED`, `HABITS_RPG_ENABLED` (и `.env.example` при необходимости).
+- Тесты (pytest): наследование PARA; один активный таймер; cron ежедневок (идемпотентность); `habits up/down`, `dailies done/undo`, виртуальные записи в agenda; срезы `/time/summary`.
+- Коммиты/PR: императивный заголовок, почему+что; обновление `.env.example`, `docs/BACKLOG.md`, `docs/CHANGELOG.md`; скриншоты UI.
 - Work from repo root, activate venv, install deps, then implement.
 - Keep changes minimal and aligned with existing style. Always finish with: `source ./venv/bin/activate && pip install --quiet -r requirements.txt && pytest -q`.
 - Changes to note models or endpoints require updating `core/db/SCHEMA.*` via `python -m tools.schema_export generate`; OpenAPI is served at `/api/v1/openapi.json` and used in tests.
+
+## Agent Self-Checklist (перед merge)
+- [ ] Есть ссылка на эпик и AC из BACKLOG?
+- [ ] Инварианты PARA соблюдены и покрыты тестами?
+- [ ] Миграции/DDL идемпотентны; схема/SCHEMA.* обновлена?
+- [ ] OpenAPI и фичефлаги в актуальном состоянии?
+- [ ] UI соответствует стилю и отзывчивости; тексты на русском?
+- [ ] BACKLOG/CHANGELOG обновлены с якорями?
+- [ ] Локальные тесты зелёные (`pytest -q`)?
+
+## Do Not Do
+- Не создавать дубли напоминаний вне календаря.
+- Не материализовать ежедневки в `calendar_items` — только виртуальная интеграция (agenda/ICS).
+- Не класть бизнес-логику в `/web` или `/bot`.
+- Не ломать префикс `/api/v1/*` и совместимость.
 
 # AGENTS: правила работы с бэклогом и ченджлогом
 

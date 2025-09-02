@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Страница `/habits` с простым интерфейсом для управления привычками.
 - Колонка `areas.color` с HEX-значением и дефолтом `#F1F5F9`; миграция с бэкфиллом.
 - Утилита `getAreaColor` в фронтенде для кеширования цветов областей.
+- AGENTS.md aligned with BACKLOG (E1–E16, Habits module, PARA invariants, agent protocol, checklist).
 
 ### Changed
 - Унифицирована работа с паролями через обёртку `core.db.bcrypt` и `WebUserService`.
