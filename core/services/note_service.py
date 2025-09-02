@@ -41,7 +41,7 @@ class NoteService:
         area_id: int,
         project_id: int | None = None,
         title: str | None = None,
-        color: str | None = None,
+        pinned: bool = False,
     ) -> Note:
         max_order_stmt = (
             select(func.max(Note.order_index))
@@ -52,13 +52,15 @@ class NoteService:
             )
         )
         max_order = (await self.session.execute(max_order_stmt)).scalar() or 0
+        if not title:
+            title = content.strip().split("\n", 1)[0][:255]
         note = Note(
             owner_id=owner_id,
             title=title,
             content=content,
             area_id=area_id,
             project_id=project_id,
-            color=color,
+            pinned=pinned,
             order_index=max_order + 1,
         )
         self.session.add(note)
@@ -114,7 +116,6 @@ class NoteService:
         area_id: int | None = None,
         project_id: int | None = None,
         title: str | None = None,
-        color: str | None = None,
         pinned: bool | None = None,
         archived_at: datetime | None = None,
     ) -> Note | None:
@@ -131,8 +132,6 @@ class NoteService:
             note.project_id = project_id
         if title is not None:
             note.title = title
-        if color is not None:
-            note.color = color
         if pinned is not None:
             note.pinned = pinned
         if archived_at is not None:

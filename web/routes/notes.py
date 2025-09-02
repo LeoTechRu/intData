@@ -22,7 +22,7 @@ class NoteCreate(BaseModel):
     content: str
     area_id: Optional[int] = None
     project_id: Optional[int] = None
-    color: Optional[str] = None
+    pinned: bool = False
 
 
 class NoteUpdate(BaseModel):
@@ -30,7 +30,6 @@ class NoteUpdate(BaseModel):
     content: Optional[str] = None
     area_id: Optional[int] = None
     project_id: Optional[int] = None
-    color: Optional[str] = None
     pinned: Optional[bool] = None
     archived_at: Optional[datetime] = None
 
@@ -39,6 +38,7 @@ class AreaOut(BaseModel):
     id: int
     name: str
     slug: Optional[str] = None
+    color: Optional[str] = None
 
 
 class ProjectOut(BaseModel):
@@ -50,7 +50,6 @@ class NoteResponse(BaseModel):
     id: int
     title: Optional[str] = None
     content: str
-    color: Optional[str] = None
     pinned: bool = False
     archived_at: Optional[datetime] = None
     order_index: int
@@ -65,11 +64,10 @@ class NoteResponse(BaseModel):
             id=note.id,
             title=note.title,
             content=note.content,
-            color=note.color,
             pinned=note.pinned,
             archived_at=note.archived_at,
             order_index=note.order_index,
-            area=AreaOut(id=area.id, name=area.name, slug=getattr(area, "slug", None)),
+            area=AreaOut(id=area.id, name=area.name, slug=getattr(area, "slug", None), color=getattr(area, "color", None)),
             project=ProjectOut(id=project.id, name=project.name) if project else None,
         )
 
@@ -152,7 +150,7 @@ async def create_note(
             content=payload.content,
             area_id=area_id,
             project_id=payload.project_id,
-            color=payload.color,
+            pinned=payload.pinned,
         )
         await service.session.refresh(note, attribute_names=["area", "project"])
         result = NoteResponse.from_model(note)
@@ -227,7 +225,6 @@ async def update_note(
             content=payload.content,
             area_id=payload.area_id,
             project_id=payload.project_id,
-            color=payload.color,
             pinned=payload.pinned,
             archived_at=payload.archived_at,
         )

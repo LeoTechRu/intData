@@ -11,17 +11,28 @@
 }
 #quick-note textarea{
   inline-size:100%;
-  resize:vertical;
+  resize:none;
+  overflow-y:auto;
+  max-height:200px;
 }
+#quick-note.collapsed textarea,
+#quick-note.collapsed .qn-extra{display:none;}
 
 .chip--area{cursor:pointer;}
 
-.note-card{ background:var(--note-bg); color:var(--note-fg); }
-
+.note-card{
+  background:var(--note-bg,#F3F4F6);
+  color:var(--note-fg,#111);
+  height:180px;
+  display:flex;
+  flex-direction:column;
+}
+.note-card .c-card__content{flex:1;overflow:hidden;}
 .note-card .js-pin.is-active{ color:#2563eb; }
 
-.note-yellow{ --note-bg:#FEF3C7; --note-fg:#111 }
-.note-mint{ --note-bg:#DCFCE7; --note-fg:#111 }
-.note-blue{ --note-bg:#DBEAFE; --note-fg:#111 }
-.note-pink{ --note-bg:#FCE7F3; --note-fg:#111 }
-.note-gray{ --note-bg:#F3F4F6; --note-fg:#111 }
+textarea{resize:none;}
+
+#noteDialog .note-card{
+  height:auto;
+  max-height:80vh;
+}
