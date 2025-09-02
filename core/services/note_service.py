@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import List, Optional
 from datetime import datetime
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -72,6 +72,7 @@ class NoteService:
         owner_id: int,
         *,
         area_id: int | None = None,
+        include_sub: bool = False,
         project_id: int | None = None,
         pinned: bool | None = None,
         archived: bool | None = False,
@@ -85,7 +86,16 @@ class NoteService:
             .where(Note.owner_id == owner_id)
         )
         if area_id is not None:
-            stmt = stmt.where(Note.area_id == area_id)
+            if include_sub:
+                node = await self.session.get(Area, area_id)
+                if node is None:
+                    return []
+                prefix = node.mp_path
+                stmt = stmt.join(Area, Area.id == Note.area_id).where(
+                    or_(Area.mp_path == prefix, Area.mp_path.like(prefix + "%"))
+                )
+            else:
+                stmt = stmt.where(Note.area_id == area_id)
         if project_id is not None:
             stmt = stmt.where(Note.project_id == project_id)
         if pinned is not None:
