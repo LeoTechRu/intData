@@ -2,7 +2,6 @@ from datetime import date
 from typing import Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from core.auth.owner import OwnerCtx, get_current_owner
@@ -13,9 +12,11 @@ from core.services.habits import (
     RewardsService,
     UserStatsService,
     HabitsCronService,
+    habits,
 )
+from sqlalchemy import select
 
-router = APIRouter(tags=["habits"])
+router = APIRouter()
 
 TG_LINK_ERROR = {
     "error": "tg_link_required",
@@ -35,7 +36,18 @@ class HabitIn(BaseModel):
     project_id: Optional[int] = None
 
 
-@router.post("/habits", status_code=201)
+@router.get("/habits", tags=["Habits"])
+async def api_list_habits(owner: OwnerCtx | None = Depends(get_current_owner)):
+    if owner is None:
+        raise HTTPException(status_code=401)
+    async with HabitsService() as svc:
+        res = await svc.session.execute(
+            select(habits).where(habits.c.owner_id == owner.owner_id)
+        )
+        return [dict(r) for r in res.mappings().all()]
+
+
+@router.post("/habits", tags=["Habits"], status_code=201)
 async def api_create_habit(
     payload: HabitIn,
     owner: OwnerCtx | None = Depends(get_current_owner),
@@ -43,7 +55,7 @@ async def api_create_habit(
     if owner is None:
         raise HTTPException(status_code=401)
     if not owner.has_tg:
-        return JSONResponse(status_code=403, content=TG_LINK_ERROR)
+        raise HTTPException(status_code=403, detail=TG_LINK_ERROR)
     if payload.area_id is None and payload.project_id is None:
         raise HTTPException(status_code=400, detail="area_or_project_required")
     try:
@@ -62,7 +74,7 @@ async def api_create_habit(
     return {"id": hid}
 
 
-@router.post("/habits/{habit_id}/up")
+@router.post("/habits/{habit_id}/up", tags=["Habits"])
 async def api_habit_up(
     habit_id: int,
     owner: OwnerCtx | None = Depends(get_current_owner),
@@ -70,15 +82,15 @@ async def api_habit_up(
     if owner is None:
         raise HTTPException(status_code=401)
     if not owner.has_tg:
-        return JSONResponse(status_code=403, content=TG_LINK_ERROR)
+        raise HTTPException(status_code=403, detail=TG_LINK_ERROR)
     try:
         async with HabitsService() as svc:
             res = await svc.up(habit_id, owner_id=owner.owner_id)
     except CooldownError as e:
         raise HTTPException(
             status_code=429,
-            detail={"error": "cooldown", "retry_after": e.retry_after},
-            headers={"Retry-After": str(e.retry_after)},
+            detail={"error": "cooldown", "retry_after": e.seconds},
+            headers={"Retry-After": str(e.seconds)},
         )
     except InsufficientGoldError:
         raise HTTPException(status_code=400, detail={"error": "insufficient_gold"})
@@ -95,7 +107,7 @@ async def api_habit_up(
     return res
 
 
-@router.post("/habits/{habit_id}/down")
+@router.post("/habits/{habit_id}/down", tags=["Habits"])
 async def api_habit_down(
     habit_id: int,
     owner: OwnerCtx | None = Depends(get_current_owner),
@@ -103,15 +115,15 @@ async def api_habit_down(
     if owner is None:
         raise HTTPException(status_code=401)
     if not owner.has_tg:
-        return JSONResponse(status_code=403, content=TG_LINK_ERROR)
+        raise HTTPException(status_code=403, detail=TG_LINK_ERROR)
     try:
         async with HabitsService() as svc:
             res = await svc.down(habit_id, owner_id=owner.owner_id)
     except CooldownError as e:
         raise HTTPException(
             status_code=429,
-            detail={"error": "cooldown", "retry_after": e.retry_after},
-            headers={"Retry-After": str(e.retry_after)},
+            detail={"error": "cooldown", "retry_after": e.seconds},
+            headers={"Retry-After": str(e.seconds)},
         )
     except ValueError as exc:
         if str(exc) == "cooldown":
@@ -126,22 +138,32 @@ async def api_habit_down(
     return res
 
 
-@router.get("/habits/stats")
+class StatsOut(BaseModel):
+    level: int
+    xp: int
+    gold: int
+    hp: int
+    kp: int
+    daily_xp: int
+    daily_gold: int
+
+
+@router.get("/habits/stats", tags=["Stats"], response_model=StatsOut)
 async def api_stats(owner: OwnerCtx | None = Depends(get_current_owner)):
     if owner is None:
         raise HTTPException(status_code=401)
     async with UserStatsService() as svc:
         stats = await svc.get_or_create(owner.owner_id)
     stats.pop("owner_id", None)
-    return stats
+    return StatsOut(**stats)
 
 
-@router.post("/habits/cron/run")
+@router.post("/habits/cron/run", tags=["Habits"])
 async def api_cron_run(owner: OwnerCtx | None = Depends(get_current_owner)):
     if owner is None:
         raise HTTPException(status_code=401)
     if not owner.has_tg:
-        return JSONResponse(status_code=403, content=TG_LINK_ERROR)
+        raise HTTPException(status_code=403, detail=TG_LINK_ERROR)
     async with HabitsCronService() as svc:
         ran = await svc.run(owner.owner_id)
     return {"ran": ran}
@@ -159,7 +181,7 @@ class DailyIn(BaseModel):
     project_id: Optional[int] = None
 
 
-@router.post("/dailies", status_code=201)
+@router.post("/dailies", tags=["Dailies"], status_code=201)
 async def api_create_daily(
     payload: DailyIn,
     owner: OwnerCtx | None = Depends(get_current_owner),
@@ -167,7 +189,7 @@ async def api_create_daily(
     if owner is None:
         raise HTTPException(status_code=401)
     if not owner.has_tg:
-        return JSONResponse(status_code=403, content=TG_LINK_ERROR)
+        raise HTTPException(status_code=403, detail=TG_LINK_ERROR)
     if payload.area_id is None and payload.project_id is None:
         raise HTTPException(status_code=400, detail="area_or_project_required")
     try:
@@ -190,7 +212,7 @@ class DatePayload(BaseModel):
     date: Optional[date] = None
 
 
-@router.post("/dailies/{daily_id}/done")
+@router.post("/dailies/{daily_id}/done", tags=["Dailies"])
 async def api_daily_done(
     daily_id: int,
     payload: DatePayload = Body(default=None),
@@ -199,7 +221,7 @@ async def api_daily_done(
     if owner is None:
         raise HTTPException(status_code=401)
     if not owner.has_tg:
-        return JSONResponse(status_code=403, content=TG_LINK_ERROR)
+        raise HTTPException(status_code=403, detail=TG_LINK_ERROR)
     on = payload.date if payload else None
     async with DailiesService() as svc:
         ok = await svc.done(daily_id, owner_id=owner.owner_id, on=on)
@@ -208,7 +230,7 @@ async def api_daily_done(
     return {"ok": True}
 
 
-@router.post("/dailies/{daily_id}/undo")
+@router.post("/dailies/{daily_id}/undo", tags=["Dailies"])
 async def api_daily_undo(
     daily_id: int,
     payload: DatePayload = Body(default=None),
@@ -217,7 +239,7 @@ async def api_daily_undo(
     if owner is None:
         raise HTTPException(status_code=401)
     if not owner.has_tg:
-        return JSONResponse(status_code=403, content=TG_LINK_ERROR)
+        raise HTTPException(status_code=403, detail=TG_LINK_ERROR)
     on = payload.date if payload else None
     async with DailiesService() as svc:
         ok = await svc.undo(daily_id, owner_id=owner.owner_id, on=on)
@@ -236,7 +258,7 @@ class RewardIn(BaseModel):
     project_id: Optional[int] = None
 
 
-@router.post("/rewards", status_code=201)
+@router.post("/rewards", tags=["Rewards"], status_code=201)
 async def api_create_reward(
     payload: RewardIn,
     owner: OwnerCtx | None = Depends(get_current_owner),
@@ -244,7 +266,7 @@ async def api_create_reward(
     if owner is None:
         raise HTTPException(status_code=401)
     if not owner.has_tg:
-        return JSONResponse(status_code=403, content=TG_LINK_ERROR)
+        raise HTTPException(status_code=403, detail=TG_LINK_ERROR)
     if payload.area_id is None and payload.project_id is None:
         raise HTTPException(status_code=400, detail="area_or_project_required")
     try:
@@ -261,7 +283,7 @@ async def api_create_reward(
     return {"id": rid}
 
 
-@router.get("/rewards")
+@router.get("/rewards", tags=["Rewards"])
 async def api_list_rewards(
     owner: OwnerCtx | None = Depends(get_current_owner),
 ):
@@ -272,7 +294,7 @@ async def api_list_rewards(
     return rewards
 
 
-@router.post("/rewards/{reward_id}/buy")
+@router.post("/rewards/{reward_id}/buy", tags=["Rewards"])
 async def api_buy_reward(
     reward_id: int,
     owner: OwnerCtx | None = Depends(get_current_owner),
@@ -280,13 +302,13 @@ async def api_buy_reward(
     if owner is None:
         raise HTTPException(status_code=401)
     if not owner.has_tg:
-        return JSONResponse(status_code=403, content=TG_LINK_ERROR)
+        raise HTTPException(status_code=403, detail=TG_LINK_ERROR)
     try:
         async with RewardsService() as svc:
             gold_after = await svc.buy(reward_id, owner_id=owner.owner_id)
     except InsufficientGoldError:
-        return JSONResponse(
-            status_code=400, content={"error": "insufficient_gold"}
+        raise HTTPException(
+            status_code=400, detail={"error": "insufficient_gold"}
         )
     if gold_after is None:
         raise HTTPException(status_code=404)

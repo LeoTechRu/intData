@@ -76,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ICS feed экспортирует VTODO с RRULE для ежедневок (только чтение).
 - `/api/v1/habits/stats` now includes `{daily_xp, daily_gold}`.
 - API авторизации унифицировано через `get_current_owner`; OpenAPI описывает новые ошибки.
+- Unified OpenAPI SSoT at `/api/openapi.json`; exporter produces `api/openapi.json`.
 
 ### Fixed
 
@@ -100,6 +101,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - Access control on owner_id for habits/dailies/rewards and logs.
 - Нулевые права на write-действия без TG-привязки; одинаковое owner-scoping для всех эндпоинтов.
+- Unified owner scoping via `get_current_owner`.
 
 ### Removed
 - Удалён устаревший API напоминаний и связанные сервисы.
@@ -115,6 +117,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Исправлено добавление и удаление избранного в веб-интерфейсе.
 - Починена вёрстка меню избранного и отображение звёздочки на страницах.
 - Удалён скриншот страницы `/settings` из документации.
+- Duplicate OpenAPI/Swagger files.
 
 ### Removed
  - Упоминания роли из пользовательского интерфейса.

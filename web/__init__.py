@@ -2,11 +2,12 @@
 from pathlib import Path
 from urllib.parse import quote
 from contextlib import asynccontextmanager
+import json
 import logging
 import os
 
 from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse, FileResponse
+from fastapi.responses import RedirectResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
@@ -116,6 +117,11 @@ tags_metadata = [
     {"name": "user", "description": "User favorites API"},
     {"name": "user-settings", "description": "User settings API"},
     {"name": "habits", "description": "Habits API"},
+    {"name": "Habits", "description": "Habits API"},
+    {"name": "Dailies", "description": "Dailies API"},
+    {"name": "Rewards", "description": "Rewards API"},
+    {"name": "Stats", "description": "Habits statistics API"},
+    {"name": "Calendar", "description": "Calendar API"},
 ]
 
 app = FastAPI(
@@ -123,7 +129,7 @@ app = FastAPI(
     title="Intelligent Data Pro API",
     docs_url=None,
     redoc_url=None,
-    openapi_url="/api/v1/openapi.json",
+    openapi_url=None,
     openapi_tags=tags_metadata,
     redirect_slashes=False,
     servers=[{"url": "/api/v1"}],
@@ -143,9 +149,16 @@ async def favicon() -> FileResponse:
 @app.get("/api", include_in_schema=False)
 async def swagger_ui():
     return get_swagger_ui_html(
-        openapi_url="/api/v1/openapi.json",
+        openapi_url="/api/openapi.json",
         title="API v1 - Swagger UI",
     )
+
+
+@app.get("/api/openapi.json", include_in_schema=False)
+async def openapi_json() -> Response:
+    data = app.openapi()
+    text = json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True)
+    return Response(text, media_type="application/json")
 
 
 
@@ -216,7 +229,7 @@ async def auth_middleware(request: Request, call_next):
     # Allow public API docs endpoints
     if (
         path == "/api"
-        or path == "/api/v1/openapi.json"
+        or path == "/api/openapi.json"
         or path == "/api/v1/auth/tg-webapp/exchange"
     ):
         return await call_next(request)
@@ -224,7 +237,7 @@ async def auth_middleware(request: Request, call_next):
     if path.startswith("/api/swagger-ui"):
         return await call_next(request)
 
-    if path.startswith("/api/") and not path.startswith("/api/v1/"):
+    if path.startswith("/api/") and not path.startswith("/api/v1/") and path != "/api/openapi.json":
         dest = f"/api/v1/{path[5:]}"
         if request.url.query:
             dest += f"?{request.url.query}"

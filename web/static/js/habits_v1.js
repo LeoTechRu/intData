@@ -1,3 +1,5 @@
+import {showToast} from './ui/toast.js';
+
 export function handleHabitApiResponse(resp, btn){
   if(resp.status === 403){
     resp.json().then(d=>{
@@ -15,7 +17,7 @@ export function handleHabitApiResponse(resp, btn){
         btn.disabled = true;
         setTimeout(()=>{ btn.disabled = false; }, retry * 1000);
       }
-      alert(`Кулдаун: повторите через ${retry} сек.`);
+      showToast(`Кулдаун: повторите через ${retry} сек.`);
     });
     return true;
   }

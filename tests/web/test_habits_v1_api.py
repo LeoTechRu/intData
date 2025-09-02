@@ -98,7 +98,7 @@ async def test_habit_and_reward_flow(client: AsyncClient):
     rid = resp.json()["id"]
     resp = await client.post(f"/api/v1/rewards/{rid}/buy", cookies=cookies)
     assert resp.status_code == 400
-    assert resp.json()["error"] == "insufficient_gold"
+    assert resp.json()["detail"]["error"] == "insufficient_gold"
 
     # check stats endpoint
     resp = await client.get("/api/v1/habits/stats", cookies=cookies)
@@ -169,7 +169,7 @@ async def test_up_requires_tg_link(client: AsyncClient):
     habit_id = resp.json()["id"]
     resp = await client.post(f"/api/v1/habits/{habit_id}/up", cookies={"web_user_id": "4"})
     assert resp.status_code == 403
-    assert resp.json()["error"] == "tg_link_required"
+    assert resp.json()["detail"]["error"] == "tg_link_required"
 
 
 @pytest.mark.asyncio
