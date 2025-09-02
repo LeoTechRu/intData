@@ -21,6 +21,7 @@
   - [E14: Insights & Reports (ревью Areas, фокус-часы)](#e14-insights--reports-ревью-areas-фокус-часы)
   - [E15: User-configurable dashboard (user_settings)](#e15-user-configurable-dashboard-user_settings)
   - [E16: Habits](#e16-habits)
+  - [E17: Frontend Modernization](#e17-frontend-modernization)
 - [MR-план](#mr-план)
 - [Definition of Done](#definition-of-done)
 - [Appendix: Notes from merge](#appendix-notes-from-merge)
@@ -339,6 +340,23 @@ POST /api/v1/rewards/{id}/buy
 - `/calendar/agenda?include_habits=1` возвращает due-ежедневки; ICS содержит `VTODO` с `RRULE`.
 - `/rewards/{id}/buy` списывает Gold и возвращает баланс.
 - В `/habits` действия мгновенно отражаются в HUD.
+
+### E17: Frontend Modernization
+**User Stories**
+1. Как разработчик, я создаю современный фронтенд на Next.js и TypeScript, чтобы ускорить разработку и унифицировать UI.
+2. Как пользователь, я вижу перенесённые страницы с отзывчивым оформлением и быстрым откликом.
+
+**Tasks**
+- P0•S — Утвердить стек: **Next.js 14 + TypeScript + TailwindCSS + React Query**.
+- P0•M — Инициализировать проект в `web/frontend`, настроить ESLint, Prettier, Vitest и скрипты `npm run dev|build|lint|test`.
+- P1•M — Реализовать базовый layout и API-клиент, работающий с `/api/v1/*`.
+- P1•M — Перенести страницу `/inbox` на новый стек и удалить соответствующие Jinja/JS активы.
+- P1•L — Поэтапно переносить остальные страницы, очищая legacy ресурсы.
+
+**Acceptance Criteria**
+- `npm run build`, `npm test`, `npm run lint` выполняются без ошибок.
+- Мигрированные страницы обслуживаются Next.js и используют React Query для запросов к API.
+- Удалённые legacy файлы фиксируются в `CHANGELOG.md`.
 
 ## MR-план
 1. MR-1 Foundations (миграции/модели) — DoD: миграции применяются; приложение поднимается; тесты не падают.

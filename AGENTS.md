@@ -103,6 +103,14 @@
 - Frontend updates must maintain a unified responsive layout so the application remains comfortable on widescreen monitors, square displays, narrow phones, and any other screen sizes.
 - Page titles are rendered in the header via `MODULE_TITLE`; do not duplicate the module name with an extra `<h1>` inside pages.
 
+## Frontend Guidelines
+- Базовый стек: **Next.js 14 + TypeScript + TailwindCSS + React Query**. Исходники располагаются в `web/frontend/`.
+- Компонентный подход на React; данные получаем через React Query и эндпоинты FastAPI `/api/v1/*`.
+- Настроить ESLint, Prettier и Vitest; перед отправкой PR обязательны `npm run lint` и `npm test`.
+- Стандартные команды: `npm run dev`, `npm run build`.
+- Используем app router Next.js в каталоге `app/` (страницы в `web/frontend/app/`).
+- Смотри дорожную карту в [docs/BACKLOG.md#e17-frontend-modernization](docs/BACKLOG.md#e17-frontend-modernization).
+
 ## Testing Guidelines
 - Framework: `pytest` with a running PostgreSQL.
 - Test naming: `tests/test_*.py`; mirror module layout.
