@@ -35,16 +35,21 @@ async def get_current_web_user(request: Request) -> Optional[WebUser]:
         return result.scalar_one_or_none()
 
 
-async def get_current_tg_user(request: Request) -> Optional[TgUser]:
+async def get_current_tg_user(
+    request: Request,
+    current_user: Optional[WebUser] = Depends(get_current_web_user),
+) -> Optional[TgUser]:
     raw = request.cookies.get("telegram_id")
-    if not raw:
-        return None
-    try:
-        telegram_id = int(raw)
-    except ValueError:
-        return None
-    async with TelegramUserService() as service:
-        return await service.get_user_by_telegram_id(telegram_id)
+    if raw:
+        try:
+            telegram_id = int(raw)
+        except ValueError:
+            return None
+        async with TelegramUserService() as service:
+            return await service.get_user_by_telegram_id(telegram_id)
+    if current_user and current_user.telegram_accounts:
+        return current_user.telegram_accounts[0]
+    return None
 
 
 def role_required(required_role: UserRole | str):
