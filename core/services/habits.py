@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core import db
 from core.config import config
 from .errors import CooldownError, InsufficientGoldError
+from core.models import Area
 
 # SQLite-friendly table metadata used by tests and services
 metadata = sa.MetaData()
@@ -230,9 +231,24 @@ class HabitsService:
             stmt = sa.text("SELECT area_id FROM projects WHERE id=:p")
             area = await self.session.execute(stmt, {"p": project_id})
             return area.scalar_one()
-        if area_id is None:
-            raise ValueError("area_id required")
-        return area_id
+        if area_id is not None:
+            return area_id
+        stmt = (
+            select(Area.id)
+            .where(
+                Area.owner_id == owner_id,
+                sa.or_(Area.slug == "inbox", Area.name.ilike("входящие")),
+            )
+        )
+        res = await self.session.execute(stmt)
+        inbox_id = res.scalar_one_or_none()
+        if inbox_id is None:
+            inbox = Area(owner_id=owner_id, name="Входящие", title="Входящие")
+            inbox.slug = "inbox"
+            self.session.add(inbox)
+            await self.session.flush()
+            return inbox.id
+        return inbox_id
 
     async def create_habit(
         self,

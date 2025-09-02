@@ -2,7 +2,7 @@ from datetime import date
 from typing import Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from core.auth.owner import OwnerCtx, get_current_owner
 from core.services.errors import CooldownError, InsufficientGoldError
@@ -28,12 +28,15 @@ TG_LINK_ERROR = {
 
 
 class HabitIn(BaseModel):
-    title: str
-    type: str
-    difficulty: str
+    title: str = Field(..., alias="name")
+    type: str = "positive"
+    difficulty: str = "easy"
     note: Optional[str] = None
     area_id: Optional[int] = None
     project_id: Optional[int] = None
+
+    class Config:
+        populate_by_name = True
 
 
 @router.get("/habits", tags=["Habits"])
@@ -44,7 +47,10 @@ async def api_list_habits(owner: OwnerCtx | None = Depends(get_current_owner)):
         res = await svc.session.execute(
             select(habits).where(habits.c.owner_id == owner.owner_id)
         )
-        return [dict(r) for r in res.mappings().all()]
+        return [
+            {**dict(r), "name": r["title"], "progress": []}
+            for r in res.mappings().all()
+        ]
 
 
 @router.post("/habits", tags=["Habits"], status_code=201)
@@ -56,8 +62,6 @@ async def api_create_habit(
         raise HTTPException(status_code=401)
     if not owner.has_tg:
         raise HTTPException(status_code=403, detail=TG_LINK_ERROR)
-    if payload.area_id is None and payload.project_id is None:
-        raise HTTPException(status_code=400, detail="area_or_project_required")
     try:
         async with HabitsService() as svc:
             hid = await svc.create_habit(
@@ -72,6 +76,34 @@ async def api_create_habit(
     except ValueError:
         raise HTTPException(status_code=400, detail="area_or_project_required")
     return {"id": hid}
+
+
+class DatePayload(BaseModel):
+    date: Optional[date] = None
+
+
+@router.post("/habits/{habit_id}/toggle", tags=["Habits"])
+async def api_habit_toggle(
+    habit_id: int,
+    payload: DatePayload = Body(default=None),
+    owner: OwnerCtx | None = Depends(get_current_owner),
+):
+    if owner is None:
+        raise HTTPException(status_code=401)
+    if not owner.has_tg:
+        raise HTTPException(status_code=403, detail=TG_LINK_ERROR)
+    try:
+        async with HabitsService() as svc:
+            res = await svc.up(habit_id, owner_id=owner.owner_id)
+    except CooldownError as e:
+        raise HTTPException(
+            status_code=429,
+            detail={"error": "cooldown", "retry_after": e.seconds},
+            headers={"Retry-After": str(e.seconds)},
+        )
+    if res is None:
+        raise HTTPException(status_code=404)
+    return res
 
 
 @router.post("/habits/{habit_id}/up", tags=["Habits"])
@@ -206,10 +238,6 @@ async def api_create_daily(
     except ValueError:
         raise HTTPException(status_code=400, detail="area_or_project_required")
     return {"id": did}
-
-
-class DatePayload(BaseModel):
-    date: Optional[date] = None
 
 
 @router.post("/dailies/{daily_id}/done", tags=["Dailies"])

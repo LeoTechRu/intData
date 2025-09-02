@@ -106,6 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PARA inheritance for newly created habits/dailies/rewards enforced in services and repair.
 - Habit ORM exposes `.area` and `.project`; `/habits` no longer responds 500 when listing habits.
 - Repair backfills `area_id` from project and warns when both `area_id` and `project_id` are NULL.
+- Habit creation via `/api/v1/habits` no longer fails when area is missing; defaults to Inbox and accepts `name` payload.
 
 ### Security
 - Access control on owner_id for habits/dailies/rewards and logs.

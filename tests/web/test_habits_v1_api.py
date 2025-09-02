@@ -154,7 +154,7 @@ async def test_para_enforcement(client: AsyncClient):
         json={"title": "H", "type": "positive", "difficulty": "easy"},
         cookies=cookies,
     )
-    assert resp.status_code == 400
+    assert resp.status_code == 201
 
 
 @pytest.mark.asyncio

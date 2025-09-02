@@ -809,7 +809,12 @@
             "title": "Area Id"
           },
           "difficulty": {
+            "default": "easy",
             "title": "Difficulty",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
             "type": "string"
           },
           "note": {
@@ -834,19 +839,14 @@
             ],
             "title": "Project Id"
           },
-          "title": {
-            "title": "Title",
-            "type": "string"
-          },
           "type": {
+            "default": "positive",
             "title": "Type",
             "type": "string"
           }
         },
         "required": [
-          "title",
-          "type",
-          "difficulty"
+          "name"
         ],
         "title": "HabitIn",
         "type": "object"
@@ -3304,6 +3304,55 @@
           }
         },
         "summary": "Api Habit Down",
+        "tags": [
+          "Habits"
+        ]
+      }
+    },
+    "/api/v1/habits/{habit_id}/toggle": {
+      "post": {
+        "operationId": "api_habit_toggle_api_v1_habits__habit_id__toggle_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "habit_id",
+            "required": true,
+            "schema": {
+              "title": "Habit Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatePayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Habit Toggle",
         "tags": [
           "Habits"
         ]
