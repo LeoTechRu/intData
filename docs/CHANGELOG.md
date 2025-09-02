@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `UserService` для работы с пользователями, группами и логированием.
 - Команды бота: `/start`, `/cancel`, `/birthday`, `/contact`.
 - Команды бота: `/setfullname`, `/setemail`, `/setphone`, `/setbirthday`; редактирование описаний групп.
+- Команда бота `/help` со списком доступных команд.
 - Команда `/group` и проверка членства (декоратор).
 - Web: ESLint, Prettier и Vitest конфигурации.
 - Логирование: middleware, пересылка неизвестных сообщений в группу логов, ответы админа, команды `/setloglevel` и `/getloglevel`.

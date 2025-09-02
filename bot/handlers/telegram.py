@@ -88,6 +88,50 @@ class UpdateDataStates(StatesGroup):
 async def cmd_start(message: Message):
     await message.answer(f"Привет, {message.from_user.first_name}! Добро пожаловать в бота.")
 
+
+@user_router.message(Command("help"))
+async def cmd_help(message: Message) -> None:
+    help_text = (
+        "Доступные команды:\n"
+        "\n"
+        "Общие:\n"
+        "/start - приветственное сообщение.\n"
+        "/help - эта справка.\n"
+        "/cancel - отменить ввод.\n"
+        "\n"
+        "Профиль:\n"
+        "/contact - показать контактные данные.\n"
+        "/setfullname - установить отображаемое имя.\n"
+        "/setemail - установить email.\n"
+        "/setphone - установить телефон.\n"
+        "/setbirthday - установить день рождения.\n"
+        "/birthday - напоминание о дне рождения.\n"
+        "\n"
+        "Заметки:\n"
+        "/note <текст> - создать заметку в Inbox (#proj:<id> для проекта).\n"
+        "/assign <note_id> <proj|area|res> <id> - присвоить заметку контейнеру.\n"
+        "\n"
+        "Привычки:\n"
+        "/habit_list - список привычек.\n"
+        "/habit_add [название] [daily|weekly|monthly] - добавить привычку.\n"
+        "/habit_done [id] - отметить выполнение за сегодня.\n"
+        "\n"
+        "Тайм-трекер:\n"
+        "/time_start [описание] - запустить таймер.\n"
+        "/time_stop [id] - остановить таймер.\n"
+        "/time_list - последние записи времени.\n"
+        "/time_resume <task_id> - возобновить таймер для задачи.\n"
+        "\n"
+        "Группы:\n"
+        "/group - зарегистрировать группу и показать участников.\n"
+        "/setgroupdesc - задать описание группы (в группах).\n"
+        "\n"
+        "Администрирование:\n"
+        "/setloglevel <DEBUG|INFO|ERROR> - установить уровень логирования.\n"
+        "/getloglevel - показать текущий уровень логов."
+    )
+    await message.answer(help_text)
+
 @user_router.message(Command("cancel"))
 @user_router.message(F.text.lower().in_(["cancel", "отмена", "выйти", "прервать"]))
 async def cmd_cancel(message: Message, state: FSMContext):
