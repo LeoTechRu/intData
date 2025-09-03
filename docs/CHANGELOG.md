@@ -62,10 +62,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Core services: HabitsService, DailiesService, HabitsCronService, UserStatsService.
 - Public API for habits, dailies, rewards, stats and cron under `/api/v1/*`.
 - /habits page (4 columns), HUD, keyboard shortcuts; Telegram commands (/habit, /daily).
+- Next.js frontend scaffold with React Query and Tailwind; migrated `/inbox` page.
 - Feature flags HABITS_V1_ENABLED, HABITS_RPG_ENABLED in .env.example.
 - Anti-farm mechanics: cooldown per habit, soft daily limit, exponential reward decay; daily_xp/daily_gold counters.
 - Notes API supports `include_sub=1` for listing notes in subareas.
 - Тест покрытия для `/api/v1/habits` проверки доступа без привязки Telegram и заголовка `Retry-After` при кулдауне.
+- Bare timers auto-create tasks in Inbox.
 
 ### Changed
 - developer docs with observability and security guidelines.
@@ -85,6 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Переименована дефолтная область «Нераспределённое» в системную «Входящие»; все сущности обязаны иметь область, при отсутствии используется «Входящие».
 - Страница `/settings` стала адаптивной: убрано повтор заголовка и добавлена сетка блоков настроек.
 - Страница `/notes` обновлена: заголовок выводится только в шапке, форма быстрой заметки центрирована и чип области позволяет менять область.
+- Task creation requires `project_id` or `area_id`; area inherits from project.
 - Страница `/notes` доработана: карточки фиксированного размера с цветом области, всплывающее окно для просмотра и новая форма быстрого ввода.
 - Цвет заметок наследуется от области; поле `notes.color` устарело и не используется.
 - В UI заметок удалён выбор цвета, карточки и чипы окрашиваются через CSS-переменные и авто-контраст.
@@ -94,9 +97,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API авторизации унифицировано через `get_current_owner`; OpenAPI описывает новые ошибки.
 - Unified OpenAPI SSoT at `/api/openapi.json`; exporter produces `api/openapi.json`.
 - OpenAPI snapshot documents `tg_link_required` and `cooldown` errors.
+- Tailwind config updated for Next.js sources.
 
 ### Fixed
 - reduced test flakiness via deterministic time handling and confirmed cooldown paths mapping to 429.
+- Страница `/inbox` запрашивает заметки у API через `NEXT_PUBLIC_API_BASE`.
 
 - Автоматическое создание таблицы `app_settings`, исключающей ошибки при её отсутствии.
 - Создание таблицы `user_settings` в repair-скрипте, что предотвращает падения при чтении настроек.
@@ -143,8 +148,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Упоминания роли из пользовательского интерфейса.
  - Убраны фиксированные ссылки (Дашборд, Задачи и др.) из меню профиля; оставлены только «Профиль», «Настройки», избранное и «Выход».
  - Alembic-миграции заменены на простой SQL-раннер `core/db/migrate.py`.
- - Удалены legacy‑маршруты и UI модуля напоминаний; функционал перенесён в календарь.
- - Удалены устаревшие директория `migrations/` и конфигурация `alembic.ini`.
+- Удалены legacy‑маршруты и UI модуля напоминаний; функционал перенесён в календарь.
+- Удалены устаревшие директория `migrations/` и конфигурация `alembic.ini`.
+- Jinja-шаблон и маршрут FastAPI для `/inbox`.
 
 ## [0.1.0] - YYYY-MM-DD
 ### Added

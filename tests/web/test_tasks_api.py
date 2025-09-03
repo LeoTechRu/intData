@@ -7,6 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from base import Base
 import core.db as db
 from core.models import TgUser
+from core.services.area_service import AreaService
 
 try:
     from main import app  # type: ignore
@@ -42,9 +43,12 @@ async def test_create_and_complete_task(client: AsyncClient):
     telegram_id = await _create_tg_user(telegram_id=10)
     cookies = {"telegram_id": str(telegram_id)}
 
+    async with AreaService() as asvc:
+        area = await asvc.create_area(owner_id=telegram_id, name="Inbox")
+
     resp = await client.post(
         "/api/v1/tasks",
-        json={"title": "Test"},
+        json={"title": "Test", "area_id": area.id},
         cookies=cookies,
     )
     assert resp.status_code == 201

@@ -228,4 +228,5 @@ __marimo__/
 # End of https://www.toptal.com/developers/gitignore/api/python
 # Frontend
 web/node_modules/
+web/.next/
 

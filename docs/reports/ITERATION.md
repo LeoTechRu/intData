@@ -17,3 +17,20 @@
 ## Risks & TODOs
 - Database migration scripts require running PostgreSQL instance.
 - Monitor habit cooldown to avoid abuse.
+
+---
+
+## Completed Tasks
+- E13 Tasks & Time: bare timer auto-creates Inbox task; task creation enforces project/area with inheritance.
+
+## Test Summary
+- `python -m core.db.migrate` – failed (no PostgreSQL).
+- `python -m core.db.repair` – ran (no output).
+- `pytest -q` – 109 passed.
+
+## SSoT Parity
+- `api/openapi.json` regenerated – in sync.
+- `core/db/SCHEMA.*` – no changes.
+
+## Risks & TODOs
+- API clients must provide `area_id` or `project_id` when creating tasks.

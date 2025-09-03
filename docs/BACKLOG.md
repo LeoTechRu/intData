@@ -242,8 +242,8 @@
 - Мягкий редирект старых `/tasks` и `/time` на новые.
 
 **Acceptance Criteria**
-- [ ] старт «голого» таймера создаёт задачу в «Входящие».
-- [ ] задача требует `project_id` или `area_id`; при указании проекта наследует `area_id`.
+- [x] старт «голого» таймера создаёт задачу в «Входящие».
+- [x] задача требует `project_id` или `area_id`; при указании проекта наследует `area_id`.
 - [ ] напоминания к задаче через `/calendar/items/{id}/alarms`.
 - [ ] флажок календаря `include_tasks/only_scheduled` работает.
 - [x] `/time/summary` даёт срезы по `project/area/day/user`.
@@ -357,9 +357,9 @@ POST /api/v1/rewards/{id}/buy
 See [frontend_modernization.md](./frontend_modernization.md).
 
 **Tasks**
-- P1•M — Исследовать и выбрать стек (Next.js или Vite), задокументировать решение.
-- P1•S — Настроить TypeScript и Tailwind в выбранном фреймворке, подготовить базовый layout.
-- P1•L — Поэтапно переносить страницы на новый стек (начать с `/inbox`), добавлять тесты и запись в `docs/CHANGELOG.md`.
+- [x] P1•M — Выбран стек **Next.js** (TypeScript + Tailwind), решение задокументировано.
+- [x] P1•S — Настроен базовый layout и провайдер React Query.
+- [x] P1•L — Страница `/inbox` перенесена на новый стек и покрыта тестами.
 - P2•S — Удалять legacy‑шаблоны и скрипты после миграции, чистить `web/static` и пути в конфиге Tailwind.
 
 **User Stories**
