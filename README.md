@@ -149,7 +149,7 @@ BOT_LANDING_URL="https://intdata.pro/bot"
 
 # Приложение
 API_BASE="/api/v1"
-NEXT_PUBLIC_API_BASE="http://localhost:5800"
+API_URL="http://localhost:5800"
 APP_MODE="single"                    # single|multiplayer|moderator|admin
 CALENDAR_V2_ENABLED=true
 

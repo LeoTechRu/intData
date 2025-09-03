@@ -32,7 +32,7 @@ class EnvSettings(BaseSettings):
     ADMIN_TELEGRAM_IDS: str = ""
 
     # Web/Auth
-    LOCAL_URL: AnyHttpUrl | None = None  # type: ignore[assignment]
+    API_URL: AnyHttpUrl | None = None  # type: ignore[assignment]
     LOGIN_CALLBACK_URL: AnyHttpUrl | None = None  # type: ignore[assignment]
     SESSION_MAX_AGE: int = 86400
     TG_LOGIN_ENABLED: bool = True
@@ -70,9 +70,9 @@ class EnvSettings(BaseSettings):
         base = str(info.data.get("PUBLIC_URL")).rstrip("/")
         return f"{base}/bot"
 
-    @field_validator("LOCAL_URL", mode="before")
+    @field_validator("API_URL", mode="before")
     @classmethod
-    def default_LOCAL_URL(
+    def default_API_URL(
         cls, v: AnyHttpUrl | None, info: ValidationInfo
     ) -> AnyHttpUrl | None:  # noqa: D401
         if v:

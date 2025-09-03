@@ -9,7 +9,7 @@ expect.extend(matchers);
 
 afterEach(() => {
   vi.restoreAllMocks();
-  delete process.env.NEXT_PUBLIC_API_BASE;
+  delete process.env.API_URL;
 });
 
 function renderWithClient(ui: React.ReactElement) {
@@ -20,7 +20,7 @@ function renderWithClient(ui: React.ReactElement) {
 describe('InboxTable', () => {
   it('renders fetched notes', async () => {
     const apiBase = 'http://backend';
-    process.env.NEXT_PUBLIC_API_BASE = apiBase;
+    process.env.API_URL = apiBase;
     const fetchMock = vi.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
       json: async () => [{ id: 1, title: 'Test', content: 'Note' }],
