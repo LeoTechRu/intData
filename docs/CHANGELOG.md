@@ -60,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Anti-farm mechanics: cooldown per habit, soft daily limit, exponential reward decay; daily_xp/daily_gold counters.
 - Notes API supports `include_sub=1` for listing notes in subareas.
 - Тест покрытия для `/api/v1/habits` проверки доступа без привязки Telegram и заголовка `Retry-After` при кулдауне.
+- Bare timers auto-create tasks in Inbox.
 
 ### Changed
 - unified test fixtures and factories; OpenAPI snapshot test now enforces SSoT.
@@ -78,6 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Переименована дефолтная область «Нераспределённое» в системную «Входящие»; все сущности обязаны иметь область, при отсутствии используется «Входящие».
 - Страница `/settings` стала адаптивной: убрано повтор заголовка и добавлена сетка блоков настроек.
 - Страница `/notes` обновлена: заголовок выводится только в шапке, форма быстрой заметки центрирована и чип области позволяет менять область.
+- Task creation requires `project_id` or `area_id`; area inherits from project.
 - Страница `/notes` доработана: карточки фиксированного размера с цветом области, всплывающее окно для просмотра и новая форма быстрого ввода.
 - Цвет заметок наследуется от области; поле `notes.color` устарело и не используется.
 - В UI заметок удалён выбор цвета, карточки и чипы окрашиваются через CSS-переменные и авто-контраст.

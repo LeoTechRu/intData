@@ -70,6 +70,8 @@ class TaskService:
             area = await self.session.get(Area, area_id)
             if not area or area.owner_id != owner_id:
                 raise PermissionError("Area belongs to different owner or not found")
+        else:
+            raise ValueError("Task requires project_id or area_id")
 
         task = Task(
             owner_id=owner_id,

@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 from core.models import Task, TaskStatus, TgUser
 from core.services.task_service import TaskService
@@ -25,6 +25,12 @@ class TaskCreate(BaseModel):
     due_date: Optional[datetime] = None
     project_id: Optional[int] = None
     area_id: Optional[int] = None
+
+    @model_validator(mode="after")
+    def _check_para(self) -> "TaskCreate":
+        if self.project_id is None and self.area_id is None:
+            raise ValueError("project_id or area_id is required")
+        return self
 
 
 class TaskResponse(BaseModel):

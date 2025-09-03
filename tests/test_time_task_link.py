@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from base import Base
-from core.models import Task, TaskStatus
+from core.models import Task, TaskStatus, Area
 from core.services.time_service import TimeService
 from core.services.task_service import TaskService
 from core.utils import utcnow
@@ -32,6 +32,8 @@ async def test_time_entry_links_to_task_and_updates_status(session):
     assert entry.task_id is not None
     task = await session.get(Task, entry.task_id)
     assert task is not None
+    area = await session.get(Area, task.area_id)
+    assert area and area.name == "Входящие"
 
     # task should move to in_progress
     updated = await session.get(Task, task.id)
@@ -67,7 +69,10 @@ async def test_resume_accumulates_time(session):
 async def test_cannot_link_task_of_another_owner(session):
     # Task belongs to owner 1
     tsvc = TaskService(session)
-    task = await tsvc.create_task(owner_id=1, title="Forbidden")
+    area = Area(owner_id=1, name="A1")
+    session.add(area)
+    await session.flush()
+    task = await tsvc.create_task(owner_id=1, title="Forbidden", area_id=area.id)
 
     time_svc = TimeService(session)
     with pytest.raises(PermissionError):
