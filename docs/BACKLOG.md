@@ -310,6 +310,11 @@ POST /api/v1/rewards
 POST /api/v1/rewards/{id}/buy
 ```
 
+**Tasks**
+- [x] /habits доступен по веб-сессии без Telegram; write-действия требуют TG (403 `tg_link_required`).
+- [x] Ошибка кулдауна маппится в 429 с `Retry-After`.
+- [x] OpenAPI документирует ошибки `tg_link_required` и `cooldown`; снапшот в `api/openapi.json` синхронизирован.
+
 **Экономика (дефолт, конфигурируемо)**
 - `XP_BASE: trivial=3, easy=10, medium=15, hard=25`
 - `GOLD_BASE: trivial=1, easy=3, medium=5, hard=8`

@@ -23,6 +23,26 @@ TG_LINK_ERROR = {
     "message": "Для этого действия нужно связать Telegram-аккаунт",
 }
 
+TG_LINK_RESPONSE = {
+    "description": "Требуется привязка Telegram-аккаунта",
+    "content": {"application/json": {"example": TG_LINK_ERROR}},
+}
+
+COOLDOWN_RESPONSE = {
+    "description": "Действие недоступно из-за кулдауна",
+    "content": {
+        "application/json": {
+            "example": {"error": "cooldown", "retry_after": 60}
+        }
+    },
+    "headers": {
+        "Retry-After": {
+            "description": "Секунды до следующей попытки",
+            "schema": {"type": "string"},
+        }
+    },
+}
+
 
 # ----------------------- Habits -----------------------
 
@@ -53,7 +73,12 @@ async def api_list_habits(owner: OwnerCtx | None = Depends(get_current_owner)):
         ]
 
 
-@router.post("/habits", tags=["Habits"], status_code=201)
+@router.post(
+    "/habits",
+    tags=["Habits"],
+    status_code=201,
+    responses={403: TG_LINK_RESPONSE},
+)
 async def api_create_habit(
     payload: HabitIn,
     owner: OwnerCtx | None = Depends(get_current_owner),
@@ -82,7 +107,11 @@ class DatePayload(BaseModel):
     date: Optional[date] = None
 
 
-@router.post("/habits/{habit_id}/toggle", tags=["Habits"])
+@router.post(
+    "/habits/{habit_id}/toggle",
+    tags=["Habits"],
+    responses={403: TG_LINK_RESPONSE, 429: COOLDOWN_RESPONSE},
+)
 async def api_habit_toggle(
     habit_id: int,
     payload: DatePayload = Body(default=None),
@@ -106,7 +135,11 @@ async def api_habit_toggle(
     return res
 
 
-@router.post("/habits/{habit_id}/up", tags=["Habits"])
+@router.post(
+    "/habits/{habit_id}/up",
+    tags=["Habits"],
+    responses={403: TG_LINK_RESPONSE, 429: COOLDOWN_RESPONSE},
+)
 async def api_habit_up(
     habit_id: int,
     owner: OwnerCtx | None = Depends(get_current_owner),
@@ -139,7 +172,11 @@ async def api_habit_up(
     return res
 
 
-@router.post("/habits/{habit_id}/down", tags=["Habits"])
+@router.post(
+    "/habits/{habit_id}/down",
+    tags=["Habits"],
+    responses={403: TG_LINK_RESPONSE, 429: COOLDOWN_RESPONSE},
+)
 async def api_habit_down(
     habit_id: int,
     owner: OwnerCtx | None = Depends(get_current_owner),
@@ -190,7 +227,11 @@ async def api_stats(owner: OwnerCtx | None = Depends(get_current_owner)):
     return StatsOut(**stats)
 
 
-@router.post("/habits/cron/run", tags=["Habits"])
+@router.post(
+    "/habits/cron/run",
+    tags=["Habits"],
+    responses={403: TG_LINK_RESPONSE},
+)
 async def api_cron_run(owner: OwnerCtx | None = Depends(get_current_owner)):
     if owner is None:
         raise HTTPException(status_code=401)

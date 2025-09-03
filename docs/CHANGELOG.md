@@ -85,6 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/api/v1/habits/stats` now includes `{daily_xp, daily_gold}`.
 - API авторизации унифицировано через `get_current_owner`; OpenAPI описывает новые ошибки.
 - Unified OpenAPI SSoT at `/api/openapi.json`; exporter produces `api/openapi.json`.
+- OpenAPI документирует ошибки `tg_link_required` и `cooldown` (с `Retry-After`).
 
 ### Fixed
 - reduced test flakiness via deterministic time handling and confirmed cooldown paths mapping to 429.

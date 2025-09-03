@@ -3212,6 +3212,17 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "tg_link_required",
+                  "message": "Для этого действия нужно связать Telegram-аккаунт"
+                }
+              }
+            },
+            "description": "Требуется привязка Telegram-аккаунта"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3240,6 +3251,17 @@
               }
             },
             "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "tg_link_required",
+                  "message": "Для этого действия нужно связать Telegram-аккаунт"
+                }
+              }
+            },
+            "description": "Требуется привязка Telegram-аккаунта"
           }
         },
         "summary": "Api Cron Run",
@@ -3292,6 +3314,17 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "tg_link_required",
+                  "message": "Для этого действия нужно связать Telegram-аккаунт"
+                }
+              }
+            },
+            "description": "Требуется привязка Telegram-аккаунта"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3301,6 +3334,25 @@
               }
             },
             "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "cooldown",
+                  "retry_after": 60
+                }
+              }
+            },
+            "description": "Действие недоступно из-за кулдауна",
+            "headers": {
+              "Retry-After": {
+                "description": "Секунды до следующей попытки",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           }
         },
         "summary": "Api Habit Down",
@@ -3341,6 +3393,17 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "tg_link_required",
+                  "message": "Для этого действия нужно связать Telegram-аккаунт"
+                }
+              }
+            },
+            "description": "Требуется привязка Telegram-аккаунта"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3350,6 +3413,25 @@
               }
             },
             "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "cooldown",
+                  "retry_after": 60
+                }
+              }
+            },
+            "description": "Действие недоступно из-за кулдауна",
+            "headers": {
+              "Retry-After": {
+                "description": "Секунды до следующей попытки",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           }
         },
         "summary": "Api Habit Toggle",
@@ -3381,6 +3463,17 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "tg_link_required",
+                  "message": "Для этого действия нужно связать Telegram-аккаунт"
+                }
+              }
+            },
+            "description": "Требуется привязка Telegram-аккаунта"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3390,6 +3483,25 @@
               }
             },
             "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": "cooldown",
+                  "retry_after": 60
+                }
+              }
+            },
+            "description": "Действие недоступно из-за кулдауна",
+            "headers": {
+              "Retry-After": {
+                "description": "Секунды до следующей попытки",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           }
         },
         "summary": "Api Habit Up",
