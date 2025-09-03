@@ -14,4 +14,7 @@ def test_openapi_ssot():
     for tag in ["Habits", "Dailies", "Rewards", "Stats", "Calendar"]:
         assert tag in runtime_tags
 
+    habit_up = runtime_spec["paths"]["/api/v1/habits/{habit_id}/up"]["post"]["responses"]
+    assert "403" in habit_up and "429" in habit_up
+
     assert runtime_spec == snapshot

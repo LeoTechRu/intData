@@ -490,6 +490,25 @@
         "title": "ContainerType",
         "type": "string"
       },
+      "CooldownErrorOut": {
+        "properties": {
+          "error": {
+            "const": "cooldown",
+            "default": "cooldown",
+            "title": "Error",
+            "type": "string"
+          },
+          "retry_after": {
+            "title": "Retry After",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "retry_after"
+        ],
+        "title": "CooldownErrorOut",
+        "type": "object"
+      },
       "DailyIn": {
         "properties": {
           "area_id": {
@@ -1798,6 +1817,23 @@
         "title": "TelegramIn",
         "type": "object"
       },
+      "TgLinkError": {
+        "properties": {
+          "error": {
+            "const": "tg_link_required",
+            "default": "tg_link_required",
+            "title": "Error",
+            "type": "string"
+          },
+          "message": {
+            "default": "Для этого действия нужно связать Telegram-аккаунт",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "title": "TgLinkError",
+        "type": "object"
+      },
       "TimeEntryResponse": {
         "description": "Representation of a time entry.",
         "properties": {
@@ -3058,6 +3094,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3107,6 +3153,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3155,6 +3211,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkError"
+                }
+              }
+            },
+            "description": "Forbidden"
           },
           "422": {
             "content": {
@@ -3212,6 +3278,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3240,6 +3316,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkError"
+                }
+              }
+            },
+            "description": "Forbidden"
           }
         },
         "summary": "Api Cron Run",
@@ -3292,6 +3378,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3301,6 +3397,16 @@
               }
             },
             "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CooldownErrorOut"
+                }
+              }
+            },
+            "description": "Too Many Requests"
           }
         },
         "summary": "Api Habit Down",
@@ -3341,6 +3447,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3350,6 +3466,16 @@
               }
             },
             "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CooldownErrorOut"
+                }
+              }
+            },
+            "description": "Too Many Requests"
           }
         },
         "summary": "Api Habit Toggle",
@@ -3381,6 +3507,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3390,6 +3526,16 @@
               }
             },
             "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CooldownErrorOut"
+                }
+              }
+            },
+            "description": "Too Many Requests"
           }
         },
         "summary": "Api Habit Up",
@@ -4307,6 +4453,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -4346,6 +4502,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkError"
+                }
+              }
+            },
+            "description": "Forbidden"
           },
           "422": {
             "content": {
