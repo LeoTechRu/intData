@@ -1,18 +1,41 @@
 {
   "compilerOptions": {
     "target": "ES2019",
-    "module": "ES6",
-    "moduleResolution": "node",
-    "outDir": "static/js",
-    "rootDir": "static/ts",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
     "strict": true,
-    "jsx": "react-jsx",
-    "types": ["node", "react"],
+    "noEmit": true,
     "esModuleInterop": true,
-    "baseUrl": "./",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["static/ts/*"]
-    }
+      "@/*": [
+        "./*"
+      ]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
-  "include": ["static/ts/**/*"]
+  "include": [
+    "app/**/*",
+    "components/**/*",
+    "next-env.d.ts",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
