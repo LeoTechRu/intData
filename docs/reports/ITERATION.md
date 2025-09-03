@@ -17,3 +17,4 @@
 ## Risks & TODOs
 - Database migration scripts require running PostgreSQL instance.
 - Monitor habit cooldown to avoid abuse.
+- П0 задачи по бэклогу закрыты; дальнейшая работа — по элементам P1+.
