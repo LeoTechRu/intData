@@ -35,6 +35,8 @@ describe('InboxTable', () => {
   });
 
   it('shows empty placeholder', async () => {
+    const apiBase = 'http://backend';
+    process.env.NEXT_PUBLIC_API_BASE = apiBase;
     vi.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
       json: async () => [],
