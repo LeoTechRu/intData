@@ -89,3 +89,37 @@ pytest -q
 pytest -q -k habits
 RUN_SLOW=1 pytest -q
 ```
+
+## Observability quickstart
+
+Enable metrics locally:
+
+```bash
+export METRICS_ENABLED=1 METRICS_BASIC_AUTH_USER=user METRICS_BASIC_AUTH_PASS=pass
+python -m web.main
+curl -u user:pass http://localhost:8000/metrics
+```
+
+## Security toggles
+
+Headers middleware and rate limiter can be disabled:
+
+```bash
+SECURITY_HEADERS_ENABLED=0 RATE_LIMIT_ENABLED=0 python -m web.main
+```
+
+## Logging fields
+
+Logs are emitted as JSON and include `ts`, `level`, `logger`, `request_id`, `path`, `method`, `status` and `duration_ms`.
+Use `X-Request-ID` header to correlate.
+
+## Local commands
+
+```bash
+make setup-dev
+make lint
+make fmt
+make typecheck
+make audit
+make smoke
+```

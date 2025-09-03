@@ -11,6 +11,14 @@ from fastapi.responses import RedirectResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
+from .middleware_logging import LoggingMiddleware
+from .middleware_security import (
+    BodySizeLimitMiddleware,
+    SecurityHeadersMiddleware,
+)
+from .middleware_rate_limit import RateLimitMiddleware
+from core.tracing import setup_tracing
+from .routes import system as system_routes
 
 from .routes import (
     admin as admin_ui,
@@ -43,8 +51,9 @@ from core.services.project_notification_worker import (
 )
 from . import para_schemas  # noqa: F401
 from tools.schema_export import check as check_schema
+from core.logging import setup_logging
 
-
+setup_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -136,6 +145,32 @@ app = FastAPI(
 )
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+# Observability & security middlewares
+app.add_middleware(LoggingMiddleware)
+
+max_body = int(os.getenv("MAX_REQUEST_BODY_BYTES", "1048576"))
+app.add_middleware(BodySizeLimitMiddleware, max_bytes=max_body)
+
+if os.getenv("SECURITY_HEADERS_ENABLED", "1") == "1":
+    csp_default = (
+        os.getenv(
+            "CSP_DEFAULT",
+            "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'",
+        )
+    )
+    app.add_middleware(SecurityHeadersMiddleware, csp=csp_default)
+
+if os.getenv("RATE_LIMIT_ENABLED", "0") == "1":
+    app.add_middleware(
+        RateLimitMiddleware,
+        limit=60,
+        period=60,
+        paths=("/auth", "/calendar/feed"),
+    )
+
+if os.getenv("OTEL_ENABLED", "0") == "1":
+    setup_tracing(app)
 
 FAVICON_PATH = STATIC_DIR / "img" / "brand" / "favicon.svg"
 
@@ -288,3 +323,4 @@ app.include_router(admin_settings_ui.router, include_in_schema=False)
 
 # Подключение всех API под единым префиксом
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(system_routes.router, include_in_schema=False)

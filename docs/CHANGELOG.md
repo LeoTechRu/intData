@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- pre-commit configuration with ruff, black, isort and basic hooks.
+- developer Makefile and type checking via mypy.
+- structured JSON logging with request correlation.
+- `/metrics`, `/healthz` and `/readyz` endpoints.
+- security headers, rate limiting and request body size guard.
+- UI kit skeleton with reusable components.
 - Time summary endpoint `/api/v1/time/summary` for aggregating durations by day, project, area or user.
 - comprehensive test suite covering DB idempotency, PARA repair, OpenAPI snapshot parity and core habits/today/tasks/time flows.
 - Epic E17 "Frontend Modernization" в `docs/BACKLOG.md` (Next.js/Vite выбор, TS+Tailwind, перенос страниц, очистка legacy).
@@ -62,6 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Тест покрытия для `/api/v1/habits` проверки доступа без привязки Telegram и заголовка `Retry-After` при кулдауне.
 
 ### Changed
+- developer docs with observability and security guidelines.
 - unified test fixtures and factories; OpenAPI snapshot test now enforces SSoT.
 - Унифицирована работа с паролями через обёртку `core.db.bcrypt` и `WebUserService`.
 - API обслуживается под `/api/v1` с заголовком `X-API-Version`; старые пути `/api/*` редиректятся (308) на новую схему, Swagger доступен по `/api`.
@@ -111,6 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Habit creation via `/api/v1/habits` no longer fails when area is missing; defaults to Inbox and accepts `name` payload.
 
 ### Security
+- baseline HTTP headers and optional rate limiting.
 - Access control on owner_id for habits/dailies/rewards and logs.
 - Нулевые права на write-действия без TG-привязки; одинаковое owner-scoping для всех эндпоинтов.
 - Unified owner scoping via `get_current_owner`.
