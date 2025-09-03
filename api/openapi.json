@@ -490,6 +490,25 @@
         "title": "ContainerType",
         "type": "string"
       },
+      "CooldownErrorOut": {
+        "properties": {
+          "error": {
+            "const": "cooldown",
+            "title": "Error",
+            "type": "string"
+          },
+          "retry_after": {
+            "title": "Retry After",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "error",
+          "retry_after"
+        ],
+        "title": "CooldownErrorOut",
+        "type": "object"
+      },
       "DailyIn": {
         "properties": {
           "area_id": {
@@ -1798,6 +1817,25 @@
         "title": "TelegramIn",
         "type": "object"
       },
+      "TgLinkRequiredError": {
+        "properties": {
+          "error": {
+            "const": "tg_link_required",
+            "title": "Error",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "error",
+          "message"
+        ],
+        "title": "TgLinkRequiredError",
+        "type": "object"
+      },
       "TimeEntryResponse": {
         "description": "Representation of a time entry.",
         "properties": {
@@ -3058,6 +3096,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkRequiredError"
+                }
+              }
+            },
+            "description": "Telegram link required"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3107,6 +3155,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkRequiredError"
+                }
+              }
+            },
+            "description": "Telegram link required"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3155,6 +3213,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkRequiredError"
+                }
+              }
+            },
+            "description": "Telegram link required"
           },
           "422": {
             "content": {
@@ -3212,6 +3280,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkRequiredError"
+                }
+              }
+            },
+            "description": "Telegram link required"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3240,6 +3318,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkRequiredError"
+                }
+              }
+            },
+            "description": "Telegram link required"
           }
         },
         "summary": "Api Cron Run",
@@ -3292,6 +3380,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkRequiredError"
+                }
+              }
+            },
+            "description": "Telegram link required"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3301,6 +3399,24 @@
               }
             },
             "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CooldownErrorOut"
+                }
+              }
+            },
+            "description": "Cooldown active",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retry",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
           }
         },
         "summary": "Api Habit Down",
@@ -3341,6 +3457,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkRequiredError"
+                }
+              }
+            },
+            "description": "Telegram link required"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3350,6 +3476,24 @@
               }
             },
             "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CooldownErrorOut"
+                }
+              }
+            },
+            "description": "Cooldown active",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retry",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
           }
         },
         "summary": "Api Habit Toggle",
@@ -3381,6 +3525,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkRequiredError"
+                }
+              }
+            },
+            "description": "Telegram link required"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3390,6 +3544,24 @@
               }
             },
             "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CooldownErrorOut"
+                }
+              }
+            },
+            "description": "Cooldown active",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retry",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
           }
         },
         "summary": "Api Habit Up",
@@ -4307,6 +4479,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkRequiredError"
+                }
+              }
+            },
+            "description": "Telegram link required"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -4346,6 +4528,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkRequiredError"
+                }
+              }
+            },
+            "description": "Telegram link required"
           },
           "422": {
             "content": {

@@ -334,6 +334,12 @@ POST /api/v1/rewards/{id}/buy
 - `/habit + <название>` — клик «плюс» по ближайшему совпадению; ответ: `+XP/+Gold, HP: x/y`.
 - `/daily done <фраза|ID>` — отметка «сегодня выполнено».
 - Недельный дайджест в проект: топ-стрики, топ-KP.
+-
+**Tasks**
+- [x] P0•S — /habits: страница доступна по веб-сессии, write-действия требуют TG (403 `tg_link_required`).
+- [x] P0•S — Кулдаун привычки отображается как 429 с заголовком `Retry-After`.
+- [x] P0•S — Снимок OpenAPI синхронизирован и описывает ошибки `tg_link_required` и `cooldown`.
+- [x] P0•S — Тесты на доступ, TG-требование и кулдаун.
 
 **Acceptance Criteria**
 - Создание привычки без `area_id` отклоняется; при `project_id` — `area_id` наследуется от проекта.
@@ -342,6 +348,10 @@ POST /api/v1/rewards/{id}/buy
 - `/calendar/agenda?include_habits=1` возвращает due-ежедневки; ICS содержит `VTODO` с `RRULE`.
 - `/rewards/{id}/buy` списывает Gold и возвращает баланс.
 - В `/habits` действия мгновенно отражаются в HUD.
+- [x] `/habits` доступен по веб-сессии; write без TG возвращают 403 `tg_link_required`.
+- [x] Повторный `up` в кулдауне возвращает 429 с заголовком `Retry-After` и полем `retry_after`.
+- [x] `api/openapi.json` совпадает с `/api/openapi.json` и содержит модели ошибок `tg_link_required` и `cooldown`.
+- [x] pytest -q подтверждает сценарии доступа без TG и кулдауна.
 
 
 ### E17: Frontend modernization
