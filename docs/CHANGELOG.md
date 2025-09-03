@@ -100,6 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tailwind config updated for Next.js sources.
 
 ### Fixed
+- Кнопка входа через Telegram снова отображается на странице авторизации.
 - reduced test flakiness via deterministic time handling and confirmed cooldown paths mapping to 429.
 - Страница `/inbox` запрашивает заметки у API через `NEXT_PUBLIC_API_BASE`.
 
@@ -155,4 +156,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - YYYY-MM-DD
 ### Added
 - Инициализация проекта.
-
