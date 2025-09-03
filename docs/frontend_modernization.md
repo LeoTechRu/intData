@@ -7,12 +7,11 @@
 - Tailwind config references templates and JS files with minimal tooling.
 
 ## Proposed Stack
-Select a single modern framework for the whole frontend:
-- **React + Vite** for a lightweight SPA build.
-- **Next.js** for React with built-in SSR/SSG.
-- Alternative options (SvelteKit, SolidStart) if they offer clear advantages.
-
-Decision criteria: developer experience, performance, ecosystem, integration with FastAPI API.
+Выбран стек **Next.js** с TypeScript, Tailwind и React Query.
+Изначально рассматривались:
+- **React + Vite** для лёгкой SPA-сборки.
+- **Next.js** с SSR/SSG.
+Решение принято в пользу Next.js благодаря экосистеме и встроенному рендерингу.
 
 ## Migration Strategy
 1. Research and choose the final stack.
