@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-from typing import List, Optional
 from datetime import datetime
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel
 
-from core.models import Note, TgUser, ContainerType, WebUser
+from core.models import ContainerType, Note, TgUser, WebUser
 from core.services.note_service import NoteService
 from core.services.para_service import ParaService
 from web.dependencies import get_current_tg_user, get_current_web_user
-from ..template_env import templates
 
+from ..template_env import templates
 
 router = APIRouter(prefix="/notes", tags=["notes"])
 ui_router = APIRouter(prefix="/notes", tags=["notes"], include_in_schema=False)
@@ -72,8 +72,13 @@ class NoteResponse(BaseModel):
             order_index=note.order_index,
             area_id=area.id,
             project_id=project.id if project else None,
-            color=getattr(area, "color", "#F1F5F9"),
-            area=AreaOut(id=area.id, name=area.name, slug=getattr(area, "slug", None), color=getattr(area, "color", None)),
+            color=getattr(area, "color", None) or "#F1F5F9",
+            area=AreaOut(
+                id=area.id,
+                name=area.name,
+                slug=getattr(area, "slug", None),
+                color=getattr(area, "color", None),
+            ),
             project=ProjectOut(id=project.id, name=project.name) if project else None,
         )
 
@@ -188,7 +193,9 @@ async def assign_note(
 
 
 @router.get("/{note_id}/backlinks")
-async def note_backlinks(note_id: int, current_user: TgUser | None = Depends(get_current_tg_user)):
+async def note_backlinks(
+    note_id: int, current_user: TgUser | None = Depends(get_current_tg_user)
+):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     async with NoteService() as service:
@@ -197,7 +204,15 @@ async def note_backlinks(note_id: int, current_user: TgUser | None = Depends(get
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         links = await service.backlinks(note_id)
     # Minimal payload
-    return [{"id": l.id, "source_type": l.source_type, "source_id": l.source_id, "link_type": l.link_type.value} for l in links]
+    return [
+        {
+            "id": l.id,
+            "source_type": l.source_type,
+            "source_id": l.source_id,
+            "link_type": l.link_type.value,
+        }
+        for l in links
+    ]
 
 
 @router.delete("/{note_id}", status_code=status.HTTP_204_NO_CONTENT)
