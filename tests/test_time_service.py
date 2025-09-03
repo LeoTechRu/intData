@@ -7,7 +7,7 @@ from base import Base
 from datetime import datetime
 
 from core.services.time_service import TimeService
-from core.models import Project, Area
+from core.models import Project, Area, Task
 
 
 @pytest_asyncio.fixture
@@ -33,6 +33,16 @@ async def test_time_entry_start_and_stop(session):
     entries = await service.list_entries(owner_id=1)
     assert len(entries) == 1
     assert entries[0].end_time is not None
+
+
+@pytest.mark.asyncio
+async def test_start_bare_timer_creates_inbox_task(session):
+    service = TimeService(session)
+    entry = await service.start_timer(owner_id=1, description="Solo")
+    task = await session.get(Task, entry.task_id)
+    assert task is not None
+    area = await session.get(Area, task.area_id)
+    assert area and area.name == "Входящие"
 
 
 @pytest.mark.asyncio

@@ -6,7 +6,7 @@ from typing import List, Optional
 from collections import defaultdict
 
 
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core import db
@@ -33,6 +33,22 @@ class TimeService:
             else:
                 await self.session.rollback()
             await self.session.close()
+
+    async def _ensure_inbox(self, owner_id: int):
+        """Return owner's default 'Inbox' area, creating if missing."""
+        from core.models import Area
+        stmt = select(Area).where(
+            Area.owner_id == owner_id,
+            or_(Area.slug == "inbox", Area.name.ilike("входящие")),
+        )
+        res = await self.session.execute(stmt)
+        inbox = res.scalar_one_or_none()
+        if inbox is None:
+            inbox = Area(owner_id=owner_id, name="Входящие", title="Входящие")
+            inbox.slug = "inbox"
+            self.session.add(inbox)
+            await self.session.flush()
+        return inbox
 
     async def start_timer(
         self,
@@ -75,9 +91,28 @@ class TimeService:
             if linked_task.owner_id != owner_id:
                 raise PermissionError("Task belongs to different owner")
         elif create_task_if_missing:
+            if project_id is not None:
+                from core.models import Project
+                prj = await self.session.get(Project, project_id)
+                if not prj or prj.owner_id != owner_id:
+                    raise PermissionError("Project belongs to different owner or not found")
+                area_id = prj.area_id
+            elif area_id is not None:
+                from .area_service import AreaService
+                if not await AreaService(self.session).is_leaf(area_id):
+                    raise ValueError("Area must be a leaf")
+            else:
+                inbox = await self._ensure_inbox(owner_id)
+                area_id = inbox.id
             # Auto-create a task when none supplied
             title = description or "Новая задача"
-            linked_task = Task(owner_id=owner_id, title=title, status=TaskStatus.in_progress)
+            linked_task = Task(
+                owner_id=owner_id,
+                title=title,
+                status=TaskStatus.in_progress,
+                project_id=project_id,
+                area_id=area_id,
+            )
             self.session.add(linked_task)
             await self.session.flush()  # get task.id
             task_id = linked_task.id
@@ -85,7 +120,7 @@ class TimeService:
         # accept direct project/area assignment when no task provided
         if linked_task is None:
             if project_id is not None:
-                from core.models import Project, Area as _Area
+                from core.models import Project
                 prj = await self.session.get(Project, project_id)
                 if not prj or prj.owner_id != owner_id:
                     raise PermissionError("Project belongs to different owner or not found")
