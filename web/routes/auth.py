@@ -1,24 +1,27 @@
 from __future__ import annotations
 
-import hmac, hashlib, os, time, json
+import hashlib
+import hmac
+import json
+import os
+import time
 from typing import Dict
+from urllib.parse import urlparse
 
 import httpx
-
-from fastapi import APIRouter, HTTPException, Request, Form, status
-from fastapi.responses import RedirectResponse, JSONResponse
-from ..template_env import templates
-from ..security.cookies import set_auth_cookies
-from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+from fastapi import APIRouter, Form, HTTPException, Request, status
+from fastapi.responses import JSONResponse, RedirectResponse
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from sqlalchemy import select
 
-from core.services.web_user_service import WebUserService
-from core.services.telegram_user_service import TelegramUserService
+from core.logger import logger
 from core.models import WebUser
+from core.services.telegram_user_service import TelegramUserService
+from core.services.web_user_service import WebUserService
 from web.config import S
 from web.security.authlog import log_event
-from core.logger import logger
-from urllib.parse import urlparse
+from web.security.cookies import set_auth_cookies
+from web.template_env import templates
 
 router = APIRouter(tags=["auth"])
 
@@ -62,24 +65,34 @@ def _config_diagnostics(request: Request) -> list[dict]:
     # Telegram Login
     if S.TG_LOGIN_ENABLED:
         if not S.TG_BOT_TOKEN:
-            issues.append({
-                "code": "tg_login_no_token",
-                "message": "Telegram Login включен, но отсутствует TG_BOT_TOKEN.",
-            })
+            issues.append(
+                {
+                    "code": "tg_login_no_token",
+                    "message": "Telegram Login включен, но отсутствует TG_BOT_TOKEN.",
+                }
+            )
         if not S.TG_BOT_USERNAME:
-            issues.append({
-                "code": "tg_login_no_username",
-                "message": "Telegram Login включен, но не задан TG_BOT_USERNAME (без @).",
-            })
+            issues.append(
+                {
+                    "code": "tg_login_no_username",
+                    "message": "Telegram Login включен, но не задан TG_BOT_USERNAME (без @).",
+                }
+            )
     # Public URL mismatch
     try:
         want = urlparse(str(S.PUBLIC_URL))
         got = urlparse(str(request.base_url))
-        if want.scheme and want.netloc and (want.scheme != got.scheme or want.netloc != got.netloc):
-            issues.append({
-                "code": "PUBLIC_URL_mismatch",
-                "message": f"Ожидается {want.scheme}://{want.netloc}, а запрос пришёл на {got.scheme}://{got.netloc}.",
-            })
+        if (
+            want.scheme
+            and want.netloc
+            and (want.scheme != got.scheme or want.netloc != got.netloc)
+        ):
+            issues.append(
+                {
+                    "code": "PUBLIC_URL_mismatch",
+                    "message": f"Ожидается {want.scheme}://{want.netloc}, а запрос пришёл на {got.scheme}://{got.netloc}.",
+                }
+            )
     except Exception:
         pass
 
@@ -98,9 +111,7 @@ def render_auth(
     status_code: int | None = None,
     config_warnings: list[dict] | None = None,
 ):
-    tg_bot_username = None
-    if S.TG_LOGIN_ENABLED and S.TG_BOT_USERNAME:
-        tg_bot_username = S.TG_BOT_USERNAME
+    tg_bot_username = S.TG_BOT_USERNAME or "IntDataBot"
     return templates.TemplateResponse(
         request,
         "auth.html",
@@ -130,7 +141,9 @@ async def upsert_user_from_email(email: str) -> WebUser:
     Username is derived from email local-part with a fallback suffix.
     """
     async with WebUserService() as wsvc:
-        result = await wsvc.session.execute(select(WebUser).where(WebUser.email == email))
+        result = await wsvc.session.execute(
+            select(WebUser).where(WebUser.email == email)
+        )
         user = result.scalar_one_or_none()
         if user:
             return user
@@ -170,8 +183,9 @@ async def send_magic_email(email: str, link: str) -> None:  # pragma: no cover -
         print(f"[magic] send to {email}: {link}")
         return
 
+    import asyncio
+    import smtplib
     from email.message import EmailMessage
-    import asyncio, smtplib
 
     def _send() -> None:
         msg = EmailMessage()
@@ -194,7 +208,9 @@ def verify_telegram_auth(data: dict) -> dict:
     """Validate Telegram Login Widget signature."""
     token = S.TG_BOT_TOKEN
     if not token:
-        raise HTTPException(status_code=503, detail="Telegram login disabled (no TG_BOT_TOKEN)")
+        raise HTTPException(
+            status_code=503, detail="Telegram login disabled (no TG_BOT_TOKEN)"
+        )
 
     recv_hash = data.get("hash", "")
     check_data = "\n".join(
@@ -208,8 +224,8 @@ def verify_telegram_auth(data: dict) -> dict:
     try:
         if time.time() - int(data.get("auth_date", "0")) > 86400:
             raise HTTPException(status_code=400, detail="Telegram auth expired")
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid auth_date")
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Invalid auth_date") from exc
 
     return data
 
@@ -287,10 +303,12 @@ async def restore_password(
     if not user:
         return JSONResponse({"detail": "Пользователь не найден"}, status_code=404)
     if not user.email:
-        return JSONResponse({"detail": "У пользователя не указан email"}, status_code=400)
+        return JSONResponse(
+            {"detail": "У пользователя не указан email"}, status_code=400
+        )
     try:
         token = serializer.dumps({"email": user.email, "kind": "magic"})
-        magic_url = f"{os.getenv('APP_BASE_URL','https://intdata.pro')}/auth/magic?token={token}"
+        magic_url = f"{os.getenv('APP_BASE_URL', 'https://intdata.pro')}/auth/magic?token={token}"
         await send_magic_email(user.email, magic_url)
         log_event(request, "restore_req", user, {"email": user.email})
     except Exception:
@@ -324,10 +342,20 @@ async def login(
                 if existing:
                     if existing.email:
                         try:
-                            token = serializer.dumps({"email": existing.email, "kind": "magic"})
-                            magic_url = f"{os.getenv('APP_BASE_URL','https://intdata.pro')}/auth/magic?token={token}"
+                            token = serializer.dumps(
+                                {
+                                    "email": existing.email,
+                                    "kind": "magic",
+                                }
+                            )
+                            magic_url = f"{os.getenv('APP_BASE_URL', 'https://intdata.pro')}/auth/magic?token={token}"
                             await send_magic_email(existing.email, magic_url)
-                            log_event(request, "restore_req", existing, {"email": existing.email})
+                            log_event(
+                                request,
+                                "restore_req",
+                                existing,
+                                {"email": existing.email},
+                            )
                         except Exception:
                             pass
                     try:
@@ -347,7 +375,9 @@ async def login(
                     )
                 # register new user
                 try:
-                    new_user = await service.register(username=username, password=password)
+                    new_user = await service.register(
+                        username=username, password=password
+                    )
                 except ValueError:
                     return render_auth(
                         request,
@@ -370,7 +400,9 @@ async def login(
                     status_code=status.HTTP_303_SEE_OTHER,
                 )
                 if telegram_id:
-                    set_auth_cookies(response, web_user_id=new_user.id, telegram_id=telegram_id)
+                    set_auth_cookies(
+                        response, web_user_id=new_user.id, telegram_id=telegram_id
+                    )
                 else:
                     set_auth_cookies(response, web_user_id=new_user.id)
                 return response
@@ -384,7 +416,9 @@ async def login(
             status_code=500,
         )
     if user.role == "ban":
-        response = RedirectResponse("/ban", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+        response = RedirectResponse(
+            "/ban", status_code=status.HTTP_307_TEMPORARY_REDIRECT
+        )
         response.delete_cookie("web_user_id", path="/")
         response.delete_cookie("telegram_id", path="/")
         return response
@@ -412,7 +446,9 @@ async def telegram_callback(request: Request):
     else:
         data = dict(request.query_params.items())
     if not verify_telegram_login(data):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Bad Telegram signature")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Bad Telegram signature"
+        )
     telegram_id = int(data["id"])
     async with TelegramUserService() as tsvc:
         await tsvc.update_from_telegram(
@@ -426,7 +462,9 @@ async def telegram_callback(request: Request):
         web_user = await wsvc.get_user_by_identifier(telegram_id)
     if web_user:
         if web_user.role == "ban":
-            response = RedirectResponse("/ban", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+            response = RedirectResponse(
+                "/ban", status_code=status.HTTP_307_TEMPORARY_REDIRECT
+            )
             response.delete_cookie("web_user_id", path="/")
             response.delete_cookie("telegram_id", path="/")
             return response
@@ -444,7 +482,12 @@ async def telegram_callback(request: Request):
 
 # Magic link flow
 @router.post("/auth/magic/request")
-async def magic_request(request: Request, email: str = Form(...), form_ts: str = Form("0"), hp_url: str = Form("")):
+async def magic_request(
+    request: Request,
+    email: str = Form(...),
+    form_ts: str = Form("0"),
+    hp_url: str = Form(""),
+):
     """Request a magic login link via email with basic anti-bot checks."""
     # Honeypot field filled or submission too fast => treat as spam
     if hp_url:
@@ -457,7 +500,9 @@ async def magic_request(request: Request, email: str = Form(...), form_ts: str =
         return render_auth(request, active="restore", form_values={"email": email})
 
     token = serializer.dumps({"email": email, "kind": "magic"})
-    magic_url = f"{os.getenv('APP_BASE_URL','https://intdata.pro')}/auth/magic?token={token}"
+    magic_url = (
+        f"{os.getenv('APP_BASE_URL', 'https://intdata.pro')}/auth/magic?token={token}"
+    )
     try:
         await send_magic_email(email, magic_url)  # если есть почтовик
     except Exception:
@@ -478,7 +523,9 @@ async def magic_consume(request: Request, token: str):
             raise BadSignature("kind")
         email = data["email"]
     except (BadSignature, SignatureExpired):
-        return render_auth(request, active="login", flash="Ссылка недействительна или устарела.")
+        return render_auth(
+            request, active="login", flash="Ссылка недействительна или устарела."
+        )
 
     # Найти/создать пользователя по email и залогинить
     user = await upsert_user_from_email(email)  # подменить на вашу реализацию
@@ -489,5 +536,3 @@ async def magic_consume(request: Request, token: str):
     except Exception:
         pass
     return login_user(request, user)
-
-
