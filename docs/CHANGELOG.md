@@ -94,6 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - reduced test flakiness via deterministic time handling and confirmed cooldown paths mapping to 429.
+- Страница `/inbox` запрашивает заметки у API через `NEXT_PUBLIC_API_BASE`.
 
 - Автоматическое создание таблицы `app_settings`, исключающей ошибки при её отсутствии.
 - Создание таблицы `user_settings` в repair-скрипте, что предотвращает падения при чтении настроек.

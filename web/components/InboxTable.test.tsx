@@ -9,6 +9,7 @@ expect.extend(matchers);
 
 afterEach(() => {
   vi.restoreAllMocks();
+  delete process.env.NEXT_PUBLIC_API_BASE;
 });
 
 function renderWithClient(ui: React.ReactElement) {
@@ -18,12 +19,18 @@ function renderWithClient(ui: React.ReactElement) {
 
 describe('InboxTable', () => {
   it('renders fetched notes', async () => {
-    vi.spyOn(global, 'fetch').mockResolvedValue({
+    const apiBase = 'http://backend';
+    process.env.NEXT_PUBLIC_API_BASE = apiBase;
+    const fetchMock = vi.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
       json: async () => [{ id: 1, title: 'Test', content: 'Note' }],
     } as any);
 
     renderWithClient(<InboxTable />);
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${apiBase}/api/v1/inbox/notes`,
+      { credentials: 'include' },
+    );
     expect(await screen.findByText('Test')).toBeInTheDocument();
   });
 
