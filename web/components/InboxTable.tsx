@@ -13,7 +13,10 @@ export default function InboxTable() {
   const { data } = useQuery<InboxNote[]>({
     queryKey: ['inbox'],
     queryFn: async () => {
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? '';
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE;
+      if (!apiBase) {
+        throw new Error('NEXT_PUBLIC_API_BASE is not set');
+      }
       const res = await fetch(`${apiBase}/api/v1/inbox/notes`, {
         credentials: 'include',
       });
