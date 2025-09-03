@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Команда бота `/help` со списком доступных команд.
 - Команда `/group` и проверка членства (декоратор).
 - Web: ESLint, Prettier и Vitest конфигурации.
+- Пример компонента React и тест на Testing Library демонстрируют рабочий стек.
 - Логирование: middleware, пересылка неизвестных сообщений в группу логов, ответы админа, команды `/setloglevel` и `/getloglevel`.
 - Декоратор `role_required` для проверки ролей.
 - Заготовки FSM для обновления контактов и описания групп.
