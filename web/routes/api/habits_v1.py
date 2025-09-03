@@ -24,6 +24,12 @@ TG_LINK_ERROR = {
 }
 
 
+class ErrorOut(BaseModel):
+    error: str
+    message: Optional[str] = None
+    retry_after: Optional[int] = None
+
+
 # ----------------------- Habits -----------------------
 
 
@@ -53,7 +59,12 @@ async def api_list_habits(owner: OwnerCtx | None = Depends(get_current_owner)):
         ]
 
 
-@router.post("/habits", tags=["Habits"], status_code=201)
+@router.post(
+    "/habits",
+    tags=["Habits"],
+    status_code=201,
+    responses={403: {"model": ErrorOut, "description": "tg_link_required"}},
+)
 async def api_create_habit(
     payload: HabitIn,
     owner: OwnerCtx | None = Depends(get_current_owner),
@@ -82,7 +93,14 @@ class DatePayload(BaseModel):
     date: Optional[date] = None
 
 
-@router.post("/habits/{habit_id}/toggle", tags=["Habits"])
+@router.post(
+    "/habits/{habit_id}/toggle",
+    tags=["Habits"],
+    responses={
+        403: {"model": ErrorOut, "description": "tg_link_required"},
+        429: {"model": ErrorOut, "description": "cooldown"},
+    },
+)
 async def api_habit_toggle(
     habit_id: int,
     payload: DatePayload = Body(default=None),
@@ -106,7 +124,14 @@ async def api_habit_toggle(
     return res
 
 
-@router.post("/habits/{habit_id}/up", tags=["Habits"])
+@router.post(
+    "/habits/{habit_id}/up",
+    tags=["Habits"],
+    responses={
+        403: {"model": ErrorOut, "description": "tg_link_required"},
+        429: {"model": ErrorOut, "description": "cooldown"},
+    },
+)
 async def api_habit_up(
     habit_id: int,
     owner: OwnerCtx | None = Depends(get_current_owner),
@@ -139,7 +164,14 @@ async def api_habit_up(
     return res
 
 
-@router.post("/habits/{habit_id}/down", tags=["Habits"])
+@router.post(
+    "/habits/{habit_id}/down",
+    tags=["Habits"],
+    responses={
+        403: {"model": ErrorOut, "description": "tg_link_required"},
+        429: {"model": ErrorOut, "description": "cooldown"},
+    },
+)
 async def api_habit_down(
     habit_id: int,
     owner: OwnerCtx | None = Depends(get_current_owner),
@@ -190,7 +222,11 @@ async def api_stats(owner: OwnerCtx | None = Depends(get_current_owner)):
     return StatsOut(**stats)
 
 
-@router.post("/habits/cron/run", tags=["Habits"])
+@router.post(
+    "/habits/cron/run",
+    tags=["Habits"],
+    responses={403: {"model": ErrorOut, "description": "tg_link_required"}},
+)
 async def api_cron_run(owner: OwnerCtx | None = Depends(get_current_owner)):
     if owner is None:
         raise HTTPException(status_code=401)
@@ -213,7 +249,12 @@ class DailyIn(BaseModel):
     project_id: Optional[int] = None
 
 
-@router.post("/dailies", tags=["Dailies"], status_code=201)
+@router.post(
+    "/dailies",
+    tags=["Dailies"],
+    status_code=201,
+    responses={403: {"model": ErrorOut, "description": "tg_link_required"}},
+)
 async def api_create_daily(
     payload: DailyIn,
     owner: OwnerCtx | None = Depends(get_current_owner),
@@ -240,7 +281,11 @@ async def api_create_daily(
     return {"id": did}
 
 
-@router.post("/dailies/{daily_id}/done", tags=["Dailies"])
+@router.post(
+    "/dailies/{daily_id}/done",
+    tags=["Dailies"],
+    responses={403: {"model": ErrorOut, "description": "tg_link_required"}},
+)
 async def api_daily_done(
     daily_id: int,
     payload: DatePayload = Body(default=None),
@@ -258,7 +303,11 @@ async def api_daily_done(
     return {"ok": True}
 
 
-@router.post("/dailies/{daily_id}/undo", tags=["Dailies"])
+@router.post(
+    "/dailies/{daily_id}/undo",
+    tags=["Dailies"],
+    responses={403: {"model": ErrorOut, "description": "tg_link_required"}},
+)
 async def api_daily_undo(
     daily_id: int,
     payload: DatePayload = Body(default=None),
@@ -286,7 +335,12 @@ class RewardIn(BaseModel):
     project_id: Optional[int] = None
 
 
-@router.post("/rewards", tags=["Rewards"], status_code=201)
+@router.post(
+    "/rewards",
+    tags=["Rewards"],
+    status_code=201,
+    responses={403: {"model": ErrorOut, "description": "tg_link_required"}},
+)
 async def api_create_reward(
     payload: RewardIn,
     owner: OwnerCtx | None = Depends(get_current_owner),
@@ -322,7 +376,11 @@ async def api_list_rewards(
     return rewards
 
 
-@router.post("/rewards/{reward_id}/buy", tags=["Rewards"])
+@router.post(
+    "/rewards/{reward_id}/buy",
+    tags=["Rewards"],
+    responses={403: {"model": ErrorOut, "description": "tg_link_required"}},
+)
 async def api_buy_reward(
     reward_id: int,
     owner: OwnerCtx | None = Depends(get_current_owner),

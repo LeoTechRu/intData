@@ -73,8 +73,16 @@ async function load(){
   const r = await fetch(`${B}/habits`, {credentials:'include'});
   const grid = document.getElementById('habitGrid');
   grid.innerHTML='';
-  if(!r.ok){
+  if(r.status === 401){
     grid.innerHTML = '<p class="text-muted">Требуется вход</p>';
+    return;
+  }
+  if(r.status === 403){
+    grid.innerHTML = '<p class="text-muted">Свяжите Telegram</p>';
+    return;
+  }
+  if(!r.ok){
+    grid.innerHTML = '<p class="text-muted">Ошибка загрузки</p>';
     return;
   }
   const data = await r.json();

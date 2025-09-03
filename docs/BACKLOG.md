@@ -287,6 +287,11 @@
 - `rewards(id, owner_id, title, cost_gold, area_id NOT NULL, project_id?, archived_at, created_at)`
 - `user_stats(owner_id PK, level, xp, gold, hp, kp, last_cron DATE)`
 
+**Tasks**
+- P0•S — /habits доступен по веб-сессии; write требует TG (403 tg_link_required).
+- P0•S — Кулдаун привычек возвращает 429 с `Retry-After`.
+- P0•S — OpenAPI фиксирует ошибки `tg_link_required` и `cooldown`; снапшот обновлён.
+
 **API**
 ```
 GET  /api/v1/habits/stats
@@ -342,6 +347,9 @@ POST /api/v1/rewards/{id}/buy
 - `/calendar/agenda?include_habits=1` возвращает due-ежедневки; ICS содержит `VTODO` с `RRULE`.
 - `/rewards/{id}/buy` списывает Gold и возвращает баланс.
 - В `/habits` действия мгновенно отражаются в HUD.
+- [x] `/habits` доступен по веб-сессии; write требует TG (403 tg_link_required).
+- [x] Повторный клик при кулдауне возвращает 429 и `Retry-After`.
+- [x] OpenAPI снапшот в `api/openapi.json` синхронизирован с рантаймом и включает ошибки `tg_link_required` и `cooldown`.
 
 
 ### E17: Frontend modernization

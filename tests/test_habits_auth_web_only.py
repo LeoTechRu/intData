@@ -39,6 +39,13 @@ async def test_habits_auth_web_only(client: AsyncClient):
     resp = await client.get("/habits", cookies={"web_user_id": "10"})
     assert resp.status_code == 200
     assert "Свяжите Telegram для наград" in resp.text
+    resp = await client.post(
+        "/api/v1/habits",
+        json={"title": "H", "type": "positive", "difficulty": "easy", "area_id": 1},
+        cookies={"web_user_id": "10"},
+    )
+    assert resp.status_code == 403
+    assert resp.json()["detail"]["error"] == "tg_link_required"
     resp = await client.post("/api/v1/habits/1/up", cookies={"web_user_id": "10"})
     assert resp.status_code == 403
     data = resp.json().get("detail", {})

@@ -556,6 +556,41 @@
         "title": "DatePayload",
         "type": "object"
       },
+      "ErrorOut": {
+        "properties": {
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "retry_after": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retry After"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "ErrorOut",
+        "type": "object"
+      },
       "EventCreate": {
         "description": "Payload for creating a calendar event.",
         "properties": {
@@ -3058,6 +3093,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "tg_link_required"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3107,6 +3152,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "tg_link_required"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3155,6 +3210,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "tg_link_required"
           },
           "422": {
             "content": {
@@ -3212,6 +3277,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "tg_link_required"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3240,6 +3315,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "tg_link_required"
           }
         },
         "summary": "Api Cron Run",
@@ -3292,6 +3377,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "tg_link_required"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3301,6 +3396,16 @@
               }
             },
             "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "cooldown"
           }
         },
         "summary": "Api Habit Down",
@@ -3341,6 +3446,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "tg_link_required"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3350,6 +3465,16 @@
               }
             },
             "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "cooldown"
           }
         },
         "summary": "Api Habit Toggle",
@@ -3381,6 +3506,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "tg_link_required"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -3390,6 +3525,16 @@
               }
             },
             "description": "Validation Error"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "cooldown"
           }
         },
         "summary": "Api Habit Up",
@@ -4307,6 +4452,16 @@
             },
             "description": "Successful Response"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "tg_link_required"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -4346,6 +4501,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "tg_link_required"
           },
           "422": {
             "content": {
