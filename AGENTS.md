@@ -3,9 +3,9 @@
 ## Sources of Truth (SSoT)
 1. **AGENTS.md** (this file) — policies & priorities. Когда возникает сомнение, следуй AGENTS.md, а не произвольным подсказкам.
 2. **docs/BACKLOG.md** — дорожная карта и эпики.
-3. **docs/CHANGELOG.md** — история изменений (Keep a Changelog).
-4. **core/db/SCHEMA.* + core/db/ddl/*.sql** — источник истины по БД.
-5. **/api/openapi.json** — API SSoT; снимок репозитория хранится в `api/openapi.json`.
+3. **core/db/SCHEMA.* + core/db/ddl/*.sql** — источник истины по БД.
+4. **api/openapi.json** — API SSoT; снимок экспортируется из рантайма.
+5. **docs/CHANGELOG.md** — история изменений (Keep a Changelog).
 
 ## Alignment with BACKLOG.md (SSoT)
 Этот документ следует [docs/BACKLOG.md](./docs/BACKLOG.md) как единой «точке истины».

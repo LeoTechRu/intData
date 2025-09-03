@@ -342,6 +342,7 @@ POST /api/v1/rewards/{id}/buy
 - `/calendar/agenda?include_habits=1` возвращает due-ежедневки; ICS содержит `VTODO` с `RRULE`.
 - `/rewards/{id}/buy` списывает Gold и возвращает баланс.
 - В `/habits` действия мгновенно отражаются в HUD.
+- [x] `/habits` доступен по веб-сессии; write-действия без TG → `403 tg_link_required`; кулдаун кликов → `429` с `Retry-After`.
 
 
 ### E17: Frontend modernization

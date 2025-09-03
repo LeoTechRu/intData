@@ -89,6 +89,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - reduced test flakiness via deterministic time handling and confirmed cooldown paths mapping to 429.
 
+- `/habits` страница читает активную веб-сессию, а в OpenAPI задокументированы ошибки `tg_link_required` и `cooldown` с заголовком `Retry-After`.
+
 - Автоматическое создание таблицы `app_settings`, исключающей ошибки при её отсутствии.
 - Создание таблицы `user_settings` в repair-скрипте, что предотвращает падения при чтении настроек.
 - Страница `/habits` корректно использует активную веб-сессию и больше не требует повторной авторизации Telegram.

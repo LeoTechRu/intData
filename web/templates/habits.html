@@ -74,7 +74,13 @@ async function load(){
   const grid = document.getElementById('habitGrid');
   grid.innerHTML='';
   if(!r.ok){
-    grid.innerHTML = '<p class="text-muted">Требуется вход</p>';
+    if(r.status === 401){
+      grid.innerHTML = '<p class="text-muted">Требуется вход</p>';
+    }else if(r.status === 403){
+      grid.innerHTML = '<p class="text-muted">Требуется вход и связанный Telegram-аккаунт</p>';
+    }else{
+      grid.innerHTML = '<p class="text-muted">Ошибка загрузки</p>';
+    }
     return;
   }
   const data = await r.json();

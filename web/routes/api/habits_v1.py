@@ -1,8 +1,8 @@
 from datetime import date
-from typing import Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 from pydantic import BaseModel, Field
+from typing import Optional, Literal
 
 from core.auth.owner import OwnerCtx, get_current_owner
 from core.services.errors import CooldownError, InsufficientGoldError
@@ -22,6 +22,16 @@ TG_LINK_ERROR = {
     "error": "tg_link_required",
     "message": "Для этого действия нужно связать Telegram-аккаунт",
 }
+
+
+class TgLinkRequiredError(BaseModel):
+    error: Literal["tg_link_required"]
+    message: str
+
+
+class CooldownErrorOut(BaseModel):
+    error: Literal["cooldown"]
+    retry_after: int
 
 
 # ----------------------- Habits -----------------------
@@ -53,7 +63,12 @@ async def api_list_habits(owner: OwnerCtx | None = Depends(get_current_owner)):
         ]
 
 
-@router.post("/habits", tags=["Habits"], status_code=201)
+@router.post(
+    "/habits",
+    tags=["Habits"],
+    status_code=201,
+    responses={403: {"model": TgLinkRequiredError}},
+)
 async def api_create_habit(
     payload: HabitIn,
     owner: OwnerCtx | None = Depends(get_current_owner),
@@ -82,7 +97,14 @@ class DatePayload(BaseModel):
     date: Optional[date] = None
 
 
-@router.post("/habits/{habit_id}/toggle", tags=["Habits"])
+@router.post(
+    "/habits/{habit_id}/toggle",
+    tags=["Habits"],
+    responses={
+        403: {"model": TgLinkRequiredError},
+        429: {"model": CooldownErrorOut},
+    },
+)
 async def api_habit_toggle(
     habit_id: int,
     payload: DatePayload = Body(default=None),
@@ -106,7 +128,14 @@ async def api_habit_toggle(
     return res
 
 
-@router.post("/habits/{habit_id}/up", tags=["Habits"])
+@router.post(
+    "/habits/{habit_id}/up",
+    tags=["Habits"],
+    responses={
+        403: {"model": TgLinkRequiredError},
+        429: {"model": CooldownErrorOut},
+    },
+)
 async def api_habit_up(
     habit_id: int,
     owner: OwnerCtx | None = Depends(get_current_owner),
@@ -139,7 +168,14 @@ async def api_habit_up(
     return res
 
 
-@router.post("/habits/{habit_id}/down", tags=["Habits"])
+@router.post(
+    "/habits/{habit_id}/down",
+    tags=["Habits"],
+    responses={
+        403: {"model": TgLinkRequiredError},
+        429: {"model": CooldownErrorOut},
+    },
+)
 async def api_habit_down(
     habit_id: int,
     owner: OwnerCtx | None = Depends(get_current_owner),
@@ -190,7 +226,11 @@ async def api_stats(owner: OwnerCtx | None = Depends(get_current_owner)):
     return StatsOut(**stats)
 
 
-@router.post("/habits/cron/run", tags=["Habits"])
+@router.post(
+    "/habits/cron/run",
+    tags=["Habits"],
+    responses={403: {"model": TgLinkRequiredError}},
+)
 async def api_cron_run(owner: OwnerCtx | None = Depends(get_current_owner)):
     if owner is None:
         raise HTTPException(status_code=401)
