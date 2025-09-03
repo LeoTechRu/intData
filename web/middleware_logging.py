@@ -1,4 +1,5 @@
 """Request/response logging middleware."""
+
 import logging
 import time
 import uuid
@@ -28,7 +29,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             duration = (time.perf_counter() - start) * 1000
             route = request.url.path
             status = response.status_code if response else 500
-            REQUEST_COUNT.labels(request.method, route, status).inc()
+            REQUEST_COUNT.labels(request.method, route, str(status)).inc()
             REQUEST_LATENCY.labels(request.method, route).observe(duration / 1000)
             request.state.request_id = request_id
             log_extra = {
@@ -40,4 +41,5 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                 }
             }
             logger.info("request", **log_extra)
-            response.headers["X-Request-ID"] = request_id
+            if response:
+                response.headers["X-Request-ID"] = request_id

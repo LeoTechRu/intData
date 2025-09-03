@@ -1,13 +1,17 @@
 """System endpoints."""
+
+import asyncio
+import base64
 import os
 import subprocess
 import time
-import base64
+
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import PlainTextResponse
+from sqlalchemy import text
 
-from core.metrics import metrics_response
 from core.db import engine
+from core.metrics import metrics_response
 
 router = APIRouter()
 
@@ -34,7 +38,10 @@ async def metrics(request: Request):
 
 @router.get("/healthz")
 async def healthz():
-    sha = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode().strip()
+    sha_bytes = await asyncio.to_thread(
+        subprocess.check_output, ["git", "rev-parse", "--short", "HEAD"]
+    )
+    sha = sha_bytes.decode().strip()
     return {"ok": True, "version": sha}
 
 
@@ -43,8 +50,8 @@ async def readyz():
     start = time.perf_counter()
     try:
         async with engine.connect() as conn:
-            await conn.execute("SELECT 1")
-    except Exception:
-        raise HTTPException(status_code=503)
+            await conn.execute(text("SELECT 1"))
+    except Exception as err:
+        raise HTTPException(status_code=503) from err
     duration = time.perf_counter() - start
     return {"ok": True, "db": {"seconds": duration}}

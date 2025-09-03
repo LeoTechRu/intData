@@ -1,4 +1,5 @@
 """Simple in-memory rate limiter."""
+
 import time
 from collections import defaultdict, deque
 from typing import Callable, Deque
@@ -19,7 +20,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if request.url.path not in self.paths:
             return await call_next(request)
         now = time.time()
-        dq = self.calls[request.client.host]
+        client_host = request.client.host if request.client else "unknown"
+        dq = self.calls[client_host]
         while dq and now - dq[0] > self.period:
             dq.popleft()
         if len(dq) >= self.limit:
