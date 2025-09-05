@@ -4,6 +4,7 @@ from functools import lru_cache
 from typing import Optional, Literal
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import AnyHttpUrl, ValidationInfo, field_validator
+from pathlib import Path
 import os
 
 
@@ -48,7 +49,8 @@ class EnvSettings(BaseSettings):
 
     # pydantic-settings v2 style configuration
     model_config = SettingsConfigDict(
-        env_file=os.getenv("INTDATA__ENV_FILE", ".env"),
+        env_file=os.getenv("ENV_FILE")
+        or Path(__file__).resolve().parent.parent / ".env",
         case_sensitive=False,
         extra="allow",  # ignore unrelated env vars (e.g., deployment-specific)
     )
