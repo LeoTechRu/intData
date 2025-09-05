@@ -98,9 +98,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unified OpenAPI SSoT at `/api/openapi.json`; exporter produces `api/openapi.json`.
 - OpenAPI snapshot documents `tg_link_required` and `cooldown` errors.
 - Tailwind config updated for Next.js sources.
+- Загрузка переменных окружения теперь производится из файла, указанного в `ENV_FILE` (по умолчанию `${PROJECT_DIR}/.env`).
 
 ### Fixed
- - Кнопка входа через Telegram снова отображается над формой входа на странице авторизации.
+- Кнопка входа через Telegram снова отображается над формой входа на странице авторизации.
+- Страница авторизации скрывает виджет Telegram при `TG_LOGIN_ENABLED=0`, предотвращая ошибки.
 - reduced test flakiness via deterministic time handling and confirmed cooldown paths mapping to 429.
 - Страница `/inbox` запрашивает заметки у API через `NEXT_PUBLIC_API_BASE`.
 - Фронтенд использует `/api/v1` по умолчанию при отсутствии `window.API_BASE`.

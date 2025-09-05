@@ -141,6 +141,7 @@
 
 **Tasks**
 - P0•S — Восстановить кнопку входа через Telegram на странице авторизации.
+- P0•S — Скрывать кнопку входа через Telegram при `TG_LOGIN_ENABLED=0`.
 
 **Acceptance Criteria**
 - `POST /projects/42/notifications` с `chat_id=-1001` привязывает канал.
@@ -182,6 +183,9 @@
 **Acceptance Criteria**
 - `.env.example` содержит `CALENDAR_V2_ENABLED=true`, `HABITS_V1_ENABLED=true`, `HABITS_RPG_ENABLED=true`.
 - CI запускает тесты на синхронизацию, API и уведомления.
+
+**Tasks**
+- P0•S — Загружать переменные окружения из `ENV_FILE` (по умолчанию `${PROJECT_DIR}/.env`).
 
 ### E10: Capture (бот/веб, Inbox)
 **User Stories**
