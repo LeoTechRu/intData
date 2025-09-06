@@ -99,6 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - OpenAPI snapshot documents `tg_link_required` and `cooldown` errors.
 - Tailwind config updated for Next.js sources.
 - Загрузка переменных окружения теперь производится из файла, указанного в `ENV_FILE` (по умолчанию `${PROJECT_DIR}/.env`).
+- Логируется путь загруженного `.env` и выводится предупреждение, если файл находится вне корня проекта.
 
 ### Fixed
 - Кнопка входа через Telegram снова отображается над формой входа на странице авторизации.
