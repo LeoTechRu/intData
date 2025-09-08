@@ -25,10 +25,10 @@
 - /web - директория (модуль) фронтенда приложений независимый от логики Telegram-бота, который можно запустить отдельно от Telegram-бота.
 - `tests/`: end-to-end and unit tests across subsystems.
 - /tests - Директория для тестов приложения без прямого влияния на функциональность приложения.
-- /utils - Директория для вспомогательных утилит напрямую не влияющих на функциональность приложения.
+- `utils/` — единственная директория для вспомогательных утилит, которые не влияют на запуск рантайма (линтеры, проверки окружения, скрипты деплоя, дампы и т. п.). Удаление `utils/` не должно ломать приложение.
 - Runtime boundaries (жёстко):
   - Всё, что обязательно для работы на рантайме, живёт в **/core** (модели, сервисы, валидаторы, резолверы, инициализация БД).
-  - **/utils** — только опциональные скрипты (линтеры, дампы). Удаление **/utils** не должно ломать приложение.
+  - `utils/` — только опциональные скрипты (линтеры, проверки, дампы). Удаление `utils/` не должно ломать приложение. Директории `tools/` в проекте не используется.
   - `web/` и `bot/` импортируют бизнес-логику только из `core/services`.
 
 ### Frontend Guidelines
@@ -128,12 +128,12 @@
 
 - Любые изменения `core/models.py` или Alembic-миграций **требуют** обновления схемы БД.
 - Генерация:
-  ```bash
-  python -m tools.schema_export generate
+```bash
+  python -m core.db.schema_export generate
   git add core/db/SCHEMA.json core/db/SCHEMA.sql
   git commit -m "chore(db): update SCHEMA after model changes"
-  ```
-- CI проверяет актуальность командой `python -m tools.schema_export check`. PR не пройдёт, если забыли обновить.
+```
+- CI проверяет актуальность командой `python -m core.db.schema_export check`. PR не пройдёт, если забыли обновить.
 
 SCHEMA.json является единой «точкой истины» структуры БД (таблицы, поля, индексы, констрейнты, enum).
 
@@ -147,14 +147,23 @@ SCHEMA.json является единой «точкой истины» стру
 - К каждому изменению — ссылка на эпик/критерии в BACKLOG; поддержи/обнови BACKLOG при необходимости.
 - Бизнес-логика — только в `/core/services/*`. `/web` и `/bot` — тонкие слои.
 - Миграции БД: idempotent DDL в `/core/db/ddl/*.sql` + `repair`; если в проекте уже используется другая технология, следуем действующей и фиксируем это здесь, НЕ меняя платформу миграций в рамках правки AGENTS.
-- Экспорт схемы (`tools/schema_export`) обновлять при изменении моделей.
+- Экспорт схемы (`core.db.schema_export`) обновлять при изменении моделей.
 - Все API — под `/api/v1/*`; обновить `/api/openapi.json`.
 - Фичефлаги: `CALENDAR_V2_ENABLED`, `HABITS_V1_ENABLED`, `HABITS_RPG_ENABLED` (и `.env.example` при необходимости).
 - Тесты (pytest): наследование PARA; один активный таймер; cron ежедневок (идемпотентность); `habits up/down`, `dailies done/undo`, виртуальные записи в agenda; срезы `/time/summary`.
 - Коммиты/PR: императивный заголовок, почему+что; обновление `.env.example`, `docs/BACKLOG.md`, `docs/CHANGELOG.md`; скриншоты UI.
 - Work from repo root, activate venv, install deps, then implement.
 - Keep changes minimal and aligned with existing style. Always finish with: `source ./venv/bin/activate && pip install --quiet -r requirements.txt && pytest -q`.
-- Changes to note models or endpoints require updating `core/db/SCHEMA.*` via `python -m tools.schema_export generate`; OpenAPI is served at `/api/openapi.json` and used in tests.
+- Changes to note models or endpoints require updating `core/db/SCHEMA.*` via `python -m core.db.schema_export generate`; OpenAPI is served at `/api/openapi.json` and used in tests.
+
+## Жёсткие архитектурные правила (не нарушать)
+- Вся логика и зависимости, без которых бэкенд не стартует, живут в `core/`.
+- Всё, что нужно только веб‑интерфейсу — в `web/` (тонкий слой UI и HTTP‑маршрутов, бизнес‑логика импортируется из `core/services`).
+- Всё, что нужно только Telegram‑боту — в `bot/` (обработчики, FSM, роутеры, бизнес‑логика из `core/services`).
+- Вспомогательные утилиты хранятся только в `utils/` и не используются рантаймом напрямую (никаких импортов из `utils/` внутри `core/`, `web/`, `bot/`).
+- В `tests/` находятся только тесты; тесты не импортируют код из `utils/` на рантайме.
+- В `docs/` — исключительно документация (backlog/changelog/архитектура, без исходников).
+- В `logs/` — только логи. Содержимое каталога не коммитим, каталог игнорируется в VCS.
 
 ## When updating API
 - [ ] Измени код и тесты.

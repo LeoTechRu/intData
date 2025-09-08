@@ -50,7 +50,7 @@ from core.services.project_notification_worker import (
     is_scheduler_enabled,
 )
 from . import para_schemas  # noqa: F401
-from tools.schema_export import check as check_schema
+from core.db.schema_export import check as check_schema
 from core.logging import setup_logging
 
 setup_logging()
@@ -183,10 +183,31 @@ async def favicon() -> FileResponse:
 
 @app.get("/api", include_in_schema=False)
 async def swagger_ui():
-    return get_swagger_ui_html(
+    """Serve Swagger UI for the public API.
+
+    Note: our global CSP is strict (script-src/style-src 'self').
+    FastAPI's Swagger UI pulls assets from jsdelivr and uses an inline
+    init script. To avoid a blank page with only the header visible,
+    we override CSP for this response to allow the required sources.
+    """
+    resp = get_swagger_ui_html(
         openapi_url="/api/openapi.json",
         title="API v1 - Swagger UI",
     )
+    # Narrowly relax CSP for Swagger UI only
+    resp.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "img-src 'self' data:; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+        "font-src 'self' data: https://cdn.jsdelivr.net"
+    )
+    return resp
+
+@app.get("/api/docs", include_in_schema=False)
+async def swagger_docs_redirect():
+    """Back-compat: redirect /api/docs -> /api (Swagger UI)."""
+    return RedirectResponse("/api", status_code=307)
 
 
 @app.get("/api/openapi.json", include_in_schema=False)
@@ -264,6 +285,7 @@ async def auth_middleware(request: Request, call_next):
     # Allow public API docs endpoints
     if (
         path == "/api"
+        or path == "/api/docs"  # back-compat path
         or path == "/api/openapi.json"
         or path == "/api/v1/auth/tg-webapp/exchange"
     ):

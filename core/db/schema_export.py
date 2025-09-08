@@ -185,7 +185,8 @@ def compute_hash(struct: dict[str, Any]) -> str:
     return hashlib.sha256(data.encode("utf-8")).hexdigest()
 
 
-DEFAULT_OUT_DIR = Path(__file__).resolve().parent.parent / "core" / "db"
+# Default output directory is the current package directory: core/db
+DEFAULT_OUT_DIR = Path(__file__).resolve().parent
 
 
 def generate(out_dir: str | Path = DEFAULT_OUT_DIR, overwrite: bool = True) -> None:
@@ -212,7 +213,7 @@ def check(out_dir: str | Path = DEFAULT_OUT_DIR) -> bool:
     json_path = out_dir / "SCHEMA.json"
     sql_path = out_dir / "SCHEMA.sql"
     if not json_path.exists() or not sql_path.exists():
-        print("Schema files are missing. Run: python -m tools.schema_export generate")
+        print("Schema files are missing. Run: python -m core.db.schema_export generate")
         return False
     with TemporaryDirectory() as tmp:
         tmp_dir = Path(tmp)
@@ -229,7 +230,7 @@ def check(out_dir: str | Path = DEFAULT_OUT_DIR) -> bool:
             ok = False
         if not ok:
             print(
-                "DB schema is out of date with models. Run: python -m tools.schema_export generate"
+                "DB schema is out of date with models. Run: python -m core.db.schema_export generate"
             )
         return ok
 
@@ -251,3 +252,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
