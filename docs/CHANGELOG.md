@@ -158,6 +158,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Удалены устаревшие директория `migrations/` и конфигурация `alembic.ini`.
 - Jinja-шаблон и маршрут FastAPI для `/inbox`.
 
+### Changed
+- Усилены инварианты PARA на уровне БД: `projects.area_id` теперь `NOT NULL`; добавлены индексы на `project_id/area_id` для основных таблиц.
+
+### Fixed
+- Исправлена TZ-логика на дашборде: устранены сравнения «naive vs aware», все вычисления нормализованы в UTC.
+
 ## [0.1.0] - YYYY-MM-DD
 ### Added
 - Инициализация проекта.

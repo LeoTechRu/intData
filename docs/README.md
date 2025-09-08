@@ -123,3 +123,44 @@ make typecheck
 make audit
 make smoke
 ```
+
+---
+
+# Экономика привычек
+
+Документ описывает формулы наград и штрафов в модуле привычек.
+
+## Награды
+- Базовый опыт и золото определяются сложностью (`XP_BASE`, `GOLD_BASE`).
+- При включённой анти-фарм механике награда уменьшается экспоненциально в
+  течение дня: `reward = base * exp(-k * n_today)`, где `k = REWARD_DECAY_K`,
+  `n_today` — количество положительных действий по привычке за текущий день.
+- После достижения мягкого дневного лимита (`daily_limit`) опыт и золото не
+  начисляются, но клик остаётся возможным.
+
+## Кулдаун
+- Минимальный интервал между действиями задаётся `cooldown_sec`.
+- Повторное действие раньше истечения кулдауна приводит к ошибке `cooldown`.
+
+## Штрафы
+- Отрицательные действия всегда применяют штраф к здоровью (`HP_BASE`) и
+  обходят дневной лимит, но всё равно учитывают кулдаун.
+
+## Ежедневные счётчики
+- `user_stats.daily_xp` и `user_stats.daily_gold` накапливают полученные за
+  день награды и сбрасываются ежедневным кроном.
+
+---
+
+# Notes API & UI
+
+## Endpoints
+- `GET /api/v1/notes` — list notes. Supports filters: `area_id`, `project_id`, `pinned`, `archived`, `q`, `limit`, `offset`.
+- `POST /api/v1/notes` — create note. Body: `{title?, content, area_id?, project_id?, color?}`.
+- `PATCH /api/v1/notes/{id}` — update fields: `{title?, content?, area_id?, project_id?, color?, pinned?, archived_at?}`.
+- `POST /api/v1/notes/{id}/archive` / `POST /api/v1/notes/{id}/unarchive` — toggle archive.
+- `POST /api/v1/notes/reorder` — set `order_index` for list of note ids.
+
+## Frontend
+- Page `/notes` renders responsive grid `.notes-grid`.
+- Cards use classes like `.note-card` and color tokens `.note-yellow`, `.note-mint`, etc.

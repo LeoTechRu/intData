@@ -10,3 +10,4 @@
 ## Frontend
 - Page `/notes` renders responsive grid `.notes-grid`.
 - Cards use classes like `.note-card` and color tokens `.note-yellow`, `.note-mint`, etc.
+

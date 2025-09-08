@@ -85,21 +85,23 @@
 
 ### E2: Миграции БД и индексы
 **User Stories**
-1. Как разработчик, я запускаю Alembic-модели для таблиц: `areas`, `projects`, `calendar_items`, `alarms`.
-2. Как разработчик, я реализую CHECK-инвариант PARA и необходимые индексы.
+1. Как разработчик, я поддерживаю идемпотентные DDL-модули для таблиц: `areas`, `projects`, `calendar_items`, `alarms`, `notes`, `time_entries`, `habits/*`.
+2. Как разработчик, я обеспечиваю CHECK‑инвариант PARA и необходимые индексы.
 
 **Tasks**
-- P0•M — Alembic: `20250829_02_notes_para_columns` (title, TEXT, container_type/id, archived_at, индексы).
-- P0•M — Alembic: `20250829_03_projects_area_status_archive` (area_id NOT NULL, status, slug uniq, archived_at, индексы).
-- P0•S — Alembic: `20250829_04_areas_resource_archive` (review_interval_days, is_active, archived_at).
-- P0•M — Alembic: `20250829_05_tasks_links_area` (project_id, area_id, estimate_minutes, индексы).
-- P0•M — Alembic: `20250829_06_time_entries_inheritance` (project_id, area_id, activity_type, billable, source, индексы).
-- P0•S — Машиночитаемая схема БД и автопроверка (`tools/schema_export`, CI).
+- [x] P0•S — Машиночитаемая схема БД и автопроверка (`python -m core.db.schema_export`, CI‑check).
+- [x] P0•M — Перевод миграций на простой раннер `core/db/migrate.py` + DDL `core/db/ddl/*.sql` (без Alembic).
+- [x] P0•S — `projects.area_id` сделать `NOT NULL` и проиндексировать.
+- [ ] P0•M — CHECK‑инвариант: у сущностей (`calendar_items`, `tasks`, `time_entries`, `habits/dailies/rewards`) должен быть ровно один из `project_id`/`area_id`.
+- [ ] P0•S — Индексы `(owner_id, project_id)` и `(owner_id, area_id)` на основные таблицы для фильтрации и include_sub.
+- [ ] P1•M — Триггеры наследования `area_id` от `project_id` для `tasks` и `resources`.
+- [ ] P2•S — Таблица `para_overrides` для субъективных привязок (owner, entity_type, entity_id, override_project_id?, override_area_id?).
+- [ ] P2•S — Линтер `utils/para_lint.py` и запуск в CI.
 
 **Acceptance Criteria**
 - `python -m core.db.migrate` создаёт таблицы с внешними ключами и индексами по `(project_id, area_id, start_ts)`.
 - Вставка `calendar_item` с обоими NULL (`project_id` и `area_id`) завершается ошибкой CHECK.
-- Миграции применяются; в таблицах `notes/projects/areas/resources/tasks/time_entries` присутствуют новые поля и индексы.
+- В таблицах `notes/projects/areas/resources/tasks/time_entries` присутствуют требуемые поля и индексы, инварианты PARA соблюдаются.
 
 ### E3: API (Calendar: /calendar/items, /calendar/agenda, /calendar/feed.ics, /projects/{id}/notifications)
 **User Stories**
@@ -152,6 +154,9 @@
 **User Stories**
 1. Как пользователь, я экспортирую элементы и задачи в стандартный ICS.
 2. Как пользователь, я вижу `VALARM` для элементов с напоминанием.
+
+**Tasks**
+- [ ] P0•S — Генерировать `VALARM` в `feed.ics` на основе связанных `alarms`.
 
 **Acceptance Criteria**
 - Скачанный фид содержит VEVENT для событий и VTODO для задач.
@@ -361,7 +366,7 @@ POST /api/v1/rewards/{id}/buy
 
 
 ### E17: Frontend Modernization
-See [frontend_modernization.md](./frontend_modernization.md).
+Reference: см. архивный отчёт `docs/archive/report_frontend_modernization.md`.
 
 **Tasks**
 - [x] P1•M — Выбран стек **Next.js** (TypeScript + Tailwind), решение задокументировано.
