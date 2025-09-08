@@ -230,3 +230,6 @@ __marimo__/
 web/node_modules/
 web/.next/
 
+# Logs
+logs/
+.logs/

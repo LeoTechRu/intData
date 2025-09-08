@@ -31,7 +31,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Check DB schema up-to-date
-        run: python -m tools.schema_export check
+        run: python -m core.db.schema_export check
 
       - name: Run tests
         env:
