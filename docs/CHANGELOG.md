@@ -127,6 +127,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Repair backfills `area_id` from project and warns when both `area_id` and `project_id` are NULL.
 - Habit creation via `/api/v1/habits` no longer fails when area is missing; defaults to Inbox and accepts `name` payload.
 - Создание заметки больше не падает при отсутствии цвета у области.
+- Бот снова пересылает все входящие сообщения в логирующую группу и позволяет администраторам отвечать на них.
 
 ### Security
 - baseline HTTP headers and optional rate limiting.
