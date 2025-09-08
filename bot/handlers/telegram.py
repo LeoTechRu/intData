@@ -406,32 +406,74 @@ async def cmd_get_log_level(message: Message):
         await message.answer(f"Текущий уровень: {current_level}\nГруппа для логов: {chat_id}")
 
 # Универсальный хендлер (ловит всё, что не подошло выше)
-log_chat_id = -1002662867876
-@router.message(F.chat.id != log_chat_id)
-async def unknown_message_handler(message: Message):
+forward_map: dict[int, tuple[int, int]] = {}
+
+@router.message()
+async def unknown_message_handler(message: Message) -> None:
+    async with TelegramUserService() as user_service:
+        settings = await user_service.get_log_settings()
+        log_chat_id = settings.chat_id if settings else None
+
+    if not log_chat_id or message.chat.id == log_chat_id:
+        return
+
     try:
-        # Добавляем метаданные в текст сообщения
-        meta_text = f"||origin_chat_id:{message.chat.id}|origin_msg_id:{message.message_id}||"
-        await message.forward(log_chat_id)
-        # Отправляем метаданные как отдельное сообщение (скрытое)
         from core.db import bot
-        await bot.send_message(log_chat_id, meta_text, parse_mode=None)
-    except Exception as e:
+
+        meta_text = (
+            f"||origin_chat_id:{message.chat.id}|origin_msg_id:{message.message_id}||"
+        )
+        fwd_msg = await message.forward(log_chat_id)
+        forward_map[fwd_msg.message_id] = (message.chat.id, message.message_id)
+        await bot.send_message(
+            log_chat_id,
+            meta_text,
+            parse_mode=None,
+            reply_to_message_id=fwd_msg.message_id,
+        )
+    except Exception as e:  # pragma: no cover - defensive
         print(f"Ошибка логирования: {e}")
 
-@router.message(F.chat.id == log_chat_id)
-async def handle_admin_reply(message: Message):
+
+@router.message()
+async def handle_admin_reply(message: Message) -> None:
+    async with TelegramUserService() as user_service:
+        settings = await user_service.get_log_settings()
+        log_chat_id = settings.chat_id if settings else None
+
+    if not log_chat_id or message.chat.id != log_chat_id or not message.reply_to_message:
+        return
+
     from core.db import bot
     from aiogram.exceptions import TelegramAPIError
     from core.logger import logger
-    if message.reply_to_message:
-        # Ищем метаданные в тексте ответа или в reply_to_message
-        meta_match = re.search(r"\|\|origin_chat_id:(\d+)\|origin_msg_id:(\d+)\|\|", message.reply_to_message.text)
+
+    origin = forward_map.get(message.reply_to_message.message_id)
+
+    if not origin:
+        meta_match = re.search(
+            r"\|\|origin_chat_id:(-?\d+)\|origin_msg_id:(\d+)\|\|",
+            message.reply_to_message.text or "",
+        )
+        if not meta_match and message.reply_to_message.reply_to_message:
+            meta_match = re.search(
+                r"\|\|origin_chat_id:(-?\d+)\|origin_msg_id:(\d+)\|\|",
+                message.reply_to_message.reply_to_message.text or "",
+            )
         if meta_match:
-            origin_chat_id = int(meta_match.group(1))
-            origin_msg_id = int(meta_match.group(2))
-            # Отправляем ответ пользователю
-            try:
-                await bot.send_message(origin_chat_id, f"{message.text}")
-            except TelegramAPIError as e:
-                logger.error(f"Не удалось отправить ответ пользователю: {e}")
+            origin = (int(meta_match.group(1)), int(meta_match.group(2)))
+
+    if not origin:
+        return
+
+    origin_chat_id, origin_msg_id = origin
+
+    try:
+        await bot.copy_message(
+            origin_chat_id,
+            message.chat.id,
+            message.message_id,
+            reply_to_message_id=origin_msg_id,
+        )
+    except TelegramAPIError as e:  # pragma: no cover - defensive
+        logger.error(f"Не удалось отправить ответ пользователю: {e}")
