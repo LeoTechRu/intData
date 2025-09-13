@@ -207,10 +207,8 @@ async def send_magic_email(email: str, link: str) -> None:  # pragma: no cover -
 def verify_telegram_auth(data: dict) -> dict:
     """Validate Telegram Login Widget signature."""
     token = S.TG_BOT_TOKEN
-    if not token:
-        raise HTTPException(
-            status_code=503, detail="Telegram login disabled (no TG_BOT_TOKEN)"
-        )
+    if not S.TG_LOGIN_ENABLED or not token:
+        raise HTTPException(status_code=503, detail="Telegram login disabled")
 
     recv_hash = data.get("hash", "")
     check_data = "\n".join(
@@ -252,6 +250,8 @@ async def upsert_user_from_telegram(info: dict):
 
 @router.get("/auth/telegram")
 async def auth_telegram(request: Request):
+    if not S.TG_LOGIN_ENABLED or not S.TG_BOT_TOKEN:
+        raise HTTPException(status_code=503, detail="Telegram login disabled")
     params = dict(request.query_params)
     info = verify_telegram_auth(params)
     user = await upsert_user_from_telegram(info)
@@ -441,6 +441,8 @@ async def logout() -> RedirectResponse:
 @router.api_route("/auth/tg/callback", methods=["GET", "POST"])
 async def telegram_callback(request: Request):
     """Handle Telegram login callback from widget."""
+    if not S.TG_LOGIN_ENABLED or not S.TG_BOT_TOKEN:
+        raise HTTPException(status_code=503, detail="Telegram login disabled")
     if request.method == "POST":
         data = dict((await request.form()).items())
     else:

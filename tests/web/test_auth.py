@@ -188,3 +188,16 @@ async def test_telegram_login_existing_user(client: AsyncClient):
 
     resp2 = await client.get("/")
     assert resp2.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_telegram_login_disabled(monkeypatch, client: AsyncClient):
+    monkeypatch.setattr(S._env, "TG_LOGIN_ENABLED", False)
+    data = {
+        "id": 555,
+        "first_name": "Nope",
+        "auth_date": int(time.time()),
+    }
+    data["hash"] = _generate_hash(data)
+    resp = await client.post("/auth/tg/callback", data=data)
+    assert resp.status_code == 503

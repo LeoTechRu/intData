@@ -104,6 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Кнопка входа через Telegram снова отображается над формой входа на странице авторизации.
 - Страница авторизации скрывает виджет Telegram при `TG_LOGIN_ENABLED=0`, предотвращая ошибки.
+- Эндпоинты входа через Telegram возвращают 503 при `TG_LOGIN_ENABLED=0`.
 - reduced test flakiness via deterministic time handling and confirmed cooldown paths mapping to 429.
 - Страница `/inbox` запрашивает заметки у API через `NEXT_PUBLIC_API_BASE`.
 - Фронтенд использует `/api/v1` по умолчанию при отсутствии `window.API_BASE`.
