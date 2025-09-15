@@ -39,7 +39,7 @@ FAVORITE_PAGES = [
     {"path": "/habits", "label": "Привычки", "min_role": UserRole.single},
     {"path": "/time", "label": "Время", "min_role": UserRole.single},
     {"path": "/inbox", "label": "Входящие", "min_role": UserRole.single},
-    {"path": "/admin", "label": "Админ", "min_role": UserRole.admin},
+    {"path": "/#cup-admin-tools", "label": "Админ", "min_role": UserRole.admin},
 ]
 
 
