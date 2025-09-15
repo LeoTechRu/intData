@@ -102,6 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Логируется путь загруженного `.env` и выводится предупреждение, если файл находится вне корня проекта.
 
 ### Fixed
+- Content Security Policy по умолчанию разрешает загрузку Telegram Login (скрипт `telegram.org` и iframe `oauth.telegram.org`), поэтому кнопка входа снова видна на `/auth`.
 - Кнопка входа через Telegram снова отображается над формой входа на странице авторизации.
 - Страница авторизации скрывает виджет Telegram при `TG_LOGIN_ENABLED=0`, предотвращая ошибки.
 - Эндпоинты входа через Telegram возвращают 503 при `TG_LOGIN_ENABLED=0`.
