@@ -125,59 +125,163 @@ class UpdateDataStates(StatesGroup):
     waiting_for_group_description = State()
 
 # -----------------------------
+# Справка по командам
+# -----------------------------
+
+GROUP_CHAT_TYPES = frozenset({"group", "supergroup"})
+
+HELP_SECTIONS = (
+    (
+        "Общие",
+        (
+            {"text": "/start - приветствие и справка."},
+            {"text": "/help - показать эту справку."},
+            {"text": "/cancel - отменить ввод."},
+        ),
+    ),
+    (
+        "Профиль",
+        (
+            {"text": "/contact - показать контактные данные."},
+            {"text": "/setfullname - установить отображаемое имя."},
+            {"text": "/setemail - установить email."},
+            {"text": "/setphone - установить телефон."},
+            {"text": "/setbirthday - установить день рождения."},
+            {"text": "/birthday - напоминание о дне рождения."},
+        ),
+    ),
+    (
+        "Заметки",
+        (
+            {"text": "/note <текст> - создать заметку в Inbox (#proj:<id> для проекта)."},
+            {"text": "/assign <note_id> <proj|area|res> <id> - присвоить заметку контейнеру."},
+        ),
+    ),
+    (
+        "Привычки",
+        (
+            {"text": "/habit_list - список привычек."},
+            {"text": "/habit_add [название] [daily|weekly|monthly] - добавить привычку."},
+            {"text": "/habit_done [id] - отметить выполнение за сегодня."},
+        ),
+    ),
+    (
+        "Тайм-трекер",
+        (
+            {"text": "/time_start [описание] - запустить таймер."},
+            {"text": "/time_stop [id] - остановить таймер."},
+            {"text": "/time_list - последние записи времени."},
+            {"text": "/time_resume <task_id> - возобновить таймер для задачи."},
+        ),
+    ),
+    (
+        "Группы",
+        (
+            {
+                "text": "/group - зарегистрировать группу и показать участников.",
+                "chat_types": GROUP_CHAT_TYPES,
+            },
+            {
+                "text": "/group audit [дней] [product] - статистика активности и оплат.",
+                "chat_types": GROUP_CHAT_TYPES,
+            },
+            {
+                "text": "/group mark <product> [@user|id] [status] - отметить покупку.",
+                "chat_types": GROUP_CHAT_TYPES,
+                "min_role": UserRole.moderator,
+            },
+            {
+                "text": "/group note [@user|id] текст [--trial=YYYY-MM-DD] [--tags=a,b] - заметка о участнике.",
+                "chat_types": GROUP_CHAT_TYPES,
+                "min_role": UserRole.moderator,
+            },
+            {
+                "text": "/setgroupdesc - задать описание группы (в группах).",
+                "chat_types": GROUP_CHAT_TYPES,
+            },
+        ),
+    ),
+    (
+        "Администрирование",
+        (
+            {
+                "text": "/setloglevel <DEBUG|INFO|ERROR> - установить уровень логирования.",
+                "min_role": UserRole.admin,
+            },
+            {
+                "text": "/getloglevel - показать текущий уровень логов.",
+                "min_role": UserRole.admin,
+            },
+        ),
+    ),
+)
+
+
+def _resolve_user_role(user: Optional[TgUser]) -> UserRole:
+    if user and getattr(user, "role", None):
+        try:
+            return UserRole[user.role]
+        except KeyError:
+            return UserRole.single
+    return UserRole.single
+
+
+def _build_help_text(role: UserRole, chat_type: Optional[str]) -> str:
+    chat_type = chat_type or "private"
+    sections: List[str] = []
+    for title, items in HELP_SECTIONS:
+        lines: List[str] = []
+        for item in items:
+            min_role: UserRole = item.get("min_role", UserRole.single)
+            allowed_chats = item.get("chat_types")
+            if role.value < min_role.value:
+                continue
+            if allowed_chats and chat_type not in allowed_chats:
+                continue
+            lines.append(item["text"])
+        if lines:
+            sections.append(f"{title}:\n" + "\n".join(lines))
+    if not sections:
+        return ""
+    return "Доступные команды:\n\n" + "\n\n".join(sections)
+
+
+async def _send_help_reply(message: Message, *, include_greeting: bool) -> None:
+    from_user = message.from_user
+    if not from_user:
+        return
+    async with TelegramUserService() as user_service:
+        user, _ = await user_service.get_or_create_user(
+            from_user.id,
+            username=from_user.username,
+            first_name=from_user.first_name,
+            last_name=from_user.last_name,
+            language_code=from_user.language_code,
+            is_premium=getattr(from_user, "is_premium", None),
+        )
+
+    role = _resolve_user_role(user)
+    chat_type = getattr(message.chat, "type", "private")
+    if include_greeting:
+        first_name = from_user.first_name or "друг"
+        await message.answer(f"Привет, {first_name}! Добро пожаловать в бота.")
+
+    help_text = _build_help_text(role, chat_type)
+    if help_text:
+        await message.answer(help_text)
+
+# -----------------------------
 # Команды
 # -----------------------------
 @router.message(Command("start"))
 @user_router.message(F.text.lower().in_(["старт", "start", "привет", "hello"]))
 async def cmd_start(message: Message):
-    await message.answer(f"Привет, {message.from_user.first_name}! Добро пожаловать в бота.")
+    await _send_help_reply(message, include_greeting=True)
 
 
 @user_router.message(Command("help"))
 async def cmd_help(message: Message) -> None:
-    help_text = (
-        "Доступные команды:\n"
-        "\n"
-        "Общие:\n"
-        "/start - приветственное сообщение.\n"
-        "/help - эта справка.\n"
-        "/cancel - отменить ввод.\n"
-        "\n"
-        "Профиль:\n"
-        "/contact - показать контактные данные.\n"
-        "/setfullname - установить отображаемое имя.\n"
-        "/setemail - установить email.\n"
-        "/setphone - установить телефон.\n"
-        "/setbirthday - установить день рождения.\n"
-        "/birthday - напоминание о дне рождения.\n"
-        "\n"
-        "Заметки:\n"
-        "/note <текст> - создать заметку в Inbox (#proj:<id> для проекта).\n"
-        "/assign <note_id> <proj|area|res> <id> - присвоить заметку контейнеру.\n"
-        "\n"
-        "Привычки:\n"
-        "/habit_list - список привычек.\n"
-        "/habit_add [название] [daily|weekly|monthly] - добавить привычку.\n"
-        "/habit_done [id] - отметить выполнение за сегодня.\n"
-        "\n"
-        "Тайм-трекер:\n"
-        "/time_start [описание] - запустить таймер.\n"
-        "/time_stop [id] - остановить таймер.\n"
-        "/time_list - последние записи времени.\n"
-        "/time_resume <task_id> - возобновить таймер для задачи.\n"
-        "\n"
-        "Группы:\n"
-        "/group - зарегистрировать группу и показать участников.\n"
-        "/group audit [дней] [product] - статистика активности и оплат.\n"
-        "/group mark <product> [@user|id] [status] - отметить покупку (в ответ на сообщение можно опустить пользователя).\n"
-        "/group note [@user|id] текст [--trial=YYYY-MM-DD] [--tags=a,b] - сохранить заметку о участнике.\n"
-        "/setgroupdesc - задать описание группы (в группах).\n"
-        "\n"
-        "Администрирование:\n"
-        "/setloglevel <DEBUG|INFO|ERROR> - установить уровень логирования.\n"
-        "/getloglevel - показать текущий уровень логов."
-    )
-    await message.answer(help_text)
+    await _send_help_reply(message, include_greeting=False)
 
 @user_router.message(Command("cancel"))
 @user_router.message(F.text.lower().in_(["cancel", "отмена", "выйти", "прервать"]))
