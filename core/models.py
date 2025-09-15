@@ -56,6 +56,14 @@ class ChannelType(PyEnum):
     supergroup = "supergroup"
 
 
+class ProductStatus(PyEnum):
+    pending = "pending"
+    trial = "trial"
+    paid = "paid"
+    refunded = "refunded"
+    gift = "gift"
+
+
 class TgUser(Base):
     """Telegram user data stored separately from web accounts."""
 
@@ -202,7 +210,7 @@ class UserSettings(Base):
 class Group(Base):  # Группа
     __tablename__ = "groups"
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     telegram_id = Column(BigInteger, unique=True, nullable=False)
     title = Column(String(255), nullable=False)
     type = Column(Enum(GroupType), default=GroupType.private)
@@ -218,7 +226,7 @@ class Group(Base):  # Группа
 class Channel(Base):  # Канал
     __tablename__ = "channels"
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     telegram_id = Column(BigInteger, unique=True, nullable=False)
     title = Column(String(255), nullable=False)
     type = Column(Enum(ChannelType), default=ChannelType.channel)
@@ -244,6 +252,113 @@ class UserGroup(Base):  # Связь пользователь-группа (мн
     is_owner = Column(Boolean, default=False)
     is_moderator = Column(Boolean, default=False)
     joined_at = Column(DateTime(timezone=True), default=utcnow)
+    crm_notes = Column(Text)
+    trial_expires_at = Column(DateTime(timezone=True))
+    crm_tags = Column(JSON, default=list)
+    crm_metadata = Column(JSON, default=dict)
+
+
+class Product(Base):
+    """Продукт, который может быть привязан к участнику."""
+
+    __tablename__ = "products"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    slug = Column(String(64), unique=True, nullable=False)
+    title = Column(String(255), nullable=False)
+    description = Column(Text)
+    active = Column(Boolean, nullable=False, default=True)
+    attributes = Column(JSON, default=dict)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    user_links = relationship(
+        "UserProduct",
+        back_populates="product",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+
+class UserProduct(Base):
+    """Привязка покупки продукта конкретному Telegram-пользователю."""
+
+    __tablename__ = "users_products"
+
+    user_id = Column(
+        BigInteger, ForeignKey("users_tg.telegram_id"), primary_key=True
+    )
+    product_id = Column(
+        Integer, ForeignKey("products.id"), primary_key=True
+    )
+    status = Column(
+        Enum(ProductStatus, name="product_status"),
+        nullable=False,
+        default=ProductStatus.paid,
+    )
+    source = Column(String(64))
+    acquired_at = Column(DateTime(timezone=True), default=utcnow)
+    notes = Column(Text)
+    extra = Column(JSON, default=dict)
+    updated_at = Column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    product = relationship(
+        "Product",
+        back_populates="user_links",
+        lazy="joined",
+    )
+    user = relationship("TgUser", backref="product_links")
+
+
+class GroupActivityDaily(Base):
+    """Ежедневная статистика активности пользователя в группе."""
+
+    __tablename__ = "group_activity_daily"
+
+    group_id = Column(
+        BigInteger, ForeignKey("groups.telegram_id"), primary_key=True
+    )
+    user_id = Column(
+        BigInteger, ForeignKey("users_tg.telegram_id"), primary_key=True
+    )
+    activity_date = Column(Date, primary_key=True)
+    messages_count = Column(Integer, default=0, nullable=False)
+    reactions_count = Column(Integer, default=0, nullable=False)
+    last_activity_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+
+class GroupRemovalLog(Base):
+    """Журнал действий по удалению участников из групп."""
+
+    __tablename__ = "group_removal_log"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    group_id = Column(
+        BigInteger, ForeignKey("groups.telegram_id"), nullable=False
+    )
+    user_id = Column(
+        BigInteger, ForeignKey("users_tg.telegram_id"), nullable=False
+    )
+    product_id = Column(Integer, ForeignKey("products.id"))
+    initiator_web_id = Column(Integer, ForeignKey("users_web.id"))
+    initiator_tg_id = Column(BigInteger)
+    reason = Column(String(255))
+    result = Column(String(32), default="queued", nullable=False)
+    details = Column(JSON, default=dict)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+
+    __table_args__ = (
+        Index("ix_group_removal_group_created", "group_id", "created_at"),
+        Index("ix_group_removal_product", "product_id"),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -892,4 +1007,3 @@ class GCalLink(Base):
     refresh_token = Column(String(255))
     created_at = Column(DateTime(timezone=True), default=utcnow)
     updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
-

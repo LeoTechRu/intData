@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Телеграм-группы{% endblock %}
+{% block content %}
+<div class="ui-layout">
+  <main id="main-content" tabindex="-1">
+    <section class="c-card">
+      <header class="c-card__header">
+        <h1 class="c-card__title">Telegram-группы</h1>
+        <p class="c-card__subtitle">Отслеживайте активность и управляемость учебных чатов.</p>
+      </header>
+      <div class="c-card__body">
+        {% if groups %}
+        <ul class="ui-list">
+          {% for group in groups %}
+          <li class="ui-list__item">
+            <div>
+              <div class="ui-list__title">{{ group.title }}</div>
+              <div class="ui-list__meta">ID: {{ group.telegram_id }} · участников: {{ group.participants_count or 0 }}</div>
+            </div>
+            <a class="button button--primary" href="/groups/{{ group.telegram_id }}">Открыть</a>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">Привязанная Telegram-учётка не состоит в группах. Добавьте бота @intDataBot в чат и выполните команду <code>/group</code>.</p>
+        {% endif %}
+      </div>
+    </section>
+  </main>
+</div>
+{% endblock %}

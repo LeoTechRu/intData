@@ -3,6 +3,7 @@
 from .note_service import NoteService
 from .task_service import TaskService
 from .telegram_user_service import TelegramUserService
+from .group_crm_service import GroupCRMService
 from .time_service import TimeService
 from .web_user_service import WebUserService
 from .favorite_service import FavoriteService
@@ -19,6 +20,7 @@ __all__ = [
     "NoteService",
     "TaskService",
     "TelegramUserService",
+    "GroupCRMService",
     "TimeService",
     "WebUserService",
     "FavoriteService",

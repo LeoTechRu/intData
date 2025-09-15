@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+{% block title %}Группа: {{ group_detail.group.title }}{% endblock %}
+{% block content %}
+<div class="ui-layout">
+  <main id="main-content" tabindex="-1">
+    <section class="c-card">
+      <header class="c-card__header">
+        <h1 class="c-card__title">{{ group_detail.group.title }}</h1>
+        <p class="c-card__subtitle">Участников: {{ group_detail.group.participants_count }} · ID: {{ group_detail.group.telegram_id }}</p>
+      </header>
+      <div class="c-card__body grid" style="grid-template-columns: repeat(auto-fit,minmax(240px,1fr)); gap:16px;">
+        <div class="metrics">
+          <div class="metrics__label">Продукты</div>
+          <ul class="ui-list ui-list--compact">
+            {% for product in group_detail.products %}
+            <li class="ui-list__item">
+              <div>
+                <div class="ui-list__title">{{ product.title }} <span class="badge{% if not product.active %} badge--muted{% endif %}">{{ product.slug }}</span></div>
+                <div class="ui-list__meta">Оплачено: {{ product.buyers }} / {{ product.total_members }}</div>
+              </div>
+            </li>
+            {% else %}
+            <li class="ui-list__item text-muted">Нет сохранённых продуктов</li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div>
+          <div class="metrics__label">Лидборд активности (30 дней)</div>
+          <ol class="ui-list ui-list--compact">
+            {% for entry in group_detail.leaderboard[:5] %}
+            <li class="ui-list__item">{{ entry.display_name }} — {{ entry.messages }} сообщений, {{ entry.reactions }} реакций{% if entry.last_activity %} · {{ entry.last_activity.strftime('%d.%m %H:%M') }} UTC{% endif %}</li>
+            {% else %}
+            <li class="ui-list__item text-muted">Активность пока не зафиксирована</li>
+            {% endfor %}
+          </ol>
+        </div>
+        <div>
+          <div class="metrics__label">История удалений</div>
+          <ul class="ui-list ui-list--compact">
+            {% for record in group_detail.removal_history[:5] %}
+            <li class="ui-list__item">{{ record.created_at.strftime('%d.%m %H:%M') }} — {{ record.display_name }} ({{ record.result }}){% if record.product_title %} · {{ record.product_title }}{% endif %}</li>
+            {% else %}
+            <li class="ui-list__item text-muted">Журнал пуст</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="c-card">
+      <header class="c-card__header">
+        <h2 class="c-card__title">Массовое удаление «непокупателей»</h2>
+        <p class="c-card__subtitle">Выберите продукт — бот удалит всех, у кого нет статуса <code>paid</code>. Используйте предпросмотр, чтобы убедиться в составе списка.</p>
+      </header>
+      <div class="c-card__body">
+        <form id="prune-form" class="grid" style="gap:12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+          <label class="ui-field">
+            <span class="ui-field__label">Продукт</span>
+            <select class="control" name="product_slug" required>
+              {% for product in group_detail.products %}
+              <option value="{{ product.slug }}">{{ product.title }} ({{ product.slug }})</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label class="ui-field">
+            <span class="ui-field__label">Комментарий</span>
+            <input class="control" type="text" name="reason" placeholder="Например: окончание пробной недели">
+          </label>
+          <div class="ui-field">
+            <label class="checkbox"><input type="checkbox" name="dry_run" checked> Только показать кандидатов</label>
+            <div class="ui-actions" style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="button" type="submit" data-mode="preview">Показать списки</button>
+              <button class="button button--danger" type="submit" data-mode="prune">Удалить из Telegram</button>
+            </div>
+          </div>
+        </form>
+        <div id="prune-result" class="muted" style="margin-top:12px;"></div>
+      </div>
+    </section>
+
+    <section class="c-card">
+      <header class="c-card__header">
+        <h2 class="c-card__title">Участники</h2>
+        <p class="c-card__subtitle">Редактируйте заметки, теги и покупки. Все изменения моментально сохраняются в CRM.</p>
+      </header>
+      <div class="c-card__body">
+        <div class="cup-admin__table-wrap">
+          <table class="ui-table" id="members-table" data-group-id="{{ group_detail.group.telegram_id }}">
+            <thead>
+              <tr>
+                <th>Участник</th>
+                <th>Активность (30 дн.)</th>
+                <th>Покупки</th>
+                <th>Пробный до</th>
+                <th>Теги</th>
+                <th>Заметка</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for member in group_detail.members %}
+              {% set trial_value = member.trial_expires_at.strftime('%Y-%m-%d') if member.trial_expires_at else '' %}
+              <tr data-user-id="{{ member.telegram_id }}">
+                <td>
+                  <div class="ui-list__title">{{ member.display_name }}</div>
+                  <div class="ui-list__meta">{{ member.username or '' }}{% if member.is_owner %} · владелец{% elif member.is_moderator %} · модератор{% endif %}</div>
+                </td>
+                <td>{{ member.activity.messages }} сообщений<br/>{{ member.activity.reactions }} реакций{% if member.activity.last_activity %}<br/><span class="text-muted">до {{ member.activity.last_activity.strftime('%d.%m %H:%M') }} UTC</span>{% endif %}</td>
+                <td>
+                  <ul class="ui-list ui-list--compact member-products">
+                    {% for product in member.products %}
+                    <li class="ui-list__item" data-product-id="{{ product.product_id }}">
+                      <span class="badge">{{ product.product_title }}</span>
+                      <span class="text-muted">{{ product.status.value }}{% if product.source %} · {{ product.source }}{% endif %}</span>
+                      <button class="ui-iconbtn" data-action="remove-product" title="Удалить" aria-label="Удалить продукт">×</button>
+                    </li>
+                    {% else %}
+                    <li class="ui-list__item text-muted">Нет покупок</li>
+                    {% endfor %}
+                  </ul>
+                  <div class="member-product-form">
+                    <input class="control control--sm product-slug" type="text" placeholder="slug">
+                    <select class="control control--sm product-status">
+                      {% for status in ['paid', 'trial', 'pending', 'gift', 'refunded'] %}
+                      <option value="{{ status }}" {% if status == 'paid' %}selected{% endif %}>{{ status }}</option>
+                      {% endfor %}
+                    </select>
+                    <input class="control control--sm product-source" type="text" placeholder="Источник">
+                    <button class="button button--sm" data-action="assign-product">Добавить</button>
+                  </div>
+                </td>
+                <td><input class="control trial-input" type="date" value="{{ trial_value }}"></td>
+                <td><input class="control tags-input" type="text" placeholder="через запятую" value="{{ member.crm_tags | join(', ') }}"></td>
+                <td>
+                  <textarea class="control note-input" rows="3" placeholder="Заметка">{{ member.crm_notes or '' }}</textarea>
+                  <div class="ui-actions" style="margin-top:4px; display:flex; gap:8px;">
+                    <button class="button button--sm" data-action="save-profile">Сохранить</button>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+(function(){
+  const API = window.API_BASE;
+  const table = document.getElementById('members-table');
+  if (!table) return;
+  const groupId = table.dataset.groupId;
+
+  async function updateProfile(row) {
+    const userId = row.dataset.userId;
+    const note = row.querySelector('.note-input').value.trim();
+    const trial = row.querySelector('.trial-input').value || null;
+    const tagsRaw = row.querySelector('.tags-input').value;
+    const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : null;
+    const payload = {notes: note || null, trial_expires_at: trial ? new Date(trial).toISOString() : null, tags};
+    const res = await fetch(`${API}/groups/${groupId}/members/${userId}/profile`, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    });
+    return res.ok;
+  }
+
+  async function assignProduct(row) {
+    const userId = row.dataset.userId;
+    const slug = row.querySelector('.product-slug').value.trim();
+    if (!slug) return false;
+    const status = row.querySelector('.product-status').value;
+    const source = row.querySelector('.product-source').value.trim();
+    const payload = {product_slug: slug, status, source: source || null};
+    const res = await fetch(`${API}/groups/${groupId}/members/${userId}/products`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    });
+    return res.ok;
+  }
+
+  async function removeProduct(row, productId) {
+    const userId = row.dataset.userId;
+    const res = await fetch(`${API}/groups/${groupId}/members/${userId}/products/${productId}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    return res.ok;
+  }
+
+  table.addEventListener('click', async (event) => {
+    const target = event.target;
+    const row = target.closest('tr[data-user-id]');
+    if (!row) return;
+    if (target.matches('[data-action="save-profile"]')) {
+      event.preventDefault();
+      target.disabled = true;
+      const ok = await updateProfile(row);
+      target.disabled = false;
+      target.textContent = ok ? 'Сохранено' : 'Ошибка';
+      setTimeout(() => target.textContent = 'Сохранить', 1500);
+    }
+    if (target.matches('[data-action="assign-product"]')) {
+      event.preventDefault();
+      target.disabled = true;
+      const ok = await assignProduct(row);
+      if (ok) window.location.reload();
+      else {
+        target.disabled = false;
+        target.textContent = 'Ошибка';
+        setTimeout(() => target.textContent = 'Добавить', 1500);
+      }
+    }
+    if (target.matches('[data-action="remove-product"]')) {
+      event.preventDefault();
+      const productItem = target.closest('[data-product-id]');
+      if (!productItem) return;
+      const productId = productItem.dataset.productId;
+      target.disabled = true;
+      const ok = await removeProduct(row, productId);
+      if (ok) window.location.reload();
+      else {
+        target.disabled = false;
+        target.textContent = '!';
+      }
+    }
+  });
+
+  const pruneForm = document.getElementById('prune-form');
+  const resultBox = document.getElementById('prune-result');
+  pruneForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const submitter = event.submitter;
+    if (!submitter) return;
+    const formData = new FormData(pruneForm);
+    const slug = formData.get('product_slug');
+    const reason = (formData.get('reason') || '').toString().trim();
+    const dryRun = formData.get('dry_run') !== null && (submitter.dataset.mode !== 'prune');
+    const payload = {product_slug: slug, dry_run: dryRun, reason: reason || null};
+    submitter.disabled = true;
+    resultBox.textContent = 'Выполняется...';
+    const res = await fetch(`${API}/groups/${groupId}/prune`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    });
+    submitter.disabled = false;
+    if (!res.ok) {
+      resultBox.textContent = 'Ошибка запуска операции';
+      return;
+    }
+    const data = await res.json();
+    if (data.dry_run) {
+      if (data.candidates.length === 0) {
+        resultBox.textContent = 'Все участники имеют покупку выбранного продукта.';
+      } else {
+        const lines = data.candidates.map(item => `• ${item.display_name} (${item.user_id})`);
+        resultBox.textContent = `Кандидатов к удалению: ${data.candidates.length}\n` + lines.join('\n');
+      }
+    } else {
+      let msg = `Удалено: ${data.removed.length}`;
+      if (data.failed.length) {
+        msg += `, не удалось: ${data.failed.length}`;
+      }
+      resultBox.textContent = msg;
+      setTimeout(() => window.location.reload(), 1200);
+    }
+  });
+})();
+</script>
+{% endblock %}

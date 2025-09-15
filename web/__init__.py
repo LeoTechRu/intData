@@ -37,6 +37,7 @@ from .routes import (
     projects,
     resources,
     inbox,
+    groups,
     api_router,
 )
 from core.db import engine
@@ -132,6 +133,7 @@ tags_metadata = [
     {"name": "Rewards", "description": "Rewards API"},
     {"name": "Stats", "description": "Habits statistics API"},
     {"name": "Calendar", "description": "Calendar API"},
+    {"name": "groups", "description": "Telegram group CRM"},
 ]
 
 app = FastAPI(
@@ -350,6 +352,7 @@ app.include_router(projects.ui_router, include_in_schema=False)
 app.include_router(resources.ui_router, include_in_schema=False)
 app.include_router(calendar.ui_router, include_in_schema=False)
 app.include_router(time_entries.ui_router, include_in_schema=False)
+app.include_router(groups.ui_router, include_in_schema=False)
 app.include_router(auth.router, include_in_schema=False)
 app.include_router(admin_ui.router, prefix="/admin", include_in_schema=False)
 app.include_router(admin_settings_ui.router, include_in_schema=False)

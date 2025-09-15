@@ -6,7 +6,8 @@ from sqlalchemy.orm import sessionmaker
 from base import Base
 from core.services.telegram_user_service import TelegramUserService
 from core.services.web_user_service import WebUserService
-from core.models import WebUser
+from core.services.group_crm_service import GroupCRMService
+from core.models import WebUser, GroupType, ProductStatus
 
 
 @pytest_asyncio.fixture
@@ -93,3 +94,56 @@ async def test_ensure_test_user(session):
     assert pwd is not None
     again = await wsvc.ensure_test_user()
     assert again is None
+
+
+@pytest.mark.asyncio
+async def test_group_crm_flow(session):
+    tsvc = TelegramUserService(session)
+    crm = GroupCRMService(session)
+
+    owner, _ = await tsvc.get_or_create_user(
+        telegram_id=111, first_name="Owner", role="admin"
+    )
+    member, _ = await tsvc.get_or_create_user(
+        telegram_id=222, first_name="Trial"
+    )
+    group, _ = await tsvc.get_or_create_group(
+        telegram_id=-1001,
+        title="Курс",
+        type=GroupType.supergroup,
+        owner_id=owner.telegram_id,
+    )
+    await tsvc.add_user_to_group(owner.telegram_id, group.telegram_id, True)
+    await tsvc.add_user_to_group(member.telegram_id, group.telegram_id)
+
+    await crm.record_activity(
+        group_id=group.telegram_id, user_id=owner.telegram_id, messages=4
+    )
+    product = await crm.ensure_product(slug="course", title="Course")
+    await crm.assign_product(
+        user_id=owner.telegram_id,
+        product_id=product.id,
+        status=ProductStatus.paid,
+        source="test",
+    )
+
+    roster = await crm.list_group_members(group.telegram_id)
+    assert len(roster) == 2
+    leaderboard = await crm.activity_leaderboard(group.telegram_id)
+    assert leaderboard and leaderboard[0]["user_id"] == owner.telegram_id
+
+    missing = await crm.members_without_product(
+        group_id=group.telegram_id, product_id=product.id
+    )
+    assert any(link.user_id == member.telegram_id for link in missing)
+    assert all(link.user_id != owner.telegram_id for link in missing)
+
+    await crm.assign_product(
+        user_id=member.telegram_id,
+        product_id=product.id,
+        status=ProductStatus.paid,
+    )
+    missing_after = await crm.members_without_product(
+        group_id=group.telegram_id, product_id=product.id
+    )
+    assert missing_after == []

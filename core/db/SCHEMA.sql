@@ -133,6 +133,38 @@ CREATE TABLE gcal_links (
 	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id)
 );
 
+CREATE TABLE group_activity_daily (
+	group_id BIGINT NOT NULL, 
+	user_id BIGINT NOT NULL, 
+	activity_date DATE NOT NULL, 
+	messages_count INTEGER NOT NULL, 
+	reactions_count INTEGER NOT NULL, 
+	last_activity_at TIMESTAMP WITH TIME ZONE, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	updated_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (group_id, user_id, activity_date), 
+	FOREIGN KEY(group_id) REFERENCES groups (telegram_id), 
+	FOREIGN KEY(user_id) REFERENCES users_tg (telegram_id)
+);
+
+CREATE TABLE group_removal_log (
+	id BIGSERIAL NOT NULL, 
+	group_id BIGINT NOT NULL, 
+	user_id BIGINT NOT NULL, 
+	product_id INTEGER, 
+	initiator_web_id INTEGER, 
+	initiator_tg_id BIGINT, 
+	reason VARCHAR(255), 
+	result VARCHAR(32) NOT NULL, 
+	details JSON, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(group_id) REFERENCES groups (telegram_id), 
+	FOREIGN KEY(user_id) REFERENCES users_tg (telegram_id), 
+	FOREIGN KEY(product_id) REFERENCES products (id), 
+	FOREIGN KEY(initiator_web_id) REFERENCES users_web (id)
+);
+
 CREATE TABLE groups (
 	id BIGSERIAL NOT NULL, 
 	telegram_id BIGINT NOT NULL, 
@@ -320,6 +352,19 @@ CREATE TABLE perms (
 	UNIQUE (name)
 );
 
+CREATE TABLE products (
+	id SERIAL NOT NULL, 
+	slug VARCHAR(64) NOT NULL, 
+	title VARCHAR(255) NOT NULL, 
+	description TEXT, 
+	active BOOLEAN NOT NULL, 
+	attributes JSON, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	updated_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	UNIQUE (slug)
+);
+
 CREATE TABLE project_notifications (
 	id SERIAL NOT NULL, 
 	project_id INTEGER NOT NULL, 
@@ -465,6 +510,10 @@ CREATE TABLE user_group (
 	is_owner BOOLEAN, 
 	is_moderator BOOLEAN, 
 	joined_at TIMESTAMP WITH TIME ZONE, 
+	crm_notes TEXT, 
+	trial_expires_at TIMESTAMP WITH TIME ZONE, 
+	crm_tags JSON, 
+	crm_metadata JSON, 
 	PRIMARY KEY (user_id, group_id), 
 	FOREIGN KEY(user_id) REFERENCES users_tg (telegram_id), 
 	FOREIGN KEY(group_id) REFERENCES groups (telegram_id)
@@ -517,6 +566,20 @@ CREATE TABLE users_favorites (
 	FOREIGN KEY(owner_id) REFERENCES users_web (id)
 );
 
+CREATE TABLE users_products (
+	user_id BIGINT NOT NULL, 
+	product_id INTEGER NOT NULL, 
+	status product_status NOT NULL, 
+	source VARCHAR(64), 
+	acquired_at TIMESTAMP WITH TIME ZONE, 
+	notes TEXT, 
+	extra JSON, 
+	updated_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (user_id, product_id), 
+	FOREIGN KEY(user_id) REFERENCES users_tg (telegram_id), 
+	FOREIGN KEY(product_id) REFERENCES products (id)
+);
+
 CREATE TABLE users_tg (
 	id SERIAL NOT NULL, 
 	telegram_id BIGINT NOT NULL, 
@@ -562,6 +625,10 @@ CREATE TABLE users_web_tg (
 	UNIQUE (tg_user_id), 
 	FOREIGN KEY(tg_user_id) REFERENCES users_tg (id)
 );
+
+CREATE INDEX ix_group_removal_group_created ON group_removal_log (group_id, created_at);
+
+CREATE INDEX ix_group_removal_product ON group_removal_log (product_id);
 
 CREATE INDEX ix_users_favorites_owner_position ON users_favorites (owner_id, position);
 

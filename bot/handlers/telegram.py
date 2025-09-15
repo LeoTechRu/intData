@@ -6,11 +6,12 @@ from aiogram.filters import Command
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from datetime import datetime, date
-from typing import Callable
+from datetime import datetime, date, timedelta, timezone
+from typing import Callable, Optional, Tuple, List
 from decorators import role_required, group_required
-from core.models import GroupType, LogLevel, UserRole
+from core.models import GroupType, LogLevel, UserRole, ProductStatus, TgUser
 from core.services.telegram_user_service import TelegramUserService
+from core.services.group_crm_service import GroupCRMService
 
 # ==============================
 # РОУТЕРЫ
@@ -18,6 +19,49 @@ from core.services.telegram_user_service import TelegramUserService
 router = Router()
 user_router = Router()
 group_router = Router()
+
+
+def _parse_group_subcommand(message: Message) -> Tuple[Optional[str], str]:
+    """Split `/group` command into subcommand and remainder."""
+    text = (message.text or "").strip()
+    tokens = text.split(maxsplit=2)
+    if len(tokens) <= 1:
+        return None, ""
+    subcommand = tokens[1].lower()
+    remainder = tokens[2] if len(tokens) == 3 else ""
+    return subcommand, remainder.strip()
+
+
+def _format_member_name(user: TgUser) -> str:
+    if user.username:
+        return f"@{user.username}"
+    full = f"{user.first_name or ''} {user.last_name or ''}".strip()
+    return full or str(user.telegram_id)
+
+
+async def _resolve_target_user(
+    message: Message,
+    identifier: Optional[str],
+    service: TelegramUserService,
+) -> Optional[TgUser]:
+    if message.reply_to_message and message.reply_to_message.from_user:
+        reply_user = message.reply_to_message.from_user
+        tg_user, _ = await service.get_or_create_user(
+            reply_user.id,
+            username=reply_user.username,
+            first_name=reply_user.first_name,
+            last_name=reply_user.last_name,
+            language_code=reply_user.language_code,
+        )
+        return tg_user
+    if not identifier:
+        return None
+    identifier = identifier.strip()
+    if identifier.startswith("@"):
+        return await service.get_user_by_username(identifier[1:])
+    if identifier.isdigit():
+        return await service.get_user_by_telegram_id(int(identifier))
+    return None
 
 # -----------------------------
 # Универсальные функции
@@ -124,6 +168,9 @@ async def cmd_help(message: Message) -> None:
         "\n"
         "Группы:\n"
         "/group - зарегистрировать группу и показать участников.\n"
+        "/group audit [дней] [product] - статистика активности и оплат.\n"
+        "/group mark <product> [@user|id] [status] - отметить покупку (в ответ на сообщение можно опустить пользователя).\n"
+        "/group note [@user|id] текст [--trial=YYYY-MM-DD] [--tags=a,b] - сохранить заметку о участнике.\n"
         "/setgroupdesc - задать описание группы (в группах).\n"
         "\n"
         "Администрирование:\n"
@@ -302,6 +349,17 @@ async def process_birthday_input(message: Message, state: FSMContext):
 @group_router.message(Command("group"))
 @group_router.message(F.text.lower().in_(["группа", "group"]))
 async def cmd_group(message: Message):
+    subcommand, remainder = _parse_group_subcommand(message)
+    if subcommand == "audit":
+        await handle_group_audit(message, remainder)
+        return
+    if subcommand == "mark":
+        await handle_group_mark(message, remainder)
+        return
+    if subcommand == "note":
+        await handle_group_note(message, remainder)
+        return
+
     async with TelegramUserService() as user_service:
         chat = message.chat
         chat_title = chat.title or f"{message.from_user.first_name} группа"
@@ -338,6 +396,279 @@ async def cmd_group(message: Message):
             )
         else:
             await message.answer("Группа пока пуста.")
+
+
+async def handle_group_audit(message: Message, remainder: str) -> None:
+    if message.chat.type not in {"group", "supergroup"}:
+        await message.answer("Команда доступна только в группах")
+        return
+
+    tokens = remainder.split()
+    days = 7
+    product_slug: Optional[str] = None
+    for token in tokens:
+        lowered = token.lower()
+        if lowered.isdigit():
+            days = max(1, min(180, int(lowered)))
+        elif lowered.startswith("product=") or lowered.startswith("p="):
+            product_slug = lowered.split("=", 1)[1]
+        elif product_slug is None:
+            product_slug = lowered
+
+    since_date = date.today() - timedelta(days=days)
+    async with TelegramUserService() as tsvc:
+        await tsvc.get_or_create_group(
+            message.chat.id,
+            title=message.chat.title,
+            type=GroupType(message.chat.type),
+            owner_id=message.from_user.id if message.from_user else None,
+        )
+        crm = GroupCRMService(tsvc.session)
+        product = None
+        if product_slug:
+            product = await crm.get_product_by_slug(product_slug)
+            if not product:
+                await message.answer(
+                    "Продукт не найден. Создайте его через веб-интерфейс или отметьте покупку командой `/group mark`.",
+                    parse_mode="Markdown",
+                )
+                return
+        roster = await crm.list_group_members(
+            message.chat.id, since=since_date
+        )
+        leaderboard = await crm.activity_leaderboard(
+            message.chat.id, since=since_date, limit=5
+        )
+
+    total_members = len(roster)
+    buyers = 0
+    missing: List[str] = []
+    quiet: List[str] = []
+
+    for entry in roster:
+        activity = entry["activity"]
+        if activity.messages == 0 and activity.reactions == 0:
+            quiet.append(_format_member_name(entry["user"]))
+        if product:
+            has_paid = any(
+                link.product_id == product.id
+                and link.status == ProductStatus.paid
+                for link in entry["products"]
+            )
+            if has_paid:
+                buyers += 1
+            else:
+                missing.append(_format_member_name(entry["user"]))
+
+    title = message.chat.title or str(message.chat.id)
+    lines = [
+        f"Отчёт по группе «{title}» за {days} дн.",
+        f"Участников: {total_members}",
+    ]
+
+    if product:
+        lines.append(
+            f"Покупка {product.title}: {buyers}/{total_members} с оплаченной записью"
+        )
+        if missing:
+            preview = ", ".join(missing[:5])
+            if len(missing) > 5:
+                preview += "…"
+            lines.append(f"Без оплаты ({len(missing)}): {preview}")
+
+    if quiet:
+        preview = ", ".join(quiet[:5])
+        if len(quiet) > 5:
+            preview += "…"
+        lines.append(f"Тихие участники ({len(quiet)}): {preview}")
+
+    if leaderboard:
+        lines.append("")
+        lines.append("Лидборд активности:")
+        for idx, entry in enumerate(leaderboard, start=1):
+            user = entry.get("user")
+            name = (
+                _format_member_name(user)
+                if user
+                else str(entry.get("user_id"))
+            )
+            last_seen = entry.get("last_activity")
+            last_str = last_seen.strftime("%d.%m %H:%M") if last_seen else "—"
+            lines.append(
+                f"{idx}. {name} — {entry['messages']} сообщений, {entry['reactions']} реакций (последняя активность {last_str} UTC)"
+            )
+
+    lines.append("")
+    lines.append("Полный контроль и массовое управление доступны на https://intdata.pro/groups")
+    await message.answer("\n".join(lines))
+
+
+async def handle_group_mark(message: Message, remainder: str) -> None:
+    if message.chat.type not in {"group", "supergroup"}:
+        await message.answer("Команда доступна только в группах")
+        return
+
+    tokens = remainder.split()
+    if not tokens:
+        await message.answer(
+            "Использование: /group mark <product_slug> [@username|id] [status] [--source=tag]"
+        )
+        return
+
+    slug = tokens[0].lower()
+    target_token: Optional[str] = None
+    status_token = "paid"
+    source: Optional[str] = None
+    note_parts: List[str] = []
+
+    for token in tokens[1:]:
+        lowered = token.lower()
+        if lowered.startswith("--source="):
+            source = token.split("=", 1)[1]
+        elif lowered in {s.value for s in ProductStatus} and status_token == "paid":
+            status_token = lowered
+        elif lowered in {"оплатил", "оплачено"}:
+            status_token = ProductStatus.paid.value
+        elif token.startswith("@") or token.isdigit():
+            if target_token is None:
+                target_token = token
+            else:
+                note_parts.append(token)
+        else:
+            note_parts.append(token)
+
+    async with TelegramUserService() as tsvc:
+        crm = GroupCRMService(tsvc.session)
+        product = await crm.get_product_by_slug(slug)
+        if not product:
+            product = await crm.ensure_product(
+                slug=slug,
+                title=slug.replace("_", " ").title(),
+            )
+
+        actor, _ = await tsvc.get_or_create_user(
+            message.from_user.id,
+            username=message.from_user.username,
+            first_name=message.from_user.first_name,
+            last_name=message.from_user.last_name,
+            language_code=message.from_user.language_code,
+        )
+        if UserRole[actor.role].value < UserRole.moderator.value:
+            await message.answer("Требуется роль модератора или выше")
+            return
+
+        target = await _resolve_target_user(message, target_token, tsvc)
+        if not target:
+            await message.answer(
+                "Не удалось найти пользователя. Ответьте на сообщение участника или укажите @username/ID."
+            )
+            return
+
+        if not await tsvc.is_user_in_group(target.telegram_id, message.chat.id):
+            await message.answer("Пользователь не найден в этой группе")
+            return
+
+        status_map = {status.value: status for status in ProductStatus}
+        status = status_map.get(status_token, ProductStatus.paid)
+
+        note = " ".join(note_parts).strip() or None
+        await crm.assign_product(
+            user_id=target.telegram_id,
+            product_id=product.id,
+            status=status,
+            source=source,
+            notes=note,
+        )
+
+    summary = (
+        f"{_format_member_name(target)} → {product.title} [{status.value}]"
+    )
+    if source:
+        summary += f" через {source}"
+    if note:
+        summary += f" · заметка сохранена"
+    await message.answer(summary)
+
+
+async def handle_group_note(message: Message, remainder: str) -> None:
+    if message.chat.type not in {"group", "supergroup"}:
+        await message.answer("Команда доступна только в группах")
+        return
+
+    tokens = remainder.split()
+    target_token: Optional[str] = None
+    trial_value: Optional[str] = None
+    tags_value: Optional[List[str]] = None
+    note_tokens: List[str] = []
+
+    for token in tokens:
+        if target_token is None and (token.startswith("@") or token.isdigit()):
+            target_token = token
+            continue
+        lowered = token.lower()
+        if lowered.startswith("--trial="):
+            trial_value = token.split("=", 1)[1]
+            continue
+        if lowered.startswith("--tags="):
+            raw = token.split("=", 1)[1]
+            tags_value = [value.strip() for value in raw.split(",") if value.strip()]
+            continue
+        note_tokens.append(token)
+
+    note_text = " ".join(note_tokens).strip()
+
+    async with TelegramUserService() as tsvc:
+        actor, _ = await tsvc.get_or_create_user(
+            message.from_user.id,
+            username=message.from_user.username,
+            first_name=message.from_user.first_name,
+            last_name=message.from_user.last_name,
+            language_code=message.from_user.language_code,
+        )
+        if UserRole[actor.role].value < UserRole.moderator.value:
+            await message.answer("Требуется роль модератора или выше")
+            return
+
+        target = await _resolve_target_user(message, target_token, tsvc)
+        if not target:
+            await message.answer(
+                "Не удалось найти пользователя. Ответьте на сообщение участника или укажите @username/ID."
+            )
+            return
+
+        if not await tsvc.is_user_in_group(target.telegram_id, message.chat.id):
+            await message.answer("Пользователь не найден в этой группе")
+            return
+
+        trial_dt: Optional[datetime] = None
+        if trial_value:
+            try:
+                parsed = datetime.strptime(trial_value, "%Y-%m-%d")
+                trial_dt = parsed.replace(tzinfo=timezone.utc)
+            except ValueError:
+                await message.answer("Используйте формат trial=YYYY-MM-DD")
+                return
+
+        crm = GroupCRMService(tsvc.session)
+        updated = await crm.update_member_profile(
+            group_id=message.chat.id,
+            user_id=target.telegram_id,
+            notes=note_text or None,
+            trial_expires_at=trial_dt,
+            tags=tags_value,
+        )
+        if not updated:
+            await message.answer("Не удалось обновить карточку участника")
+            return
+
+    parts = [f"Заметка для {_format_member_name(target)} обновлена"]
+    if note_text:
+        parts.append(f"Текст: {note_text}")
+    if trial_dt:
+        parts.append(f"Пробный доступ до {trial_dt.date()}")
+    if tags_value:
+        parts.append("Теги: " + ", ".join(tags_value))
+    await message.answer("\n".join(parts))
 
 
 @group_router.message(Command("setgroupdesc"))

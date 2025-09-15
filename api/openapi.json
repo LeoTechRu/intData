@@ -1,6 +1,34 @@
 {
   "components": {
     "schemas": {
+      "ActivityOut": {
+        "properties": {
+          "last_activity": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Activity"
+          },
+          "messages": {
+            "default": 0,
+            "title": "Messages",
+            "type": "integer"
+          },
+          "reactions": {
+            "default": 0,
+            "title": "Reactions",
+            "type": "integer"
+          }
+        },
+        "title": "ActivityOut",
+        "type": "object"
+      },
       "AlarmCreate": {
         "description": "Payload for creating an alarm.",
         "properties": {
@@ -194,6 +222,67 @@
           "mp_path"
         ],
         "title": "AreaResponse",
+        "type": "object"
+      },
+      "AssignProductRequest": {
+        "properties": {
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "product_slug": {
+            "title": "Product Slug",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ProductStatus",
+            "default": "paid"
+          }
+        },
+        "required": [
+          "product_slug"
+        ],
+        "title": "AssignProductRequest",
+        "type": "object"
+      },
+      "AssignProductResponse": {
+        "properties": {
+          "product_id": {
+            "title": "Product Id",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ProductStatus"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "product_id",
+          "status"
+        ],
+        "title": "AssignProductResponse",
         "type": "object"
       },
       "AssignTaskPayload": {
@@ -755,6 +844,29 @@
         "title": "ExchangeIn",
         "type": "object"
       },
+      "FailedPruneMember": {
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "display_name",
+          "error"
+        ],
+        "title": "FailedPruneMember",
+        "type": "object"
+      },
       "FavCreate": {
         "properties": {
           "label": {
@@ -799,6 +911,299 @@
           }
         },
         "title": "FavUpdate",
+        "type": "object"
+      },
+      "GroupDetailResponse": {
+        "properties": {
+          "group": {
+            "$ref": "#/components/schemas/GroupInfoOut"
+          },
+          "leaderboard": {
+            "items": {
+              "$ref": "#/components/schemas/LeaderboardEntry"
+            },
+            "title": "Leaderboard",
+            "type": "array"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/GroupMemberOut"
+            },
+            "title": "Members",
+            "type": "array"
+          },
+          "products": {
+            "items": {
+              "$ref": "#/components/schemas/ProductSummary"
+            },
+            "title": "Products",
+            "type": "array"
+          },
+          "removal_history": {
+            "items": {
+              "$ref": "#/components/schemas/RemovalLogEntry"
+            },
+            "title": "Removal History",
+            "type": "array"
+          }
+        },
+        "required": [
+          "group",
+          "members",
+          "products",
+          "leaderboard",
+          "removal_history"
+        ],
+        "title": "GroupDetailResponse",
+        "type": "object"
+      },
+      "GroupInfoOut": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "participants_count": {
+            "default": 0,
+            "title": "Participants Count",
+            "type": "integer"
+          },
+          "telegram_id": {
+            "title": "Telegram Id",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "telegram_id",
+          "title"
+        ],
+        "title": "GroupInfoOut",
+        "type": "object"
+      },
+      "GroupMemberOut": {
+        "properties": {
+          "activity": {
+            "$ref": "#/components/schemas/ActivityOut"
+          },
+          "crm_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Crm Notes"
+          },
+          "crm_tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Crm Tags",
+            "type": "array"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "is_moderator": {
+            "default": false,
+            "title": "Is Moderator",
+            "type": "boolean"
+          },
+          "is_owner": {
+            "default": false,
+            "title": "Is Owner",
+            "type": "boolean"
+          },
+          "products": {
+            "items": {
+              "$ref": "#/components/schemas/MemberProductOut"
+            },
+            "title": "Products",
+            "type": "array"
+          },
+          "telegram_id": {
+            "title": "Telegram Id",
+            "type": "integer"
+          },
+          "trial_expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trial Expires At"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          }
+        },
+        "required": [
+          "telegram_id",
+          "display_name"
+        ],
+        "title": "GroupMemberOut",
+        "type": "object"
+      },
+      "GroupMemberProfileUpdate": {
+        "properties": {
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          },
+          "trial_expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trial Expires At"
+          }
+        },
+        "title": "GroupMemberProfileUpdate",
+        "type": "object"
+      },
+      "GroupPruneRequest": {
+        "properties": {
+          "dry_run": {
+            "default": false,
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
+          "product_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Slug"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "title": "GroupPruneRequest",
+        "type": "object"
+      },
+      "GroupPruneResponse": {
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/PruneMember"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "dry_run": {
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "failed": {
+            "items": {
+              "$ref": "#/components/schemas/FailedPruneMember"
+            },
+            "title": "Failed",
+            "type": "array"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "integer"
+          },
+          "product_slug": {
+            "title": "Product Slug",
+            "type": "string"
+          },
+          "removed": {
+            "items": {
+              "$ref": "#/components/schemas/PruneMember"
+            },
+            "title": "Removed",
+            "type": "array"
+          },
+          "total_candidates": {
+            "title": "Total Candidates",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "dry_run",
+          "product_id",
+          "product_slug",
+          "total_candidates"
+        ],
+        "title": "GroupPruneResponse",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -897,6 +1302,107 @@
           "content"
         ],
         "title": "InboxNote",
+        "type": "object"
+      },
+      "LeaderboardEntry": {
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "last_activity": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Activity"
+          },
+          "messages": {
+            "title": "Messages",
+            "type": "integer"
+          },
+          "reactions": {
+            "title": "Reactions",
+            "type": "integer"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "display_name",
+          "messages",
+          "reactions"
+        ],
+        "title": "LeaderboardEntry",
+        "type": "object"
+      },
+      "MemberProductOut": {
+        "properties": {
+          "acquired_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acquired At"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "integer"
+          },
+          "product_slug": {
+            "title": "Product Slug",
+            "type": "string"
+          },
+          "product_title": {
+            "title": "Product Title",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ProductStatus"
+          }
+        },
+        "required": [
+          "product_id",
+          "product_slug",
+          "product_title",
+          "status"
+        ],
+        "title": "MemberProductOut",
         "type": "object"
       },
       "NoteAssign": {
@@ -1173,6 +1679,55 @@
         "title": "NotificationChannelKind",
         "type": "string"
       },
+      "ProductStatus": {
+        "enum": [
+          "pending",
+          "trial",
+          "paid",
+          "refunded",
+          "gift"
+        ],
+        "title": "ProductStatus",
+        "type": "string"
+      },
+      "ProductSummary": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "buyers": {
+            "default": 0,
+            "title": "Buyers",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "total_members": {
+            "default": 0,
+            "title": "Total Members",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "active"
+        ],
+        "title": "ProductSummary",
+        "type": "object"
+      },
       "ProjectCreate": {
         "properties": {
           "area_id": {
@@ -1329,6 +1884,115 @@
           "slug"
         ],
         "title": "ProjectResponse",
+        "type": "object"
+      },
+      "PruneMember": {
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "display_name"
+        ],
+        "title": "PruneMember",
+        "type": "object"
+      },
+      "RemovalLogEntry": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
+          "product_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Slug"
+          },
+          "product_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Title"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "result": {
+            "title": "Result",
+            "type": "string"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "user_id",
+          "display_name",
+          "result",
+          "created_at"
+        ],
+        "title": "RemovalLogEntry",
+        "type": "object"
+      },
+      "RemoveProductResponse": {
+        "properties": {
+          "removed": {
+            "title": "Removed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "removed"
+        ],
+        "title": "RemoveProductResponse",
         "type": "object"
       },
       "ResourceCreate": {
@@ -3238,6 +3902,321 @@
         "summary": "Api Daily Undo",
         "tags": [
           "Dailies"
+        ]
+      }
+    },
+    "/api/v1/groups": {
+      "get": {
+        "operationId": "list_groups_api_v1_groups_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GroupInfoOut"
+                  },
+                  "title": "Response List Groups Api V1 Groups Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Groups",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
+    "/api/v1/groups/{group_id}": {
+      "get": {
+        "operationId": "get_group_detail_api_v1_groups__group_id__get",
+        "parameters": [
+          {
+            "description": "Telegram chat ID",
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "description": "Telegram chat ID",
+              "title": "Group Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 365,
+              "minimum": 1,
+              "title": "Days",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Group Detail",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
+    "/api/v1/groups/{group_id}/members/{user_id}/products": {
+      "post": {
+        "operationId": "assign_product_to_member_api_v1_groups__group_id__members__user_id__products_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "title": "Group Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignProductRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssignProductResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Assign Product To Member",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
+    "/api/v1/groups/{group_id}/members/{user_id}/products/{product_id}": {
+      "delete": {
+        "operationId": "remove_product_from_member_api_v1_groups__group_id__members__user_id__products__product_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "title": "Group Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "product_id",
+            "required": true,
+            "schema": {
+              "title": "Product Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveProductResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Product From Member",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
+    "/api/v1/groups/{group_id}/members/{user_id}/profile": {
+      "put": {
+        "operationId": "update_member_profile_api_v1_groups__group_id__members__user_id__profile_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "title": "Group Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupMemberProfileUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupMemberOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Member Profile",
+        "tags": [
+          "groups"
+        ]
+      }
+    },
+    "/api/v1/groups/{group_id}/prune": {
+      "post": {
+        "operationId": "prune_group_members_api_v1_groups__group_id__prune_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "title": "Group Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupPruneRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupPruneResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Prune Group Members",
+        "tags": [
+          "groups"
         ]
       }
     },
@@ -5552,6 +6531,10 @@
     {
       "description": "Calendar API",
       "name": "Calendar"
+    },
+    {
+      "description": "Telegram group CRM",
+      "name": "groups"
     }
   ]
 }

@@ -7,7 +7,7 @@ import secrets
 import hashlib
 
 from aiogram import Bot
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -68,6 +68,12 @@ class TelegramUserService:
     ) -> Optional[TgUser]:
         result = await self.session.execute(
             select(TgUser).where(TgUser.telegram_id == telegram_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_user_by_username(self, username: str) -> Optional[TgUser]:
+        result = await self.session.execute(
+            select(TgUser).where(func.lower(TgUser.username) == username.lower())
         )
         return result.scalar_one_or_none()
 
@@ -174,11 +180,25 @@ class TelegramUserService:
         return result.scalar_one_or_none()
 
     async def create_group(self, **kwargs) -> Optional[Group]:
+        bind = getattr(self.session, "bind", None)
+        if bind is not None and bind.dialect.name == "sqlite":
+            kwargs.setdefault("id", abs(int(kwargs.get("telegram_id", 0))))
         try:
             group = Group(**kwargs)
             self.session.add(group)
             await self.session.flush()
             return group
+        except IntegrityError as e:
+            if "groups.id" in str(e):
+                await self.session.rollback()
+                kwargs.setdefault("id", abs(int(kwargs.get("telegram_id", 0))))
+                group = Group(**kwargs)
+                self.session.add(group)
+                await self.session.flush()
+                return group
+            logger.error(f"IntegrityError при создании группы: {e}")
+            await self.session.rollback()
+            return None
         except Exception as e:
             logger.error(f"Ошибка создания группы: {e}")
             return None
@@ -238,6 +258,23 @@ class TelegramUserService:
             .where(UserGroup.group_id == group_id)
         )
         return result.scalars().all()
+
+    async def remove_user_from_group(self, user_id: int, group_id: int) -> bool:
+        result = await self.session.execute(
+            select(UserGroup).where(
+                UserGroup.user_id == user_id,
+                UserGroup.group_id == group_id,
+            )
+        )
+        link = result.scalar_one_or_none()
+        if not link:
+            return False
+        await self.session.delete(link)
+        group = await self.get_group_by_telegram_id(group_id)
+        if group and group.participants_count and group.participants_count > 0:
+            group.participants_count -= 1
+        await self.session.flush()
+        return True
 
     async def update_group_description(self, group_id: int, description: str) -> bool:
         """Update group's description."""

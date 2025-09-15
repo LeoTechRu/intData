@@ -13,6 +13,7 @@ from bot.handlers.habit import router as habit_router
 from core.logger import LoggerMiddleware
 from core.models import LogLevel
 from core.services.telegram_user_service import TelegramUserService
+from bot.middleware import GroupActivityMiddleware
 
 
 async def main() -> None:
@@ -21,6 +22,7 @@ async def main() -> None:
     await init_app_once(env)
 
     dp.message.middleware(LoggerMiddleware(bot))
+    dp.message.middleware(GroupActivityMiddleware())
     dp.callback_query.middleware(LoggerMiddleware(bot))
     dp.include_router(user_router)
     dp.include_router(group_router)

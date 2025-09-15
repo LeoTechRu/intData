@@ -18,6 +18,7 @@ from .areas import api as areas_api
 from .projects import api as projects_api
 from .resources import api as resources_api
 from .inbox import api as inbox_api
+from .groups import api as groups_api
 from .api_user_settings import router as user_settings_api
 
 # отдельные файлы в web/routes/api/*
@@ -38,6 +39,7 @@ api_router.include_router(areas_api)
 api_router.include_router(projects_api)
 api_router.include_router(resources_api)
 api_router.include_router(inbox_api)
+api_router.include_router(groups_api)
 api_router.include_router(admin_api)
 api_router.include_router(admin_settings_api)
 api_router.include_router(app_settings_api)
