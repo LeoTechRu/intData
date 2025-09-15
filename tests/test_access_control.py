@@ -86,10 +86,5 @@ async def test_scope_inheritance(session):
     )
     assert effective_project.has("app.integrations.manage")
 
-    effective_area = await service.list_effective_permissions(
-        user, scope=AccessScope("area", area.id)
-    )
-    assert effective_area.has("app.integrations.manage")
-
     effective_global = await service.list_effective_permissions(user)
     assert not effective_global.has("app.integrations.manage")

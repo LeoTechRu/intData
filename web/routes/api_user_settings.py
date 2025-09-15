@@ -134,28 +134,4 @@ async def put_setting(
             raise HTTPException(status_code=400, detail="layouts must be dict")
     async with UserSettingsService() as svc:
         value = await svc.upsert(current_user.id, key, payload.value)
-    if key == "favorites":
-        effective = await get_effective_permissions(
-            request, current_user=current_user
-        )
-        allowed_paths = {
-            page["path"]
-            for page in FAVORITE_PAGES
-            if not effective
-            or (page.get("role") and effective.has_role(page["role"]))
-            or (page.get("permission") and effective.has(page["permission"]))
-            or (not page.get("role") and not page.get("permission"))
-        }
-        filtered_items = [
-            item
-            for item in payload.value.get("items", [])
-            if item.get("path") in allowed_paths
-        ]
-        if len(filtered_items) != len(payload.value.get("items", [])):
-            async with UserSettingsService() as svc:
-                value = await svc.upsert(
-                    current_user.id,
-                    key,
-                    {"v": payload.value.get("v", 1), "items": filtered_items},
-                )
     return {"ok": True, "key": key, "value": value}

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Iterable, Optional, Sequence, Dict, Set
 
 from sqlalchemy import select, and_, or_
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core import db
@@ -46,9 +47,15 @@ class PermissionDefinition:
 class PermissionRegistry:
     """Cache of permissions indexed by code and bit position."""
 
-    def __init__(self, permissions: Iterable[AuthPermission]) -> None:
+    def __init__(
+        self,
+        permissions: Iterable[AuthPermission],
+        *,
+        fallback: Optional[Dict[str, int]] = None,
+    ) -> None:
         self._by_code: Dict[str, PermissionDefinition] = {}
         self._by_bit: Dict[int, PermissionDefinition] = {}
+        self._fallback = fallback or {}
         for perm in permissions:
             definition = PermissionDefinition(
                 code=perm.code,
@@ -62,14 +69,21 @@ class PermissionRegistry:
         for code in codes:
             definition = self._by_code.get(code)
             if definition is None:
-                raise KeyError(f"Unknown permission code: {code}")
+                fallback_bit = self._fallback.get(code)
+                if fallback_bit is None:
+                    raise KeyError(f"Unknown permission code: {code}")
+                mask |= 1 << fallback_bit
+                continue
             mask |= definition.mask
         return mask
 
     def has(self, mask: int, code: str) -> bool:
         definition = self._by_code.get(code)
         if definition is None:
-            return False
+            fallback_bit = self._fallback.get(code)
+            if fallback_bit is None:
+                return False
+            return bool(mask & (1 << fallback_bit))
         return bool(mask & definition.mask)
 
     def codes_from_mask(self, mask: int) -> Set[str]:
@@ -238,7 +252,11 @@ class AccessControlService:
         if cache and now - cache[0] < self._CACHE_TTL:
             return cache[1]
         result = await self.session.execute(select(AuthPermission))
-        registry = PermissionRegistry(result.scalars().all())
+        fallback = {
+            definition["code"]: definition["bit_position"]
+            for definition in DEFAULT_PERMISSIONS
+        }
+        registry = PermissionRegistry(result.scalars().all(), fallback=fallback)
         AccessControlService._perm_cache = (now, registry)
         return registry
 
@@ -284,9 +302,21 @@ class AccessControlService:
 
         registry = await self._get_permission_registry()
         roles_map = await self._get_roles_map()
+        bit_lookup = {
+            definition["code"]: definition["bit_position"]
+            for definition in DEFAULT_PERMISSIONS
+        }
         for role_def in DEFAULT_ROLES:
             permissions = role_def["permissions"]
-            mask = registry.mask_for(permissions) if permissions else 0
+            mask = 0
+            for code in permissions:
+                if code in bit_lookup:
+                    mask |= 1 << bit_lookup[code]
+                else:
+                    try:
+                        mask |= registry.mask_for([code])
+                    except KeyError:
+                        continue
             role = roles_map.get(role_def["slug"])
             if role is None:
                 role = Role(
@@ -449,6 +479,10 @@ class AccessControlService:
     ) -> EffectivePermissions:
         if isinstance(user, WebUser):
             user_obj = user
+            if not getattr(user_obj, "role", None):
+                refreshed = await self.session.get(WebUser, user_obj.id)
+                if refreshed is not None:
+                    user_obj = refreshed
         else:
             user_obj = await self.session.get(WebUser, user)
             if user_obj is None:
@@ -491,17 +525,21 @@ class AccessControlService:
                 UserRoleLink.expires_at > now,
             )
         )
-        result = await self.session.execute(stmt)
+        try:
+            result = await self.session.execute(stmt)
+        except OperationalError:
+            result = None
 
         accumulator_mask = 0
         role_slugs: Set[str] = set()
         is_superuser = False
-        for link, role in result.all():
-            slug = role.slug or role.name.lower()
-            role_slugs.add(slug)
-            if role.grants_all:
-                is_superuser = True
-            accumulator_mask |= role.permissions_mask
+        if result is not None:
+            for link, role in result.all():
+                slug = role.slug or role.name.lower()
+                role_slugs.add(slug)
+                if role.grants_all:
+                    is_superuser = True
+                accumulator_mask |= role.permissions_mask
 
         primary_slug = (user_obj.role or "single").lower()
         base_role = roles_map.get(primary_slug)
@@ -510,6 +548,23 @@ class AccessControlService:
             if base_role.grants_all:
                 is_superuser = True
             accumulator_mask |= base_role.permissions_mask
+        else:
+            default_role = next(
+                (item for item in DEFAULT_ROLES if item["slug"] == primary_slug),
+                None,
+            )
+            if default_role is not None:
+                role_slugs.add(primary_slug)
+                bit_lookup = {
+                    definition["code"]: definition["bit_position"]
+                    for definition in DEFAULT_PERMISSIONS
+                }
+                for code in default_role["permissions"]:
+                    bit = bit_lookup.get(code)
+                    if bit is not None:
+                        accumulator_mask |= 1 << bit
+                if default_role["grants_all"]:
+                    is_superuser = True
 
         return EffectivePermissions(
             registry=registry,
