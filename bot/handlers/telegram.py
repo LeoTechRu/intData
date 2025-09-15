@@ -13,6 +13,7 @@ from core.models import GroupType, LogLevel, UserRole, ProductStatus, TgUser
 from core.services.telegram_user_service import TelegramUserService
 from core.services.crm_service import CRMService
 from core.services.group_moderation_service import GroupModerationService
+from sqlalchemy.exc import SQLAlchemyError
 
 # ==============================
 # РОУТЕРЫ
@@ -252,14 +253,17 @@ async def _send_help_reply(message: Message, *, include_greeting: bool) -> None:
     if not from_user:
         return
     async with TelegramUserService() as user_service:
-        user, _ = await user_service.get_or_create_user(
-            from_user.id,
-            username=from_user.username,
-            first_name=from_user.first_name,
-            last_name=from_user.last_name,
-            language_code=from_user.language_code,
-            is_premium=getattr(from_user, "is_premium", None),
-        )
+        try:
+            user, _ = await user_service.get_or_create_user(
+                from_user.id,
+                username=getattr(from_user, "username", None),
+                first_name=getattr(from_user, "first_name", None),
+                last_name=getattr(from_user, "last_name", None),
+                language_code=getattr(from_user, "language_code", None),
+                is_premium=getattr(from_user, "is_premium", None),
+            )
+        except SQLAlchemyError:
+            user = TgUser(telegram_id=from_user.id, role=UserRole.single.name)
 
     role = _resolve_user_role(user)
     chat_type = getattr(message.chat, "type", "private")
