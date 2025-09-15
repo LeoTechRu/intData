@@ -2,10 +2,11 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Request
 
-from core.models import WebUser, UserRole
+from core.models import WebUser
 from core.services.web_user_service import WebUserService
 from core.services.telegram_user_service import TelegramUserService
 from core.services.group_moderation_service import GroupModerationService
+from core.services.access_control import AccessControlService
 from ..dependencies import role_required
 from ..template_env import templates
 
@@ -31,11 +32,14 @@ async def load_admin_console_data() -> dict[str, Any]:
             }
             for item in moderation_raw
         ]
+    async with AccessControlService() as access:
+        roles = await access.list_roles()
+        admin_roles = [role.slug for role in roles]
     return {
         "admin_users_tg": users_tg,
         "admin_users_web": users_web,
         "admin_groups": groups_with_members,
-        "admin_roles": [r.name for r in UserRole],
+        "admin_roles": admin_roles,
         "admin_group_moderation": admin_group_moderation,
     }
 
@@ -43,7 +47,7 @@ async def load_admin_console_data() -> dict[str, Any]:
 @router.get("")
 async def admin_dashboard(
     request: Request,
-    current_user: WebUser = Depends(role_required(UserRole.admin)),
+    current_user: WebUser = Depends(role_required("admin")),
 ):
     """Render consolidated admin landing page with users and groups."""
     admin_data = await load_admin_console_data()

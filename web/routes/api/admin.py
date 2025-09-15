@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
-from core.models import WebUser, UserRole
+from core.models import WebUser
 from core.services.web_user_service import WebUserService
 from core.services.telegram_user_service import TelegramUserService
 from ...dependencies import role_required
@@ -13,10 +13,10 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 async def api_change_user_role(
     telegram_id: int,
     role: str,
-    current_user: WebUser = Depends(role_required(UserRole.admin)),
+    current_user: WebUser = Depends(role_required("admin")),
 ):
     async with TelegramUserService() as service:
-        await service.update_user_role(telegram_id, UserRole[role])
+        await service.update_user_role(telegram_id, role)
     return {"status": "ok"}
 
 
@@ -24,10 +24,14 @@ async def api_change_user_role(
 async def api_change_web_user_role(
     user_id: int,
     role: str,
-    current_user: WebUser = Depends(role_required(UserRole.admin)),
+    current_user: WebUser = Depends(role_required("admin")),
 ):
     async with WebUserService() as service:
-        await service.update_user_role(user_id, UserRole[role])
+        await service.update_user_role(
+            user_id,
+            role,
+            actor_user_id=current_user.id,
+        )
     return {"status": "ok"}
 
 
@@ -35,7 +39,7 @@ async def api_change_web_user_role(
 async def api_link_web_user(
     web_user_id: int,
     tg_user_id: int,
-    current_user: WebUser = Depends(role_required(UserRole.admin)),
+    current_user: WebUser = Depends(role_required("admin")),
 ):
     async with WebUserService() as service:
         await service.link_telegram(web_user_id, tg_user_id)
@@ -46,7 +50,7 @@ async def api_link_web_user(
 async def api_unlink_web_user(
     web_user_id: int,
     tg_user_id: int,
-    current_user: WebUser = Depends(role_required(UserRole.admin)),
+    current_user: WebUser = Depends(role_required("admin")),
 ):
     async with WebUserService() as service:
         await service.unlink_telegram(web_user_id, tg_user_id)
@@ -56,7 +60,7 @@ async def api_unlink_web_user(
 
 @router.post("/restart")
 async def restart_service(
-    target: str, current_user: WebUser = Depends(role_required(UserRole.admin))
+    target: str, current_user: WebUser = Depends(role_required("admin"))
 ):
     """Restart systemd unit for 'web' or 'bot' (requires sudoers setup).
 

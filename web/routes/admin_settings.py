@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Request
 
-from core.models import WebUser, UserRole
+from core.models import WebUser
 from ..dependencies import role_required
 from ..template_env import templates
 
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/admin", tags=["admin"], include_in_schema=False)
 @router.get("/settings")
 async def admin_settings_page(
     request: Request,
-    current_user: WebUser = Depends(role_required(UserRole.admin)),
+    current_user: WebUser = Depends(role_required("admin")),
 ):
     return templates.TemplateResponse(request, "admin_settings.html", {
         "current_user": current_user,

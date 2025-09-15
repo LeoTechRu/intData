@@ -35,12 +35,13 @@ __mapper_args__ = {
 }
 
 
-class UserRole(IntEnum):  # Числовая иерархия ролей
-    ban = 0
-    single = 1
-    multiplayer = 2
-    moderator = 3
-    admin = 4
+class UserRole(IntEnum):  # Числовая иерархия ролей (legacy alias)
+    suspended = 0
+    ban = 0  # legacy alias for suspended
+    single = 10
+    multiplayer = 20
+    moderator = 30
+    admin = 40
 
 
 class GroupType(PyEnum):  # Типы групп и каналов
@@ -808,17 +809,25 @@ class Role(Base):
     __tablename__ = "roles"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    slug = Column(String(50), nullable=False, unique=True)
     name = Column(String(50), unique=True, nullable=False)
     level = Column(Integer, default=0)
     description = Column(String(255))
+    permissions_mask = Column(BigInteger, nullable=False, default=0)
+    is_system = Column(Boolean, default=False, nullable=False)
+    grants_all = Column(Boolean, default=False, nullable=False)
 
 
-class Perm(Base):
-    __tablename__ = "perms"
+class AuthPermission(Base):
+    __tablename__ = "auth_permissions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(50), unique=True, nullable=False)
+    code = Column(String(100), unique=True, nullable=False)
+    name = Column(String(50), nullable=False)
     description = Column(String(255))
+    category = Column(String(64))
+    bit_position = Column(Integer, unique=True, nullable=False)
+    mutable = Column(Boolean, default=True, nullable=False)
 
 
 class UserRoleLink(Base):
@@ -828,6 +837,28 @@ class UserRoleLink(Base):
     user_id = Column(Integer, ForeignKey("users_web.id"))
     role_id = Column(Integer, ForeignKey("roles.id"))
     expires_at = Column(DateTime)
+    scope_type = Column(String(20), nullable=False, default="global")
+    scope_id = Column(Integer)
+    granted_by = Column(Integer, ForeignKey("users_web.id"))
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "role_id", "scope_type", "scope_id"),
+    )
+
+
+class AuthAuditEntry(Base):
+    __tablename__ = "auth_audit_entries"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    actor_user_id = Column(Integer, ForeignKey("users_web.id"))
+    target_user_id = Column(Integer, ForeignKey("users_web.id"), nullable=False)
+    action = Column(String(50), nullable=False)
+    role_slug = Column(String(50))
+    scope_type = Column(String(20), nullable=False, default="global")
+    scope_id = Column(Integer)
+    details = Column(JSON, default=dict)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
 
 
 class LinkType(PyEnum):

@@ -19,7 +19,7 @@ from core.models import (
     Interface,
     Limit,
     Role,
-    Perm,
+    AuthPermission,
     UserRoleLink,
     Link,
 )
@@ -201,9 +201,9 @@ class RoleService(CRUDService[Role]):
         super().__init__(Role, session)
 
 
-class PermService(CRUDService[Perm]):
+class PermService(CRUDService[AuthPermission]):
     def __init__(self, session: Optional[AsyncSession] = None) -> None:
-        super().__init__(Perm, session)
+        super().__init__(AuthPermission, session)
 
 
 class UserRoleService(CRUDService[UserRoleLink]):

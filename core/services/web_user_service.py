@@ -9,8 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 from core import db
-from core.models import WebUser, TgUser, WebTgLink, UserRole
+from core.models import WebUser, TgUser, WebTgLink, UserRole, Role, UserRoleLink
 from core.db import bcrypt
+from core.services.access_control import AccessControlService, AccessScope
 
 
 def _parse_birthday(value: Optional[str]):
@@ -88,6 +89,12 @@ class WebUserService:
             )
             self.session.add(user)
             await self.session.flush()
+        access = AccessControlService(self.session)
+        await access.grant_role(
+            target_user_id=user.id,
+            role_slug=user.role,
+            scope=AccessScope.global_scope(),
+        )
         return user
 
     async def authenticate(
@@ -120,6 +127,12 @@ class WebUserService:
         )
         self.session.add(user)
         await self.session.flush()
+        access = AccessControlService(self.session)
+        await access.grant_role(
+            target_user_id=user.id,
+            role_slug=user.role,
+            scope=AccessScope.global_scope(),
+        )
         return password
 
     async def link_telegram(
@@ -164,12 +177,47 @@ class WebUserService:
         await self.session.flush()
         return web_user
 
-    async def update_user_role(self, user_id: int, new_role: UserRole) -> bool:
+    async def update_user_role(
+        self,
+        user_id: int,
+        new_role: UserRole | str,
+        *,
+        actor_user_id: Optional[int] = None,
+    ) -> bool:
         user = await self.get_by_id(user_id)
         if not user:
             return False
-        user.role = new_role.name
+        role_slug = (
+            new_role.name if isinstance(new_role, UserRole) else str(new_role)
+        ).lower()
+        user.role = role_slug
         await self.session.flush()
+
+        access = AccessControlService(self.session)
+
+        stmt = (
+            select(UserRoleLink, Role)
+            .join(Role, Role.id == UserRoleLink.role_id)
+            .where(UserRoleLink.user_id == user.id)
+            .where(UserRoleLink.scope_type == "global")
+            .where(UserRoleLink.scope_id.is_(None))
+        )
+        result = await self.session.execute(stmt)
+        for link, role in result.all():
+            if role.slug != role_slug and role.is_system:
+                await access.revoke_role(
+                    target_user_id=user.id,
+                    role_slug=role.slug,
+                    actor_user_id=actor_user_id,
+                    scope=AccessScope.global_scope(),
+                )
+
+        await access.grant_role(
+            target_user_id=user.id,
+            role_slug=role_slug,
+            actor_user_id=actor_user_id,
+            scope=AccessScope.global_scope(),
+        )
         return True
 
     async def update_profile(

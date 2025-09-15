@@ -1,8 +1,8 @@
 {
   "version": 1,
   "dialect": "postgresql",
-  "generated_at": "2025-09-15T21:38:57Z",
-  "metadata_hash": "47c3ee3ee09c506431b083c43405b30d92b48fc279a23c80dc9f5fd5e5c3e361",
+  "generated_at": "2025-09-15T22:54:53Z",
+  "metadata_hash": "9028ccdc18301782019f9959408f510d7683473bb395ac378206ae250ae7d18e",
   "enums": [
     {
       "name": "activitytype",
@@ -499,6 +499,228 @@
         }
       ],
       "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "auth_audit_entries": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "action",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "actor_user_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "details",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "role_slug",
+          "type": "VARCHAR(50)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "scope_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "scope_type",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "global",
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "target_user_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "actor_user_id"
+          ],
+          "ref_table": "users_web",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "target_user_id"
+          ],
+          "ref_table": "users_web",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "auth_permissions": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "bit_position",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "category",
+          "type": "VARCHAR(64)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "code",
+          "type": "VARCHAR(100)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "description",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "mutable",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": true,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "name",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [],
+      "unique_constraints": [
+        {
+          "name": null,
+          "columns": [
+            "bit_position"
+          ]
+        },
+        {
+          "name": null,
+          "columns": [
+            "code"
+          ]
+        }
+      ],
       "indexes": [],
       "checks": []
     },
@@ -3016,55 +3238,6 @@
       "indexes": [],
       "checks": []
     },
-    "perms": {
-      "comment": "",
-      "columns": [
-        {
-          "name": "description",
-          "type": "VARCHAR(255)",
-          "nullable": true,
-          "primary_key": false,
-          "autoincrement": true,
-          "default": null,
-          "server_default": null,
-          "comment": ""
-        },
-        {
-          "name": "id",
-          "type": "INTEGER",
-          "nullable": false,
-          "primary_key": true,
-          "autoincrement": true,
-          "default": null,
-          "server_default": null,
-          "comment": ""
-        },
-        {
-          "name": "name",
-          "type": "VARCHAR(50)",
-          "nullable": false,
-          "primary_key": false,
-          "autoincrement": true,
-          "default": null,
-          "server_default": null,
-          "comment": ""
-        }
-      ],
-      "primary_key": [
-        "id"
-      ],
-      "foreign_keys": [],
-      "unique_constraints": [
-        {
-          "name": null,
-          "columns": [
-            "name"
-          ]
-        }
-      ],
-      "indexes": [],
-      "checks": []
-    },
     "products": {
       "comment": "",
       "columns": [
@@ -3726,12 +3899,32 @@
           "comment": ""
         },
         {
+          "name": "grants_all",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": false,
+          "server_default": null,
+          "comment": ""
+        },
+        {
           "name": "id",
           "type": "INTEGER",
           "nullable": false,
           "primary_key": true,
           "autoincrement": true,
           "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "is_system",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": false,
           "server_default": null,
           "comment": ""
         },
@@ -3754,6 +3947,26 @@
           "default": null,
           "server_default": null,
           "comment": ""
+        },
+        {
+          "name": "permissions_mask",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": 0,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "slug",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
         }
       ],
       "primary_key": [
@@ -3765,6 +3978,12 @@
           "name": null,
           "columns": [
             "name"
+          ]
+        },
+        {
+          "name": null,
+          "columns": [
+            "slug"
           ]
         }
       ],
@@ -4473,8 +4692,28 @@
       "comment": "",
       "columns": [
         {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
           "name": "expires_at",
           "type": "TIMESTAMP WITHOUT TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "granted_by",
+          "type": "INTEGER",
           "nullable": true,
           "primary_key": false,
           "autoincrement": true,
@@ -4503,6 +4742,26 @@
           "comment": ""
         },
         {
+          "name": "scope_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "scope_type",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "global",
+          "server_default": null,
+          "comment": ""
+        },
+        {
           "name": "user_id",
           "type": "INTEGER",
           "nullable": true,
@@ -4517,6 +4776,18 @@
         "id"
       ],
       "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "granted_by"
+          ],
+          "ref_table": "users_web",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
         {
           "name": null,
           "columns": [
@@ -4542,7 +4813,17 @@
           "onupdate": null
         }
       ],
-      "unique_constraints": [],
+      "unique_constraints": [
+        {
+          "name": null,
+          "columns": [
+            "user_id",
+            "role_id",
+            "scope_type",
+            "scope_id"
+          ]
+        }
+      ],
       "indexes": [],
       "checks": []
     },

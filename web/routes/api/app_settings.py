@@ -10,7 +10,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel
 
-from core.models import UserRole, WebUser
+from core.models import WebUser
 from core.services.app_settings_service import get_settings_by_prefix, upsert_settings
 from web.dependencies import get_current_web_user, role_required
 
@@ -65,7 +65,7 @@ async def api_get_settings(request: Request, prefix: str) -> Response:
 
 
 @router.put(
-    "", name="api:app_settings_put", dependencies=[Depends(role_required(UserRole.admin))]
+    "", name="api:app_settings_put", dependencies=[Depends(role_required("admin"))]
 )
 async def api_put_settings(
     payload: SettingsIn,

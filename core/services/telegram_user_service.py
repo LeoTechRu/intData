@@ -151,13 +151,18 @@ class TelegramUserService:
         return user
 
     async def update_user_role(
-        self, telegram_id: int, new_role: UserRole
+        self, telegram_id: int, new_role: UserRole | str
     ) -> bool:
         user = await self.get_user_by_telegram_id(telegram_id)
         if not user:
             return False
         try:
-            user.role = new_role.name
+            role_name = (
+                new_role.name if isinstance(new_role, UserRole) else str(new_role)
+            ).lower()
+            if role_name == "ban":
+                role_name = "suspended"
+            user.role = role_name
             await self.session.flush()
             return True
         except Exception as e:

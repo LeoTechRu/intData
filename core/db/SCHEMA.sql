@@ -42,6 +42,34 @@ CREATE TABLE areas (
 	FOREIGN KEY(parent_id) REFERENCES areas (id) ON DELETE SET NULL
 );
 
+CREATE TABLE auth_audit_entries (
+	id SERIAL NOT NULL, 
+	actor_user_id INTEGER, 
+	target_user_id INTEGER NOT NULL, 
+	action VARCHAR(50) NOT NULL, 
+	role_slug VARCHAR(50), 
+	scope_type VARCHAR(20) NOT NULL, 
+	scope_id INTEGER, 
+	details JSON, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(actor_user_id) REFERENCES users_web (id), 
+	FOREIGN KEY(target_user_id) REFERENCES users_web (id)
+);
+
+CREATE TABLE auth_permissions (
+	id SERIAL NOT NULL, 
+	code VARCHAR(100) NOT NULL, 
+	name VARCHAR(50) NOT NULL, 
+	description VARCHAR(255), 
+	category VARCHAR(64), 
+	bit_position INTEGER NOT NULL, 
+	mutable BOOLEAN NOT NULL, 
+	PRIMARY KEY (id), 
+	UNIQUE (code), 
+	UNIQUE (bit_position)
+);
+
 CREATE TABLE calendar_events (
 	id SERIAL NOT NULL, 
 	owner_id BIGINT, 
@@ -344,14 +372,6 @@ CREATE TABLE okrs (
 	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id)
 );
 
-CREATE TABLE perms (
-	id SERIAL NOT NULL, 
-	name VARCHAR(50) NOT NULL, 
-	description VARCHAR(255), 
-	PRIMARY KEY (id), 
-	UNIQUE (name)
-);
-
 CREATE TABLE products (
 	id SERIAL NOT NULL, 
 	slug VARCHAR(64) NOT NULL, 
@@ -431,10 +451,15 @@ CREATE TABLE rewards (
 
 CREATE TABLE roles (
 	id SERIAL NOT NULL, 
+	slug VARCHAR(50) NOT NULL, 
 	name VARCHAR(50) NOT NULL, 
 	level INTEGER, 
 	description VARCHAR(255), 
+	permissions_mask BIGINT NOT NULL, 
+	is_system BOOLEAN NOT NULL, 
+	grants_all BOOLEAN NOT NULL, 
 	PRIMARY KEY (id), 
+	UNIQUE (slug), 
 	UNIQUE (name)
 );
 
@@ -524,9 +549,15 @@ CREATE TABLE user_roles (
 	user_id INTEGER, 
 	role_id INTEGER, 
 	expires_at TIMESTAMP WITHOUT TIME ZONE, 
+	scope_type VARCHAR(20) NOT NULL, 
+	scope_id INTEGER, 
+	granted_by INTEGER, 
+	created_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 
+	UNIQUE (user_id, role_id, scope_type, scope_id), 
 	FOREIGN KEY(user_id) REFERENCES users_web (id), 
-	FOREIGN KEY(role_id) REFERENCES roles (id)
+	FOREIGN KEY(role_id) REFERENCES roles (id), 
+	FOREIGN KEY(granted_by) REFERENCES users_web (id)
 );
 
 CREATE TABLE user_settings (

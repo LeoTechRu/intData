@@ -1,16 +1,22 @@
 """Common dependencies for FastAPI routes in web app."""
 from __future__ import annotations
 
-from typing import Optional
+import inspect
+from typing import Optional, Sequence, Callable, Awaitable
 
 from fastapi import Request, Depends, HTTPException, status
 
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from core.models import WebUser, TgUser, UserRole
+from core.models import WebUser, TgUser
 from core.services.web_user_service import WebUserService
 from core.services.telegram_user_service import TelegramUserService
+from core.services.access_control import (
+    AccessControlService,
+    AccessScope,
+    EffectivePermissions,
+)
 
 
 async def get_current_web_user(request: Request) -> Optional[WebUser]:
@@ -52,16 +58,43 @@ async def get_current_tg_user(
     return None
 
 
-def role_required(required_role: UserRole | str):
-    """Ensure current user has the required role."""
+async def get_effective_permissions(
+    request: Request,
+    *,
+    current_user: Optional[WebUser] = None,
+    scope: AccessScope = AccessScope.global_scope(),
+) -> Optional[EffectivePermissions]:
+    """Return cached effective permissions for the current request."""
 
-    required = (
-        required_role
-        if isinstance(required_role, UserRole)
-        else UserRole[required_role]
-    )
+    if current_user is None:
+        current_user = await get_current_web_user(request)
+    if not current_user:
+        return None
+    cache = getattr(request.state, "access_cache", {})
+    key = (scope.scope_type, scope.scope_id)
+    if key in cache:
+        return cache[key]
+    async with AccessControlService() as access:
+        effective = await access.list_effective_permissions(
+            current_user, scope=scope
+        )
+    cache[key] = effective
+    request.state.access_cache = cache
+    return effective
+
+
+ScopeResolver = Callable[[Request], AccessScope | Awaitable[AccessScope]]
+
+
+def permission_required(
+    *permission_codes: str,
+    roles: Sequence[str] | None = None,
+    scope_resolver: ScopeResolver | None = None,
+):
+    """Ensure current user owns the requested permissions or roles."""
 
     async def verifier(
+        request: Request,
         current_user: Optional[WebUser] = Depends(get_current_web_user),
     ) -> WebUser:
         if not current_user:
@@ -69,7 +102,27 @@ def role_required(required_role: UserRole | str):
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Insufficient permissions",
             )
-        if UserRole[current_user.role].value < required.value:
+        scope = AccessScope.global_scope()
+        if scope_resolver is not None:
+            resolved = scope_resolver(request)
+            scope = await resolved if inspect.isawaitable(resolved) else resolved
+        effective = await get_effective_permissions(
+            request,
+            current_user=current_user,
+            scope=scope,
+        )
+        if effective is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions",
+            )
+        if roles and not any(effective.has_role(role.lower()) for role in roles):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions",
+            )
+        normalized_codes = [code for code in permission_codes if code]
+        if normalized_codes and not effective.has_all(normalized_codes):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Insufficient permissions",
@@ -77,3 +130,17 @@ def role_required(required_role: UserRole | str):
         return current_user
 
     return verifier
+
+
+def role_required(*role_slugs: str):
+    normalized = [slug.lower() for slug in role_slugs if slug]
+    return permission_required(roles=normalized)
+
+
+__all__ = [
+    "get_current_web_user",
+    "get_current_tg_user",
+    "permission_required",
+    "role_required",
+    "get_effective_permissions",
+]

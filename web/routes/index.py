@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from fastapi import APIRouter, Request, Depends, status
 
-from core.models import UserRole, WebUser, TgUser, TaskStatus
+from core.models import WebUser, TgUser, TaskStatus
 from core.services.telegram_user_service import TelegramUserService
 from core.services.nexus_service import ProjectService, HabitService
 from core.services.group_moderation_service import GroupModerationService
@@ -14,7 +14,7 @@ from core.services.calendar_service import CalendarService
 from core.services.time_service import TimeService
 from core.utils import utcnow
 from core.utils.habit_utils import calc_progress
-from web.dependencies import get_current_web_user
+from web.dependencies import get_current_web_user, get_effective_permissions
 from .admin import load_admin_console_data
 from ..template_env import templates
 
@@ -47,7 +47,7 @@ async def index(
     current_user: WebUser | None = Depends(get_current_web_user),
 ):
     """Render dashboard for authorised users or login page for guests."""
-    if current_user and current_user.role == "ban":
+    if current_user and current_user.role in {"ban", "suspended"}:
         from fastapi.responses import RedirectResponse
         return RedirectResponse(
             "/ban", status_code=status.HTTP_307_TEMPORARY_REDIRECT
@@ -221,6 +221,10 @@ async def index(
                     for h in habits
                 ]
 
+            effective = await get_effective_permissions(
+                request, current_user=current_user
+            )
+
             context = {
                 "user": tg_user,
                 "current_user": current_user,
@@ -232,7 +236,7 @@ async def index(
                 "member_projects": member_projects,
                 "role_name": role_name,
                 "current_role_name": current_user.role,
-                "is_admin": UserRole[role_name] >= UserRole.admin,
+                "is_admin": bool(effective and effective.has_role("admin")),
                 "kpi_focus_week": round(kpi_focus_week, 2),
                 "kpi_focus_week_delta": kpi_focus_week_delta,
                 "kpi_goals": kpi_goals,

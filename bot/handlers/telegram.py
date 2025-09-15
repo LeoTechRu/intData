@@ -266,7 +266,8 @@ async def _send_help_reply(message: Message, *, include_greeting: bool) -> None:
             user = TgUser(telegram_id=from_user.id, role=UserRole.single.name)
 
     role = _resolve_user_role(user)
-    chat_type = getattr(message.chat, "type", "private")
+    chat = getattr(message, "chat", None)
+    chat_type = getattr(chat, "type", "private")
     if include_greeting:
         first_name = from_user.first_name or "друг"
         await message.answer(f"Привет, {first_name}! Добро пожаловать в бота.")

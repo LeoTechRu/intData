@@ -15,12 +15,17 @@ from fastapi import (
 from pydantic import BaseModel, Field
 
 from core.db import bot
-from core.models import Group, Product, ProductStatus, TgUser, UserRole, WebUser
+from core.models import Group, Product, ProductStatus, TgUser, WebUser
 from core.services.crm_service import CRMService
 from core.services.group_moderation_service import GroupModerationService
 from core.services.telegram_user_service import TelegramUserService
 from core.utils import utcnow
-from web.dependencies import get_current_web_user, role_required
+from core.services.access_control import AccessControlService
+from web.dependencies import (
+    get_current_web_user,
+    role_required,
+    get_effective_permissions,
+)
 from ..template_env import templates
 
 router = APIRouter(prefix="/groups", tags=["groups"])
@@ -175,7 +180,9 @@ async def _ensure_group_access(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     is_member = await service.is_user_in_group(tg_user.telegram_id, group_id)
     if not is_member and group.owner_id != tg_user.telegram_id:
-        if UserRole[current_user.role] < UserRole.admin:
+        async with AccessControlService() as access:
+            effective = await access.list_effective_permissions(current_user)
+        if not effective.has_role("admin"):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     return tg_user, group
 
@@ -307,7 +314,7 @@ async def _collect_group_detail(
 
 @router.get("", response_model=List[GroupInfoOut])
 async def list_groups(
-    current_user: WebUser = Depends(role_required(UserRole.moderator)),
+    current_user: WebUser = Depends(role_required("moderator")),
 ):
     if not current_user.telegram_accounts:
         raise HTTPException(
@@ -332,7 +339,7 @@ async def list_groups(
 async def get_group_detail(
     group_id: int = Path(..., description="Telegram chat ID"),
     days: int = Query(30, ge=1, le=365),
-    current_user: WebUser = Depends(role_required(UserRole.moderator)),
+    current_user: WebUser = Depends(role_required("moderator")),
 ):
     async with TelegramUserService() as service:
         _, group = await _ensure_group_access(
@@ -357,7 +364,7 @@ async def update_member_profile(
     payload: GroupMemberProfileUpdate,
     group_id: int,
     user_id: int,
-    current_user: WebUser = Depends(role_required(UserRole.moderator)),
+    current_user: WebUser = Depends(role_required("moderator")),
 ):
     async with TelegramUserService() as service:
         _, group = await _ensure_group_access(
@@ -398,7 +405,7 @@ async def assign_product_to_member(
     payload: AssignProductRequest,
     group_id: int,
     user_id: int,
-    current_user: WebUser = Depends(role_required(UserRole.moderator)),
+    current_user: WebUser = Depends(role_required("moderator")),
 ):
     async with TelegramUserService() as service:
         _, group = await _ensure_group_access(
@@ -433,7 +440,7 @@ async def remove_product_from_member(
     group_id: int,
     user_id: int,
     product_id: int,
-    current_user: WebUser = Depends(role_required(UserRole.moderator)),
+    current_user: WebUser = Depends(role_required("moderator")),
 ):
     async with TelegramUserService() as service:
         _, group = await _ensure_group_access(
@@ -453,7 +460,7 @@ async def remove_product_from_member(
 async def prune_group_members(
     payload: GroupPruneRequest,
     group_id: int,
-    current_user: WebUser = Depends(role_required(UserRole.moderator)),
+    current_user: WebUser = Depends(role_required("moderator")),
 ):
     async with TelegramUserService() as service:
         tg_user, group = await _ensure_group_access(
@@ -548,6 +555,9 @@ async def groups_overview(
     current_user: WebUser | None = Depends(get_current_web_user),
 ):
     groups: List[Group] = []
+    effective = await get_effective_permissions(
+        request, current_user=current_user
+    )
     if current_user and current_user.telegram_accounts:
         tg_user = current_user.telegram_accounts[0]
         async with TelegramUserService() as service:
@@ -555,7 +565,7 @@ async def groups_overview(
     context = {
         "current_user": current_user,
         "current_role_name": getattr(current_user, "role", ""),
-        "is_admin": bool(current_user and current_user.role == UserRole.admin.name),
+        "is_admin": bool(effective and effective.has_role("admin")),
         "page_title": "Телеграм‑группы",
         "groups": groups,
         "MODULE_TITLE": "Телеграм‑группы",
@@ -567,7 +577,7 @@ async def groups_overview(
 async def group_detail_page(
     request: Request,
     group_id: int,
-    current_user: WebUser = Depends(role_required(UserRole.moderator)),
+    current_user: WebUser = Depends(role_required("moderator")),
 ):
     async with TelegramUserService() as service:
         _, group = await _ensure_group_access(

@@ -2,23 +2,31 @@ from __future__ import annotations
 
 from typing import Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
-from core.models import WebUser, UserRole
+from core.models import WebUser
 from core.services.user_settings_service import UserSettingsService
-from web.dependencies import get_current_web_user
+from web.dependencies import get_current_web_user, get_effective_permissions
 from .settings import FAVORITE_PAGES
 
 router = APIRouter(prefix="/user/settings", tags=["user-settings"])
 
 DEFAULT_KEYS = ["dashboard_layout", "favorites"]
 
-# Build default favorites dynamically based on accessible pages
-def _default_favorites(role: UserRole) -> dict:
+
+def _default_favorites(effective) -> dict:
     items = []
     for page in FAVORITE_PAGES:
-        if role >= page["min_role"]:
+        allowed = False
+        if effective:
+            if page.get("role"):
+                allowed = effective.has_role(page["role"])
+            elif page.get("permission"):
+                allowed = effective.has(page["permission"])
+            else:
+                allowed = True
+        if allowed:
             items.append(
                 {
                     "label": page["label"],
@@ -27,6 +35,7 @@ def _default_favorites(role: UserRole) -> dict:
                 }
             )
     return {"v": 1, "items": items}
+
 
 DEFAULT_DASHBOARD_LAYOUT = {
     "v": 1,
@@ -55,19 +64,23 @@ class SettingIn(BaseModel):
 
 @router.get("")
 async def list_settings(
-    keys: Optional[str] = None, current_user: WebUser | None = Depends(get_current_web_user)
+    request: Request,
+    keys: Optional[str] = None,
+    current_user: WebUser | None = Depends(get_current_web_user),
 ):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     want = [k.strip() for k in keys.split(",")] if keys else DEFAULT_KEYS
     result: Dict[str, Dict | None] = {}
-    role_enum = UserRole[current_user.role] if getattr(current_user, "role", None) else UserRole.single
+    effective = await get_effective_permissions(
+        request, current_user=current_user
+    )
     async with UserSettingsService() as svc:
         for key in want:
             val = await svc.get(current_user.id, key)
             if val is None:
                 if key == "favorites":
-                    val = _default_favorites(role_enum)
+                    val = _default_favorites(effective)
                 elif key == "dashboard_layout":
                     val = DEFAULT_DASHBOARD_LAYOUT
             result[key] = val
@@ -76,16 +89,20 @@ async def list_settings(
 
 @router.get("/{key}")
 async def get_setting(
-    key: str, current_user: WebUser | None = Depends(get_current_web_user)
+    request: Request,
+    key: str,
+    current_user: WebUser | None = Depends(get_current_web_user),
 ):
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     async with UserSettingsService() as svc:
         value = await svc.get(current_user.id, key)
     if value is None:
-        role_enum = UserRole[current_user.role] if getattr(current_user, "role", None) else UserRole.single
+        effective = await get_effective_permissions(
+            request, current_user=current_user
+        )
         if key == "favorites":
-            value = _default_favorites(role_enum)
+            value = _default_favorites(effective)
         elif key == "dashboard_layout":
             value = DEFAULT_DASHBOARD_LAYOUT
     return {"key": key, "value": value}
@@ -93,6 +110,7 @@ async def get_setting(
 
 @router.put("/{key}")
 async def put_setting(
+    request: Request,
     key: str,
     payload: SettingIn,
     current_user: WebUser | None = Depends(get_current_web_user),
@@ -116,4 +134,28 @@ async def put_setting(
             raise HTTPException(status_code=400, detail="layouts must be dict")
     async with UserSettingsService() as svc:
         value = await svc.upsert(current_user.id, key, payload.value)
+    if key == "favorites":
+        effective = await get_effective_permissions(
+            request, current_user=current_user
+        )
+        allowed_paths = {
+            page["path"]
+            for page in FAVORITE_PAGES
+            if not effective
+            or (page.get("role") and effective.has_role(page["role"]))
+            or (page.get("permission") and effective.has(page["permission"]))
+            or (not page.get("role") and not page.get("permission"))
+        }
+        filtered_items = [
+            item
+            for item in payload.value.get("items", [])
+            if item.get("path") in allowed_paths
+        ]
+        if len(filtered_items) != len(payload.value.get("items", [])):
+            async with UserSettingsService() as svc:
+                value = await svc.upsert(
+                    current_user.id,
+                    key,
+                    {"v": payload.value.get("v", 1), "items": filtered_items},
+                )
     return {"ok": True, "key": key, "value": value}
