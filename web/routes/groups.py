@@ -16,7 +16,8 @@ from pydantic import BaseModel, Field
 
 from core.db import bot
 from core.models import Group, Product, ProductStatus, TgUser, UserRole, WebUser
-from core.services.group_crm_service import GroupCRMService
+from core.services.crm_service import CRMService
+from core.services.group_moderation_service import GroupModerationService
 from core.services.telegram_user_service import TelegramUserService
 from core.utils import utcnow
 from web.dependencies import get_current_web_user, role_required
@@ -182,12 +183,13 @@ async def _ensure_group_access(
 async def _collect_group_detail(
     *,
     group: Group,
-    crm: GroupCRMService,
+    crm: CRMService,
+    moderation: GroupModerationService,
     service: TelegramUserService,
     days: int,
 ) -> GroupDetailResponse:
     since_date = utcnow().date() - timedelta(days=days)
-    roster = await crm.list_group_members(group.telegram_id, since=since_date)
+    roster = await moderation.list_group_members(group.telegram_id, since=since_date)
     products = await crm.list_products(active_only=False)
     product_map: Dict[int, Product] = {p.id: p for p in products}
     buyers_map: Dict[int, int] = {p.id: 0 for p in products}
@@ -234,7 +236,7 @@ async def _collect_group_detail(
             )
         )
 
-    leaderboard_raw = await crm.activity_leaderboard(
+    leaderboard_raw = await moderation.activity_leaderboard(
         group.telegram_id, since=since_date, limit=10
     )
     leaderboard: List[LeaderboardEntry] = []
@@ -250,7 +252,7 @@ async def _collect_group_detail(
             )
         )
 
-    history = await crm.removal_history(group.telegram_id)
+    history = await moderation.removal_history(group.telegram_id)
     user_cache: Dict[int, TgUser] = {
         member.telegram_id: entry["user"]
         for member, entry in zip(members_out, roster)
@@ -336,9 +338,14 @@ async def get_group_detail(
         _, group = await _ensure_group_access(
             group_id=group_id, current_user=current_user, service=service
         )
-        crm = GroupCRMService(service.session)
+        crm = CRMService(service.session)
+        moderation = GroupModerationService(service.session, crm=crm)
         return await _collect_group_detail(
-            group=group, crm=crm, service=service, days=days
+            group=group,
+            crm=crm,
+            moderation=moderation,
+            service=service,
+            days=days,
         )
 
 
@@ -356,8 +363,8 @@ async def update_member_profile(
         _, group = await _ensure_group_access(
             group_id=group_id, current_user=current_user, service=service
         )
-        crm = GroupCRMService(service.session)
-        updated = await crm.update_member_profile(
+        moderation = GroupModerationService(service.session)
+        updated = await moderation.update_member_profile(
             group_id=group.telegram_id,
             user_id=user_id,
             notes=payload.notes,
@@ -366,8 +373,13 @@ async def update_member_profile(
         )
         if not updated:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        crm = moderation.crm
         detail = await _collect_group_detail(
-            group=group, crm=crm, service=service, days=30
+            group=group,
+            crm=crm,
+            moderation=moderation,
+            service=service,
+            days=30,
         )
         member = next(
             (m for m in detail.members if m.telegram_id == user_id), None
@@ -394,7 +406,7 @@ async def assign_product_to_member(
         )
         if not await service.is_user_in_group(user_id, group.telegram_id):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-        crm = GroupCRMService(service.session)
+        crm = CRMService(service.session)
         product = await crm.ensure_product(
             slug=payload.product_slug,
             title=payload.product_slug.replace("_", " ").title(),
@@ -429,7 +441,7 @@ async def remove_product_from_member(
         )
         if not await service.is_user_in_group(user_id, group.telegram_id):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-        crm = GroupCRMService(service.session)
+        crm = CRMService(service.session)
         removed = await crm.revoke_product(user_id=user_id, product_id=product_id)
         return RemoveProductResponse(removed=removed)
 
@@ -447,7 +459,8 @@ async def prune_group_members(
         tg_user, group = await _ensure_group_access(
             group_id=group_id, current_user=current_user, service=service
         )
-        crm = GroupCRMService(service.session)
+        crm = CRMService(service.session)
+        moderation = GroupModerationService(service.session, crm=crm)
         product: Optional[Product] = None
         if payload.product_id:
             product = await service.session.get(Product, payload.product_id)
@@ -456,9 +469,9 @@ async def prune_group_members(
         if not product:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Продукт не найден")
 
-        members = await crm.list_group_members(group.telegram_id)
+        members = await moderation.list_group_members(group.telegram_id)
         member_map = {entry["membership"].user_id: entry["user"] for entry in members}
-        candidates_links = await crm.members_without_product(
+        candidates_links = await moderation.members_without_product(
             group_id=group.telegram_id, product_id=product.id
         )
         candidates: List[PruneMember] = [
@@ -487,7 +500,7 @@ async def prune_group_members(
                 await bot.ban_chat_member(group.telegram_id, link.user_id)
                 await bot.unban_chat_member(group.telegram_id, link.user_id)
                 await service.remove_user_from_group(link.user_id, group.telegram_id)
-                await crm.log_removal(
+                await moderation.log_removal(
                     group_id=group.telegram_id,
                     user_id=link.user_id,
                     product_id=product.id,
@@ -501,7 +514,7 @@ async def prune_group_members(
                     PruneMember(user_id=link.user_id, display_name=display_name)
                 )
             except Exception as exc:  # pragma: no cover - Telegram errors
-                await crm.log_removal(
+                await moderation.log_removal(
                     group_id=group.telegram_id,
                     user_id=link.user_id,
                     product_id=product.id,
@@ -560,9 +573,14 @@ async def group_detail_page(
         _, group = await _ensure_group_access(
             group_id=group_id, current_user=current_user, service=service
         )
-        crm = GroupCRMService(service.session)
+        crm = CRMService(service.session)
+        moderation = GroupModerationService(service.session, crm=crm)
         detail = await _collect_group_detail(
-            group=group, crm=crm, service=service, days=30
+            group=group,
+            crm=crm,
+            moderation=moderation,
+            service=service,
+            days=30,
         )
     context = {
         "current_user": current_user,

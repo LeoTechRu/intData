@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Обзор модерации Telegram-групп в ЦУП и админском секторе: активные участники, тихие пользователи и задолженности по оплатам.
 - pre-commit configuration with ruff, black, isort and basic hooks.
 - developer Makefile and type checking via mypy.
 - structured JSON logging with request correlation.
@@ -74,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bare timers auto-create tasks in Inbox.
 
 ### Changed
+- CRM по продуктам выделена в отдельный сервис, управление модерацией групп использует самостоятельный модуль и сводки.
 - developer docs with observability and security guidelines.
 - unified test fixtures and factories; OpenAPI snapshot test now enforces SSoT.
 - Унифицирована работа с паролями через обёртку `core.db.bcrypt` и `WebUserService`.

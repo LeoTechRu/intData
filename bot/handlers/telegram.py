@@ -11,7 +11,8 @@ from typing import Callable, Optional, Tuple, List
 from decorators import role_required, group_required
 from core.models import GroupType, LogLevel, UserRole, ProductStatus, TgUser
 from core.services.telegram_user_service import TelegramUserService
-from core.services.group_crm_service import GroupCRMService
+from core.services.crm_service import CRMService
+from core.services.group_moderation_service import GroupModerationService
 
 # ==============================
 # РОУТЕРЫ
@@ -527,7 +528,8 @@ async def handle_group_audit(message: Message, remainder: str) -> None:
             type=GroupType(message.chat.type),
             owner_id=message.from_user.id if message.from_user else None,
         )
-        crm = GroupCRMService(tsvc.session)
+        crm = CRMService(tsvc.session)
+        moderation = GroupModerationService(tsvc.session, crm=crm)
         product = None
         if product_slug:
             product = await crm.get_product_by_slug(product_slug)
@@ -537,10 +539,10 @@ async def handle_group_audit(message: Message, remainder: str) -> None:
                     parse_mode="Markdown",
                 )
                 return
-        roster = await crm.list_group_members(
+        roster = await moderation.list_group_members(
             message.chat.id, since=since_date
         )
-        leaderboard = await crm.activity_leaderboard(
+        leaderboard = await moderation.activity_leaderboard(
             message.chat.id, since=since_date, limit=5
         )
 
@@ -642,7 +644,7 @@ async def handle_group_mark(message: Message, remainder: str) -> None:
             note_parts.append(token)
 
     async with TelegramUserService() as tsvc:
-        crm = GroupCRMService(tsvc.session)
+        crm = CRMService(tsvc.session)
         product = await crm.get_product_by_slug(slug)
         if not product:
             product = await crm.ensure_product(
@@ -753,8 +755,8 @@ async def handle_group_note(message: Message, remainder: str) -> None:
                 await message.answer("Используйте формат trial=YYYY-MM-DD")
                 return
 
-        crm = GroupCRMService(tsvc.session)
-        updated = await crm.update_member_profile(
+        moderation = GroupModerationService(tsvc.session)
+        updated = await moderation.update_member_profile(
             group_id=message.chat.id,
             user_id=target.telegram_id,
             notes=note_text or None,

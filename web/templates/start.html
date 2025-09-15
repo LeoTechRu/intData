@@ -212,6 +212,26 @@
         </div>
       </section>
 
+      {% set overview = group_moderation_overview or [] %}
+      <section class="card span-2" data-widget="group_moderation">
+        <div class="card-title">Модерация групп</div>
+        <div class="list">
+          {% for item in overview %}
+          <div class="list-item">
+            <div class="title">{{ item.title }}</div>
+            <div class="subtitle text-muted">
+              Активны: {{ item.active }}/{{ item.members }} · Без оплаты: {{ item.unpaid }} · Тихие: {{ item.quiet }} · Последняя активность: {{ item.last_activity }}
+            </div>
+          </div>
+          {% else %}
+          <div class="text-muted">Данные появятся после подключения групп.</div>
+          {% endfor %}
+        </div>
+        <footer class="card-footer">
+          <a href="/groups" class="link-muted">Перейти к управлению группами</a>
+        </footer>
+      </section>
+
       {% set items = owned_projects or [] %}
       <section class="card" data-widget="owned_projects">
         <div class="card-title">Ваши проекты</div>

@@ -115,6 +115,47 @@
       {% endif %}
     </section>
 
+    <section id="admin-group-moderation" class="card cup-admin__card">
+      <div class="card-title">Модерация групп</div>
+      {% if admin_group_moderation %}
+      <div class="cup-admin__table-wrap">
+        <table class="ui-table">
+          <thead>
+            <tr>
+              <th>Группа</th>
+              <th>Активные</th>
+              <th>Тихие</th>
+              <th>Без оплаты</th>
+              <th>Последняя активность</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in admin_group_moderation %}
+            <tr>
+              <td>{{ item.group.title }}</td>
+              <td>{{ item.active }}/{{ item.members }}</td>
+              <td>{{ item.quiet }}</td>
+              <td>{{ item.unpaid }}</td>
+              <td>
+                {% if item.last_activity %}
+                  {{ item.last_activity.strftime('%d.%m %H:%M') }}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-muted">Нет данных о модерации.</p>
+      {% endif %}
+      <footer class="cup-admin__footer">
+        <a href="/groups" class="link-muted">Открыть CRM по группам</a>
+      </footer>
+    </section>
+
     <section id="admin-settings" class="card cup-admin__card">
       <div class="card-title">Настройки приложения</div>
       <div class="grid grid-2">

@@ -6,7 +6,8 @@ from sqlalchemy.orm import sessionmaker
 from base import Base
 from core.services.telegram_user_service import TelegramUserService
 from core.services.web_user_service import WebUserService
-from core.services.group_crm_service import GroupCRMService
+from core.services.crm_service import CRMService
+from core.services.group_moderation_service import GroupModerationService
 from core.models import WebUser, GroupType, ProductStatus
 
 
@@ -99,7 +100,8 @@ async def test_ensure_test_user(session):
 @pytest.mark.asyncio
 async def test_group_crm_flow(session):
     tsvc = TelegramUserService(session)
-    crm = GroupCRMService(session)
+    crm = CRMService(session)
+    moderation = GroupModerationService(session, crm=crm)
 
     owner, _ = await tsvc.get_or_create_user(
         telegram_id=111, first_name="Owner", role="admin"
@@ -116,7 +118,7 @@ async def test_group_crm_flow(session):
     await tsvc.add_user_to_group(owner.telegram_id, group.telegram_id, True)
     await tsvc.add_user_to_group(member.telegram_id, group.telegram_id)
 
-    await crm.record_activity(
+    await moderation.record_activity(
         group_id=group.telegram_id, user_id=owner.telegram_id, messages=4
     )
     product = await crm.ensure_product(slug="course", title="Course")
@@ -127,12 +129,12 @@ async def test_group_crm_flow(session):
         source="test",
     )
 
-    roster = await crm.list_group_members(group.telegram_id)
+    roster = await moderation.list_group_members(group.telegram_id)
     assert len(roster) == 2
-    leaderboard = await crm.activity_leaderboard(group.telegram_id)
+    leaderboard = await moderation.activity_leaderboard(group.telegram_id)
     assert leaderboard and leaderboard[0]["user_id"] == owner.telegram_id
 
-    missing = await crm.members_without_product(
+    missing = await moderation.members_without_product(
         group_id=group.telegram_id, product_id=product.id
     )
     assert any(link.user_id == member.telegram_id for link in missing)
@@ -143,7 +145,12 @@ async def test_group_crm_flow(session):
         product_id=product.id,
         status=ProductStatus.paid,
     )
-    missing_after = await crm.members_without_product(
+    missing_after = await moderation.members_without_product(
         group_id=group.telegram_id, product_id=product.id
     )
     assert missing_after == []
+
+    overview = await moderation.groups_overview(
+        group_ids=[group.telegram_id], since_days=30
+    )
+    assert overview and overview[0]["members_total"] == 2

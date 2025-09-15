@@ -9,7 +9,8 @@ import core.db as db
 from core.models import TgUser, WebUser, UserRole
 from core.services.telegram_user_service import TelegramUserService
 from core.services.web_user_service import WebUserService
-from core.services.group_crm_service import GroupCRMService
+from core.services.crm_service import CRMService
+from core.services.group_moderation_service import GroupModerationService
 from core.models import GroupType, ProductStatus
 
 try:
@@ -45,7 +46,8 @@ async def _bootstrap_group() -> tuple[int, int, int]:
     async with db.async_session() as session:  # type: ignore
         async with session.begin():
             tsvc = TelegramUserService(session)
-            crm = GroupCRMService(session)
+            crm = CRMService(session)
+            moderation = GroupModerationService(session, crm=crm)
             owner, _ = await tsvc.get_or_create_user(
                 telegram_id=10, first_name="Owner", role=UserRole.admin.name
             )
@@ -60,7 +62,7 @@ async def _bootstrap_group() -> tuple[int, int, int]:
             )
             await tsvc.add_user_to_group(owner.telegram_id, group.telegram_id, True)
             await tsvc.add_user_to_group(trial.telegram_id, group.telegram_id)
-            await crm.record_activity(
+            await moderation.record_activity(
                 group_id=group.telegram_id,
                 user_id=owner.telegram_id,
                 messages=5,

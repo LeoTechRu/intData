@@ -10,7 +10,7 @@ from aiogram.types import Message, Update
 from core.logger import logger
 from core.models import GroupType
 from core.services.telegram_user_service import TelegramUserService
-from core.services.group_crm_service import GroupCRMService
+from core.services.group_moderation_service import GroupModerationService
 from core.utils import utcnow
 
 
@@ -48,8 +48,8 @@ class GroupActivityMiddleware(BaseMiddleware):
                 )
                 await tsvc.add_user_to_group(user.telegram_id, message.chat.id)
 
-                crm = GroupCRMService(tsvc.session)
-                await crm.record_activity(
+                moderation = GroupModerationService(tsvc.session)
+                await moderation.record_activity(
                     group_id=message.chat.id,
                     user_id=user.telegram_id,
                     messages=1,

@@ -7,6 +7,7 @@ from fastapi import APIRouter, Request, Depends, status
 from core.models import UserRole, WebUser, TgUser, TaskStatus
 from core.services.telegram_user_service import TelegramUserService
 from core.services.nexus_service import ProjectService, HabitService
+from core.services.group_moderation_service import GroupModerationService
 from core.services.task_service import TaskService
 from core.services.alarm_service import AlarmService
 from core.services.calendar_service import CalendarService
@@ -59,6 +60,7 @@ async def index(
             member_groups = []
             owned_projects = []
             member_projects = []
+            group_moderation_overview = []
             if current_user.telegram_accounts:
                 tg_user = current_user.telegram_accounts[0]
                 all_groups = await service.list_user_groups(
@@ -73,6 +75,41 @@ async def index(
                 owned_projects = await project_service.list(
                     owner_id=tg_user.telegram_id,
                 )
+                if owned_groups or member_groups:
+                    mod_service = GroupModerationService(service.session)
+                    target_ids = {
+                        g.telegram_id for g in owned_groups + member_groups
+                    }
+                    overview_raw = await mod_service.groups_overview(
+                        group_ids=list(target_ids),
+                        limit=5,
+                        since_days=14,
+                    )
+
+                    def _format_last(dt):
+                        if not dt:
+                            return "—"
+                        return dt.strftime("%d.%m %H:%M")
+
+                    overview_raw.sort(
+                        key=lambda item: (
+                            item.get("unpaid_members", 0),
+                            item.get("quiet_members", 0),
+                        ),
+                        reverse=True,
+                    )
+                    group_moderation_overview = [
+                        {
+                            "title": item["group"].title,
+                            "members": item.get("members_total", 0),
+                            "active": item.get("active_members", 0),
+                            "quiet": item.get("quiet_members", 0),
+                            "unpaid": item.get("unpaid_members", 0),
+                            "last_activity": _format_last(item.get("last_activity")),
+                            "group_id": item["group"].telegram_id,
+                        }
+                        for item in overview_raw[:3]
+                    ]
             role_name = tg_user.role if tg_user else current_user.role
 
             # Use timezone-aware "now" and normalize model datetimes
@@ -190,6 +227,7 @@ async def index(
                 "profile_user": current_user,
                 "owned_groups": owned_groups,
                 "member_groups": member_groups,
+                "group_moderation_overview": group_moderation_overview,
                 "owned_projects": owned_projects,
                 "member_projects": member_projects,
                 "role_name": role_name,

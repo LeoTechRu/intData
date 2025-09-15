@@ -1,11 +1,11 @@
-"""Business logic for Telegram group CRM features."""
+"""Business logic for Telegram group moderation and analytics."""
 
 from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import Any, Dict, Iterable, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
 from sqlalchemy import Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,13 +15,14 @@ from core.models import (
     Group,
     GroupActivityDaily,
     GroupRemovalLog,
-    Product,
     ProductStatus,
     TgUser,
     UserGroup,
     UserProduct,
 )
 from core.utils import utcnow
+
+from .crm_service import CRMService
 
 
 @dataclass(slots=True)
@@ -46,25 +47,42 @@ class ActivityTotals:
             self.last_activity = last_activity
 
 
-class GroupCRMService:
-    """High-level helpers for product ownership, activity stats and mass actions."""
+class GroupModerationService:
+    """High-level helpers for roster management, activity stats and logs."""
 
-    def __init__(self, session: Optional[AsyncSession] = None):
+    def __init__(
+        self,
+        session: Optional[AsyncSession] = None,
+        *,
+        crm: CRMService | None = None,
+    ):
         self.session = session
         self._external = session is not None
+        self._crm = crm
 
-    async def __aenter__(self) -> "GroupCRMService":
+    async def __aenter__(self) -> "GroupModerationService":
         if self.session is None:
             self.session = db.async_session()
+        if self._crm is None:
+            self._crm = CRMService(self.session)
         return self
 
     async def __aexit__(self, exc_type, exc, tb) -> None:
-        if not self._external:
+        if not self._external and self.session is not None:
             if exc_type is None:
                 await self.session.commit()
             else:
                 await self.session.rollback()
             await self.session.close()
+        if not self._external:
+            self.session = None
+        self._crm = None
+
+    @property
+    def crm(self) -> CRMService:
+        if self._crm is None:
+            self._crm = CRMService(self.session)
+        return self._crm
 
     # ------------------------------------------------------------------
     # Activity tracking
@@ -181,116 +199,6 @@ class GroupCRMService:
         return aggregates
 
     # ------------------------------------------------------------------
-    # Products and ownership
-    # ------------------------------------------------------------------
-    async def list_products(self, *, active_only: bool = True) -> List[Product]:
-        stmt: Select[Product] = select(Product)
-        if active_only:
-            stmt = stmt.where(Product.active.is_(True))
-        stmt = stmt.order_by(Product.title.asc())
-        rows = await self.session.execute(stmt)
-        return rows.scalars().all()
-
-    async def get_product_by_slug(self, slug: str) -> Optional[Product]:
-        row = await self.session.execute(
-            select(Product).where(Product.slug == slug)
-        )
-        return row.scalar_one_or_none()
-
-    async def ensure_product(
-        self,
-        *,
-        slug: str,
-        title: str,
-        description: str | None = None,
-        active: bool = True,
-        attributes: Optional[Dict[str, Any]] = None,
-    ) -> Product:
-        product = await self.get_product_by_slug(slug)
-        if product:
-            changed = False
-            if product.title != title:
-                product.title = title
-                changed = True
-            if product.description != description:
-                product.description = description
-                changed = True
-            if product.active != active:
-                product.active = active
-                changed = True
-            if attributes is not None and product.attributes != attributes:
-                product.attributes = attributes
-                changed = True
-            if changed:
-                product.updated_at = utcnow()
-            return product
-        product = Product(
-            slug=slug,
-            title=title,
-            description=description,
-            active=active,
-            attributes=attributes or {},
-        )
-        self.session.add(product)
-        await self.session.flush()
-        return product
-
-    async def assign_product(
-        self,
-        *,
-        user_id: int,
-        product_id: int,
-        status: ProductStatus = ProductStatus.paid,
-        source: Optional[str] = None,
-        acquired_at: Optional[datetime] = None,
-        notes: Optional[str] = None,
-        extra: Optional[Dict[str, Any]] = None,
-    ) -> UserProduct:
-        acquired_at = acquired_at or utcnow()
-        link = await self.session.get(UserProduct, (user_id, product_id))
-        if link:
-            link.status = status
-            link.source = source
-            link.acquired_at = acquired_at
-            if notes is not None:
-                link.notes = notes
-            if extra is not None:
-                link.extra = extra
-            link.updated_at = utcnow()
-            return link
-        link = UserProduct(
-            user_id=user_id,
-            product_id=product_id,
-            status=status,
-            source=source,
-            acquired_at=acquired_at,
-            notes=notes,
-            extra=extra or {},
-        )
-        self.session.add(link)
-        await self.session.flush()
-        return link
-
-    async def revoke_product(self, *, user_id: int, product_id: int) -> bool:
-        link = await self.session.get(UserProduct, (user_id, product_id))
-        if not link:
-            return False
-        await self.session.delete(link)
-        return True
-
-    async def member_products(self, *, user_ids: Sequence[int]) -> Dict[int, List[UserProduct]]:
-        if not user_ids:
-            return {}
-        rows = await self.session.execute(
-            select(UserProduct)
-            .where(UserProduct.user_id.in_(user_ids))
-        )
-        grouped: Dict[int, List[UserProduct]] = defaultdict(list)
-        for link in rows.scalars():
-            grouped[link.user_id].append(link)
-        return grouped
-
-    # ------------------------------------------------------------------
     # Group roster & CRM metadata
     # ------------------------------------------------------------------
     async def update_member_profile(
@@ -335,7 +243,7 @@ class GroupCRMService:
             return []
 
         user_ids = [pair[0].user_id for pair in pairs]
-        products_map = await self.member_products(user_ids=user_ids)
+        products_map = await self.crm.member_products(user_ids=user_ids)
         activity_map = await self._activity_totals_map(
             group_id, since=since
         )
@@ -412,5 +320,76 @@ class GroupCRMService:
         result = await self.session.execute(stmt)
         return result.scalars().all()
 
+    # ------------------------------------------------------------------
+    # Dashboards
+    # ------------------------------------------------------------------
+    async def groups_overview(
+        self,
+        *,
+        limit: int = 5,
+        since_days: int = 7,
+        group_ids: Optional[Sequence[int]] = None,
+    ) -> List[Dict[str, Any]]:
+        """Return aggregated moderation stats for selected groups."""
 
-__all__ = ["GroupCRMService", "ActivityTotals"]
+        if group_ids is not None:
+            group_ids = [int(gid) for gid in group_ids if gid]
+            if not group_ids:
+                return []
+
+        since = date.today() - timedelta(days=since_days)
+        stmt: Select[Any] = (
+            select(
+                Group,
+                func.count(UserGroup.user_id).label("members_total"),
+            )
+            .outerjoin(UserGroup, UserGroup.group_id == Group.telegram_id)
+            .group_by(Group.id)
+            .order_by(func.count(UserGroup.user_id).desc(), Group.title.asc())
+            .limit(limit)
+        )
+        if group_ids is not None:
+            stmt = stmt.where(Group.telegram_id.in_(group_ids))
+        rows = await self.session.execute(stmt)
+        overview: List[Dict[str, Any]] = []
+        for group, members_total in rows.all():
+            roster_rows = await self.session.execute(
+                select(UserGroup.user_id).where(UserGroup.group_id == group.telegram_id)
+            )
+            user_ids = [row[0] for row in roster_rows]
+            activity_map = await self._activity_totals_map(
+                group.telegram_id, since=since
+            )
+            active_members = sum(
+                1
+                for totals in activity_map.values()
+                if (totals.messages or totals.reactions)
+            )
+            quiet_members = max(0, int(members_total or 0) - active_members)
+            last_activity = None
+            for totals in activity_map.values():
+                if totals.last_activity and (
+                    last_activity is None or totals.last_activity > last_activity
+                ):
+                    last_activity = totals.last_activity
+            products_map = await self.crm.member_products(user_ids=user_ids)
+            paid_members = sum(
+                1
+                for links in products_map.values()
+                if any(link.status == ProductStatus.paid for link in links)
+            )
+            unpaid_members = max(0, int(members_total or 0) - paid_members)
+            overview.append(
+                {
+                    "group": group,
+                    "members_total": int(members_total or 0),
+                    "active_members": active_members,
+                    "quiet_members": quiet_members,
+                    "last_activity": last_activity,
+                    "unpaid_members": unpaid_members,
+                }
+            )
+        return overview
+
+
+__all__ = ["GroupModerationService", "ActivityTotals"]

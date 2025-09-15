@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Request
 from core.models import WebUser, UserRole
 from core.services.web_user_service import WebUserService
 from core.services.telegram_user_service import TelegramUserService
+from core.services.group_moderation_service import GroupModerationService
 from ..dependencies import role_required
 from ..template_env import templates
 
@@ -17,11 +18,25 @@ async def load_admin_console_data() -> dict[str, Any]:
         users_tg = await tsvc.list_users()
         groups_with_members = await tsvc.list_groups_with_members()
         users_web = await wsvc.list_users()
+        moderation_service = GroupModerationService(tsvc.session)
+        moderation_raw = await moderation_service.groups_overview(limit=8)
+        admin_group_moderation = [
+            {
+                "group": item["group"],
+                "members": item.get("members_total", 0),
+                "active": item.get("active_members", 0),
+                "quiet": item.get("quiet_members", 0),
+                "unpaid": item.get("unpaid_members", 0),
+                "last_activity": item.get("last_activity"),
+            }
+            for item in moderation_raw
+        ]
     return {
         "admin_users_tg": users_tg,
         "admin_users_web": users_web,
         "admin_groups": groups_with_members,
         "admin_roles": [r.name for r in UserRole],
+        "admin_group_moderation": admin_group_moderation,
     }
 
 
