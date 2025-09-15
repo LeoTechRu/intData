@@ -14,6 +14,7 @@ from core.services.time_service import TimeService
 from core.utils import utcnow
 from core.utils.habit_utils import calc_progress
 from web.dependencies import get_current_web_user
+from .admin import load_admin_console_data
 from ..template_env import templates
 
 router = APIRouter()
@@ -207,8 +208,21 @@ async def index(
                 "upcoming_alarms": upcoming_alarms,
                 "upcoming_events": upcoming_events,
                 "habit_list": habit_list,
-                "page_title": "Дашборд",
+                "page_title": "ЦУП",
+                "page_title_tooltip": "Центр Управления Полётами",
             }
+            if context["is_admin"]:
+                admin_data = await load_admin_console_data()
+                context.update(admin_data)
+                context.update(
+                    {
+                        "admin_anchor_id": "cup-admin-tools",
+                        "admin_heading_description": (
+                            "Админские утилиты доступны только вам. "
+                            "Ниже собраны инструменты из прежнего раздела /admin."
+                        ),
+                    }
+                )
             return templates.TemplateResponse(request, "start.html", context)
 
     from fastapi.responses import RedirectResponse

@@ -21,7 +21,11 @@
 
 <div class="top-center">
   {% set TITLE_TEXT = (MODULE_TITLE if MODULE_TITLE is defined and MODULE_TITLE else BRAND_NAME)|striptags %}
-  <h1 class="page-title">{{ TITLE_TEXT }}</h1>
+  {% set TITLE_TOOLTIP = MODULE_TITLE_TOOLTIP if MODULE_TITLE_TOOLTIP is defined and MODULE_TITLE_TOOLTIP %}
+  <h1 class="page-title" {% if TITLE_TOOLTIP %}title="{{ TITLE_TOOLTIP }}"{% endif %}>
+    {{ TITLE_TEXT }}
+    {% if TITLE_TOOLTIP %}<span class="sr-only"> — {{ TITLE_TOOLTIP }}</span>{% endif %}
+  </h1>
   <button class="fav-toggle" data-fav-toggle data-kind="page" data-id="{{ request.url.path }}" data-path="{{ request.url.path }}" data-label="{{ TITLE_TEXT }}" aria-pressed="false" aria-label="Добавить в избранное">☆</button>
   {# На узких экранах .top-center скрывается через CSS #}
 </div>

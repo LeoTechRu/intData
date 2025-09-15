@@ -41,6 +41,9 @@
         {% if not auth_page %}
             {# Передаём в шапку название модуля: page_title -> блок title -> бренд #}
             {% set MODULE_TITLE = page_title if page_title is defined and page_title else self.title() %}
+            {% if MODULE_TITLE_TOOLTIP is not defined %}
+                {% set MODULE_TITLE_TOOLTIP = page_title_tooltip if page_title_tooltip is defined else None %}
+            {% endif %}
             {% include "header.html" %}
         {% endif %}
     </header>

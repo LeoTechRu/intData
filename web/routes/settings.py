@@ -29,7 +29,7 @@ DASHBOARD_WIDGETS = [
 ]
 
 FAVORITE_PAGES = [
-    {"path": "/", "label": "Дашборд", "min_role": UserRole.single},
+    {"path": "/", "label": "ЦУП", "min_role": UserRole.single},
     {"path": "/tasks", "label": "Задачи", "min_role": UserRole.single},
     {"path": "/projects", "label": "Проекты", "min_role": UserRole.single},
     {"path": "/notes", "label": "Заметки", "min_role": UserRole.single},
@@ -67,4 +67,3 @@ async def settings_page(
         "favorite_pages": favorite_pages,
     }
     return templates.TemplateResponse(request, "settings.html", context)
-
