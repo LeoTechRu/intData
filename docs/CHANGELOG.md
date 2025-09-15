@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Тайм‑трекер: модель `TimeEntry`, `TimeService`, веб‑API `/time`, страница UI, команды бота `/time_start`, `/time_stop`, `/time_list`.
 - Каркас календаря: модель `CalendarEvent`, `CalendarService`.
 - Базовые эндпоинты календаря `/api/v1/calendar/items` и генерация `feed.ics` (заглушки).
+- Административные утилиты перенесены на главную страницу «ЦУП» (доступны только роли admin) с якорем `#cup-admin-tools`.
 - Таблицы `calendar_items`, `alarms`, `notification_channels`, `project_notifications`,
   `notification_triggers` и `notifications`.
 - API `/api/v1/calendar/agenda` и `/api/v1/calendar/items/{item_id}/alarms`.
@@ -100,6 +101,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tailwind config updated for Next.js sources.
 - Загрузка переменных окружения теперь производится из файла, указанного в `ENV_FILE` (по умолчанию `${PROJECT_DIR}/.env`).
 - Логируется путь загруженного `.env` и выводится предупреждение, если файл находится вне корня проекта.
+- Главный экран переименован в «ЦУП» с подсказкой «Центр Управления Полётами», поправлены пункты меню и тултипы.
 
 ### Fixed
 - Content Security Policy по умолчанию разрешает загрузку Telegram Login (скрипт `telegram.org` и iframe `oauth.telegram.org`), поэтому кнопка входа снова видна на `/auth`.
