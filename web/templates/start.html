@@ -305,5 +305,8 @@
       </section>
 
     </div>
+    {% if is_admin and admin_users_web is defined %}
+      {% include "partials/admin_tools.html" with context %}
+    {% endif %}
   </div>
 {% endblock %}
