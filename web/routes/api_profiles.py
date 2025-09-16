@@ -197,12 +197,15 @@ async def update_profile(
                 slug=slug,
                 data=payload.dict(exclude_unset=True),
             )
-            access.profile = updated
-            await service.ensure_default_sections(updated)
         except ValueError as exc:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+        await service.ensure_default_sections(updated)
+        access = await service.get_profile(
+            entity_type=entity_type,
+            slug=updated.slug,
+            viewer=current_user,
+        )
     include_grants = access.is_owner or access.is_admin
-    access.sections = access.sections  # force existing sections usage
     return _profile_to_response(access, include_grants=include_grants)
 
 
@@ -243,8 +246,13 @@ async def update_profile_grants(
             actor=current_user,
         )
         await service.ensure_default_sections(access.profile)
-        include_grants = True
-        return _profile_to_response(access, include_grants=include_grants)
+        refreshed = await service.get_profile(
+            entity_type=entity_type,
+            slug=access.profile.slug,
+            viewer=current_user,
+        )
+    include_grants = True
+    return _profile_to_response(refreshed, include_grants=include_grants)
 
 
 api = router
