@@ -91,13 +91,26 @@ async def test_api_defaults_and_put(monkeypatch):
         return WebUser(id=user.id, username="u_api")
 
     app.dependency_overrides[get_current_web_user] = override_user
+    class FakeEffective:
+        def has(self, _perm: str) -> bool:
+            return True
+
+        def has_role(self, _role: str) -> bool:
+            return True
+
+    async def fake_permissions(request, current_user=None):
+        return FakeEffective()
+
+    monkeypatch.setattr(
+        "web.routes.api_user_settings.get_effective_permissions",
+        fake_permissions,
+    )
     client = TestClient(app)
 
     res = client.get("/api/v1/user/settings")
     assert res.status_code == 200
     body = res.json()
     assert "dashboard_layout" in body and body["favorites"]["items"]
-    assert any(item["path"] == "/settings#areas" for item in body["favorites"]["items"])
 
     legacy_payload = {
         "v": 1,

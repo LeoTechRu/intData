@@ -81,6 +81,17 @@
             "title": "Name",
             "type": "string"
           },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
           "review_interval_days": {
             "default": 7,
             "title": "Review Interval Days",
