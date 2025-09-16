@@ -20,6 +20,7 @@ class AreaCreate(BaseModel):
     name: str
     color: Optional[str] = None
     review_interval_days: int = 7
+    parent_id: Optional[int] = None
 
 
 class AreaResponse(BaseModel):
@@ -63,7 +64,7 @@ async def create_area(payload: AreaCreate, current_user: TgUser | None = Depends
         area = await svc.create_area(
             owner_id=current_user.telegram_id,
             name=payload.name,
-            parent_id=None,
+            parent_id=payload.parent_id,
             color=payload.color,
         )
     return AreaResponse.from_model(area)
