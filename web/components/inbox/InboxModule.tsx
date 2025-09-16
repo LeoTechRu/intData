@@ -364,6 +364,9 @@ export default function InboxModule() {
     [areas, inboxArea],
   );
 
+  const areaSelectId = 'inbox-assign-area';
+  const projectSelectId = 'inbox-assign-project';
+
   const inboxOverloaded = totalCaptured > 12;
 
   return (
@@ -556,11 +559,15 @@ export default function InboxModule() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
+                  <label
+                    htmlFor={assignState.target === 'area' ? areaSelectId : projectSelectId}
+                    className="text-xs font-medium uppercase tracking-[0.2em] text-muted"
+                  >
                     {assignState.target === 'area' ? 'Выберите область' : 'Выберите проект'}
                   </label>
                   {assignState.target === 'area' ? (
                     <select
+                      id={areaSelectId}
                       className="w-full rounded-lg border border-subtle bg-[var(--surface-0)] px-3 py-2 text-sm text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
                       value={assignState.areaId}
                       onChange={(event) =>
@@ -576,6 +583,7 @@ export default function InboxModule() {
                     </select>
                   ) : (
                     <select
+                      id={projectSelectId}
                       className="w-full rounded-lg border border-subtle bg-[var(--surface-0)] px-3 py-2 text-sm text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
                       value={assignState.projectId}
                       onChange={(event) =>
