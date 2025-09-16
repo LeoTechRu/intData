@@ -13,6 +13,7 @@ from .favorite_service import FavoriteService
 from .habits import HabitsService, DailiesService, HabitsCronService, UserStatsService
 from .profile_service import ProfileService
 from .profile_service import ProfileService
+from .diagnostics_service import DiagnosticsService
 from .sync_gcal import (
     generate_auth_url,
     exchange_code,
@@ -38,6 +39,7 @@ __all__ = [
     "UserStatsService",
     "ProfileService",
     "ProfileService",
+    "DiagnosticsService",
     "generate_auth_url",
     "exchange_code",
     "save_gcal_link",
