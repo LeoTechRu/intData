@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}{{ profile.display_name }}{% endblock %}
+{% block content %}
+<div class="ui-layout">
+  <header class="profile-hero">
+    <div class="profile-hero__media">
+      {% if profile.cover_url %}
+        <div class="profile-hero__cover" style="background-image: linear-gradient(120deg, rgba(0,0,0,0.3), rgba(0,0,0,0.2)), url('{{ profile.cover_url }}');"></div>
+      {% endif %}
+      <div class="profile-hero__avatar">
+        {% if profile.avatar_url %}
+          <img src="{{ profile.avatar_url }}" alt="" />
+        {% else %}
+          <span aria-hidden="true">👤</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="profile-hero__content">
+      <h1 class="module-title">{{ profile.display_name }}</h1>
+      {% if profile.headline %}
+        <p class="module-subtitle">{{ profile.headline }}</p>
+      {% endif %}
+      {% if profile.summary %}
+        <p class="profile-summary">{{ profile.summary }}</p>
+      {% endif %}
+      {% if profile.can_edit %}
+        {% if editing %}
+          <a class="button button--ghost" href="/users/{{ profile.slug }}">Отмена</a>
+        {% else %}
+          <a class="button" href="/users/{{ profile.slug }}?edit=true">Редактировать</a>
+        {% endif %}
+      {% endif %}
+    </div>
+  </header>
+
+  {% if editing and profile.can_edit %}
+    <section class="card">
+      <div class="card-body">
+        <form class="ui-form profile-edit-form" method="post" action="/users/{{ profile.slug }}" autocomplete="off">
+          <div class="form-grid">
+            <label>
+              <span>Полное имя</span>
+              <input type="text" name="full_name" value="{{ profile_user.full_name or '' }}">
+            </label>
+            <label>
+              <span>Username</span>
+              <input type="text" name="username" value="{{ profile_user.username }}" disabled>
+            </label>
+            <label>
+              <span>Email</span>
+              <input type="email" name="email" value="{{ profile_user.email or '' }}">
+            </label>
+            <label>
+              <span>Телефон</span>
+              <input type="text" name="phone" value="{{ profile_user.phone or '' }}">
+            </label>
+            <label>
+              <span>День рождения</span>
+              <input type="date" name="birthday" value="{{ profile_user.birthday.strftime('%Y-%m-%d') if profile_user.birthday else '' }}">
+            </label>
+            <label>
+              <span>Язык</span>
+              <input type="text" name="language" value="{{ profile_user.language or '' }}">
+            </label>
+            <label>
+              <span>Заголовок</span>
+              <input type="text" name="headline" value="{{ profile.headline or '' }}">
+            </label>
+            <label class="full">
+              <span>Краткое описание</span>
+              <textarea name="summary" rows="3">{{ profile.summary or '' }}</textarea>
+            </label>
+            <label>
+              <span>Avatar URL</span>
+              <input type="url" name="avatar_url" value="{{ profile.avatar_url or '' }}" placeholder="https://...">
+            </label>
+            <label>
+              <span>Cover URL</span>
+              <input type="url" name="cover_url" value="{{ profile.meta.cover or profile.cover_url or '' }}" placeholder="https://...">
+            </label>
+            <label class="full">
+              <span>Теги (через запятую)</span>
+              <input type="text" name="tags" value="{{ ', '.join(profile.tags) }}">
+            </label>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="button button--primary">Сохранить</button>
+            <a class="button button--ghost" href="/users/{{ profile.slug }}">Отмена</a>
+          </div>
+        </form>
+      </div>
+    </section>
+  {% else %}
+    <section class="cards-grid" style="--cards-grid-min: 320px;">
+      <section class="card" data-widget="profile-contact">
+        <div class="card-body">
+          <h2 class="card-title">Контакты</h2>
+          <dl class="profile-details">
+            <div><dt>Email</dt><dd>{{ profile_user.email or '—' }}</dd></div>
+            <div><dt>Телефон</dt><dd>{{ profile_user.phone or '—' }}</dd></div>
+            <div><dt>Язык</dt><dd>{{ profile_user.language or '—' }}</dd></div>
+            <div><dt>Telegram</dt><dd>{% if profile_user.telegram_accounts %}{% for acc in profile_user.telegram_accounts %}@{{ acc.username }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}—{% endif %}</dd></div>
+          </dl>
+        </div>
+      </section>
+      <section class="card" data-widget="profile-links">
+        <div class="card-body">
+          <h2 class="card-title">Ссылки</h2>
+          {% set links = profile.meta.links or [] %}
+          {% if links %}
+            <ul class="profile-links">
+              {% for link in links %}
+                <li><a href="{{ link.url }}" target="_blank" rel="noopener">{{ link.label or link.url }}</a></li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">Нет ссылок</p>
+          {% endif %}
+        </div>
+      </section>
+      <section class="card" data-widget="profile-tags">
+        <div class="card-body">
+          <h2 class="card-title">Навыки и фокусы</h2>
+          {% if profile.tags %}
+            <ul class="profile-tags">
+              {% for tag in profile.tags %}
+                <li>{{ tag }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted">Теги не указаны</p>
+          {% endif %}
+        </div>
+      </section>
+      <section class="card" data-widget="profile-sections" style="grid-column:1/-1;">
+        <div class="card-body">
+          <h2 class="card-title">Секции</h2>
+          {% if profile.sections %}
+            <div class="profile-sections">
+              {% for section in profile.sections %}
+                <article class="profile-section">
+                  <h3>{{ section.title or section.id }}</h3>
+                  <p class="text-muted">Данные появятся, когда эта секция будет заполнена.</p>
+                </article>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted">Для вас нет доступных секций.</p>
+          {% endif %}
+        </div>
+      </section>
+    </section>
+  {% endif %}
+
+  {% if profile.can_edit %}
+    <section class="card" data-widget="profile-access" data-profile-slug="{{ profile.slug }}" data-profile-entity="users" data-profile-grants='{{ profile.grants | tojson | safe }}'>
+      <div class="card-body">
+        <h2 class="card-title">Доступ к профилю</h2>
+        <p class="text-muted">Управляйте, кто может видеть ваш профиль: отметьте аудитории или добавьте конкретного пользователя, группу или проект.</p>
+        <form class="profile-grants-form">
+          <fieldset class="profile-grants-toggles">
+            <label><input type="checkbox" name="grant_public"> Открыть для всех</label>
+            <label><input type="checkbox" name="grant_authenticated"> Доступен всем авторизованным</label>
+          </fieldset>
+          <div class="profile-grants-list">
+            <table>
+              <thead>
+                <tr><th>Аудитория</th><th>ID</th><th>Секции</th><th></th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="profile-grants-add">
+            <label>
+              <span>Тип</span>
+              <select name="audience_type">
+                <option value="user">Пользователь</option>
+                <option value="group">Группа (Telegram ID)</option>
+                <option value="project">Проект</option>
+                <option value="area">Area</option>
+              </select>
+            </label>
+            <label>
+              <span>ID</span>
+              <input type="text" name="subject_id" placeholder="Например, 42">
+            </label>
+            <label>
+              <span>Секции (через запятую, пусто = все)</span>
+              <input type="text" name="sections" placeholder="overview,activity">
+            </label>
+            <button type="button" class="button button--ghost" data-action="grant-add">Добавить</button>
+          </div>
+          <footer class="form-actions">
+            <span class="text-muted" data-state="grants-status"></span>
+          </footer>
+        </form>
+      </div>
+    </section>
+  {% endif %}
+</div>
+{% endblock %}
