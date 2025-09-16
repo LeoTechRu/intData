@@ -192,6 +192,7 @@ class ProfileService:
             if "profile_visibility" not in meta_payload:
                 meta_payload["profile_visibility"] = meta_payload.get("visibility", "private")
 
+        # Default user profiles start as private; visibility is expanded via explicit grants.
         profile = EntityProfile(
             entity_type=entity_type,
             entity_id=entity_id,
