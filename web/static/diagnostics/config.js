@@ -1,26 +1,21 @@
-// Base API endpoint for all frontend requests
-// Автовыбор: локально используем docker-compose порт 9001
-// В проде — прежние боевые адреса (за nginx)
+// Diagnostics configuration shared by SPA and static forms
 (function () {
   const isLocal = /localhost|127\.0\.0\.1|0\.0\.0\.0/.test(location.host);
-  const API = isLocal
-    ? "http://localhost:9001/api/v1"
-    : "https://vds.punkt-b.pro/backend/api/v1";
-  // expose as both property and global variable for legacy scripts
+  const API = `${location.origin}/api/v1`;
   window.API_URL = API;
-  // eslint-disable-next-line no-unused-vars, no-undef
-  if (typeof API_URL === 'undefined') { window.API_URL = API; }
-  // also create a var in global scope
-  // eslint-disable-next-line no-undef
+  if (typeof API_URL === 'undefined') {
+    window.API_URL = API;
+  }
   API_URL = API;
 
-  const DOMAIN = isLocal ? location.origin : "https://test.intdata.ru";
-  const CABINET = DOMAIN;
-  const DIAGNOSTICS = DOMAIN + "/diagnostics";
-  const CONCLUSION = DOMAIN + "/conclusion";
+  const baseUrl = location.origin.replace(/\/$/, '');
+  const CABINET = `${baseUrl}/diagnostics`;
+  const FORMS = `${baseUrl}/diagnostics/forms`;
+  const CONCLUSION = `${baseUrl}/diagnostics/conclusion`;
+
   window.CABINET_URL = CABINET;
-  window.DIAGNOSTICS_URL = DIAGNOSTICS;
+  window.DIAGNOSTICS_URL = FORMS;
   window.CONCLUSION_URL = CONCLUSION;
-  window.POLICY_URL = DIAGNOSTICS + "/policy.html";
-  window.PROFESSIONS_ALL_URL = DIAGNOSTICS + "/43-professions-all.html";
+  window.POLICY_URL = `${FORMS}/policy.html`;
+  window.PROFESSIONS_ALL_URL = `${FORMS}/43-professions-all.html`;
 })();
