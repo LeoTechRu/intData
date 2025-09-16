@@ -239,7 +239,7 @@ async def auth_middleware(request: Request, call_next):
     path = request.url.path
 
     # Allow serving static resources and favicons without auth
-    if path.startswith("/static") or path.startswith("/favicon"):
+    if path.startswith("/static") or path.startswith("/favicon") or path.startswith("/_next/static"):
         return await call_next(request)
 
     # Always allow the ban page itself
