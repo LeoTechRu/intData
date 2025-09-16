@@ -2,14 +2,12 @@ from __future__ import annotations
 
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from core.models import Resource, TgUser, WebUser
+from core.models import Resource, TgUser
 from core.services.para_service import ParaService
-from core.services.profile_service import ProfileService, ProfileAccess
-from web.dependencies import get_current_tg_user, get_current_web_user
-from ..template_env import templates
+from web.dependencies import get_current_tg_user
 
 
 router = APIRouter(prefix="/resources", tags=["resources"])
@@ -78,35 +76,6 @@ def _build_profile_context(access: ProfileAccess) -> dict[str, Any]:
             for grant in profile.grants
         ],
     }
-
-
-@ui_router.get("/{slug}")
-async def resource_profile_page(
-    slug: str,
-    request: Request,
-    current_user: WebUser | None = Depends(get_current_web_user),
-):
-    async with ProfileService() as service:
-        try:
-            access = await service.get_profile(
-                entity_type="resource",
-                slug=slug,
-                viewer=current_user,
-            )
-        except ValueError:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-        except PermissionError:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
-    profile_ctx = _build_profile_context(access)
-    context = {
-        "current_user": current_user,
-        "profile": profile_ctx,
-        "entity": "resources",
-        "catalog_path": "/resources",
-        "MODULE_TITLE": f"Ресурс: {profile_ctx['display_name']}",
-        "page_title": profile_ctx['display_name'],
-    }
-    return templates.TemplateResponse(request, "profiles/detail.html", context)
 
 
 # Alias for centralized API mounting

@@ -18,6 +18,7 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     Float,
+    SmallInteger,
     String,
     Text,
     JSON,
@@ -25,7 +26,7 @@ from sqlalchemy import (
     Index,
     func,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, ARRAY
 
 from base import Base
@@ -100,6 +101,24 @@ class WebUser(Base):
     privacy_settings = Column(JSON, default=dict)
     birthday = Column(Date)
     language = Column(String(10))
+    diagnostics_enabled = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=sa.false(),
+    )
+    diagnostics_active = Column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default=sa.true(),
+    )
+    diagnostics_available = Column(
+        ARRAY(SmallInteger),
+        nullable=False,
+        default=list,
+        server_default=sa.text("'{}'::smallint[]"),
+    )
     created_at = Column(DateTime(timezone=True), default=utcnow)
     updated_at = Column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
@@ -113,6 +132,17 @@ class WebUser(Base):
         "TgUser",
         secondary="users_web_tg",
         backref="web_accounts",
+    )
+    diagnostic_profile = relationship(
+        "DiagnosticClient",
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )
+    diagnostics_clients = relationship(
+        "DiagnosticClient",
+        back_populates="specialist",
+        foreign_keys="DiagnosticClient.specialist_id",
     )
 
     # Flask-Login compatibility helpers
@@ -1067,6 +1097,144 @@ class Link(Base):
     created_at = Column(DateTime(timezone=True), default=utcnow)
     updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
+
+
+# ---------------------------------------------------------------------------
+# Diagnostics domain
+# ---------------------------------------------------------------------------
+
+
+class DiagnosticTemplate(Base):
+    __tablename__ = "diagnostic_templates"
+
+    id = Column(SmallInteger, primary_key=True)
+    slug = Column(String(128), nullable=False, unique=True)
+    title = Column(String(255), nullable=False)
+    form_path = Column(String(255), nullable=False)
+    sort_order = Column(
+        SmallInteger,
+        nullable=False,
+        default=0,
+        server_default=sa.text("0"),
+    )
+    is_active = Column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default=sa.true(),
+    )
+    config = Column(
+        JSON,
+        nullable=False,
+        default=dict,
+        server_default=sa.text("'{}'::jsonb"),
+    )
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    results = relationship(
+        "DiagnosticResult",
+        back_populates="template",
+        cascade="all, delete-orphan",
+    )
+
+
+class DiagnosticClient(Base):
+    __tablename__ = "diagnostic_clients"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(
+        Integer,
+        ForeignKey("users_web.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
+    specialist_id = Column(
+        Integer,
+        ForeignKey("users_web.id", ondelete="SET NULL"),
+    )
+    is_new = Column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default=sa.true(),
+    )
+    in_archive = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=sa.false(),
+    )
+    contact_permission = Column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default=sa.true(),
+    )
+    last_result_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    user = relationship(
+        "WebUser",
+        foreign_keys=[user_id],
+        back_populates="diagnostic_profile",
+    )
+    specialist = relationship(
+        "WebUser",
+        foreign_keys=[specialist_id],
+        back_populates="diagnostics_clients",
+    )
+    results = relationship(
+        "DiagnosticResult",
+        back_populates="client",
+        cascade="all, delete-orphan",
+        order_by="DiagnosticResult.submitted_at.desc()",
+    )
+
+
+class DiagnosticResult(Base):
+    __tablename__ = "diagnostic_results"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    client_id = Column(
+        Integer,
+        ForeignKey("diagnostic_clients.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    specialist_id = Column(
+        Integer,
+        ForeignKey("users_web.id", ondelete="SET NULL"),
+    )
+    diagnostic_id = Column(
+        SmallInteger,
+        ForeignKey("diagnostic_templates.id"),
+    )
+    payload = Column(
+        JSON,
+        nullable=False,
+        default=dict,
+        server_default=sa.text("'{}'::jsonb"),
+    )
+    open_answer = Column(Text)
+    submitted_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=utcnow,
+    )
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=utcnow,
+    )
+
+    client = relationship("DiagnosticClient", back_populates="results")
+    specialist = relationship("WebUser", foreign_keys=[specialist_id])
+    template = relationship("DiagnosticTemplate", back_populates="results")
 
 
 # ---------------------------------------------------------------------------

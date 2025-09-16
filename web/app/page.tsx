@@ -19,6 +19,12 @@ const shortcuts = [
     badge: 'новый UI',
   },
   {
+    href: '/users',
+    title: 'Команда',
+    description: 'Смотрите профили участников, их роли и резюме в одном списке.',
+    badge: 'новый UI',
+  },
+  {
     href: '/resources',
     title: 'Ресурсы',
     description: 'Храните артефакты и ссылки по проектам в едином каталоге.',

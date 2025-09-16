@@ -27,17 +27,11 @@ from .routes import (
     index,
     settings,
     habits,
-    tasks,
     notes,
     calendar,
     time_entries,
-    areas,
-    projects,
-    resources,
     products,
-    inbox,
     groups,
-    users,
     api_router,
 )
 from core.db import engine
@@ -345,14 +339,12 @@ app.include_router(index.router, include_in_schema=False)
 app.include_router(settings.router, include_in_schema=False)
 app.include_router(habits.ui_router, include_in_schema=False)
 app.include_router(notes.ui_router, include_in_schema=False)
-app.include_router(projects.ui_router, include_in_schema=False)
 app.include_router(products.ui_router, include_in_schema=False)
 app.include_router(calendar.ui_router, include_in_schema=False)
 app.include_router(time_entries.ui_router, include_in_schema=False)
 app.include_router(groups.ui_router, include_in_schema=False)
 app.include_router(auth.router, include_in_schema=False)
 app.include_router(admin_ui.router, include_in_schema=False)
-app.include_router(users.router, include_in_schema=False)
 
 # Подключение всех API под единым префиксом
 app.include_router(api_router, prefix="/api/v1")
