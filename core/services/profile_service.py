@@ -360,6 +360,12 @@ class ProfileService:
             return profile.sections
         return DEFAULT_SECTIONS.copy()
 
+    def _has_default_access(self, profile: EntityProfile, context: ViewerContext) -> bool:
+        """Implicit visibility rules when no explicit grants exist."""
+        if profile.entity_type == "user":
+            return context.is_authenticated
+        return False
+
     def _owned_by_viewer(self, profile: EntityProfile, context: ViewerContext) -> bool:
         if not context.user:
             return False
@@ -464,14 +470,18 @@ class ProfileService:
             owner_access = self._owned_by_viewer(profile, context)
             admin_access = context.is_admin
             grants = [] if (owner_access or admin_access) else self._grants_for_viewer(profile, context)
-            if not grants and not (owner_access or admin_access):
+            fallback_access = self._has_default_access(profile, context)
+            if not grants and not (owner_access or admin_access or fallback_access):
                 continue
-            sections = self._resolve_sections(
-                profile,
-                grants,
-                owner_access=owner_access,
-                admin_access=admin_access,
-            )
+            if fallback_access and not (owner_access or admin_access):
+                sections = self._profile_sections(profile)
+            else:
+                sections = self._resolve_sections(
+                    profile,
+                    grants,
+                    owner_access=owner_access,
+                    admin_access=admin_access,
+                )
             if not sections and not (owner_access or admin_access):
                 continue
             response.append(
@@ -503,13 +513,21 @@ class ProfileService:
         owner_access = self._owned_by_viewer(profile, context)
         admin_access = context.is_admin
         grants = [] if (owner_access or admin_access) else self._grants_for_viewer(profile, context)
-        if not grants and not (owner_access or admin_access):
+        fallback_access = self._has_default_access(profile, context)
+        if not grants and not (owner_access or admin_access or fallback_access):
             raise PermissionError("access denied")
-        sections = (
-            self._resolve_sections(profile, grants, owner_access=owner_access, admin_access=admin_access)
-            if with_sections
-            else []
-        )
+        if with_sections:
+            if fallback_access and not (owner_access or admin_access):
+                sections = self._profile_sections(profile)
+            else:
+                sections = self._resolve_sections(
+                    profile,
+                    grants,
+                    owner_access=owner_access,
+                    admin_access=admin_access,
+                )
+        else:
+            sections = []
         if with_sections and not sections and not (owner_access or admin_access):
             raise PermissionError("access denied")
         return ProfileAccess(

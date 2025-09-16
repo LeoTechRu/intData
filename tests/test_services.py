@@ -13,9 +13,10 @@ from aiogram.types import (
 from base import Base
 from core.services.telegram_user_service import TelegramUserService
 from core.services.web_user_service import WebUserService
+from core.services.profile_service import ProfileService
 from core.services.crm_service import CRMService
 from core.services.group_moderation_service import GroupModerationService
-from core.models import WebUser, GroupType, ProductStatus, UserGroup
+from core.models import WebUser, GroupType, ProductStatus, UserGroup, EntityProfile
 
 
 @pytest_asyncio.fixture
@@ -76,6 +77,35 @@ async def test_binding_flow(session):
         await wsvc.link_telegram(other.id, tg_user.id)
     await wsvc.unlink_telegram(web_user.id, tg_user.id)
     assert await wsvc.get_user_by_identifier(123) is None
+
+
+@pytest.mark.asyncio
+async def test_profile_service_user_default_visibility(session):
+    viewer = WebUser(username="viewer", password_hash="x", role="single")
+    owner = WebUser(username="alice", password_hash="x", role="single")
+    session.add_all([viewer, owner])
+    await session.flush()
+    session.add(
+        EntityProfile(
+            entity_type="user",
+            entity_id=owner.id,
+            slug="alice",
+            display_name="Alice Example",
+            sections=[{"id": "overview", "title": "Обзор"}],
+        )
+    )
+    await session.commit()
+
+    service = ProfileService(session)
+    catalog = await service.list_catalog(entity_type="user", viewer=viewer)
+    assert [item.profile.slug for item in catalog] == ["alice"]
+    access = await service.get_profile(entity_type="user", slug="alice", viewer=viewer)
+    assert access.profile.display_name == "Alice Example"
+    assert access.sections
+
+    assert await service.list_catalog(entity_type="user", viewer=None) == []
+    with pytest.raises(PermissionError):
+        await service.get_profile(entity_type="user", slug="alice", viewer=None)
 
 
 @pytest.mark.asyncio
