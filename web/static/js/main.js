@@ -872,3 +872,158 @@ activate(hash && forms[hash] ? hash : defaultTab);
   window.addEventListener('pageshow', () => closeMenu());
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') closeMenu(); });
 })();
+
+(function () {
+  const accessCard = document.querySelector('[data-widget="profile-access"]');
+  if (!accessCard) return;
+  const form = accessCard.querySelector('.profile-grants-form');
+  const toggles = {
+    public: form.querySelector('input[name="grant_public"]'),
+    authenticated: form.querySelector('input[name="grant_authenticated"]'),
+  };
+  const entity = accessCard.getAttribute('data-profile-entity');
+  const slug = accessCard.getAttribute('data-profile-slug');
+  let grants = [];
+  try {
+    grants = JSON.parse(accessCard.getAttribute('data-profile-grants') || '[]');
+  } catch (err) {
+    console.warn('Cannot parse profile grants', err);
+  }
+  let targeted = grants.filter((grant) => !['public', 'authenticated'].includes(grant.audience_type));
+
+  const stateEl = form.querySelector('[data-state="grants-status"]');
+  const tableBody = form.querySelector('.profile-grants-list tbody');
+
+  const syncToggles = () => {
+    toggles.public.checked = !!grants.find((g) => g.audience_type === 'public');
+    toggles.authenticated.checked = !!grants.find((g) => g.audience_type === 'authenticated');
+  };
+
+  const renderTable = () => {
+    tableBody.innerHTML = '';
+    if (!targeted.length) {
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.colSpan = 4;
+      cell.className = 'text-muted';
+      cell.textContent = 'Нет индивидуальных доступов';
+      row.appendChild(cell);
+      tableBody.appendChild(row);
+      return;
+    }
+    targeted.forEach((grant, index) => {
+      const row = document.createElement('tr');
+      const typeCell = document.createElement('td');
+      typeCell.textContent = grant.audience_type;
+      const idCell = document.createElement('td');
+      idCell.textContent = grant.subject_id ?? '—';
+      const sectionsCell = document.createElement('td');
+      sectionsCell.textContent = grant.sections && grant.sections.length ? grant.sections.join(', ') : 'все';
+      const actionCell = document.createElement('td');
+      const btn = document.createElement('button');
+      btn.className = 'button button--ghost button--sm';
+      btn.type = 'button';
+      btn.textContent = 'Удалить';
+      btn.addEventListener('click', () => {
+        targeted.splice(index, 1);
+        saveGrants();
+      });
+      actionCell.appendChild(btn);
+      row.appendChild(typeCell);
+      row.appendChild(idCell);
+      row.appendChild(sectionsCell);
+      row.appendChild(actionCell);
+      tableBody.appendChild(row);
+    });
+  };
+
+  const serializePayload = () => {
+    const payload = [];
+    if (toggles.public.checked) {
+      payload.push({ audience_type: 'public', sections: null, subject_id: null });
+    }
+    if (toggles.authenticated.checked) {
+      payload.push({ audience_type: 'authenticated', sections: null, subject_id: null });
+    }
+    targeted.forEach((grant) => {
+      payload.push({
+        audience_type: grant.audience_type,
+        subject_id: grant.subject_id,
+        sections: grant.sections && grant.sections.length ? grant.sections : null,
+      });
+    });
+    return payload;
+  };
+
+  const saveGrants = () => {
+    if (!entity || !slug) return;
+    stateEl.textContent = 'Сохранение…';
+    const payload = serializePayload();
+    fetch(`/api/v1/profiles/${entity}/${slug}/grants`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then((resp) => {
+        if (!resp.ok) {
+          throw new Error(`HTTP ${resp.status}`);
+        }
+        return resp.json();
+      })
+      .then((data) => {
+        grants = data.grants || [];
+        targeted = grants.filter((g) => !['public', 'authenticated'].includes(g.audience_type));
+        syncToggles();
+        renderTable();
+        stateEl.textContent = 'Обновлено';
+        setTimeout(() => {
+          stateEl.textContent = '';
+        }, 3000);
+      })
+      .catch((err) => {
+        console.error('Failed to update grants', err);
+        stateEl.textContent = 'Ошибка сохранения';
+      });
+  };
+
+  const addBtn = form.querySelector('[data-action="grant-add"]');
+  if (addBtn) {
+    addBtn.addEventListener('click', () => {
+      const typeSel = form.querySelector('select[name="audience_type"]');
+      const idInput = form.querySelector('input[name="subject_id"]');
+      const sectionsInput = form.querySelector('input[name="sections"]');
+      if (!typeSel || !idInput) return;
+      const type = typeSel.value;
+      const rawId = idInput.value.trim();
+      if (!rawId) {
+        idInput.focus();
+        return;
+      }
+      const subjectId = Number.isNaN(Number(rawId)) ? rawId : Number(rawId);
+      const sections = (sectionsInput.value || '')
+        .split(',')
+        .map((token) => token.trim())
+        .filter(Boolean);
+      const exists = targeted.find(
+        (grant) => grant.audience_type === type && grant.subject_id === subjectId,
+      );
+      if (exists) {
+        sectionsInput.value = '';
+        return;
+      }
+      targeted.push({
+        audience_type: type,
+        subject_id: subjectId,
+        sections: sections,
+      });
+      idInput.value = '';
+      sectionsInput.value = '';
+      saveGrants();
+    });
+  }
+
+  toggles.public.addEventListener('change', saveGrants);
+  toggles.authenticated.addEventListener('change', saveGrants);
+  renderTable();
+  syncToggles();
+})();

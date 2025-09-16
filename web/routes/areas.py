@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from core.models import Area, TgUser
 from core.services.para_service import ParaService
 from core.services.area_service import AreaService
+from core.services.profile_service import ProfileService, ProfileAccess
 from web.dependencies import get_current_tg_user
 
 

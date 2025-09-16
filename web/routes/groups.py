@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import (
     APIRouter,
@@ -18,6 +18,7 @@ from core.db import bot
 from core.models import Group, Product, ProductStatus, TgUser, WebUser
 from core.services.crm_service import CRMService
 from core.services.group_moderation_service import GroupModerationService
+from core.services.profile_service import ProfileService, ProfileAccess
 from core.services.telegram_user_service import TelegramUserService
 from core.utils import utcnow
 from core.services.access_control import AccessControlService
@@ -573,7 +574,7 @@ async def groups_overview(
     return templates.TemplateResponse(request, "groups/index.html", context)
 
 
-@ui_router.get("/{group_id}")
+@ui_router.get("/manage/{group_id}")
 async def group_detail_page(
     request: Request,
     group_id: int,
@@ -602,6 +603,61 @@ async def group_detail_page(
         "MODULE_TITLE_TOOLTIP": "CRM по участникам и продажам",
     }
     return templates.TemplateResponse(request, "groups/detail.html", context)
+
+
+def _build_profile_context(access: ProfileAccess) -> dict[str, Any]:
+    profile = access.profile
+    return {
+        "slug": profile.slug,
+        "display_name": profile.display_name,
+        "headline": profile.headline,
+        "summary": profile.summary,
+        "avatar_url": profile.avatar_url,
+        "cover_url": profile.cover_url,
+        "meta": profile.profile_meta or {},
+        "tags": list(profile.tags or []),
+        "sections": access.sections,
+        "grants": [
+            {
+                "audience_type": grant.audience_type,
+                "subject_id": grant.subject_id,
+                "sections": list(grant.sections or []),
+                "expires_at": grant.expires_at,
+            }
+            for grant in profile.grants
+        ],
+        "can_edit": access.is_owner or access.is_admin,
+        "is_owner": access.is_owner,
+    }
+
+
+@ui_router.get("/{slug}")
+async def group_profile_page(
+    slug: str,
+    request: Request,
+    current_user: WebUser | None = Depends(get_current_web_user),
+):
+    async with ProfileService() as service:
+        try:
+            access = await service.get_profile(
+                entity_type="group",
+                slug=slug,
+                viewer=current_user,
+            )
+        except ValueError:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        except PermissionError:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    profile_ctx = _build_profile_context(access)
+    context = {
+        "current_user": current_user,
+        "profile": profile_ctx,
+        "entity": "groups",
+        "catalog_path": "/groups",
+        "MODULE_TITLE": f"Группа: {profile_ctx['display_name']}",
+        "page_title": f"Группа: {profile_ctx['display_name']}",
+    }
+    return templates.TemplateResponse(request, "profiles/detail.html", context)
 
 
 api = router

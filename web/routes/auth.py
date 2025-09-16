@@ -396,7 +396,7 @@ async def login(
                 except Exception:
                     pass
                 response = RedirectResponse(
-                    f"/profile/{new_user.username}?edit=1",
+                    f"/users/{new_user.username}?edit=1",
                     status_code=status.HTTP_303_SEE_OTHER,
                 )
                 if telegram_id:
