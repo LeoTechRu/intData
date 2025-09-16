@@ -349,6 +349,12 @@ class ProfileService:
 
         await self.replace_grants(profile, payload, actor=actor)
         await self.session.refresh(profile)
+
+        meta = dict(profile.profile_meta or {})
+        if meta.get("visibility") != visibility:
+            meta["visibility"] = visibility
+            profile.profile_meta = meta
+            profile.updated_at = utcnow()
         return profile
 
     # ------------------------------------------------------------------
@@ -363,7 +369,12 @@ class ProfileService:
     def _has_default_access(self, profile: EntityProfile, context: ViewerContext) -> bool:
         """Implicit visibility rules when no explicit grants exist."""
         if profile.entity_type == "user":
-            return context.is_authenticated
+            meta = profile.profile_meta or {}
+            visibility = str(meta.get("visibility") or meta.get("profile_visibility") or "").lower()
+            if visibility == "public":
+                return True
+            if visibility == "authenticated":
+                return context.is_authenticated
         return False
 
     def _owned_by_viewer(self, profile: EntityProfile, context: ViewerContext) -> bool:

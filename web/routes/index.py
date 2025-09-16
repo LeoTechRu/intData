@@ -330,8 +330,12 @@ def _load_next_payload(page: str) -> tuple[str, tuple[str, ...]]:
 def _next_response(page: str) -> HTMLResponse:
     html, script_hashes = _load_next_payload(page)
     response = HTMLResponse(html)
-    base_csp = os.getenv("CSP_DEFAULT")
-    response.headers["Content-Security-Policy"] = augment_csp(script_hashes, base=base_csp)
+    if os.getenv("SECURITY_HEADERS_ENABLED", "1") == "1":
+        base_csp = os.getenv("CSP_DEFAULT")
+        response.headers["Content-Security-Policy"] = augment_csp(
+            script_hashes,
+            base=base_csp,
+        )
     return response
 
 

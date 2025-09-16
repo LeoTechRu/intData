@@ -378,7 +378,7 @@ def backfill_profile_visibility(conn: Connection) -> dict[str, int]:
     result = conn.execute(
         sa.text(
             """
-            SELECT p.id, p.entity_id, u.privacy_settings
+            SELECT p.id, p.entity_id, p.profile_meta, u.privacy_settings
             FROM entity_profiles AS p
             JOIN users_web AS u ON p.entity_type = 'user' AND u.id = p.entity_id
             """
@@ -387,8 +387,9 @@ def backfill_profile_visibility(conn: Connection) -> dict[str, int]:
 
     grants_added = 0
     privacy_updates = 0
+    meta_updates = 0
 
-    for profile_id, user_id, raw_privacy in result:
+    for profile_id, user_id, raw_meta, raw_privacy in result:
         grants_rows = conn.execute(
             sa.text(
                 "SELECT audience_type FROM entity_profile_grants WHERE profile_id = :pid"
@@ -396,6 +397,16 @@ def backfill_profile_visibility(conn: Connection) -> dict[str, int]:
             {"pid": profile_id},
         ).fetchall()
         grant_set = {row[0] for row in grants_rows}
+
+        if isinstance(raw_meta, dict):
+            meta = dict(raw_meta)
+        elif isinstance(raw_meta, str) and raw_meta:
+            try:
+                meta = json.loads(raw_meta)
+            except json.JSONDecodeError:
+                meta = {}
+        else:
+            meta = {}
 
         if isinstance(raw_privacy, dict):
             privacy = dict(raw_privacy)
@@ -453,7 +464,15 @@ def backfill_profile_visibility(conn: Connection) -> dict[str, int]:
             )
             privacy_updates += 1
 
-    return {"grants_added": grants_added, "privacy_updated": privacy_updates}
+        if desired_visibility and meta.get("visibility") != desired_visibility:
+            meta["visibility"] = desired_visibility
+            conn.execute(
+                sa.text("UPDATE entity_profiles SET profile_meta=:val WHERE id=:pid"),
+                {"val": json.dumps(meta), "pid": profile_id},
+            )
+            meta_updates += 1
+
+    return {"grants_added": grants_added, "privacy_updated": privacy_updates, "meta_updated": meta_updates}
 
 
 
