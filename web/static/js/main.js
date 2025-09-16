@@ -176,20 +176,292 @@ export async function saveDashboardLayout(layout) {
 }
 
 function applyDashboardLayout() {
-    const widgets = dashboardLayout === null || dashboardLayout === void 0 ? void 0 : dashboardLayout.widgets;
-    const hidden = dashboardLayout === null || dashboardLayout === void 0 ? void 0 : dashboardLayout.hidden;
-    document.querySelectorAll('[data-widget]').forEach((el) => {
-        const key = el.dataset.widget;
-        if (!key)
-            return;
+    const container = document.querySelector('[data-dashboard]');
+    if (!container)
+        return;
+    const elements = Array.from(container.querySelectorAll('[data-widget]'));
+    if (!elements.length)
+        return;
+    const savedOrder = Array.isArray(dashboardLayout === null || dashboardLayout === void 0 ? void 0 : dashboardLayout.widgets)
+        ? [...dashboardLayout.widgets]
+        : [];
+    const savedHidden = Array.isArray(dashboardLayout === null || dashboardLayout === void 0 ? void 0 : dashboardLayout.hidden)
+        ? [...dashboardLayout.hidden]
+        : [];
+    if (!savedOrder.length) {
+        const fallbackOrder = elements
+            .map((el) => el.dataset.widget || '')
+            .filter(Boolean);
+        const hiddenSet = new Set(savedHidden);
+        dashboardLayout.widgets = fallbackOrder.filter((key) => !hiddenSet.has(key));
+        if (!dashboardLayout.hidden)
+            dashboardLayout.hidden = savedHidden;
+    }
+    const orderKeys = Array.isArray(dashboardLayout.widgets) ? dashboardLayout.widgets : [];
+    if (orderKeys.length) {
+        const order = new Map(orderKeys.map((key, index) => [key, index]));
+        const sorted = elements.slice().sort((a, b) => {
+            const aKey = a.dataset.widget || '';
+            const bKey = b.dataset.widget || '';
+            const aIndex = order.has(aKey) ? order.get(aKey) : Number.MAX_SAFE_INTEGER;
+            const bIndex = order.has(bKey) ? order.get(bKey) : Number.MAX_SAFE_INTEGER;
+            return aIndex - bIndex;
+        });
+        sorted.forEach((node) => container.appendChild(node));
+    }
+    elements.forEach((el) => {
+        const key = el.dataset.widget || '';
         let hide = false;
-        if (Array.isArray(widgets) && widgets.length > 0) {
-            hide = !widgets.includes(key);
+        if (orderKeys.length) {
+            hide = !orderKeys.includes(key);
         }
-        else if (Array.isArray(hidden) && hidden.length > 0) {
-            hide = hidden.includes(key);
+        else if (savedHidden.length) {
+            hide = savedHidden.includes(key);
         }
         el.hidden = hide;
+        el.classList.toggle('dashboard-widget-hidden', hide);
+    });
+}
+
+function initDashboardEditor() {
+    const container = document.querySelector('[data-dashboard]');
+    const toggle = document.querySelector('[data-dashboard-edit]');
+    const panel = document.querySelector('[data-dashboard-editor]');
+    const hiddenList = panel === null || panel === void 0 ? void 0 : panel.querySelector('[data-dashboard-hidden-list]');
+    if (!container || !toggle || !panel || !hiddenList)
+        return;
+    let editing = false;
+    let dragSource = null;
+    function widgetKey(el) {
+        var _a;
+        return ((_a = el === null || el === void 0 ? void 0 : el.dataset) === null || _a === void 0 ? void 0 : _a.widget) || '';
+    }
+    function allWidgets() {
+        return Array.from(container.querySelectorAll('[data-widget]'));
+    }
+    function visibleWidgets() {
+        return allWidgets()
+            .filter((el) => !el.hidden)
+            .map((el) => widgetKey(el))
+            .filter(Boolean);
+    }
+    function hiddenWidgets() {
+        return allWidgets()
+            .filter((el) => el.hidden)
+            .map((el) => widgetKey(el))
+            .filter(Boolean);
+    }
+    function ensureLayoutDefaults() {
+        if (!Array.isArray(dashboardLayout.hidden)) {
+            dashboardLayout.hidden = [];
+        }
+        if (!Array.isArray(dashboardLayout.widgets) || dashboardLayout.widgets.length === 0) {
+            const hiddenSet = new Set(dashboardLayout.hidden);
+            dashboardLayout.widgets = allWidgets()
+                .map((el) => widgetKey(el))
+                .filter((key) => key && !hiddenSet.has(key));
+        }
+    }
+    function updateToggleLabel() {
+        toggle.textContent = editing ? 'Готово' : 'Настроить дашборд';
+    }
+    function refreshHiddenList() {
+        hiddenList.innerHTML = '';
+        const hiddenKeys = hiddenWidgets();
+        if (!hiddenKeys.length) {
+            const li = document.createElement('li');
+            li.className = 'dashboard-editor-panel__empty';
+            li.textContent = 'Все виджеты отображаются';
+            hiddenList.appendChild(li);
+            return;
+        }
+        hiddenKeys.forEach((key) => {
+            const widget = container.querySelector(`[data-widget="${key}"]`);
+            const li = document.createElement('li');
+            li.className = 'dashboard-editor-panel__item';
+            const titleNode = widget === null || widget === void 0 ? void 0 : widget.querySelector('.card-title');
+            const titleText = titleNode && titleNode.textContent ? titleNode.textContent.trim() : '';
+            const title = titleText || key;
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'button button--ghost';
+            button.textContent = `Показать «${title}»`;
+            button.addEventListener('click', () => {
+                if (!widget)
+                    return;
+                widget.hidden = false;
+                widget.classList.remove('dashboard-widget-hidden');
+                dashboardLayout.hidden = (dashboardLayout.hidden || []).filter((k) => k !== key);
+                const nextOrder = new Set(dashboardLayout.widgets || []);
+                nextOrder.add(key);
+                dashboardLayout.widgets = Array.from(nextOrder);
+                container.appendChild(widget);
+                persistLayout();
+            });
+            li.appendChild(button);
+            hiddenList.appendChild(li);
+        });
+    }
+    function addOverlay(el) {
+        if (el.querySelector('.dashboard-widget__overlay'))
+            return;
+        const overlay = document.createElement('div');
+        overlay.className = 'dashboard-widget__overlay';
+        const handle = document.createElement('span');
+        handle.className = 'dashboard-widget__handle';
+        handle.setAttribute('aria-hidden', 'true');
+        handle.textContent = '⇅';
+        const hideBtn = document.createElement('button');
+        hideBtn.type = 'button';
+        hideBtn.className = 'dashboard-widget__hide';
+        hideBtn.setAttribute('aria-label', 'Скрыть виджет');
+        hideBtn.textContent = '×';
+        overlay.appendChild(handle);
+        overlay.appendChild(hideBtn);
+        el.appendChild(overlay);
+    }
+    function removeOverlays() {
+        container.querySelectorAll('.dashboard-widget__overlay').forEach((node) => node.remove());
+    }
+    function persistLayout() {
+        ensureLayoutDefaults();
+        dashboardLayout.widgets = visibleWidgets();
+        dashboardLayout.hidden = hiddenWidgets();
+        saveDashboardLayout(dashboardLayout).catch(() => { });
+        refreshHiddenList();
+    }
+    function enterEditMode() {
+        editing = true;
+        container.classList.add('dashboard--editing');
+        toggle.setAttribute('aria-pressed', 'true');
+        panel.hidden = false;
+        allWidgets().forEach((el) => {
+            el.draggable = true;
+            el.classList.add('dashboard-widget--editable');
+            addOverlay(el);
+        });
+        updateToggleLabel();
+        refreshHiddenList();
+    }
+    function exitEditMode() {
+        editing = false;
+        container.classList.remove('dashboard--editing');
+        toggle.setAttribute('aria-pressed', 'false');
+        panel.hidden = true;
+        allWidgets().forEach((el) => {
+            el.removeAttribute('draggable');
+            el.classList.remove('dashboard-widget--editable');
+        });
+        removeOverlays();
+        updateToggleLabel();
+        persistLayout();
+    }
+    toggle.addEventListener('click', () => {
+        ensureLayoutDefaults();
+        if (editing) {
+            exitEditMode();
+        }
+        else {
+            enterEditMode();
+        }
+    });
+    container.addEventListener('click', (event) => {
+        if (!editing)
+            return;
+        const hideBtn = event.target.closest('.dashboard-widget__hide');
+        if (!hideBtn)
+            return;
+        const widget = hideBtn.closest('[data-widget]');
+        const key = widgetKey(widget);
+        if (!key)
+            return;
+        widget.hidden = true;
+        widget.classList.add('dashboard-widget-hidden');
+        dashboardLayout.widgets = (dashboardLayout.widgets || []).filter((k) => k !== key);
+        const hiddenSet = new Set(dashboardLayout.hidden || []);
+        hiddenSet.add(key);
+        dashboardLayout.hidden = Array.from(hiddenSet);
+        persistLayout();
+    });
+    container.addEventListener('dragstart', (event) => {
+        if (!editing) {
+            event.preventDefault();
+            return;
+        }
+        const widget = event.target.closest('[data-widget]');
+        if (!widget || widget.hidden) {
+            event.preventDefault();
+            return;
+        }
+        dragSource = widget;
+        widget.classList.add('is-dragging');
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', widgetKey(widget));
+    });
+    container.addEventListener('dragend', () => {
+        if (dragSource) {
+            dragSource.classList.remove('is-dragging');
+            dragSource = null;
+        }
+    });
+    container.addEventListener('dragover', (event) => {
+        if (!editing)
+            return;
+        const target = event.target.closest('[data-widget]');
+        if (!target || target.hidden)
+            return;
+        event.preventDefault();
+    });
+    container.addEventListener('drop', (event) => {
+        if (!editing)
+            return;
+        event.preventDefault();
+        if (!dragSource)
+            return;
+        const target = event.target.closest('[data-widget]');
+        if (!target || target === dragSource || target.hidden)
+            return;
+        const rect = target.getBoundingClientRect();
+        const after = event.clientY > rect.top + rect.height / 2;
+        container.insertBefore(dragSource, after ? target.nextSibling : target);
+        dragSource.classList.remove('is-dragging');
+        dragSource = null;
+        persistLayout();
+    });
+}
+
+function initAdminIframe() {
+    const frame = document.querySelector('[data-admin-iframe]');
+    if (!frame)
+        return;
+    const resize = () => {
+        try {
+            const doc = frame.contentDocument;
+            if (!doc || !doc.body)
+                return;
+            const height = doc.body.scrollHeight || doc.documentElement.scrollHeight;
+            if (height)
+                frame.style.height = `${Math.max(height, 480)}px`;
+        }
+        catch (_a) {
+            /* ignore cross-origin */
+        }
+    };
+    frame.addEventListener('load', () => {
+        resize();
+        try {
+            if ('ResizeObserver' in window) {
+                const doc = frame.contentDocument;
+                if (doc && doc.body) {
+                    const observer = new ResizeObserver(() => resize());
+                    observer.observe(doc.body);
+                    frame.addEventListener('load', () => observer.disconnect(), { once: true });
+                }
+            }
+        }
+        catch (_a) {
+            /* ignore */
+        }
     });
 }
 
@@ -200,6 +472,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initPersonaHeader();
     initCardLinks();
     initFavoriteToggle();
+    initDashboardEditor();
+    initAdminIframe();
     loadUserSettings();
 });
 (function(){
@@ -568,4 +842,3 @@ activate(hash && forms[hash] ? hash : defaultTab);
   window.addEventListener('pageshow', () => closeMenu());
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') closeMenu(); });
 })();
-

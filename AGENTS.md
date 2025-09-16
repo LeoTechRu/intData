@@ -38,6 +38,8 @@
 - Интерфейсы обязательны к адаптивности; не допускаются дубликаты `<h1>`, заголовок задаётся через `MODULE_TITLE`.
 - Стандарты: **ESLint**, **Prettier**, **Vitest/Jest**; перед PR выполняются `npm run build`, `npm run dev`, `npm run lint`, `npm run test`.
 - Задачи по фронтенду согласуются с [docs/BACKLOG.md#e17-frontend-modernization](./docs/BACKLOG.md#e17-frontend-modernization) как единой SSoT.
+- ЦУП (`web/templates/start.html`) собирается на адаптивной сетке `repeat(auto-fit, minmax(320px, 1fr))`. Каждый виджет — `<section class="card" data-widget="…">` с обязательной `.card-title`, уникальным `data-widget` и классами `span-*` для расширения на 2/3 колонок. Минимальная высота карты задаётся `--dashboard-card-min-height`, порядок и видимость сохраняются в `user_settings.dashboard_layout`.
+- Админский сектор подключается через `<iframe data-admin-iframe>` с маршрута `/cup/admin-embed` и шаблона `web/templates/admin/embed.html`; любые изменения админки вносим там либо в `partials/admin_tools.html`, без прямых блоков в `start.html`.
 
 ## Инициализация БД (без Alembic)
 - Источник правды по схеме: идемпотентные DDL в **`core/db/ddl/*.sql`** (только `CREATE/ALTER/INDEX IF NOT EXISTS`).
@@ -77,7 +79,7 @@
 - Одна расширяемая таблица **`user_settings`** (K/V JSONB): ключи `dashboard_layout`, `favorites` и др. в будущем.
 - Перенос `users_favorites` → `user_settings` (`key='favorites'`) выполняется в **`core/db/repair.py`** (идемпотентно).
 - API: `GET /api/v1/user/settings`, `GET/PUT /api/v1/user/settings/{key}`.
-- UI: режим «Настроить дашборд» (drag-n-drop, resize); дефолтные раскладки — фолбэк, если записи нет.
+- UI: кнопка «Настроить дашборд» в ЦУП включает drag-n-drop и скрытие/возврат виджетов. `layout.widgets` — список видимых карточек по порядку, `layout.hidden` — скрытые. Дефолт – все виджеты до первой сохранённой раскладки.
 
 ## Build, Test, and Development Commands
 - Create venv: `python -m venv venv && source ./venv/bin/activate`
