@@ -1,8 +1,5 @@
 import pytest
-import pytest_asyncio
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
 
 from aiogram.types import (
     ChatMemberAdministrator,
@@ -17,18 +14,6 @@ from core.services.profile_service import ProfileService
 from core.services.crm_service import CRMService
 from core.services.group_moderation_service import GroupModerationService
 from core.models import WebUser, GroupType, ProductStatus, UserGroup, EntityProfile
-
-
-@pytest_asyncio.fixture
-async def session():
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    async_session = sessionmaker(
-        engine, expire_on_commit=False, class_=AsyncSession
-    )
-    async with async_session() as sess:
-        yield sess
 
 
 @pytest.mark.asyncio
