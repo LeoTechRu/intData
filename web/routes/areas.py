@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
-from core.models import Area, TgUser, WebUser
+from core.models import Area, TgUser
 from core.services.para_service import ParaService
 from core.services.area_service import AreaService
-from web.dependencies import get_current_tg_user, get_current_web_user
-from ..template_env import templates
+from web.dependencies import get_current_tg_user
 
 
 router = APIRouter(prefix="/areas", tags=["areas"])
@@ -70,14 +70,8 @@ async def create_area(payload: AreaCreate, current_user: TgUser | None = Depends
 
 
 @ui_router.get("")
-async def areas_page(request: Request, current_user: WebUser | None = Depends(get_current_web_user)):
-    context = {
-        "current_user": current_user,
-        "current_role_name": getattr(current_user, "role", ""),
-        "is_admin": getattr(current_user, "role", "") == "admin",
-        "page_title": "Areas",
-    }
-    return templates.TemplateResponse(request, "areas.html", context)
+async def areas_page_redirect() -> RedirectResponse:
+    return RedirectResponse("/settings#areas", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 
 
 

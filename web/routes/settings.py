@@ -34,7 +34,7 @@ FAVORITE_PAGES = [
     {"path": "/projects", "label": "Проекты", "permission": "app.projects.manage"},
     {"path": "/notes", "label": "Заметки", "permission": "app.tasks.manage"},
     {"path": "/calendar", "label": "Календарь", "permission": "app.calendar.manage"},
-    {"path": "/areas", "label": "Области", "permission": "app.areas.manage"},
+    {"path": "/settings#areas", "label": "Области", "permission": "app.areas.manage"},
     {"path": "/resources", "label": "Ресурсы", "permission": "app.projects.manage"},
     {"path": "/habits", "label": "Привычки", "permission": "app.habits.manage"},
     {"path": "/time", "label": "Время", "permission": "app.tasks.manage"},
