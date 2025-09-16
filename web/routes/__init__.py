@@ -20,6 +20,7 @@ from .resources import api as resources_api
 from .inbox import api as inbox_api
 from .groups import api as groups_api
 from .api_user_settings import router as user_settings_api
+from .api_profiles import router as profiles_api
 
 # отдельные файлы в web/routes/api/*
 from .api.admin import router as admin_api
@@ -50,3 +51,4 @@ api_router.include_router(gcal_api)
 api_router.include_router(user_settings_api)
 api_router.include_router(habits_v1_api)
 api_router.include_router(diagnostics_api)
+api_router.include_router(profiles_api)
