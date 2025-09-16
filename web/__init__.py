@@ -16,6 +16,7 @@ from .middleware_security import (
     BodySizeLimitMiddleware,
     SecurityHeadersMiddleware,
 )
+from .security.csp import build_csp
 from .config import S
 from .middleware_rate_limit import RateLimitMiddleware
 from core.tracing import setup_tracing
@@ -152,21 +153,7 @@ app.add_middleware(BodySizeLimitMiddleware, max_bytes=max_body)
 if os.getenv("SECURITY_HEADERS_ENABLED", "1") == "1":
     csp_default = os.getenv("CSP_DEFAULT")
     if not csp_default:
-        script_src = ["'self'"]
-        frame_src = ["'self'"]
-        connect_src = ["'self'"]
-        if S.TG_LOGIN_ENABLED:
-            script_src.append("https://telegram.org")
-            frame_src.append("https://oauth.telegram.org")
-            connect_src.append("https://oauth.telegram.org")
-        csp_default = (
-            "default-src 'self'; "
-            "img-src 'self' data:; "
-            "style-src 'self' 'unsafe-inline'; "
-            f"script-src {' '.join(script_src)}; "
-            f"frame-src {' '.join(frame_src)}; "
-            f"connect-src {' '.join(connect_src)}"
-        )
+        csp_default = build_csp()
     app.add_middleware(SecurityHeadersMiddleware, csp=csp_default)
 
 if os.getenv("RATE_LIMIT_ENABLED", "0") == "1":
