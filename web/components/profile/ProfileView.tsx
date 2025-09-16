@@ -94,6 +94,7 @@ export default function ProfileView({ entity, slug, backHref, backLabel }: Profi
               <div className="flex items-start">
                 <Link
                   href={backHref}
+                  prefetch={false}
                   className="inline-flex items-center gap-2 rounded-full border border-subtle px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-base hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
                 >
                   {backLabel ?? '← Вернуться'}

@@ -126,6 +126,7 @@ export default function UsersCatalog() {
                   <Link
                     key={user.slug}
                     href={`/users/${user.slug}`}
+                    prefetch={false}
                     className="group flex flex-col gap-3 rounded-2xl border border-subtle bg-[var(--surface-0)] p-5 transition-base hover:-translate-y-1 hover:border-[var(--accent-primary)]"
                   >
                     <div className="flex items-center gap-3">
