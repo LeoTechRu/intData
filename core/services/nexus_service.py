@@ -26,6 +26,7 @@ from core.models import (
 from datetime import date
 
 from ..utils.habit_utils import generate_calendar
+from .profile_service import ProfileService, normalize_slug
 
 T = TypeVar("T", bound=db.Base)
 
@@ -169,6 +170,35 @@ class HabitService(CRUDService[Habit]):
 class ResourceService(CRUDService[Resource]):
     def __init__(self, session: Optional[AsyncSession] = None) -> None:
         super().__init__(Resource, session)
+
+    async def create(self, **kwargs) -> Resource:
+        resource = await super().create(**kwargs)
+        await self._sync_profile(resource)
+        return resource
+
+    async def update(self, obj_id: int, **kwargs) -> Resource | None:
+        resource = await super().update(obj_id, **kwargs)
+        if resource:
+            await self._sync_profile(resource)
+        return resource
+
+    async def _sync_profile(self, resource: Resource) -> None:
+        updates = {
+            "slug": normalize_slug(resource.title, f"resource-{resource.id}"),
+            "display_name": resource.title,
+            "summary": resource.content,
+            "profile_meta": {"type": resource.type, "owner_id": resource.owner_id},
+        }
+        if resource.meta and isinstance(resource.meta, dict):
+            tags = resource.meta.get("tags")
+            if tags:
+                updates["tags"] = tags
+        async with ProfileService(self.session) as profiles:
+            await profiles.upsert_profile_meta(
+                entity_type="resource",
+                entity_id=resource.id,
+                updates=updates,
+            )
 
 
 class ArchiveService(CRUDService[Archive]):
