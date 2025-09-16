@@ -26,6 +26,7 @@ from core.models import (
     GroupType,
 )
 from core.utils import utcnow
+from core.services.profile_service import ProfileService, normalize_slug
 
 
 class TelegramUserService:
@@ -195,6 +196,22 @@ class TelegramUserService:
             group = Group(**kwargs)
             self.session.add(group)
             await self.session.flush()
+            slug_source = kwargs.get("slug") or kwargs.get("username") or kwargs.get("title")
+            slug = normalize_slug(slug_source, f"group-{group.telegram_id}")
+            async with ProfileService(self.session) as profiles:
+                await profiles.upsert_profile_meta(
+                    entity_type="group",
+                    entity_id=group.telegram_id,
+                    updates={
+                        "slug": slug,
+                        "display_name": group.title,
+                        "summary": group.description,
+                        "profile_meta": {
+                            "type": group.type.value if group.type else None,
+                            "participants_count": group.participants_count,
+                        },
+                    },
+                )
             return group
         except IntegrityError as e:
             if "groups.id" in str(e):
@@ -203,6 +220,22 @@ class TelegramUserService:
                 group = Group(**kwargs)
                 self.session.add(group)
                 await self.session.flush()
+                slug_source = kwargs.get("slug") or kwargs.get("username") or kwargs.get("title")
+                slug = normalize_slug(slug_source, f"group-{group.telegram_id}")
+                async with ProfileService(self.session) as profiles:
+                    await profiles.upsert_profile_meta(
+                        entity_type="group",
+                        entity_id=group.telegram_id,
+                        updates={
+                            "slug": slug,
+                            "display_name": group.title,
+                            "summary": group.description,
+                            "profile_meta": {
+                                "type": group.type.value if group.type else None,
+                                "participants_count": group.participants_count,
+                            },
+                        },
+                    )
                 return group
             logger.error(f"IntegrityError при создании группы: {e}")
             await self.session.rollback()
@@ -435,6 +468,16 @@ class TelegramUserService:
             group.description = description
             group.updated_at = utcnow()
             await self.session.flush()
+            async with ProfileService(self.session) as profiles:
+                await profiles.upsert_profile_meta(
+                    entity_type="group",
+                    entity_id=group.telegram_id,
+                    updates={
+                        "slug": group.slug if hasattr(group, "slug") else normalize_slug(group.title, f"group-{group.telegram_id}"),
+                        "display_name": group.title,
+                        "summary": group.description,
+                    },
+                )
             return True
         except Exception as e:  # pragma: no cover - defensive
             logger.error(f"Ошибка обновления описания группы: {e}")

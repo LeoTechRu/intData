@@ -267,6 +267,7 @@ class WebUserService:
             "display_name", user.full_name or user.username
         )
         profile_updates.setdefault("slug", user.username)
+        profile_updates.setdefault("force_slug", True)
         async with ProfileService(self.session) as profiles:
             await profiles.upsert_profile_meta(
                 entity_type="user",

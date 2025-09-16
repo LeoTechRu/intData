@@ -97,6 +97,7 @@ class AreaService:
                         {"id": "initiatives", "title": "Инициативы"},
                         {"id": "contacts", "title": "Контакты"},
                     ],
+                    "force_slug": True,
                 },
             )
         return a

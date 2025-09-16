@@ -2,33 +2,38 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Any, Iterable, Optional, Sequence
 
-from sqlalchemy import Select, and_, func, or_, select
+from sqlalchemy import Select, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from core import db
 from core.models import (
-    Area,
     EntityProfile,
     EntityProfileGrant,
-    Group,
-    Project,
     UserGroup,
     UserRoleLink,
     WebTgLink,
     WebUser,
 )
 from core.services.access_control import AccessControlService
+from core.utils import utcnow
 
 DEFAULT_SECTIONS: list[dict[str, str]] = [
     {"id": "overview", "title": "Обзор"},
     {"id": "activity", "title": "Активность"},
     {"id": "relations", "title": "Связи"},
 ]
+
+
+def normalize_slug(value: Optional[str], fallback: str) -> str:
+    candidate = (value or "").strip().lower()
+    candidate = re.sub(r"[^a-z0-9]+", "-", candidate)
+    candidate = candidate.strip("-")
+    return candidate or fallback
 
 
 @dataclass(slots=True)
@@ -129,9 +134,10 @@ class ProfileService:
         slug: str,
         display_name: str,
         defaults: Optional[dict[str, Any]] = None,
+        force_slug: bool = False,
     ) -> EntityProfile:
         defaults = defaults or {}
-        normalized_slug = slug.lower()
+        normalized_slug = normalize_slug(slug, f"{entity_type}-{entity_id}")
         stmt = select(EntityProfile).where(
             EntityProfile.entity_type == entity_type,
             EntityProfile.entity_id == entity_id,
@@ -140,7 +146,7 @@ class ProfileService:
         profile = result.scalars().first()
         if profile:
             changed = False
-            if profile.slug != normalized_slug:
+            if force_slug and profile.slug != normalized_slug:
                 profile.slug = normalized_slug
                 changed = True
             if display_name and profile.display_name != display_name:
@@ -161,7 +167,7 @@ class ProfileService:
                 profile.sections = defaults["sections"]
                 changed = True
             if changed:
-                profile.updated_at = datetime.utcnow()
+                profile.updated_at = utcnow()
             return profile
         profile = EntityProfile(
             entity_type=entity_type,
@@ -197,7 +203,7 @@ class ProfileService:
         if not profile:
             raise ValueError("profile not found")
         if "slug" in data and data["slug"]:
-            profile.slug = data["slug"].lower()
+            profile.slug = normalize_slug(data["slug"], f"{entity_type}-{profile.entity_id}")
         for key in [
             "display_name",
             "headline",
@@ -210,7 +216,7 @@ class ProfileService:
         ]:
             if key in data and data[key] is not None:
                 setattr(profile, key, data[key])
-        profile.updated_at = datetime.utcnow()
+        profile.updated_at = utcnow()
         await self.session.flush()
         return profile
 
@@ -224,7 +230,7 @@ class ProfileService:
         current = list(profile.grants)
         keep_ids: set[int] = set()
         updated_grants: list[EntityProfileGrant] = []
-        now = datetime.utcnow()
+        now = utcnow()
         for item in payload:
             audience = item.get("audience_type")
             subject_id = item.get("subject_id")
@@ -301,7 +307,7 @@ class ProfileService:
     ) -> list[EntityProfileGrant]:
         grants: list[EntityProfileGrant] = []
         for grant in profile.grants:
-            if grant.expires_at and grant.expires_at < datetime.utcnow():
+            if grant.expires_at and grant.expires_at < utcnow():
                 continue
             audience = grant.audience_type
             if audience == "public":
@@ -457,12 +463,15 @@ class ProfileService:
         entity_id: int,
         updates: dict[str, Any],
     ) -> EntityProfile:
-        slug = updates.get("slug") or updates.get("username") or str(entity_id)
+        payload = dict(updates)
+        force_slug = bool(payload.pop("force_slug", False))
+        slug = payload.get("slug") or payload.get("username") or str(entity_id)
         profile = await self.ensure_profile(
             entity_type=entity_type,
             entity_id=entity_id,
             slug=slug,
-            display_name=updates.get("display_name") or slug,
-            defaults=updates,
+            display_name=payload.get("display_name") or slug,
+            defaults=payload,
+            force_slug=force_slug,
         )
         return profile
