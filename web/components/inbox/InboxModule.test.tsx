@@ -109,7 +109,9 @@ describe('InboxModule', () => {
     expect(notesHint.closest('article')).toHaveTextContent('2');
 
     const tasksHint = screen.getByText('Требуют распределения или уточнения');
-    expect(tasksHint.closest('article')).toHaveTextContent('1');
+    await waitFor(() => {
+      expect(tasksHint.closest('article')).toHaveTextContent('1');
+    });
 
     expect(fetchMock).toHaveBeenCalled();
   });
@@ -146,7 +148,10 @@ describe('InboxModule', () => {
     renderWithClient(<InboxModule />);
 
     expect(await screen.findByText('Готовы разобраться?')).toBeInTheDocument();
-    expect(screen.getByText('Прочитать статью')).toBeInTheDocument();
+    const previewLabel = screen.getByText('Следующий в очереди');
+    const previewCard = previewLabel.parentElement;
+    expect(previewCard).not.toBeNull();
+    expect(within(previewCard as HTMLElement).getByText('Прочитать статью')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Начать разбор' })).toBeInTheDocument();
   });
 

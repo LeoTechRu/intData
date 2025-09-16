@@ -10,6 +10,7 @@ from core.models import WebUser
 from core.services.web_user_service import WebUserService
 from core.services.profile_service import ProfileService, ProfileAccess
 from web.dependencies import get_current_web_user
+from core.utils import utcnow
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
@@ -249,6 +250,7 @@ async def update_profile_grants(
             actor=current_user,
         )
         await service.ensure_default_sections(access.profile)
+        meta = dict(access.profile.profile_meta or {})
         refreshed = await service.get_profile(
             entity_type=entity_type,
             slug=access.profile.slug,
@@ -259,6 +261,17 @@ async def update_profile_grants(
             visibility = "public"
         elif any(grant.audience_type == "authenticated" for grant in refreshed.profile.grants):
             visibility = "authenticated"
+        meta_changed = False
+        if meta.get("visibility") != visibility:
+            meta["visibility"] = visibility
+            meta_changed = True
+        if meta.get("profile_visibility") != visibility:
+            meta["profile_visibility"] = visibility
+            meta_changed = True
+        if meta_changed:
+            access.profile.profile_meta = meta
+            access.profile.updated_at = utcnow()
+            await service.session.flush()
         if entity_type == "user":
             user_service = WebUserService(service.session)
             owner = await user_service.get_by_id(refreshed.profile.entity_id)
