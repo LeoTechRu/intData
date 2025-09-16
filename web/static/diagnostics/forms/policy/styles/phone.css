@@ -1,0 +1,53 @@
+@media screen and (max-width: 1000px) {
+    h2 {
+        font-size: 24px;
+    }
+
+    h3 {
+        font-size: 20px;
+    }
+
+    p, .p1 {
+        font-size: 16px;
+        line-height: normal;
+    }
+    
+    .p1-strong {
+        font-size: 16px;
+    }
+
+    .p2, .p2-strong {
+        font-size: 16px;
+        line-height: 112%;
+        word-break: break-word;
+    }
+}
+    
+@media screen and (max-width: 1000px) {
+    #top-left-logo {
+        width: 100px;
+        top: 24px;
+        left: 24px;
+    }
+}
+
+@media screen and (max-width: 1000px) {
+    article {
+        flex-direction: column;
+        justify-content: flex-start;
+
+        overflow: visible;
+    }
+
+    section {
+        margin-top: 100px;
+    }
+
+    section h3 {
+        margin-top: 36px;
+    }
+
+    section p {
+        margin-top: 12px;
+    }
+}

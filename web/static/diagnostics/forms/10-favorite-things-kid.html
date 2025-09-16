@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+    <title>10 любимых дел</title>
+
+    <!-- Отключаем кеширование -->
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <meta http-equiv="pragma" content="no-cache">
+
+    <link rel="stylesheet" href="./global/global.css">
+    <link rel="stylesheet" href="./10-favorite-things-kid/styles/style.css">
+    <link rel="stylesheet" href="./10-favorite-things-kid/styles/form-checkbox.css">
+    <link rel="stylesheet" href="./10-favorite-things-kid/styles/phone.css">
+</head>
+<body>
+    <script src="./10-favorite-things-kid/scripts/check.js"></script>
+
+    <article>
+        <div id="top-left-logo">
+            <img src="https://static.tildacdn.com/tild6630-3237-4638-a534-313664333931/___.svg" alt="logo">
+        </div>
+        
+        <aside id="form-aside">
+            <h3>После заполнения анкеты вам откроется доступ к диагностике<br><span>«10 любимых дел»</span></h3>
+            <p>Диагностика поможет узнать, какие виды деятельности вам подходят больше всего.<br>Пожалуйста, внимательно прочитайте инструкцию, прежде чем переходить к самой диагностике. Инструкция будет доступна вам после заполнения данной формы.</p>
+        </aside>
+
+        <section id="form-section">
+            <form>
+                <div id="form-logo">
+                    <img src="https://sun9-33.userapi.com/impg/o7UasFLuPHffAw7M354dhIyAw-ywr1TdpgWp7w/AU35d9CQutY.jpg?size=192x140&quality=96&sign=65f29d920ee520f801e55492621ceaed&type=album" alt="mini-logo">
+                </div>
+
+                <label class="p1" for="form-name">ФИО</label>
+                <input class="p1" type="text" id="form-name" name="form-name" maxlength="100" required>
+
+                <label class="p1" for="form-phone">Телефон</label>
+                <input class="p1" type="tel" id="form-phone" name="form-phone" maxlength="20" required>
+
+                <div class="form-checkbox">
+                    <div id="parents-phone"></div>
+                    <label id="label-parents-phone" for="parents-phone" class="p1">Телефон родителя</label>
+                </div>
+
+                <label class="p1" for="form-email">Email</label>
+                <input class="p1" type="email" id="form-email" name="form-email" maxlength="100" required>
+
+                <p id="form-error">Неверный формат ФИО</p>
+
+                <div class="form-checkbox">
+                    <div id="policy"></div>
+                    <label id="label-policy" for="policy" class="p1">Я принимаю условия <span>Пользовательского соглашения</span> и даю свое <span>согласие на обработку персональных данных</span> в соответствии с <span>Политикой</span>.</label>
+                </div>
+
+                <button class="p1" type="submit" id="submit-form">Далее</button>
+            </form>
+        </section>
+
+
+        <!-- Контент диагностики -->
+        <h2 id="section-title" class="hidden">«10 любимых дел»</h2>
+        <section id="section-content" class="hidden">
+            <!-- Две колонны контента -->
+            <div class="section-content">
+                <!-- Колонна с 2 блоками -->
+                <div class="section-content__column">
+                    <div class="section-content__block" id="block-purple">
+                        <div id="cross-block-arrow1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="142" height="71" viewBox="0 0 142 71" fill="none">
+                                <path d="M0 68C5.00679e-06 69.3807 1.1193 70.5 2.50001 70.5C3.88072 70.5 5.00001 69.3807 5 68L0 68ZM130.5 67.9999L141.247 41.2073L112.67 45.2968L130.5 67.9999ZM5 68C4.99986 30.3883 30.1629 9.75102 57.8218 6.08933C85.628 2.40813 115.479 15.9112 124.925 46.4726L129.702 44.9961C119.38 11.5996 86.8243 -2.79387 57.1656 1.13257C27.3596 5.07852 -0.000148773 27.553 0 68L5 68Z" fill="#F1CD21"/>
+                            </svg>
+                        </div>
+                        <h3>Это <span>ВАЖНОЕ</span> сообщение<img src="https://sun9-43.userapi.com/impg/Yd2ijlCd0fXQJKrRU3ZMagID9ol3fMvHHYApeg/P2qEVzS19gc.jpg?size=28x28&quality=96&sign=50450a2dd683a43ed4b8f66b323b4c09&type=album" alt="shape"></h3>
+                        <h3>поможет тебе сделать это ЗАДАНИЕ правильно. Поэтому, пожалуйста, прочитай этот текст внимательно и следуйте нашим инструкциям.</h3>
+                        <h3>До <span>21:00</span> завтрашнего дня я жду от тебя 10 пунктов, отвечающих на вопрос:<img src="https://sun9-19.userapi.com/impg/rtJeKVHALsqXKiIF7I9Uoon7lkH0ztE27O1i9A/zjXhlGWZEM4.jpg?size=28x28&quality=96&sign=8e019baefc823fac03da09a2ec846a5a&type=album" alt="shape"></h3>
+                        <h3>«Что ты любишь делать больше всего?»</h3>
+                        <h3>Меньше 10 пунктов не засчитывается за выполнение задания - поэтому важно вписать 10 дел в 10 полей ниже.<img src="https://sun9-71.userapi.com/impg/lyJ51FhntW5ryAYyTWJQxaOLVfLHX89niWN12Q/65t_nQLnvgw.jpg?size=28x29&quality=96&sign=66ff7a29f85f93240cdfd5541878841e&type=album" alt="shape"></h3>
+                    </div>
+                    <div class="section-content__block" id="block-yellow">
+                        <h3>Важно посидеть и подумать!<br><br>И вспомнить  то, что мы обсуждали и о чем говорили во время нашей встречи.<img src="https://sun9-69.userapi.com/impg/Ky0RIWZXG9RJizSYAh4O615P6R_i92-qexpwwg/GaYiimdd6Ds.jpg?size=28x28&quality=96&sign=6626e624cf99a74bf6a0d7b13d81a007&type=album" alt="shape"></h3>
+                        <h3>Встань в позицию <span>СОЗДАТЕЛЯ</span> некоего продукта, а не его потребителя!<img src="https://sun9-73.userapi.com/impg/AB_g-v77EZ-5EprPbvOxXLuFjOWXrNCdGmKWIg/LGJAFjn0KPY.jpg?size=28x27&quality=96&sign=843ab0c096aa73ca3367f926ad8427a8&type=album" alt="shape"></h3>
+                        <h3>Впиши свои ответы в формы ниже.<img src="https://sun9-58.userapi.com/impg/TLOzuCBcvXtrYD3NHCeavo-JkyJVJ6HXZ8VOOQ/1B621tSv7yg.jpg?size=34x28&quality=96&sign=12d75971378133e8007b3d373b14e165&type=album" alt="shape"></h3>
+                        <h3>УДАЧИ!</h3>
+                        <div id="cross-block-arrow2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="142" height="71" viewBox="0 0 142 71" fill="none">
+                                <path d="M11 3L28.8942 25.6524L0.329511 29.823L11 3ZM136.5 3.00007C136.5 1.61935 137.619 0.500069 139 0.500069C140.381 0.500069 141.5 1.61935 141.5 3.00007H136.5ZM16.6351 24.5124C26.1599 54.7627 56.0145 68.4684 83.7862 64.9669C97.6328 63.2212 110.801 57.1976 120.493 46.9398C130.16 36.7096 136.5 22.1315 136.5 3.00007H141.5C141.5 23.3081 134.738 39.1447 124.128 50.3737C113.544 61.5752 99.2612 68.0555 84.4117 69.9277C54.7912 73.6622 22.271 59.06 11.866 26.0141L16.6351 24.5124Z" fill="#BD92CE"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Колонна с 1 блоком (в моб версии вставляется внутырь колонны) -->
+                <div class="section-content__block" id="block-blue">
+                    <h3>При этом <span>ДЕЛАТЬ = СОЗДАВАТЬ</span>, а НЕ ПОТРЕБЛЯТЬ.</h3>
+                    <h3>Поэтому ниже пример<br>КАК правильно<br>КАК неправильно<br>можно записать 10 «любимых дел»:<img src="https://sun9-69.userapi.com/impg/uGPZv4SwKgc1k1zVWrH_dVAQIRmSuewehi7pBg/82aoFfjGSSU.jpg?size=28x28&quality=96&sign=674a9af22bd587f3279271197e322d22&type=album" alt="shape"></h3>
+                    <div id="shape-text">
+                        <div class="shape-text__column">
+                            <h3>Правильно</h3>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="150" height="6" viewBox="0 0 150 6" fill="none">
+                                <path d="M147 3L3.00001 3" stroke="#F1CD21" stroke-width="5" stroke-linecap="round"/>
+                            </svg>
+                            <h3>печь тортики<br>снимать видосики<br>писать книги</h3>
+                        </div>
+
+                        <svg xmlns="http://www.w3.org/2000/svg" width="6" height="150" viewBox="0 0 6 150" fill="none">
+                            <path d="M3 3L3 147" stroke="#F1CD21" stroke-width="5" stroke-linecap="round"/>
+                        </svg>
+
+                        <div class="shape-text__column">
+                            <h3>Неправильно</h3>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="150" height="6" viewBox="0 0 150 6" fill="none">
+                                <path d="M147 3L3.00001 3" stroke="#F1CD21" stroke-width="5" stroke-linecap="round"/>
+                            </svg>
+                            <h3>кушать тортики<br>смотреть видосики<br>читать книги</h3>
+                        </div>
+                    </div>
+                    <h3>Увидел разницу?<br>Чтобы открыть кофейню или стать классным бариста, надо любить <span>ГОТОВИТЬ</span> кофе, а не пить<img src="https://sun9-38.userapi.com/impg/ySX5OH15h75Jx3HSqGA33Iyv_VfljcPT6PcH6A/3DI2bAgEozA.jpg?size=28x29&quality=96&sign=ce7015acfda66ea723de6ff153959ec7&type=album" alt="shape"></h3>
+                    <h3>Люблю спать, есть, слушать музыку, гулять - это первое, что приходит на ум при ответе на вопрос<br>«что я люблю делать». Это естественно!</h3>
+                    <h3>Но это не подходит для выбора профессии! И не засчитывается за выполнение задания:)</h3>
+                    <h3>Твоя задача прислать мне 10 пунктов того, что ты любишь <span>СОЗДАВАТЬ</span> и делать <span>ПОЛЕЗНОГО</span> для других. Того, что может стать основой профессии.
+                    </h3>
+                </div>
+            </div>
+
+            <!-- Инпуты после блока -->
+            <div class="section-inputs">
+                <div class="section-inputs__block">
+                    <h3>1.</h3>
+                    <textarea id="input-1" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>2.</h3>
+                    <textarea id="input-2" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>3.</h3>
+                    <textarea id="input-3" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>4.</h3>
+                    <textarea id="input-4" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>5.</h3>
+                    <textarea id="input-5" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>6.</h3>
+                    <textarea id="input-6" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>7.</h3>
+                    <textarea id="input-7" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>8.</h3>
+                    <textarea id="input-8" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>9.</h3>
+                    <textarea id="input-9" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>10.</h3>
+                    <textarea id="input-10" maxlength="1000"></textarea>
+                </div>
+            </div>
+
+            <!-- Кнопка в конце -->
+            <button id="button-end" disabled>Отправить</button>
+            <button id="button-back">Назад</button>
+        </section>
+    </article>
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script src="../../config.js"></script>
+    <script src="./global/inputError.js"></script>
+    <script src="./10-favorite-things-kid/scripts/form.js"></script>
+    <script src="./10-favorite-things-kid/scripts/script.js"></script>
+</body>
+</html>
+

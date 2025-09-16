@@ -1,0 +1,82 @@
+/* Чекбокс */
+.input-checkbox {
+    width: 20px;
+    height: 20px;
+    position: relative;
+
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.input-checkbox svg {
+    width: 20px;
+    height: 20px;
+
+    display: none;
+
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* При активации отключаем бордер и включаем иконку */
+.vector-wrapper.active .input-checkbox,
+.job-wrapper.active .input-checkbox,
+#section-training-options button.active .input-checkbox {
+    border: none;
+}
+
+.vector-wrapper.active svg,
+.job-wrapper.active svg,
+#section-training-options button.active svg {
+    display: block;
+}
+
+
+/* Радиокнопка */
+.input-radio {
+    width: 20px;
+    height: 20px;
+    display: block;
+    position: relative;
+}
+
+.input-radio::before {
+    content: "";
+    width: 20px;
+    height: 20px;
+
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    
+    box-sizing: border-box;
+    border: 1px var(--border) solid;
+    border-radius: 50%;
+
+    background-color: #FFFFFF;
+    cursor: pointer;
+}
+
+#section-prepare-conclusion button .input-radio::before,
+#section-paid-forms button .input-radio::before {
+    background-color: #00000000;
+}
+
+.vector-best-wrapper.active .input-radio::after,
+#section-prepare-conclusion button.active .input-radio::after,
+#section-paid-forms button.active .input-radio::after {
+    content: "";
+    width: 14px;
+    height: 14px;
+
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    
+    background-color: var(--border);
+    border-radius: 50%;
+
+    cursor: pointer;
+}

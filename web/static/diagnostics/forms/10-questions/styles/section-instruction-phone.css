@@ -1,0 +1,127 @@
+@media screen and (max-width: 1280px) {
+    #section-instruction {
+        width: min(calc(438px + 24px), 100%);
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    #section-instruction h2 {
+        text-align: left;
+        font-weight: 600;
+        font-size: 32px;
+        line-height: 112%;
+        margin: 80px 0 40px 32px;
+    }
+    
+    .section-instruction__row {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-left: 32px;
+    }
+
+    .section-instruction__row div {
+        justify-content: center;
+        align-items: center;
+    }
+
+    .section-instruction__row div:nth-of-type(1) {
+        width: min(438px, 100%);
+        height: 435px;
+        padding: 0 52px 0 36px;
+        background-image: url("../assets/instruction-1-phone.png");
+    }
+
+    .section-instruction__row div:nth-of-type(2) {
+        width: min(396px, 100%);
+        height: 388px;
+        padding: 0 42px 0 73px;
+        background-image: url("../assets/instruction-2-phone.png");
+        margin-top: 0;
+    }
+
+    .section-instruction__row h3 {
+        font-weight: 600;
+        font-size: 24px;
+        text-align: center;
+    }
+
+    .section-instruction__row p {
+        font-weight: 400;
+        font-size: 18px;
+        line-height: 150%;
+        text-align: center;
+    }
+
+    /* Начать тестирование */
+    #submit-instruction {
+        width: min(396px, 100%);
+        height: 55px;
+
+        border-radius: 12px;
+
+        font-size: 20px;
+        font-weight: 500;
+        color: #ffffff;
+
+        margin: 40px auto 0 auto;
+    }
+}
+
+/* Добавлено срезания правого угла первого блока на маленьких экранах */
+@media screen and (max-width: 452px) {
+    #section-instruction h2 {
+        margin-left: 16px;
+    }
+
+    .section-instruction__row {
+        margin-left: 16px;
+    }
+}
+
+.br-pc-hide {
+    display: none;
+}
+
+@media screen and (max-width: 428px) {
+    #section-instruction {
+        padding: 0 16px;
+    }
+
+    #section-instruction h2 {
+        margin-left: 0;
+    }
+
+    .section-instruction__row {
+        margin-left: 0;
+    }
+
+    .br-pc-hide {
+        display: block;
+    }
+
+    /* Переход с фигур на обводку */
+    .section-instruction__row div:nth-of-type(1) {
+        width: 100%;
+        height: auto;
+        padding: 60px 16px;
+        background-image: none;
+        border: 2px solid #f1cd21;
+        border-radius: 20px;
+    }
+
+    .section-instruction__row div:nth-of-type(2) {
+        width: 100%;
+        height: auto;
+        padding: 60px 16px;
+        background-image: none;
+        border: 2px solid #66caa5;
+        border-radius: 20px;
+    }
+
+    /* Начать тестирование */
+    #submit-instruction {
+        width: 100%;
+        margin-left: 0;
+    }
+}

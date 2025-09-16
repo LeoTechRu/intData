@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+    <title>43 профессии</title>
+
+    <!-- Отключаем кеширование -->
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <meta http-equiv="pragma" content="no-cache">
+
+    <link rel="stylesheet" href="./global/global.css">
+    <link rel="stylesheet" href="./43-professions/styles/style.css">
+    <link rel="stylesheet" href="./43-professions/styles/form-checkbox.css">
+    <link rel="stylesheet" href="./43-professions/styles/phone.css">
+</head>
+<body>
+    <script src="./43-professions/scripts/questions.js"></script>
+    <script src="./43-professions/scripts/check.js"></script>
+
+    <article>
+        <div id="top-left-logo">
+            <img src="https://static.tildacdn.com/tild6630-3237-4638-a534-313664333931/___.svg" alt="logo">
+        </div>
+
+
+        <!-- Фигура сверху справа -->
+        <div id="top-right-figure" class="hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" width="203" height="166" viewBox="0 0 203 166" fill="none">
+                <path d="M226.379 71.1897L226.379 71.1892C216.389 58.383 219.417 38.0788 232.703 29.9459C241.756 24.3971 245.156 13.7067 243.661 3.88713C242.167 -5.93533 235.835 -14.5648 225.766 -16.1794C210.733 -18.5911 201.967 -36.5881 207.547 -52.4696C211.451 -63.6028 208.046 -74.3253 201.527 -80.6613C195.029 -86.9762 185.497 -88.9122 176.867 -82.6374C170.481 -77.9928 163.026 -77.4429 156.598 -80.1535C150.182 -82.8594 144.843 -88.7864 142.555 -96.9987C139.374 -108.415 130.879 -113.992 122.495 -113.992C114.112 -113.992 105.617 -108.415 102.435 -96.9986C100.152 -88.7864 94.8158 -82.8594 88.3996 -80.1535C81.972 -77.4428 74.5146 -77.9929 68.1242 -82.6372L68.1238 -82.6375C59.4986 -88.9121 49.9662 -86.9764 43.4684 -80.6613C36.9491 -74.3253 33.5445 -63.603 37.4525 -52.4699L37.4526 -52.4698C43.0242 -36.5887 34.2582 -18.5913 19.2345 -16.1795C9.16489 -14.5648 2.83337 -5.93533 1.33869 3.88713C-0.155547 13.7067 3.24442 24.3971 12.2971 29.9459C25.5828 38.0788 28.6114 58.3832 18.6118 71.1896C11.6917 80.054 11.6889 91.4816 15.9747 100.081C20.2585 108.676 28.6961 114.245 38.6053 111.777L38.6056 111.777C53.5231 108.065 67.1004 121.622 66.5572 138.744L66.5572 138.744C66.1707 150.769 72.5359 159.439 80.4623 162.78C88.3555 166.106 97.9187 164.209 104.232 154.803L104.232 154.803C108.828 147.96 115.637 144.486 122.495 144.486C129.354 144.486 136.163 147.96 140.758 154.803L140.759 154.803C147.072 164.209 156.635 166.106 164.528 162.78C172.455 159.439 178.82 150.769 178.434 138.744L178.434 138.744C177.89 121.621 191.477 108.066 206.394 111.777L206.395 111.777C216.299 114.245 224.737 108.676 229.021 100.081C233.306 91.4816 233.304 80.0541 226.379 71.1897Z" stroke="#66CAA6" stroke-width="2"/>
+            </svg>
+        </div>
+
+        <!-- Круг снизу слева -->
+        <div id="bottom-left-figure" class="hidden">
+            <svg width="256" height="187" viewBox="0 0 256 187" fill="none" xmlns="http://www.w3.org/2000/svg" id="bottom-left-figure-pc">
+                <path d="M254.685 150C254.685 232.246 184.734 299 98.3427 299C11.9514 299 -58 232.246 -58 150C-58 67.7541 11.9514 1 98.3427 1C184.734 1 254.685 67.7541 254.685 150Z" stroke="#F1CD21" stroke-width="2"/>
+            </svg>
+
+            <svg width="147" height="235" viewBox="0 0 147 235" fill="none" xmlns="http://www.w3.org/2000/svg" id="bottom-left-figure-phone">
+                <path d="M145.685 150C145.685 232.246 75.7339 299 -10.6573 299C-97.0486 299 -167 232.246 -167 150C-167 67.7541 -97.0486 1 -10.6573 1C75.7339 1 145.685 67.7541 145.685 150Z" stroke="#F1CD21" stroke-width="2"/>
+            </svg>
+        </div>
+
+        
+        <aside id="form-aside">
+            <h3>После заполнения анкеты вам откроется доступ к диагностике<br><span>«43 профессии»</span></h3>
+            <p>Диагностика поможет узнать, какие виды деятельности вам подходят больше всего.<br>Пожалуйста, внимательно прочитайте инструкцию, прежде чем переходить к самой диагностике. Инструкция будет доступна вам после заполнения данной формы.</p>
+        </aside>
+
+        <section id="form-section">
+            <form>
+                <div id="form-logo">
+                    <img src="https://sun9-33.userapi.com/impg/o7UasFLuPHffAw7M354dhIyAw-ywr1TdpgWp7w/AU35d9CQutY.jpg?size=192x140&quality=96&sign=65f29d920ee520f801e55492621ceaed&type=album" alt="mini-logo">
+                </div>
+
+                <label class="p1" for="form-name">ФИО</label>
+                <input class="p1" type="text" id="form-name" name="form-name" maxlength="100" required>
+
+                <label class="p1" for="form-phone">Телефон</label>
+                <input class="p1" type="tel" id="form-phone" name="form-phone" maxlength="20" required>
+
+                <div class="form-checkbox">
+                    <div id="parents-phone"></div>
+                    <label id="label-parents-phone" for="parents-phone" class="p1">Телефон родителя</label>
+                </div>
+
+                <label class="p1" for="form-email">Email</label>
+                <input class="p1" type="email" id="form-email" name="form-email" maxlength="100" required>
+
+                <p id="form-error">Неверный формат ФИО</p>
+
+                <div class="form-checkbox">
+                    <div id="policy"></div>
+                    <label id="label-policy" for="policy" class="p1">Я принимаю условия <span>Пользовательского соглашения</span> и даю свое <span>согласие на обработку персональных данных</span> в соответствии с <span>Политикой</span>.</label>
+                </div>
+
+                <button class="p1" type="submit" id="submit-form">Далее</button>
+            </form>
+        </section>
+
+        <!-- Инструкция -->
+        <h2 id="section-title" class="hidden">«43 Профессии»</h2>
+
+        <section id="section-instruction" class="hidden">
+            <div class="section-instruction__row">
+                <h2>В этом тесте вам будет предложено 43 раза сделать выбор</h2>
+                <h3>Не спешите и внимательно читайте описание каждой профессии.Не думайте в этом тесте о деньгах. Выбирайте так, словно доход во всех предложенных профессиях будет одинаковым. Примеряйте на себя именно вид деятельности. Чем вам было бы интереснее заниматься?</h3>
+            </div>
+
+            <div class="section-instruction__row-wrapper">
+                <div class="section-instruction__row section-instruction__row_pink">
+                    <h3>Возможно, в каком-то из вариантов обе профессии вам не понравятся. Но и в этом случае необходимо сделать выбор в пользу чего-то одного. Пусть и по принципу "из двух зол меньшее".</h3>
+                    <h2>Пожалуйста, проходите этот тест внимательно и вдумчиво!</h2>
+                </div>
+            </div>
+
+            <button id="submit-instruction">Начать тестирование</button>
+        </section>
+
+        <!-- Вопрос -->
+        <section id="question-section" class="hidden">
+            <!-- Обычный вопрос -->
+            <div class="question__section-content">
+                <h2>Мне больше подходит:</h2>
+
+                <div class="question" id="question-1">
+                    <div class="question__mark-wrapper">
+                        <div class="question__mark" id="question-mark-1"></div>
+                    </div>
+                    <div class="question__content">
+                        <p class="p1-strong" id="question-title-1"></p>
+                        <p id="question-description-1"></p>
+                    </div>
+                </div>
+
+                <div class="question" id="question-2">
+                    <div class="question__mark-wrapper">
+                        <div class="question__mark" id="question-mark-2"></div>
+                    </div>
+                    <div class="question__content">
+                        <p class="p1-strong" id="question-title-2"></p>
+                        <p id="question-description-2"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Вопрос с открытым ответом -->
+            <div class="question-open__section-content hidden">
+                <h3>Вы сейчас прочитали о <span>86 различных профессиях.</span> Запишите 3 профессии из изученных 86, которые, как вам кажется, могли бы вам подойти. Это должны быть три профессии, которые у вас во время чтения вызвали мысли в духе «вот этим мне было бы, наверное, интересно заниматься». Пусть это будут три профессии, которые вы бы рассматривали в первую очередь для себя, если бы в мире осталось всего 86 профессий:</h3>
+                <textarea class="p1" id="question-open-input" maxlength="500"></textarea>
+            </div>
+
+            <div class="question-buttons">
+                <button class="p1" id="button-prev">Назад</button>
+                <p class="js-question-counter"></p> <!-- Класс вместо id что бы заменить текст в обеих -->
+                <button class="p1" id="button-next">Далее</button>
+                <button class="p1 hidden" id="button-end" disabled>Завершить</button>
+            </div>
+        </section>
+    </article>
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script src="../../config.js"></script>
+    <script src="./global/inputError.js"></script>
+    <script src="./43-professions/scripts/form.js"></script>
+    <script src="./43-professions/scripts/script.js"></script>
+</body>
+</html>

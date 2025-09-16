@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+    <title>Идеальная работа</title>
+
+    <!-- Отключаем кеширование -->
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <meta http-equiv="pragma" content="no-cache">
+
+    <link rel="stylesheet" href="./global/global.css">
+    <link rel="stylesheet" href="./perfect-job/styles/style.css">
+    <link rel="stylesheet" href="./perfect-job/styles/form-checkbox.css">
+    <link rel="stylesheet" href="./perfect-job/styles/phone.css">
+</head>
+<body>
+    <script src="./perfect-job/scripts/check.js"></script>
+
+    <article>
+        <div id="top-left-logo">
+            <img src="https://static.tildacdn.com/tild6630-3237-4638-a534-313664333931/___.svg" alt="logo">
+        </div>
+        
+        <aside id="form-aside">
+            <h3>После заполнения анкеты вам откроется доступ к диагностике<br><span>«Идеальная работа»</span></h3>
+            <p>Диагностика поможет узнать, какие виды деятельности вам подходят больше всего.<br>Пожалуйста, внимательно прочитайте инструкцию, прежде чем переходить к самой диагностике. Инструкция будет доступна вам после заполнения данной формы.</p>
+        </aside>
+
+        <section id="form-section">
+            <form>
+                <div id="form-logo">
+                    <img src="https://sun9-33.userapi.com/impg/o7UasFLuPHffAw7M354dhIyAw-ywr1TdpgWp7w/AU35d9CQutY.jpg?size=192x140&quality=96&sign=65f29d920ee520f801e55492621ceaed&type=album" alt="mini-logo">
+                </div>
+
+                <label class="p1" for="form-name">ФИО</label>
+                <input class="p1" type="text" id="form-name" name="form-name" maxlength="100" required>
+
+                <label class="p1" for="form-phone">Телефон</label>
+                <input class="p1" type="tel" id="form-phone" name="form-phone" maxlength="20" required>
+
+                <label class="p1" for="form-email">Email</label>
+                <input class="p1" type="email" id="form-email" name="form-email" maxlength="100" required>
+
+                <p id="form-error">Неверный формат ФИО</p>
+
+                <div class="form-checkbox">
+                    <div id="policy"></div>
+                    <label id="label-policy" for="policy" class="p1">Я принимаю условия <span>Пользовательского соглашения</span> и даю свое <span>согласие на обработку персональных данных</span> в соответствии с <span>Политикой</span>.</label>
+                </div>
+
+                <button class="p1" type="submit" id="submit-form">Далее</button>
+            </form>
+        </section>
+
+
+        <!-- Контент диагностики -->
+        <h2 id="section-title" class="hidden">«Идеальная работа»</h2>
+        <section id="section-content" class="hidden">
+            <!-- Две колонны контента -->
+            <div class="section-rules">
+                <div class="section-rules__square">
+                    <h3><span>Приветствуем!</span></h3>
+                    <h3>Пожалуйста, внимательно <span>до конца</span> дослушайте аудио с заданием, прежде чем что-либо делать. Это важно сделать, чтобы правильно выполнить задание!</h3>
+                </div>
+
+                <div class="section-rules__circle">
+                    <h3><span>Рекомендуем</span> также вам при выполнении этого задания вспомнить свой опыт работы. Какая работа для вас была идеальной по условиям? И почему? 
+                    </h3>
+                </div>
+
+                <div class="section-rules__triangle">
+                    <h3>Жду выполненное вами задание <span>до 21:00</span> завтрашнего дня! </h3>
+                    <h3><span>УДАЧИ!</span></h3>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="280" height="318" viewBox="0 0 280 318" fill="none">
+                        <path d="M270 141.885C283.333 149.583 283.333 168.828 270 176.526L30 315.09C16.6667 322.788 0 313.165 0 297.769V20.641C0 5.24501 16.6667 -4.3775 30 3.32051L270 141.885Z" fill="#66CAA5"/>
+                    </svg>
+                </div>
+            </div>
+            
+            <div class="section-inputs">
+                <!-- Воспроизведение голосового сообщения -->
+                <div class="audio-wrapper">
+                    <!-- Тег Audio для воспроизведения -->
+                    <audio class="audio" src="./perfect-job/audio.mp3"></audio>
+                    
+                    <!-- Кнопка старта и паузы -->
+                    <button id="audio-play">
+                        <img src="https://sun9-66.userapi.com/impg/bZIvIeta5p67wIH-4hlex3TdFBr5LELvUrr7jA/KMC199jejKs.jpg?size=28x28&quality=96&sign=b8e587bf5ee368c11fbc25b9f8c2e046&type=album" alt="button">
+                    </button>
+                    
+                    <!-- Прогресс воспроизведения -->
+                    <div id="audio-progress">
+                        <img src="https://sun9-39.userapi.com/impg/SaJTJ29rLHokeXCRFvSQ4y_3P3k5wm1epeSBNw/Ok7Qeih2XNk.jpg?size=498x44&quality=96&sign=72d47dcfec1db3311575b62db8b8ace5&type=album" alt="audio">
+                    </div>
+                </div>
+
+                <div class="section-inputs__block">
+                    <h3>1.</h3>
+                    <input type="text" id="input-1" maxlength="100">
+                </div>
+                <div class="section-inputs__block">
+                    <h3>2.</h3>
+                    <input type="text" id="input-2" maxlength="100">
+                </div>
+                <div class="section-inputs__block">
+                    <h3>3.</h3>
+                    <input type="text" id="input-3" maxlength="100">
+                </div>
+                <div class="section-inputs__block">
+                    <h3>4.</h3>
+                    <input type="text" id="input-4" maxlength="100">
+                </div>
+                <div class="section-inputs__block">
+                    <h3>5.</h3>
+                    <input type="text" id="input-5" maxlength="100">
+                </div>
+                <div class="section-inputs__block">
+                    <h3>6.</h3>
+                    <input type="text" id="input-6" maxlength="100">
+                </div>
+                <div class="section-inputs__block">
+                    <h3>7.</h3>
+                    <input type="text" id="input-7" maxlength="100">
+                </div>
+                <div class="section-inputs__block">
+                    <h3>8.</h3>
+                    <input type="text" id="input-8" maxlength="100">
+                </div>
+                <div class="section-inputs__block">
+                    <h3>9.</h3>
+                    <input type="text" id="input-9" maxlength="100">
+                </div>
+                <div class="section-inputs__block">
+                    <h3>10.</h3>
+                    <input type="text" id="input-10" maxlength="100">
+                </div>
+
+
+                <!-- Кнопки в конце -->
+                <button id="button-end" disabled>Отправить</button>
+                <button id="button-back">Назад</button>
+            </div>
+
+            
+        </section>
+    </article>
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script src="../../config.js"></script>
+    <script src="./global/inputError.js"></script>
+    <script src="./perfect-job/scripts/form.js"></script>
+    <script src="./perfect-job/scripts/script.js"></script>
+</body>
+</html>

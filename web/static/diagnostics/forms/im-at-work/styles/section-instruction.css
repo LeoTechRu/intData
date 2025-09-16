@@ -1,0 +1,121 @@
+.article-content {
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+
+    box-sizing: border-box;
+    padding: 0 0 70px 0; /* На 70px снизу меньше так как снизу плашка от тильды */
+
+    overflow-x: hidden;
+}
+
+/* Секция с инструкцией */
+#section-instruction {
+    width: min(1026px, 100%);
+    height: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Заголовок страницы */
+#section-instruction h2 {
+    width: fit-content;
+
+    font-weight: 700;
+    font-size: 48px;
+    letter-spacing: -1px;
+    background: linear-gradient(90deg, #bd92ce 0%, #66caa5 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    margin: 160px auto 76px auto;
+}
+
+.section-instruction__row {
+    width: 100%;
+    display: flex;
+    gap: 20px;
+}
+
+.section-instruction__row h3 {
+    font-size: 24px;
+    line-height: 132%;
+}
+
+.section-instruction__row p {
+    font-size: 18px;
+    line-height: 150%;
+}
+
+.section-instruction__col {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.section-instruction-1 {
+    width: 386px;
+    height: 420px;
+    box-sizing: border-box;
+    padding: 32px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    background-image: url("../assets/instruction-1.png");
+    background-repeat: no-repeat;
+    margin-top: 29px;
+}
+
+.section-instruction-1 h3, .section-instruction-1 p {
+    color: #ffffff;
+}
+
+.section-instruction-2 {
+    width: 620px;
+    height: 205px;
+    box-sizing: border-box;
+    padding: 61px 32px 32px 32px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    background-image: url("../assets/instruction-2.png");
+    background-repeat: no-repeat;
+}
+
+.section-instruction-3 {
+    width: 620px;
+    height: 229px;
+    box-sizing: border-box;
+    padding: 32px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    background-image: url("../assets/instruction-3.png");
+    background-repeat: no-repeat;
+}
+
+
+
+/* Начать тестирование */
+#submit-instruction {
+    width: 720px;
+    height: 80px;
+
+    border-radius: 20px;
+
+    font-size: 28px;
+    font-weight: 500;
+    color: #ffffff;
+
+    margin: 92px auto 0 auto;
+}

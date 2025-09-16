@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+    <title>8 кадров</title>
+
+    <!-- Отключаем кеширование -->
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <meta http-equiv="pragma" content="no-cache">
+
+    <link rel="stylesheet" href="./global/global.css">
+    <link rel="stylesheet" href="./8-frames-kid/styles/style.css">
+    <link rel="stylesheet" href="./8-frames-kid/styles/form-checkbox.css">
+    <link rel="stylesheet" href="./8-frames-kid/styles/phone.css">
+</head>
+<body>
+    <script src="./8-frames-kid/scripts/check.js"></script>
+
+    <article>
+        <div id="top-left-logo">    
+            <img src="https://static.tildacdn.com/tild6630-3237-4638-a534-313664333931/___.svg" alt="logo">
+        </div>
+        
+        <aside id="form-aside">
+            <h3>После заполнения анкеты вам откроется доступ к диагностике<br><span>«8 кадров»</span></h3>
+            <p>Диагностика поможет узнать, какие виды деятельности вам подходят больше всего.<br>Пожалуйста, внимательно прочитайте инструкцию, прежде чем переходить к самой диагностике. Инструкция будет доступна вам после заполнения данной формы.</p>
+        </aside>
+
+        <section id="form-section">
+            <form>
+                <div id="form-logo">
+                    <img src="https://sun9-33.userapi.com/impg/o7UasFLuPHffAw7M354dhIyAw-ywr1TdpgWp7w/AU35d9CQutY.jpg?size=192x140&quality=96&sign=65f29d920ee520f801e55492621ceaed&type=album" alt="mini-logo">
+                </div>
+
+                <label class="p1" for="form-name">ФИО</label>
+                <input class="p1" type="text" id="form-name" name="form-name" maxlength="100" required>
+
+                <label class="p1" for="form-phone">Телефон</label>
+                <input class="p1" type="tel" id="form-phone" name="form-phone" maxlength="20" required>
+
+                <div class="form-checkbox">
+                    <div id="parents-phone"></div>
+                    <label id="label-parents-phone" for="parents-phone" class="p1">Телефон родителя</label>
+                </div>
+
+                <label class="p1" for="form-email">Email</label>
+                <input class="p1" type="email" id="form-email" name="form-email" maxlength="100" required>
+
+                <p id="form-error">Неверный формат ФИО</p>
+
+                <div class="form-checkbox">
+                    <div id="policy"></div>
+                    <label id="label-policy" for="policy" class="p1">Я принимаю условия <span>Пользовательского соглашения</span> и даю свое <span>согласие на обработку персональных данных</span> в соответствии с <span>Политикой</span>.</label>
+                </div>
+
+                <button class="p1" type="submit" id="submit-form">Далее</button>
+            </form>
+        </section>
+
+
+        <!-- Контент диагностики -->
+        <section id="section-content" class="hidden">
+            <div class="section-content__columns-container">
+                <!-- Левая колонна -->
+                <div class="section-content__column">
+                    <h2 id="section-title" class="hidden">«8 кадров»</h2>
+
+                    <div class="section-content__block section-content__cyan-left">
+                        <div class="order"><h3>1</h3></div>
+
+                        <h3>Задание, в котором очень важно помечтать.</h3>
+                        <h3>В этом задании тебе нужно представить, что у тебя появилась возможность прожить не одну, а целых 8 жизней. И все они твои!</h3>
+                        <h3>Не надо выбирать один вариант «что делать». Можно прожить все 8 жизней. Твои 8 идеальных профессиональных жизней.</h3>
+                        <h3><span>Какие они, эти идеальные  8 сценариев  ПРО  ТВОЮ БУДУЩУЮ ЖИЗНЬ?</span> Что ты в каждом из 8 сценариев делаешь? Где живешь? Чем занимаешься?</h3>
+                    </div>
+
+                    <div class="section-content__block section-content__purple-left">
+                        <div class="order"><h3>3</h3></div>
+
+                        <h3><span>В каждой жизни у тебя должна быть ровно 1 профессия. Профессия может быть любой, но повторяться нельзя.</span><br>И нельзя в этом задании использовать варианты:</h3>
+                        <div class="text-block">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M16.4223 8.21114C17.8964 8.94819 17.8964 11.0518 16.4223 11.7889L2.89443 18.5528C1.56463 19.2177 0 18.2507 0 16.7639V3.23607C0 1.7493 1.56462 0.782312 2.89443 1.44721L16.4223 8.21114Z" fill="#F1CD21"/>
+                            </svg>
+                            <h3>нарушающие законы (киллер, увы, нет)</h3>
+                        </div>
+                        <div class="text-block">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M16.4223 8.21114C17.8964 8.94819 17.8964 11.0518 16.4223 11.7889L2.89443 18.5528C1.56463 19.2177 0 18.2507 0 16.7639V3.23607C0 1.7493 1.56462 0.782312 2.89443 1.44721L16.4223 8.21114Z" fill="#F1CD21"/>
+                            </svg>
+                            <h3>волшебные (феей тоже в другой раз)</h3>
+                        </div>
+                        <div class="text-block">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M16.4223 8.21114C17.8964 8.94819 17.8964 11.0518 16.4223 11.7889L2.89443 18.5528C1.56463 19.2177 0 18.2507 0 16.7639V3.23607C0 1.7493 1.56462 0.782312 2.89443 1.44721L16.4223 8.21114Z" fill="#F1CD21"/>
+                            </svg>
+                            <h3>не имеющие отношения к нашему времени (гладиатор или жрец у ацтеков тоже отпадает)</h3>
+                        </div>
+                    </div>
+
+                    <h2 id="section-sub-title">Удачи!</h2>
+                </div>
+
+                <!-- Правая колонна -->
+                <div class="section-content__column jq-second-column">
+                    <div class="section-content__block section-content__yellow-right">
+                        <div class="order"><h3>2</h3></div>
+
+                        <h3>Важно, чтобы каждый из 8 сценариев содержал:</h3>
+                        <h3>твою профессию</h3>
+                        <h3>где живёшь и чем занимаешься</h3>
+                        <h3>в чем чувствуешь себя полезным, какую пользу приносишь другим</h3>
+                        <h3>что тебя больше всего вдохновляет именно в этом сценарии (от чего ты особенно счастлив в этом варианте профессиональной жизни)</h3>
+                    </div>
+
+                    <div class="section-content__block section-content__cyan-right">
+                        <div class="order"><h3>4</h3></div>
+
+                        <h3>Пример, как правильно делать это задание (как это может выглядеть):</h3>
+                        <h3>Сценарий  1: Психолог, живу в Новосибирске, консультирую клиентов и провожу исследования работы мозга, вдохновляет, что я помогаю людям сохранять отношения друг с другом. Счастлив от того, что много общаюсь с людьми и помогаю им изменить их жизнь»</h3>
+                        <h3>Любые дополнительные детали приветствуются.</h3>
+                        <h3>И, да, <span>это ОДНО ИЗ САМЫХ ГЛАВНЫХ ЗАДАНИЙ  ПРОГРАММЫ.</span></h3>
+                        <h3>Пожалуйста, отнесись  к нему ответственно! Удели ему время и помечтай о разных вариантах своей жизни!</h3>
+                        <h3>Жду твои  8 сценариев до <span>21:00</span> завтрашнего дня!</h3>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Инпуты в конце -->
+            <div class="section-inputs">
+                <div class="section-inputs__block">
+                    <h3>1.</h3>
+                    <textarea id="input-1" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>2.</h3>
+                    <textarea id="input-2" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>3.</h3>
+                    <textarea id="input-3" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>4.</h3>
+                    <textarea id="input-4" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>5.</h3>
+                    <textarea id="input-5" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>6.</h3>
+                    <textarea id="input-6" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>7.</h3>
+                    <textarea id="input-7" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>8.</h3>
+                    <textarea id="input-8" maxlength="1000"></textarea>
+                </div>
+            </div>
+
+
+            <!-- Кнопки в конце -->
+            <button id="button-end" disabled>Отправить</button>
+            <button id="button-back">Назад</button>
+        </section>
+    </article>
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script src="../../config.js"></script>
+    <script src="./global/inputError.js"></script>
+    <script src="./8-frames-kid/scripts/form.js"></script>
+    <script src="./8-frames-kid/scripts/script.js"></script>
+</body>
+</html>

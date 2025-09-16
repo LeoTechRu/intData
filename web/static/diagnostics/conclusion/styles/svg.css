@@ -1,0 +1,65 @@
+#svg-purple-polygon {
+    position: absolute;
+    top: 4px;
+    right: 0;
+
+    z-index: -1;
+}
+
+#svg-green-triangle {
+    position: absolute;
+    top: 124px;
+    left: 0;
+
+    z-index: -1;
+}
+
+#svg-yellow-circle {
+    position: absolute;
+    top: 426px;
+    left: 0;
+    overflow: hidden;
+
+    z-index: -1;
+}
+
+#svg-green-quadrilateral {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    overflow: hidden;
+
+    z-index: -1;
+}
+
+#svg-green-square {
+    position: absolute;
+    top: 158px;
+    left: 0;
+
+    z-index: -1;
+}
+
+#svg-yellow-polygon {
+    position: absolute;
+    top: 365px;
+    right: 0;
+
+    z-index: -1;
+}
+
+#svg-yellow-triangle {
+    position: absolute;
+    top: 151px;
+    left: 0;
+
+    z-index: -1;
+}
+
+#svg-green-polygon {
+    position: absolute;
+    top: 34px;
+    right: -12px;
+
+    z-index: -1;
+}

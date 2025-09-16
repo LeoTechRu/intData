@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+    <title>Антирейтинг профессий</title>
+
+    <!-- Отключаем кеширование -->
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <meta http-equiv="pragma" content="no-cache">
+
+    <link rel="stylesheet" href="./global/global.css">
+    <link rel="stylesheet" href="./antirating-of-professions-kid/styles/style.css">
+    <link rel="stylesheet" href="./antirating-of-professions-kid/styles/form-checkbox.css">
+    <link rel="stylesheet" href="./antirating-of-professions-kid/styles/phone.css">
+</head>
+<body>
+    <script src="./antirating-of-professions-kid/scripts/questions.js"></script>
+    <script src="./antirating-of-professions-kid/scripts/check.js"></script>
+
+    <article>
+        <div id="top-left-logo">
+            <img src="https://static.tildacdn.com/tild6630-3237-4638-a534-313664333931/___.svg" alt="logo">
+        </div>
+        
+        <aside id="form-aside">
+            <h3>После заполнения анкеты вам откроется доступ к диагностике<br><span>«Антирейтинг профессий»</span></h3>
+            <p>Диагностика поможет узнать, какие виды деятельности вам подходят больше всего.<br>Пожалуйста, внимательно прочитайте инструкцию, прежде чем переходить к самой диагностике. Инструкция будет доступна вам после заполнения данной формы.</p>
+        </aside>
+
+        <section id="form-section">
+            <form>
+                <div id="form-logo">
+                    <img src="https://sun9-33.userapi.com/impg/o7UasFLuPHffAw7M354dhIyAw-ywr1TdpgWp7w/AU35d9CQutY.jpg?size=192x140&quality=96&sign=65f29d920ee520f801e55492621ceaed&type=album" alt="mini-logo">
+                </div>
+
+                <label class="p1" for="form-name">ФИО</label>
+                <input class="p1" type="text" id="form-name" name="form-name" maxlength="100" required>
+
+                <label class="p1" for="form-phone">Телефон</label>
+                <input class="p1" type="tel" id="form-phone" name="form-phone" maxlength="20" required>
+
+                <div class="form-checkbox">
+                    <div id="parents-phone"></div>
+                    <label id="label-parents-phone" for="parents-phone" class="p1">Телефон родителя</label>
+                </div>
+
+                <label class="p1" for="form-email">Email</label>
+                <input class="p1" type="email" id="form-email" name="form-email" maxlength="100" required>
+
+                <p id="form-error">Неверный формат ФИО</p>
+
+                <div class="form-checkbox">
+                    <div id="policy"></div>
+                    <label id="label-policy" for="policy" class="p1">Я принимаю условия <span>Пользовательского соглашения</span> и даю свое <span>согласие на обработку персональных данных</span> в соответствии с <span>Политикой</span>.</label>
+                </div>
+
+                <button class="p1" type="submit" id="submit-form">Далее</button>
+            </form>
+        </section>
+
+
+        <!-- Контент диагностики -->
+        <div id="section-title" class="hidden">
+            <h2>«Антирейтинг профессий»</h2>
+            <div id="title-bg"></div>
+        </div>
+        <section id="section-content" class="hidden">
+            <div class="section-content__row">
+                <div class="section-content__row-image">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50" fill="none">
+                        <path d="M20.0118 9.84375C20.0118 15.0084 15.8636 19.1875 10.7559 19.1875C5.64823 19.1875 1.5 15.0084 1.5 9.84375C1.5 4.6791 5.64823 0.5 10.7559 0.5C15.8636 0.5 20.0118 4.6791 20.0118 9.84375Z" fill="#BD92CE" stroke="#BD92CE"/>
+                        <rect x="30.7695" y="0.5" width="18.5118" height="19" rx="1.5" stroke="#66CAA5"/>
+                        <path d="M14.9224 38.7039C15.9157 39.2825 15.9157 40.7175 14.9224 41.2961L3.72971 47.8164C2.72972 48.3989 1.47467 47.6776 1.47467 46.5203V33.4797C1.47467 32.3224 2.72972 31.6011 3.72971 32.1836L14.9224 38.7039Z" stroke="#F1CD21"/>
+                    </svg>
+                </div>
+                <h3 class="section-content__row-text">Сегодня я прошу тебя сделать необычное задание - рассказать мне о тех профессиях, которые точно «не твои». И обосновать: почему ты не хочешь работать именно в этих профессиях.<br>Я прошу тебя составить список из <span>10 «точно не твоих»</span> профессий с объяснением, что тебе в них не нравится. В примере ниже вариант одного из ответов на это задание.</h3>
+                
+                <div class="arrow">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="69" height="119" viewBox="0 0 69 119" fill="none">
+                        <path d="M1.99999 0.499997C1.17157 0.5 0.5 1.17157 0.5 2C0.5 2.82843 1.17158 3.5 2.00001 3.5L1.99999 0.499997ZM2.00006 110.706L17.5634 118.307L16.3648 101.028L2.00006 110.706ZM2.00001 3.5C42.042 3.49987 63.0187 27.2828 65.292 52.0477C67.5681 76.8428 51.1632 103.097 15.2614 108.287L15.6906 111.256C53.1161 105.846 70.7066 78.214 68.2794 51.7735C65.8496 25.3027 43.4246 0.49987 1.99999 0.499997L2.00001 3.5Z" fill="#F1CD21" fill-opacity="0.5"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="section-content-block">
+                <h3>Бухгалтерия. Мне не нравится однообразный и монотонный вид этой работы. Не люблю возиться с цифрами и таблицами. Плюс здесь мало общения с людьми. И большая ответственность - надо все посчитать правильно до копейки (а я часто путаюсь в цифрах и допускаю ошибки в расчетах).</h3>
+            </div>
+
+            <div class="section-content__row">
+                <div class="section-content__row-image">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="52" height="50" viewBox="0 0 52 50" fill="none">
+                        <path d="M20.5312 9.84375C20.5312 14.9968 16.2854 19.1875 11.0312 19.1875C5.77709 19.1875 1.53125 14.9968 1.53125 9.84375C1.53125 4.69073 5.77709 0.5 11.0312 0.5C16.2854 0.5 20.5312 4.69073 20.5312 9.84375Z" fill="#BD92CE" stroke="#BD92CE"/>
+                        <rect x="31.7383" y="0.5" width="19.1416" height="19" rx="1.5" fill="#66CAA5" stroke="#66CAA5"/>
+                        <path d="M15.3866 38.6937C16.4036 39.2676 16.4036 40.7324 15.3866 41.3063L3.73593 47.8812C2.736 48.4455 1.49872 47.723 1.49872 46.5748V33.4252C1.49872 32.277 2.736 31.5545 3.73593 32.1188L15.3866 38.6937Z" stroke="#F1CD21"/>
+                    </svg>
+                </div>
+                <h3 class="section-content__row-text">Пожалуйста, постарайся не вносить в этот список профессии, которые очевидно не нравятся всем. Например, «дворник» или «водитель машины по вывозу мусора». Подумай про те профессии, которые нравятся некоторым людям (например, твоим знакомым) или тебе их даже иногда рекомендуют, но тебе  (по твоим ощущениям) они не подходят. </h3>
+            </div>
+
+            <div class="section-content__row">
+                <div class="section-content__row-image">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="52" height="50" viewBox="0 0 52 50" fill="none">
+                        <path d="M20.5234 9.84375C20.5234 14.9968 16.2776 19.1875 11.0234 19.1875C5.76928 19.1875 1.52344 14.9968 1.52344 9.84375C1.52344 4.69073 5.76928 0.5 11.0234 0.5C16.2776 0.5 20.5234 4.69073 20.5234 9.84375Z" fill="#BD92CE" stroke="#BD92CE"/>
+                        <rect x="31.5234" y="0.5" width="19" height="19" rx="1.5" fill="#66CAA5" stroke="#66CAA5"/>
+                        <path d="M15.2872 38.6959C16.299 39.2709 16.299 40.7291 15.2872 41.3041L3.73947 47.867C2.73951 48.4353 1.49832 47.7131 1.49832 46.5629V33.4371C1.49832 32.2869 2.73951 31.5647 3.73948 32.133L15.2872 38.6959Z" fill="#F1CD21" stroke="#F1CD21"/>
+                    </svg>
+                </div>
+                <h3 class="section-content__row-text">И самое главное в этом задании - <span>подумай и пропиши подробно</span>, что именно тебе не нравится  в той или иной профессии. Почему тебя отталкивает та или иная профессия из твоего списка?</h3>
+            </div>
+
+            <!-- Инпуты в конце -->
+            <div class="section-inputs">
+                <div class="section-inputs__block">
+                    <h3>1.</h3>
+                    <textarea id="input-1" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>2.</h3>
+                    <textarea id="input-2" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>3.</h3>
+                    <textarea id="input-3" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>4.</h3>
+                    <textarea id="input-4" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>5.</h3>
+                    <textarea id="input-5" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>6.</h3>
+                    <textarea id="input-6" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>7.</h3>
+                    <textarea id="input-7" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>8.</h3>
+                    <textarea id="input-8" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>9.</h3>
+                    <textarea id="input-9" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>10.</h3>
+                    <textarea id="input-10" maxlength="1000"></textarea>
+                </div>
+            </div>
+
+
+            <!-- Кнопки в конце -->
+            <button id="button-end" disabled>Отправить</button>
+            <button id="button-back">Назад</button>
+        </section>
+    </article>
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script src="../../config.js"></script>
+    <script src="./global/inputError.js"></script>
+    <script src="./antirating-of-professions-kid/scripts/form.js"></script>
+    <script src="./antirating-of-professions-kid/scripts/script.js"></script>
+</body>
+</html>

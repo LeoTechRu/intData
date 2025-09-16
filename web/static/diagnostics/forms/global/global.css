@@ -1,0 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap');
+
+:root {
+    --p-gray: #00000088;
+    --p-cyan: #66CAA5;
+    --h-title: #BD92CE;
+
+    --border: #BD92CE;
+    --border-cyan: #66CAA6;
+    --button: #BD92CE;
+    --input-bg: #DEC8E7;
+    --input-placeholder: #5E4967;
+
+    --dot-bg: #F1CD21;
+}
+
+* {
+    padding: 0;
+    margin: 0;
+    color-scheme: light;
+}

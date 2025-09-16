@@ -1,0 +1,136 @@
+@media screen and (max-width: 1280px) {
+    #section-content {
+        width: min(calc(396px + 24px), 100%);
+        padding: 0 12px;
+        box-sizing: border-box;
+    }
+
+    #section-content h2 {
+        font-weight: 600;
+        font-size: 32px;
+        line-height: 112%;
+        text-align: left;
+        margin: 80px 0 16px 0;
+    }
+
+
+    /* Контент страницы */
+    .section-content__column {
+        width: 100%;
+    }
+
+    .question-wrapper {
+        height: auto;
+        border: none;
+        
+
+        margin-top: 0px;
+    }
+
+    /* Текст вопроса */
+    #question {
+        width: 100%;
+        text-align: left;
+        font-size: 20px;
+    }
+
+    /* Блок выбора варианта ответа */
+    .grade-wrapper {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: 20px;
+        
+        margin-top: 32px;
+    }
+
+    /* Кнопка выбора ответа */
+    .grade {
+        max-width: none;
+        width: 100%;
+        height: 80px;
+        flex-direction: row;
+        justify-content: flex-start;
+        padding: 0 0 0 60px;
+
+        border: 1px solid #bd92ce;
+        border-radius: 8px;
+    }
+
+    .grade-range {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 1280px) {
+    .question-buttons {
+        width: 100%;
+        height: 40px;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        margin-top: 28px;
+        margin-bottom: 28px;
+    }
+
+    #question-counter {
+        font-size: 18px;
+        color: #141212;
+    }
+
+    #button-back {
+        width: 150px;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+
+        background-color: #ffffff;
+        border: 1px solid var(--button);
+
+        font-size: 18px;
+        border-radius: 10px;
+    }
+
+    @media (hover: hover) {
+        #button-back:hover {
+            background-color: #000000;
+            color: #FFFFFF;
+            border: 1px solid #000000;
+        }
+    }
+
+    #button-next, #button-end {
+        width: 150px;
+        height: 100%;
+
+        position: absolute;
+        top: 0;
+        right: 0;
+
+        font-size: 18px;
+        border-radius: 10px;
+    }
+}
+
+@media screen and (max-width: 430px) {
+    .question-buttons {
+        width: 100%;
+
+        box-sizing: border-box;
+        padding: 0 20px;
+    }
+
+    .question-buttons button {
+        width: 33% !important;
+    }
+}
+
+@media screen and (max-width: 320px) {
+    .grade {
+        padding: 0 0 0 20px;
+    }
+}

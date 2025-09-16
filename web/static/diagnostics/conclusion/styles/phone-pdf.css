@@ -1,0 +1,66 @@
+/* Заключение */
+@media screen and (max-width: 1000px) {
+    #section-pdf {
+        width: 100%;
+
+        margin: 0 auto 20px auto;
+    }
+
+    #section-pdf .content-wrapper {
+        width: 100%;
+        padding: 0 8px;
+        box-sizing: border-box;
+    }
+
+    #section-pdf .content {
+        margin: 0 auto;
+    }
+
+    .pdf-buttons {
+        padding: 0 20px;
+        box-sizing: border-box;
+
+        margin-top: 100px;
+    }
+}
+
+/* Сжатие заключения */
+@media screen and (max-width: 670px) {
+    #section-pdf .content {
+        width: 100%;
+    }
+
+    .pdf-title {
+        width: 100%;
+        height: auto;
+        padding: 20px 8px 20px 60px;
+        margin-left: 0;
+    }
+
+    .pdf-title h2 {
+        width: 100%;
+        font-size: 5vw;
+    }
+
+    .pdf-title p {
+        width: 100% !important;
+        font-size: 3vw;
+    }
+
+    #section-pdf .content p {
+        width: 100%;
+        font-size: 14px;
+    }
+
+    .pdf-last-page {
+        width: 90%;
+    }
+
+    .pdf-last-page p {
+        width: 100% !important;
+    }
+
+    .pdf-last-page-img {
+        margin: 20px auto 0 auto;
+    }
+}

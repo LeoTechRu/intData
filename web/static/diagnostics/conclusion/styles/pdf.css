@@ -1,0 +1,205 @@
+#section-pdf {
+    width: 610px;
+
+    align-items: flex-start;
+
+    margin-bottom: 20px;
+}
+
+.pdf-status {
+    width: 100%;
+    text-align: center;
+
+    margin: 24px auto 0 auto;
+}
+
+#section-pdf .content-wrapper {
+    width: 610px;
+    height: 700px;
+
+    overflow: auto;
+}
+
+#section-pdf .content-wrapper::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+/* Подложка скролла в цвет фона */
+#section-pdf .content-wrapper::-webkit-scrollbar-track {
+    border-radius: 4px;
+    background-color: #00000000;
+}
+
+/* Скрол цвета основного блока */
+#section-pdf .content-wrapper::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background-color: var(--input-bg);
+}
+
+#section-pdf .content {
+    width: 595px;
+}
+
+#section-pdf .content p {
+    /* width: 515px; */
+    width: 595px;
+
+    line-height: normal;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
+
+.pdf-logo {
+    width: 272px;
+    height: 128px;
+    
+    border-radius: 0px 80px 80px 0px;
+    background-color: #FFF;
+
+    position: relative;
+
+    margin-top: 68px;
+}
+
+.pdf-logo img {
+    width: 170px;
+    height: 77px;
+
+    position: absolute;
+    top: 26px;
+    left: 51px;
+}
+
+.pdf-logo-shadow {
+    position: absolute;
+
+    top: 0px;
+    left: 0;
+
+    width: 272px;
+    height: 128px;
+    
+    box-shadow: 0px 16px 20px 0px rgba(0, 0, 0, 0.25);
+    border-radius: 0px 80px 80px 0px;
+
+    z-index: -1;
+}
+
+.pdf-title {
+    width: 575px;
+    height: 308px;
+
+    border-radius: 200px 0px 0px 200px;
+    background: #F6D623;
+
+    box-sizing: border-box;
+    padding: 36px 38px 0 94px;
+
+    margin-left: auto;
+    margin-top: 144px;
+}
+
+.pdf-title h2 {
+    width: 443px;
+    font-size: 36px;
+    font-weight: 700;
+    line-height: normal;
+}
+
+.pdf-title p {
+    width: 474px !important;
+    font-size: 20px;
+    font-weight: 300;
+    line-height: normal;
+
+    margin-top: 16px;
+}
+
+.pdf-first-page-icons {
+    width: 118px;
+    height: 29px;
+
+    margin: 120px 24px 0 auto;
+}
+
+.pdf-first-page-icons img {
+    width: 118px;
+    height: 29px;
+}
+
+/* 3 и 4 пункт которые не показываются если эксперт выбрал не рекомендовать */
+
+.text-justify {
+    text-align: justify;
+}
+
+.text-italic {
+    font-style: italic;
+}
+
+.text-cyan {
+    color: var(--p-cyan);
+}
+
+.text-bold {
+    font-weight: 500;
+}
+
+
+.pdf-last-page-wrapper {
+    margin-top: 87px;
+}
+
+.pdf-last-page {
+    width: 459px;
+
+    /* height: 561px; */
+    display: flex;
+    flex-direction: column;
+    gap: 17px;
+
+    box-sizing: border-box;
+    padding: 40px;
+
+    border-radius: 0px 80px;
+    background: #DAAAE8;
+    position: relative;
+
+    margin: 0 auto;
+}
+
+.pdf-last-page p {
+    width: 379px !important;
+}
+
+
+.pdf-last-page-img {
+    width: 170px;
+
+    margin: 20px 80px 0 auto;
+}
+
+.pdf-last-page-img img {
+    width: 170px;
+    height: 77px;
+}
+
+.pdf-padding-small {
+    padding-top: 12px;
+}
+
+.pdf-padding-medium {
+    padding-top: 20px;
+}
+
+.pdf-padding-big {
+    padding-top: 30px;
+}
+
+
+/* У институтов доп отступ снизу */
+.pdf-institute {
+    padding-bottom: 12px;
+}

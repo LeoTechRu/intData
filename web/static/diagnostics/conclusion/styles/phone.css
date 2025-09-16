@@ -1,0 +1,285 @@
+@import "./phone-pdf.css";
+
+@media screen and (max-width: 1000px) {
+    #top-left-logo {
+        width: 100px;
+        top: 24px;
+        left: 24px;
+    }
+}
+
+@media screen and (max-width: 1000px) {
+    article {
+        justify-content: flex-start;
+
+        box-sizing: border-box;
+        padding: 0 20px;
+
+        overflow: auto;
+    }
+
+    section {
+        width: 100%;
+    }
+
+    section .content {
+        width: 100%;
+    }
+
+
+    .svg-figure {
+        display: none;
+    }
+    
+
+    .control-buttons {
+        width: min(560px, 100%); /* Кнопки по макс ширине контейнера */
+        height: 38px;
+
+        /* Отступ снизу для всех блоков */
+        margin: 0 0 20px 0;
+    }
+
+    #button-back, #button-next, #button-download {
+        width: 150px;
+    }
+
+
+    section > h2 {
+        width: min(650px, 100%); /* Заголовок и подзаголовок чуть больше контейнера */
+        font-size: 32px;
+
+        margin-top: 141px;
+    }
+
+    section > p {
+        width: min(650px, 100%) !important;
+        text-align: center;
+    }
+}
+
+@media screen and (max-width: 420px) {
+    /* На очень маленьком формате делаем кнопку в треть от ширины */
+    #button-back, #button-next, #button-download {
+        width: 33%;
+    }
+}
+
+/* Первая страница */
+@media screen and (max-width: 1000px) {
+    #section-form form {
+        margin-top: 56px;
+        margin-bottom: 12px;
+    }
+
+    form {
+        width: min(560px, 100%);
+    }
+
+    form input {
+        width: 100%;
+    }
+
+    .form-date-wrapper {
+        width: 100%;
+
+        margin-bottom: 12px;
+    }
+}
+
+
+/* Вторая страница */
+@media screen and (max-width: 1000px) {
+    #section-vector-selection .content {
+        /* width: min(560px, 100%); */
+        width: min(320px, 100%);
+
+        flex-direction: column;
+        flex-wrap: nowrap;
+        gap: 20px;
+
+        box-sizing: border-box;
+        padding: 0;
+
+        margin-top: 56px;
+        margin-bottom: 48px;
+    }
+
+    .vector-column {
+        width: 100%;
+        gap: 20px;
+    }
+
+    .vector-wrapper {
+        width: 100%;
+    }
+
+    .vector-wrapper p {
+        width: calc(100% - 32px); /* Минус ширина чекбокса и отступа */
+        font-size: 18px;
+    }
+
+    .vector-wrapper br {
+        display: none;
+    }
+}
+
+
+/* Третья страница */
+@media screen and (max-width: 1000px) {
+    #section-vector-best .content {
+        /* width: min(560px, 100%); */
+        width: min(320px, 100%);
+        height: auto;
+
+        margin-top: 56px;
+        margin-bottom: 99px;
+    }
+
+    .vector-best-wrapper {
+        width: 100%;
+        display: flex;
+        gap: 12px;
+
+        cursor: pointer;
+    }
+
+    .vector-best-wrapper p {
+        width: calc(100% - 32px); /* Минус ширина чекбокса и отступа */
+        font-size: 18px;
+    }
+}
+
+
+/* Четвертая страница */
+@media screen and (max-width: 1240px) {
+    #section-vector-jobs .content {
+        width: min(560px, 100%);
+        height: auto;
+
+        flex-direction: column;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        align-items: center;
+
+        margin-top: 56px;
+        margin-bottom: 48px;
+    }
+}
+
+
+/* Пятая страница */
+@media screen and (max-width: 1000px) {
+    #section-prepare-conclusion .content {
+        width: min(560px, 100%);
+
+        margin-top: 56px;
+        margin-bottom: 185px;
+    }
+
+    #section-prepare-conclusion button p {
+        font-size: 18px;
+    }
+}
+
+/* Шестая страница */
+@media screen and (max-width: 1000px) {
+    #section-training-options .content {
+        width: min(560px, 100%);
+
+        margin-top: 56px;
+        margin-bottom: 63px;
+    }
+
+    #section-training-options button p {
+        font-size: 18px;
+    }
+}
+
+
+/* Седьмая страница */
+@media screen and (max-width: 1000px) {
+    #section-city .content {
+        width: min(560px, 100%);
+        height: 357px;
+
+        margin-top: 56px;
+    }
+
+    .city-input__wrapper {
+        width: 100%;
+    }
+}
+
+
+/* Восьмая страница */
+@media screen and (max-width: 1000px) {
+    #section-paid-forms .content {
+        width: min(560px, 100%);
+
+        margin-top: 56px;
+        margin-bottom: 72px;
+    }
+
+    /* Делаем кнопку растягиваемой */
+    #section-paid-forms button {
+        min-height: 80px;
+        max-height: 200px;
+        height: auto;
+    }
+
+    #section-paid-forms button p {
+        font-size: 18px;
+    }
+}
+
+@media screen and (max-width: 420px) {
+    /* На очень маленьком формате делаем паддинг кнопки меньше */
+    #section-paid-forms button {
+        padding-left: 24px;
+    }
+}
+
+
+/* Девятая страница */
+@media screen and (max-width: 1240px) {
+    #section-institutions .institutions-wrapper {
+        width: min(560px, 100%);
+        height: auto;
+
+        overflow: visible;
+
+        margin-top: 56px;
+        margin-bottom: 50px;
+    }
+
+    #section-institutions .content {
+        flex-direction: column;
+        flex-wrap: nowrap;
+        gap: 20px;
+    }
+
+    .textarea-wrapper {
+        width: 100%;
+        height: 175px;
+    }
+
+    .textarea-wrapper textarea {
+        width: 100%;
+        height: 100%;
+
+        padding: 16px 48px 0 28px;
+    }
+}
+
+
+/* Десятая страница */
+@media screen and (max-width: 1000px) {
+    .comment-wrapper {
+        width: min(560px, 100%);
+        height: 236px;
+
+        margin-top: 56px;
+        margin-bottom: 56px;
+    }
+}

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+    <title>Диагностика жизнестойкости</title>
+
+    <!-- Отключаем кеширование -->
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <meta http-equiv="pragma" content="no-cache">
+
+    <link rel="stylesheet" href="./global/global.css">
+    <link rel="stylesheet" href="./viability/styles/style.css">
+    <link rel="stylesheet" href="./viability/styles/form-checkbox.css">
+    <link rel="stylesheet" href="./viability/styles/section-instruction.css">
+    <link rel="stylesheet" href="./viability/styles/section-instruction-phone.css">
+    <link rel="stylesheet" href="./viability/styles/section-content.css">
+    <link rel="stylesheet" href="./viability/styles/section-content-phone.css">
+    <link rel="stylesheet" href="./viability/styles/phone.css">
+</head>
+<body>
+    <script src="./viability/scripts/questions.js"></script>
+    <script src="./viability/scripts/check.js"></script>
+
+    <article>
+        <div id="top-left-logo">
+            <img src="https://static.tildacdn.com/tild6630-3237-4638-a534-313664333931/___.svg" alt="logo">
+        </div>
+
+        <!-- Фигура сверху справа -->
+        <div id="top-right-figure" class="hidden">
+            <svg width="362" height="369" viewBox="0 0 362 369" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M233.258 24.8867C255.365 3.07791 292.071 22.6105 286.656 53.4014L286.656 53.4024C282.841 75.1559 300.112 94.7233 321.851 93.3759L322.366 93.3405C353.075 90.9661 368.734 129.871 345.03 150.005L345.03 150.006C328.156 164.359 329.085 190.909 346.931 203.884L346.931 203.885C371.948 222.093 359.113 262.13 328.279 262.19C306.418 262.233 290.357 282.924 295.37 304.298L295.493 304.803C303.042 335.108 267.795 357.452 244.229 337.462C227.383 323.169 201.696 328.809 192.097 348.89C178.646 377.023 137.529 371.341 132.211 340.615C128.432 318.684 105.237 306.29 85.1332 315.476L85.1322 315.476C57.0405 328.328 29.1612 297.259 44.6605 270.139C55.6765 250.855 45.8419 226.248 24.6595 220.232C-5.00273 211.812 -6.49911 169.794 22.5182 159.052C43.2151 151.404 51.3115 126.101 38.9477 107.707C21.7418 82.102 46.8181 49.2174 75.4664 59.0742L76.144 59.3147C96.8424 66.904 119.088 52.7016 121.333 30.5562L121.333 30.5552C124.472 -0.550125 165.1 -9.39592 180.464 17.591L180.463 17.592C191.442 36.8644 217.464 40.4603 233.258 24.8877L233.258 24.8867Z" stroke="#BD92CE" stroke-width="2" />
+            </svg>
+        </div>
+
+        <!-- Круг снизу слева -->
+        <div id="bottom-left-figure" class="hidden">
+            <svg width="455" height="434" viewBox="0 0 455 434" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M227.5 1C352.638 1 454 97.6992 454 216.884C454 336.068 352.638 432.767 227.5 432.767C102.362 432.767 1.00025 336.068 1 216.884C1 97.6992 102.362 1 227.5 1Z" stroke="#F1CD21" stroke-width="2" />
+            </svg>
+        </div>
+        
+        <aside id="form-aside">
+            <h3>После заполнения анкеты вам откроется доступ к диагностике<br><span>«Диагностика жизнестойкости»</span></h3>
+            <p>Пожалуйста, внимательно прочитайте инструкцию, прежде чем переходить к самой диагностике. Инструкция будет доступна вам после заполнения данной формы.</p>
+        </aside>
+
+        <section id="form-section">
+            <form>
+                <div id="form-logo">
+                    <img src="https://sun9-33.userapi.com/impg/o7UasFLuPHffAw7M354dhIyAw-ywr1TdpgWp7w/AU35d9CQutY.jpg?size=192x140&quality=96&sign=65f29d920ee520f801e55492621ceaed&type=album" alt="mini-logo">
+                </div>
+
+                <label class="p1" for="form-name">ФИО</label>
+                <input class="p1" type="text" id="form-name" name="form-name" maxlength="100" required>
+
+                <label class="p1" for="form-phone">Телефон</label>
+                <input class="p1" type="tel" id="form-phone" name="form-phone" maxlength="20" required>
+
+                <label class="p1" for="form-email">Email</label>
+                <input class="p1" type="email" id="form-email" name="form-email" maxlength="100" required>
+
+                <p id="form-error">Неверный формат ФИО</p>
+
+                <div class="form-checkbox">
+                    <div id="policy"></div>
+                    <label id="label-policy" for="policy" class="p1">Я принимаю условия <span>Пользовательского соглашения</span> и даю свое <span>согласие на обработку персональных данных</span> в соответствии с <span>Политикой</span>.</label>
+                </div>
+                
+                <button class="p1" type="submit" id="submit-form">Далее</button>
+            </form>
+        </section>
+
+
+        <!-- Инструкция -->
+        <section id="section-instruction" class="hidden">
+            <h2>Диагностика жизнестойкости</h2>
+            <div class="section-instruction__row">
+                <div>
+                    <img src="./viability/assets/instruction-1.svg" alt="instruction-1 svg">
+                    <h3>Задание</h3>
+                    <p>Вам будет предложено 45 утверждений. Для каждого утверждения выберите один из 4 вариантов ответа, который лучше всего отражает ваше мнение: «нет», «скорее нет, чем да», «скорее да, чем нет», «да».</p>
+                </div>
+                <div>
+                    <img src="./viability/assets/instruction-2.svg" alt="instruction-2 svg">
+                    <h3>Для чего</h3>
+                    <p>Эта диагностика предназначена для оценки жизнестойкости — способности активно и гибко справляться со стрессом и трудностями.</p>
+                </div>
+                <div>
+                    <img src="./viability/assets/instruction-3.svg" alt="instruction-3 svg">
+                    <h3>Важно</h3>
+                    <p>Отвечайте, пожалуйста, честно, ориентируясь на свои ощущения и поведение в обычной жизни.</p>
+                </div>
+            </div>
+            <button id="submit-instruction">Начать тестирование</button>
+        </section>
+
+        <!-- Контент -->
+        <section id="section-content" class="hidden">
+            <h2>Диагностика жизнестойкости</h2>
+            <div class="section-content__column">
+                <div class="question-wrapper">
+                    <p id="question"></p>
+                </div>
+
+                <div class="grade-wrapper">
+                    <button class="grade" id="grade-1">
+                        <div class="grade-mark"></div>
+                        <h3>Нет</h3>
+                    </button>
+                    <button class="grade" id="grade-2">
+                        <div class="grade-mark"></div>
+                        <h3>Скорее нет, чем да</h3>
+                    </button>
+                    <button class="grade" id="grade-3">
+                        <div class="grade-mark"></div>
+                        <h3>Скорее да, чем нет</h3>
+                    </button>
+                    <button class="grade" id="grade-4">
+                        <div class="grade-mark"></div>
+                        <h3>Да</h3>
+                    </button>
+                </div>
+
+                <div class="grade-range">
+                    <div class="grade-circle"></div>
+                </div>
+
+                <div class="question-buttons">
+                    <button id="button-back">Назад</button>
+                    <p id="question-counter">1/45</p>
+                    <button id="button-next">Далее</button>
+                    <button class="hidden" id="button-end" disabled>Завершить</button>
+                </div>
+            </div>
+        </section>
+    </article>
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script src="../../config.js"></script>
+    <script src="./global/inputError.js"></script>
+    <script src="./viability/scripts/form.js"></script>
+    <script src="./viability/scripts/script.js"></script>
+</body>
+</html>

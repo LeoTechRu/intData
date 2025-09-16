@@ -1,0 +1,88 @@
+/* Уменьшаем расстояние между инпутом с номером телефоном и чекбоксом */
+#form-section:has(#parents-phone) #form-phone {
+    margin-bottom: 8px;
+}
+
+/* Обработка персональной информации */
+.form-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+
+    margin-bottom: 29px;
+}
+
+.form-checkbox label {
+    width: calc(100% - 12px - 15px);
+    font-size: 12px;
+    line-height: 112%;
+    cursor: pointer;
+}
+
+.form-checkbox label span {
+    font-size: 12px;
+    line-height: 112%;
+    cursor: pointer;
+    display: inline;
+
+    font-weight: 500;
+    color: var(--h-title);
+}
+
+#label-parents-phone {
+    margin-top: 1px;
+}
+
+@media (hover: hover) {
+    .form-checkbox label span:hover {
+        text-decoration: underline;
+    }
+}
+
+@media (hover: none) {
+    .form-checkbox label span {
+        text-decoration: underline;
+    }
+}
+
+.form-checkbox div {
+    width: 15px;
+    height: 15px;
+    box-sizing: border-box;
+    cursor: pointer;
+
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    background-color: #ffffff;
+
+}
+
+.form-checkbox div.checked {
+    background-color: var(--border);
+}
+
+@media screen and (max-width: 1000px) {
+    /* Обработка персональной информации */
+    .form-checkbox {
+        gap: 8px;
+
+        margin-bottom: 8px;
+    }
+
+    .form-checkbox label {
+        width: calc(100% - 8px - 8px);
+    }
+
+    .form-checkbox label, .form-checkbox label span {
+        font-size: 10px;
+    }
+
+    .form-checkbox div {
+        width: 15px;
+        height: 15px;
+    }
+
+    #label-parents-phone {
+        margin-top: 3px;
+    }
+}

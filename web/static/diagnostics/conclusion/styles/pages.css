@@ -1,0 +1,632 @@
+/* Первая страница - вход */
+#section-form > p {
+    width: 857px;
+
+    margin-top: 16px;
+}
+
+#section-form form {
+    margin-top: 56px;
+    margin-bottom: 8px;
+}
+
+form input {
+    display: block;
+    width: 560px;
+    height: 48px;
+
+    box-sizing: border-box;
+    padding: 0 12px;
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    margin-top: 12px;
+    margin-bottom: 24px;
+}
+
+form input#form-date {
+    width: 100%;
+    height: auto;
+    border: none;
+
+    outline: none;
+
+    margin-top: 0;
+    margin-bottom: 0;
+
+    /* ios fix */
+    appearance: none;
+    -webkit-appearance: none;
+    -webkit-min-logical-width: 100%;
+}
+
+.form-date-wrapper {
+    width: 560px;
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+
+    box-sizing: border-box;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    margin-top: 12px;
+    margin-bottom: 20px;
+}
+
+
+#form-error {
+    color: #F40B0B;
+    visibility: hidden;
+    text-align: center;
+}
+
+#form-error.show {
+    visibility: visible;
+}
+
+
+/* Вторая страница */
+#section-vector-selection > p {
+    width: 916px;
+    text-align: center;
+
+    margin-top: 16px;
+}
+
+
+#section-vector-selection .content {
+    /* width: min(1304px, 100%); */
+    width: min(700px, 100%);
+
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+
+    box-sizing: border-box;
+    padding: 0 20px;
+
+    margin-top: 60px;
+    margin-bottom: 42px;
+}
+
+.vector-column {
+    width: calc(50% - 10px);
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+
+.vector-wrapper {
+    width: 100%;
+    display: flex;
+    gap: 12px;
+
+    cursor: pointer;
+}
+
+.vector-wrapper p {
+    width: calc(100% - 32px); /* Минус ширина чекбокса и отступа */
+    font-size: 18px;
+}
+
+
+
+/* Третья страница */
+#section-vector-best > p {
+    width: 857px;
+    text-align: center;
+    margin-top: 16px;
+}
+
+#section-vector-best .content {
+    /* width: 525px; */
+    width: 320px;
+    height: 322px;
+    display: flex;
+    flex-direction: column;
+    gap: 27px;
+
+    margin-top: 60px;
+    margin-bottom: 14px;
+}
+
+.vector-best-wrapper {
+    width: 100%;
+    display: flex;
+    gap: 12px;
+
+    cursor: pointer;
+}
+
+.vector-best-wrapper p {
+    font-size: 18px;
+}
+
+
+/* Четвертая страница */
+#section-vector-jobs > p {
+    width: 857px;
+    text-align: center;
+
+    margin-top: 16px;
+}
+
+#section-vector-jobs .content {
+    width: 1192px;
+    height: 336px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 56px;
+
+    margin-top: 46px;
+    margin-bottom: 14px;
+}
+
+.vector-jobs__container {
+    width: 255px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+
+    background-color: #FFFFFF;
+}
+
+.vector-jobs__container-title {
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 112%;
+}
+
+.vector-jobs__wrapper {
+    width: 100%;
+    height: 284px;
+
+    padding: 0 12px;
+    box-sizing: border-box;
+
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+/* Контент с прокруткой внутри блока с границами */
+.vector-jobs__content {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+
+    padding: 12px 0;
+    box-sizing: border-box;
+}
+
+.vector-jobs__content::-webkit-scrollbar {
+    width: 2px;
+    height: 4px;
+}
+
+/* Подложка скролла в цвет фона */
+.vector-jobs__content::-webkit-scrollbar-track {
+    margin: 12px 0;
+    border-radius: 4px;
+    background-color: #00000000;
+}
+
+/* Скрол цвета основного блока */
+.vector-jobs__content::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background-color: var(--input-bg);
+}
+
+.job-wrapper {
+    display: flex;
+    gap: 12px;
+
+    cursor: pointer;
+
+    margin-top: 28px;
+}
+
+.job-wrapper:first-of-type {
+    margin-top: 0;
+}
+
+.job-wrapper p {
+    width: 190px;
+    font-size: 18px;
+    line-height: 112%;
+    word-break: break-word;
+    word-wrap: break-word;
+}
+
+/* .job-wrapper input {} */
+
+/* Блок с contenteditable */
+.job-contenteditable {
+    width: 190px;
+
+    box-sizing: border-box;
+    padding: 0px 12px;
+
+    border: 1px solid var(--border);
+    border-radius: 8px;
+
+    font-family: 'Roboto', Sans-Serif;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 112%;
+}
+
+
+/* Пятая страница */
+#section-prepare-conclusion > p {
+    width: 857px;
+    text-align: center;
+
+    margin-top: 16px;
+}
+
+#section-prepare-conclusion .content {
+    width: 560px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 64px;
+
+    margin-top: 57px;
+    margin-bottom: 160px;
+}
+
+#section-prepare-conclusion button {
+    width: 100%;
+    height: 80px;
+
+    gap: 12px;
+
+    box-sizing: border-box;
+    padding-left: 58px;
+    border-radius: 8px;
+    border: 1px solid #BD92CE;
+    background-color: #FFFFFF;
+
+    justify-content: flex-start;
+}
+
+#section-prepare-conclusion button.active {
+    background: rgba(189, 146, 206, 0.30);
+    color: #000000 !important;
+}
+
+@media (hover: hover) {
+    #section-prepare-conclusion button:hover {
+        background: rgba(189, 146, 206, 0.30);
+        color: #000000 !important;
+    }
+}
+
+#section-prepare-conclusion button p {
+    width: calc(100% - 32px);
+    text-align: start;
+}
+
+
+/* Шестая страница */
+#section-training-options > p {
+    width: 857px;
+    text-align: center;
+
+    margin-top: 16px;
+}
+
+#section-training-options .content {
+    width: 560px;
+
+    display: flex;
+    flex-direction: column;
+    /* gap: 20px; */
+    gap: 16px;
+
+    margin-top: 24px;
+    margin-bottom: 25px;
+}
+
+#section-training-options button {
+    width: 100%;
+    height: 80px;
+
+    gap: 12px;
+
+    box-sizing: border-box;
+    padding-left: 58px;
+    border-radius: 8px;
+    border: 1px solid #BD92CE;
+    background-color: #FFFFFF;
+
+    justify-content: flex-start;
+}
+
+#section-training-options button.active {
+    background: rgba(189, 146, 206, 0.30);
+    color: #000000 !important;
+}
+
+@media (hover: hover) {
+    #section-training-options button:hover {
+        background: rgba(189, 146, 206, 0.30);
+        color: #000000 !important;
+    }
+}
+
+#section-training-options button p {
+    width: calc(100% - 32px);
+    text-align: start;
+}
+
+
+/* Седьмая страница */
+#section-city > p {
+    width: 857px;
+    text-align: center;
+
+    margin-top: 16px;
+}
+
+#section-city .content {
+    height: 357px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 19px;
+
+    margin-top: 56px;
+    margin-bottom: 4px;
+}
+
+.city-input__wrapper {
+    width: 560px;
+    height: 48px;
+
+    position: relative;
+}
+
+.city-input {
+    width: 100%;
+    height: 100%;
+
+    box-sizing: border-box;
+    padding: 0 48px 0 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+
+    font-size: 12px;
+}
+
+.city-input__wrapper-svg {
+    width: 48px;
+    height: 48px;
+
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    cursor: pointer;
+}
+
+.city-input__additional {
+    width: 100%;
+    height: 137px;
+
+    position: absolute;
+    top: 52px;
+    left: 0;
+
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    box-sizing: border-box;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #BD92CE;
+
+    background-color: #FFFFFF;
+
+    z-index: 1;
+}
+
+.city-input__additional p {
+    font-size: 12px;
+    line-height: 112%;
+    
+    cursor: pointer;
+}
+
+.city-input__additional p:last-of-type {
+    color: #BDBDBD;
+    cursor: default;
+}
+
+
+/* Восьмая страница */
+#section-paid-forms > p {
+    width: 857px;
+    text-align: center;
+
+    margin-top: 16px;
+}
+
+#section-paid-forms .content {
+    width: 560px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+
+    margin-top: 24px;
+    margin-bottom: 76px;
+}
+
+#section-paid-forms button {
+    width: 100%;
+    height: 80px;
+
+    gap: 12px;
+
+    box-sizing: border-box;
+    padding-left: 58px;
+    border-radius: 8px;
+    border: 1px solid #BD92CE;
+    background-color: #FFFFFF;
+
+    justify-content: flex-start;
+}
+
+#section-paid-forms button.active {
+    background: rgba(189, 146, 206, 0.30);
+    color: #000000 !important;
+}
+
+@media (hover: hover) {
+    #section-paid-forms button:hover {
+        background: rgba(189, 146, 206, 0.30);
+        color: #000000 !important;
+    }
+}
+
+#section-paid-forms button p {
+    width: calc(100% - 32px);
+    font-size: 18px;
+    text-align: start;
+}
+
+
+/* Девятая страница */
+#section-institutions > p {
+    width: 860px;
+    text-align: center;
+
+    margin-top: 16px;
+}
+
+#section-institutions .institutions-wrapper {
+    width: 1186px;
+    height: 338px;
+
+    overflow: auto;
+    scrollbar-gutter: stable;
+
+    margin-top: 56px;
+    margin-bottom: 2px;
+}
+
+/* Скролл */
+#section-institutions .institutions-wrapper::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+/* Подложка скролла в цвет фона */
+#section-institutions .institutions-wrapper::-webkit-scrollbar-track {
+    border-radius: 10px;
+    background-color: #00000000;
+}
+
+/* Скрол цвета основного блока */
+#section-institutions .institutions-wrapper::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background-color: var(--input-bg);
+}
+
+#section-institutions .content {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+}
+
+.textarea-wrapper {
+    width: 560px;
+    height: 149px;
+
+    position: relative;
+}
+
+.textarea-wrapper h3 {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.textarea-wrapper textarea {
+    width: 100%;
+    height: 100%;
+    resize: none;
+
+    box-sizing: border-box;
+    padding: 16px 48px 0 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+
+    font-family: 'Roboto', Sans-Serif;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 112%;
+}
+
+.textarea-wrapper textarea::-webkit-scrollbar {
+    display: none;
+}
+
+.textarea-wrapper.demo textarea {
+    color: rgba(0, 0, 0, 0.60);
+}
+
+.textarea-wrapper svg {
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    cursor: pointer;
+}
+
+
+/* Десятая страница */
+#section-comment > p {
+    width: 857px;
+
+    margin-top: 16px;
+}
+
+.comment-wrapper {
+    width: 560px;
+    height: 150px;
+
+    margin-top: 56px;
+    margin-bottom: 214px;
+}
+
+.comment-wrapper textarea {
+    width: 100%;
+    height: 100%;
+    resize: none;
+
+    box-sizing: border-box;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+
+    font-family: 'Roboto', Sans-Serif;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 112%;
+}
+
+.comment-wrapper textarea::-webkit-scrollbar {
+    display: none;
+}

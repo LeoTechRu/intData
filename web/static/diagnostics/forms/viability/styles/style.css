@@ -1,0 +1,264 @@
+body, html {
+    width: 100%;
+    height: 100%;
+}
+
+h2 {
+    font-family: 'Roboto', Sans-Serif;
+    font-weight: 500;
+    font-size: 48px;
+    line-height: 134%;
+}
+
+h3 {
+    font-family: 'Roboto', Sans-Serif;
+    font-weight: 500;
+    font-size: 24px;
+    line-height: 132%;
+}
+
+p, .p1 {
+    font-family: 'Roboto', Sans-Serif;
+    font-weight: 400;
+    font-size: 20px; /* На этой странице 20 вместо 18 */
+    line-height: 21px;
+}
+
+.p1-strong {
+    font-family: 'Roboto';
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 112%;
+}
+
+.p-gray {
+    color: var(--p-gray);
+}
+
+.p-cut {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hidden {
+    display: none !important;
+}
+
+
+/* Стиль для ошибки инпута */
+input.error {
+    animation: inputError 2s ease-in;
+}
+
+/* Анимация ошибки */
+@keyframes inputError {
+    0% {
+        border: 1px solid var(--border);
+    }
+
+    2% {
+        border: 1px solid #F40B0B;
+    }
+
+    100% {
+        border: 1px solid var(--border);
+    }
+}
+
+
+
+/* Логотип сверху слева */
+#top-left-logo {
+    width: 128px;
+    
+    position: absolute;
+    top: 50px;
+    left: 100px;
+    
+}
+
+#top-left-logo img {
+    width: 100%;
+}
+
+
+
+article {
+    width: min(1440px, 100%); /* Ширина 1440px или 100% при сужении */
+    height: 800px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    position: relative;
+    
+    margin: 0 auto; /* По центру страницы */
+}
+
+
+#form-aside {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+
+#form-aside h3 {
+    width: 403px;
+    height: 96px;
+
+    margin-right: 126px;
+}
+
+#form-aside p {
+    width: 403px;
+    height: 154px;
+
+    font-size: 20px;
+    line-height: 112%;
+
+    margin-right: 126px;
+}
+
+#form-aside h3 span, #form-aside p span {
+    color: var(--p-cyan);
+}
+
+
+
+#form-section {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#form-section form {
+    width: 460px;
+    box-sizing: border-box;
+    padding: 42px 65px;
+
+    display: flex;
+    flex-direction: column;
+    
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    margin-left: 67px;
+}
+
+
+#form-logo {
+    width: 100%;
+    height: 29px;
+    display: flex;
+    justify-content: center;
+
+    margin-bottom: 42px;
+}
+
+#form-logo img {
+    width: 39px;
+    height: 29px;
+}
+
+
+form input {
+    display: block;
+    width: 100%;
+    height: 40px;
+    box-sizing: border-box;
+    padding: 0 12px;
+
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    margin-top: 4px;
+    margin-bottom: 29px;
+}
+
+#form-error {
+    color: #F40B0B;
+    margin-bottom: 12px;
+    visibility: hidden;
+}
+
+#form-error.show {
+    visibility: visible;
+}
+
+button {
+    width: 100%;
+    height: 40px;
+    box-sizing: border-box;
+
+    font-size: 18px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: var(--button);
+    border-radius: 10px;
+    border: none;
+    outline: none;       
+    
+    transition: .15s all;
+    cursor: pointer;
+    color: #000000;
+}
+
+@media (hover: hover) {
+    button:hover {
+        background: #000000;
+        color: #FFFFFF;
+    }
+}
+
+button:disabled {
+    background: #d1aedf;
+    color: #313131;
+    cursor: not-allowed;
+}
+
+
+
+input[type="email"] {
+    margin-bottom: 12px;
+}
+
+
+/* Фигура сверху справа */
+#top-right-figure {
+    width: 168px;
+    height: 289px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    overflow: hidden;
+}
+
+#top-right-figure svg {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+
+/* Круг снизу слева */
+#bottom-left-figure {
+    width: 357px;
+    height: 243px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    overflow: hidden;
+}
+
+#bottom-left-figure svg {
+    position: absolute;
+    top: 96px;
+    right: 50px;
+}

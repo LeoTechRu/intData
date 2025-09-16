@@ -1,0 +1,496 @@
+body {
+    width: 100%;
+}
+
+h2 {
+    font-family: 'Roboto', Sans-Serif;
+    font-weight: 500;
+    font-size: 48px;
+    line-height: 134%;
+}
+
+h3 {
+    font-family: 'Roboto', Sans-Serif;
+    font-weight: 500;
+    font-size: 24px;
+    line-height: 132%;
+}
+
+p, .p1 {
+    font-family: 'Roboto', Sans-Serif;
+    font-weight: 400;
+    font-size: 20px; /* На этой странице 20 вместо 18 */
+    line-height: 21px;
+}
+
+.p1-strong {
+    font-family: 'Roboto';
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 112%;
+}
+
+.p-gray {
+    color: var(--p-gray);
+}
+
+.p-cut {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hidden {
+    display: none !important;
+}
+
+
+/* Стиль для ошибки инпута */
+input.error {
+    animation: inputError 2s ease-in;
+}
+
+/* Анимация ошибки */
+@keyframes inputError {
+    0% {
+        border: 1px solid var(--border);
+    }
+
+    2% {
+        border: 1px solid #F40B0B;
+    }
+
+    100% {
+        border: 1px solid var(--border);
+    }
+}
+
+
+
+/* Логотип сверху слева */
+#top-left-logo {
+    width: 128px;
+    
+    position: absolute;
+    top: 50px;
+    left: 100px;
+    
+}
+
+#top-left-logo img {
+    width: 100%;
+}
+
+
+
+article {
+    width: min(1440px, 100%); /* Ширина 1440px или 100% при сужении */
+    height: 800px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    position: relative;
+    
+    margin: 0 auto; /* По центру страницы */
+}
+
+
+#form-aside {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+
+#form-aside h3 {
+    width: 403px;
+    height: 96px;
+
+    margin-right: 126px;
+}
+
+#form-aside p {
+    width: 403px;
+    height: 154px;
+
+    font-size: 20px;
+    line-height: 112%;
+
+    margin-right: 126px;
+}
+
+#form-aside h3 span, #form-aside p span {
+    color: var(--p-cyan);
+}
+
+
+
+#form-section {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#form-section form {
+    width: 460px;
+    box-sizing: border-box;
+    padding: 42px 65px;
+
+    display: flex;
+    flex-direction: column;
+    
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    margin-left: 67px;
+}
+
+
+#form-logo {
+    width: 100%;
+    height: 29px;
+    display: flex;
+    justify-content: center;
+
+    margin-bottom: 42px;
+}
+
+#form-logo img {
+    width: 39px;
+    height: 29px;
+}
+
+
+form input {
+    display: block;
+    width: 100%;
+    height: 40px;
+    box-sizing: border-box;
+    padding: 0 12px;
+
+    border: 1px solid var(--border);
+    border-radius: 10px;
+
+    margin-top: 4px;
+    margin-bottom: 29px;
+}
+
+#form-error {
+    color: #F40B0B;
+    margin-bottom: 12px;
+    visibility: hidden;
+}
+
+#form-error.show {
+    visibility: visible;
+}
+
+button {
+    width: 100%;
+    height: 40px;
+    box-sizing: border-box;
+
+    font-size: 18px !important;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: var(--button);
+    border-radius: 10px;
+    border: none;
+    outline: none;       
+    
+    transition: .15s all;
+    cursor: pointer;
+    color: #000000 !important;
+}
+
+@media (hover: hover) {
+    button:hover {
+        background: #000000;
+        color: #FFFFFF !important;
+    }
+}
+
+button:disabled {
+    background: #d1aedf;
+    color: #313131 !important;
+    cursor: not-allowed;
+}
+
+
+
+input[type="email"] {
+    margin-bottom: 12px;
+}
+
+
+#top-right-figure {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: -1;
+}
+
+#bottom-left-figure {
+    width: 256px;
+    height: 187px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    z-index: -1;
+
+    overflow: hidden;
+}
+
+#bottom-left-figure svg {
+    position: absolute;
+    top: 2px;
+    left: 0;
+}
+
+.article-content {
+    width: 100%;
+    height: auto;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+
+    box-sizing: border-box;
+    padding: 0 0 70px 0; /* На 70px снизу меньше так как снизу плашка от тильды */
+
+    overflow-x: hidden;
+}
+
+.article-content-question {
+    padding: 0;
+}
+
+
+/* Секция с инструкцией */
+#section-instruction {
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Заголовок страницы */
+#section-title {
+    height: 57px;
+    padding-top: 75px;
+    padding-bottom: 80px;
+
+    text-transform: uppercase;
+    text-align: center;
+
+    color: var(--h-title);
+}
+
+
+.section-instruction__row {
+    width: min(1400px, 100%); /* +20px с боков */
+    display: flex;
+    flex-direction: row;
+    gap: 62px;
+
+    box-sizing: border-box;
+    padding: 0 20px;
+}
+
+
+.section-instruction__row h3 {
+    width: 50%;
+    font-weight: 400;
+    line-height: 112%;
+    color: #141212;
+}
+
+.section-instruction__row h2 {
+    width: 50%;
+    text-transform: uppercase;
+    font-weight: 400;
+    color: #141212;
+}
+
+.section-instruction__row_pink h2 {
+    width: 50%;
+    padding: 40px 0;
+}
+
+.section-instruction__row_pink h3 {
+    width: 50%;
+    padding: 40px 0;
+}
+
+.section-instruction__row_pink h3 span {
+    font-weight: 500;
+}
+
+.section-instruction__row-wrapper {
+    width: 100%;
+    height: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    background: rgba(189, 146, 206, 0.50);
+
+    margin-top: 40px;
+}
+
+
+/* Начать тестирование */
+#submit-instruction {
+    width: 720px;
+    height: 80px;
+
+    border-radius: 20px;
+
+    font-size: 32px !important;
+    font-weight: 500;
+
+    background: #66CAA5;
+
+    margin-top: 80px;
+    margin-bottom: 25px;
+}
+
+@media (hover: hover) {
+    #submit-instruction:hover {
+        background: #000000;
+        color: #FFFFFF !important;
+    }
+}
+
+#submit-instruction:disabled {
+    background: #d1aedf;
+    color: #313131 !important;
+    cursor: not-allowed;
+}
+
+
+
+#question-section {
+    width: 729px; /* Максимальная длина поля с вопросом */
+    height: 100%;
+
+    margin: 0 auto; /* По центру */
+}
+
+.question__section-content h2 {
+    width: 546px;
+
+    margin: 133px auto 52px auto; /* По центру */
+}
+
+.question {
+    width: 100%;
+    height: 119px;
+    box-sizing: border-box;
+    padding: 25px 93px;
+    display: flex;
+
+    border: 2px solid var(--border);
+    border-radius: 10px;
+
+    cursor: pointer;
+}
+
+.question:not(:first-child) {
+    margin-top: 38px;
+}
+
+
+/* Выбранный вопрос */
+.question__mark-wrapper {
+    width: 60px; /* 32 + 28 */
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.question__mark {
+    width: 32px;
+    height: 32px;
+    box-sizing: border-box;
+
+    border-radius: 50%;
+    border: 1px solid var(--p-cyan);
+}
+
+.question__mark.checked {
+    background-color: var(--p-cyan);
+}
+
+
+.question__content {
+    width: calc(100% - 60px);
+}
+
+/* .question__content .p1-strong {
+    margin-bottom: 4px;
+} */
+
+#question-description-1, #question-description-2 {
+    margin-top: 4px;
+}
+
+
+/* Кнопки под вопросом */
+.question-buttons {
+    width: 622px;
+    height: 86px;
+    box-sizing: border-box;
+    padding: 20px 52px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin: 56px auto 0 auto;
+}
+
+
+.question-buttons button {
+    width: 178px;
+    height: 46px;
+}
+
+.question-buttons p, .question-buttons .p1 {
+    font-size: 18px;
+}
+
+
+/* Контент вопроса с открытым ответом */
+.question-open__section-content h3 {
+    width: 100%;
+    margin-top: 129px;
+}
+
+.question-open__section-content h3 span {
+    color: var(--p-cyan);
+
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.question-open__section-content textarea {
+    width: 729px;
+    height: 119px;
+    box-sizing: border-box;
+    padding: 12px 12px;
+    resize: none;
+
+    border: 2px solid var(--border);
+    border-radius: 10px;
+
+    margin-top: 40px;
+    margin-bottom: -4px;
+}

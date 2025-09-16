@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+    <title>Интервью</title>
+
+    <!-- Отключаем кеширование -->
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <meta http-equiv="pragma" content="no-cache">
+
+    <link rel="stylesheet" href="./global/global.css">
+    <link rel="stylesheet" href="./interview/styles/style.css">
+    <link rel="stylesheet" href="./interview/styles/form-checkbox.css">
+    <link rel="stylesheet" href="./interview/styles/phone.css">
+</head>
+<body>
+    <script src="./interview/scripts/check.js"></script>
+
+    <article>
+        <div id="top-left-logo">
+            <img src="https://static.tildacdn.com/tild6630-3237-4638-a534-313664333931/___.svg" alt="logo">
+        </div>
+        
+        <aside id="form-aside">
+            <h3>После заполнения анкеты вам откроется доступ к диагностике<br><span>«Интервью»</span></h3>
+            <p>Диагностика поможет узнать, какие виды деятельности вам подходят больше всего.<br>Пожалуйста, внимательно прочитайте инструкцию, прежде чем переходить к самой диагностике. Инструкция будет доступна вам после заполнения данной формы.</p>
+        </aside>
+
+        <section id="form-section">
+            <form>
+                <div id="form-logo">
+                    <img src="https://sun9-33.userapi.com/impg/o7UasFLuPHffAw7M354dhIyAw-ywr1TdpgWp7w/AU35d9CQutY.jpg?size=192x140&quality=96&sign=65f29d920ee520f801e55492621ceaed&type=album" alt="mini-logo">
+                </div>
+
+                <label class="p1" for="form-name">ФИО</label>
+                <input class="p1" type="text" id="form-name" name="form-name" maxlength="100" required>
+
+                <label class="p1" for="form-phone">Телефон</label>
+                <input class="p1" type="tel" id="form-phone" name="form-phone" maxlength="20" required>
+
+                <label class="p1" for="form-email">Email</label>
+                <input class="p1" type="email" id="form-email" name="form-email" maxlength="100" required>
+
+                <p id="form-error">Неверный формат ФИО</p>
+
+                <div class="form-checkbox">
+                    <div id="policy"></div>
+                    <label id="label-policy" for="policy" class="p1">Я принимаю условия <span>Пользовательского соглашения</span> и даю свое <span>согласие на обработку персональных данных</span> в соответствии с <span>Политикой</span>.</label>
+                </div>
+
+                <button class="p1" type="submit" id="submit-form">Далее</button>
+            </form>
+        </section>
+
+
+        <!-- Контент диагностики -->
+        <h2 id="section-title" class="hidden">«Интервью»</h2>
+        <section id="section-content" class="hidden">
+            <div class="rules">
+                <div class="rules-pink">
+                    <h3>В этом задании мы будем говорить о вас и искать ответ на вопрос «кем стать», опираясь на поддержку и знания близких вам людей.</h3>
+                </div>
+
+                <div class="rules-green">
+                    <h3>Посмотрите внимательно видео-инструкцию ниже, прежде чем выполнять это задание. А после проведения самих интервью обязательно заполните все три поля  под видео.</h3>
+                </div>
+
+                <div class="rules-yellow">
+                    <h3>Что именно нужно сделать, мы обсуждаем в видео. Пожалуйста, выполните это задание и отправьте нам результат до 21:00 завтрашнего дня!</h3>
+                </div>
+            </div>
+
+            <div class="figures">
+                <img src="https://sun9-68.userapi.com/impg/zOWgbz97WujJeh47FZt-tYtjzRHH7KaP5tpeeg/VVWDd2G9ULs.jpg?size=46x39&quality=96&sign=f7250966118dfcc31e768a862eb1d711&type=album" alt="figure">
+                <img src="https://sun9-68.userapi.com/impg/zOWgbz97WujJeh47FZt-tYtjzRHH7KaP5tpeeg/VVWDd2G9ULs.jpg?size=46x39&quality=96&sign=f7250966118dfcc31e768a862eb1d711&type=album" alt="figure">
+                <img src="https://sun9-68.userapi.com/impg/zOWgbz97WujJeh47FZt-tYtjzRHH7KaP5tpeeg/VVWDd2G9ULs.jpg?size=46x39&quality=96&sign=f7250966118dfcc31e768a862eb1d711&type=album" alt="figure">
+            </div>
+
+            <div class="iframe-wrapper">
+                <iframe width="1242" height="528" src="https://www.youtube.com/embed/R6LsPO4dnfQ?si=kA0TbkSD3fiB_wqE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                <svg xmlns="http://www.w3.org/2000/svg" width="273" height="280" viewBox="0 0 273 280" fill="none">
+                    <path d="M205.279 70.058L204.82 69.8957L204.665 69.4349C190.765 28.1925 165.275 1 136.5 1C107.725 1 82.2353 28.1924 68.3445 69.4347L68.1892 69.8957L67.7307 70.0581C27.5407 84.2941 1 110.44 1 140C1 169.56 27.55 195.696 67.7308 209.932L68.1892 210.095L68.3445 210.556C82.2354 251.798 107.725 279 136.5 279C165.275 279 190.764 251.798 204.665 210.555L204.82 210.095L205.279 209.932C245.459 195.696 272 169.56 272 140C272 110.44 245.459 84.2941 205.279 70.058Z" stroke="#F1CD21" stroke-width="2"/>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="245" height="278" viewBox="0 0 245 278" fill="none">
+                    <path d="M36.509 62.3267C41.9272 77.6412 33.3359 94.7355 19.076 97.0055L36.509 62.3267ZM36.509 62.3267C28.428 39.4988 50.5555 18.1838 68.7121 31.2816L36.509 62.3267ZM225.767 97.9931L225.924 97.0055L225.767 97.9931C210.74 95.6025 201.963 77.7545 207.548 61.9933C211.449 50.9602 208.048 40.3335 201.53 34.0521C195.033 27.7903 185.496 25.8686 176.864 32.0927C170.478 36.6979 163.026 37.2424 156.601 34.5555C150.186 31.8729 144.845 25.9951 142.556 17.847C139.376 6.53378 130.885 1 122.495 1C114.106 1 105.615 6.53357 102.435 17.8465C100.15 25.9948 94.8118 31.8728 88.3968 34.5555C81.9717 37.2425 74.5172 36.6978 68.1274 32.0929L68.127 32.0926C59.4993 25.8687 49.963 27.7901 43.4654 34.0521C36.9476 40.3335 33.5461 50.9601 37.4517 61.993L37.4517 61.9931C43.0278 77.754 34.2513 95.6024 19.2332 97.9931L19.2331 97.9931C9.15958 99.5949 2.83202 108.153 1.3385 117.886C-0.154659 127.616 3.24178 138.212 12.2934 143.714C25.5813 151.78 28.6144 171.924 18.6093 184.63C11.6922 193.416 11.6896 204.741 15.9732 213.264C20.2544 221.782 28.6917 227.309 38.6072 224.86L38.6075 224.86C53.5139 221.182 67.1009 234.616 66.5572 251.61L66.5572 251.611C66.171 263.526 72.5312 272.122 80.4595 275.435C88.3575 278.736 97.9228 276.851 104.234 267.526L104.235 267.526C108.832 260.738 115.64 257.295 122.495 257.295C129.35 257.295 136.159 260.738 140.756 267.526L140.756 267.526C147.068 276.851 156.633 278.736 164.531 275.435C172.459 272.122 178.82 263.526 178.434 251.611V251.61C177.89 234.615 191.487 221.183 206.393 224.86L206.393 224.86C216.304 227.309 224.741 221.782 229.022 213.264C233.306 204.741 233.303 193.416 226.382 184.63L226.381 184.629C216.386 171.924 219.419 151.78 232.706 143.714C241.758 138.212 245.155 127.616 243.661 117.886C242.168 108.153 235.84 99.5949 225.767 97.9931Z" stroke="#66CAA6" stroke-width="2"/>
+                </svg>
+
+                <svg xmlns="http://www.w3.org/2000/svg" width="67" height="119" viewBox="0 0 67 119" fill="none" class="svg-phone">
+                    <path d="M38.0325 88.6834L37.5742 88.8458L37.4189 89.3066C31.533 106.774 20.8368 118 9 118C-2.83678 118 -13.5331 106.774 -19.4148 89.3068L-19.5701 88.8458L-20.0286 88.6833C-37.0282 82.6605 -48 71.69 -48 59.5C-48 47.3101 -37.0244 36.3437 -20.0285 30.3207L-19.57 30.1583L-19.4148 29.6973C-13.533 12.2302 -2.83666 1 9 1C20.8367 1 31.5329 12.2302 37.4189 29.6975L37.5742 30.1583L38.0325 30.3207C55.0282 36.3437 66 47.31 66 59.5C66 71.69 55.028 82.6605 38.0325 88.6834Z" stroke="#F1CD21" stroke-width="2"/>
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="70" height="122" viewBox="0 0 70 122" fill="none" class="svg-phone">
+                    <path d="M99.3547 81.3897L99.3543 81.3892C94.757 75.5701 96.1214 66.3309 102.292 62.601C106.044 60.3302 107.489 55.9316 106.857 51.83C106.225 47.7266 103.57 44.2217 99.4346 43.567C92.3896 42.451 88.4112 34.1963 90.9639 27.0228C92.607 22.3956 91.1706 17.9618 88.4512 15.3522C85.7515 12.7615 81.8445 11.9909 78.2897 14.543C72.2451 18.8837 64.4048 15.4355 62.303 7.98655C60.9658 3.24966 57.4331 1.00002 53.9979 1.00002C50.5627 1.00002 47.03 3.24969 45.6929 7.98666C43.5948 15.4364 35.7543 18.883 29.7064 14.5431L29.706 14.5428C26.1534 11.991 22.2466 12.7613 19.5467 15.3522C16.8273 17.9618 15.391 22.3954 17.036 27.0225L17.036 27.0227C19.5847 34.1957 15.6068 42.4509 8.56558 43.5669L8.56541 43.567C4.4301 44.2217 1.77503 47.7266 1.14265 51.83C0.510541 55.9316 1.95599 60.3302 5.70818 62.601C11.8786 66.3309 13.2431 75.5703 8.6414 81.3895C5.74643 85.0511 5.73624 89.7822 7.54011 93.3559C9.3414 96.9246 12.8293 99.152 16.8855 98.1543L16.8858 98.1542C23.9113 96.4285 30.1466 102.733 29.8984 110.459L29.8984 110.459C29.7354 115.466 32.4109 119.019 35.6821 120.38C38.9243 121.729 42.8564 120.979 45.4863 117.111L45.4864 117.111C47.6122 113.985 50.7829 112.375 53.998 112.375C57.213 112.375 60.3837 113.985 62.5095 117.111L62.5096 117.111C65.1395 120.979 69.0716 121.729 72.3138 120.38C75.585 119.019 78.2605 115.466 78.0975 110.459L78.0975 110.459C77.8492 102.732 84.0892 96.4286 91.1142 98.1542L91.1145 98.1543C95.1685 99.1519 98.6565 96.9247 100.458 93.3559C102.262 89.7822 102.251 85.0512 99.3547 81.3897Z" stroke="#66CAA6" stroke-width="2"/>
+                </svg>
+            </div>
+
+            <div class="section-inputs">
+                <div class="section-inputs__block">
+                    <h3>1.</h3>
+                    <textarea id="input-1" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>2.</h3>
+                    <textarea id="input-2" maxlength="1000"></textarea>
+                </div>
+                <div class="section-inputs__block">
+                    <h3>3.</h3>
+                    <textarea id="input-3" maxlength="1000"></textarea>
+                </div>
+            </div>
+
+            <button id="button-end" disabled>Отправить</button>
+            <button id="button-back">Назад</button>   
+        </section>
+    </article>
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script src="../../config.js"></script>
+    <script src="./global/inputError.js"></script>
+    <script src="./interview/scripts/form.js"></script>
+    <script src="./interview/scripts/script.js"></script>
+</body>
+</html>

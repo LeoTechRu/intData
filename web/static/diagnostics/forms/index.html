@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon" />
+    <title>Ошибка</title>
+
+    <!-- Отключаем кеширование -->
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="pragma" content="no-cache" />
+
+    <link rel="stylesheet" href="./global/global.css" />
+  </head>
+  <body>
+    <p>
+      Вы перешли по неправильной ссылке! Актуальную ссылку на тестирование
+      попросите у профориентолога!
+    </p>
+    <!-- Перенаправление на страницу с ошибкой -->
+    <script>
+      location.href = "testing-end.html?no-manager-id";
+    </script>
+  </body>
+</html>

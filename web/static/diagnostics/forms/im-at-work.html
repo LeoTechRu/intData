@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon">
+    <title>Я на работе</title>
+
+    <!-- Отключаем кеширование -->
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <meta http-equiv="pragma" content="no-cache">
+
+    <link rel="stylesheet" href="./global/global.css">
+    <link rel="stylesheet" href="./im-at-work/styles/style.css">
+    <link rel="stylesheet" href="./im-at-work/styles/form-checkbox.css">
+    <link rel="stylesheet" href="./im-at-work/styles/section-instruction.css">
+    <link rel="stylesheet" href="./im-at-work/styles/section-instruction-phone.css">
+    <link rel="stylesheet" href="./im-at-work/styles/section-content.css">
+    <link rel="stylesheet" href="./im-at-work/styles/section-content-phone.css">
+    <link rel="stylesheet" href="./im-at-work/styles/phone.css">
+</head>
+<body>
+    <script src="./im-at-work/scripts/questions.js"></script>
+    <script src="./im-at-work/scripts/check.js"></script>
+
+    <article>
+        <div id="top-left-logo">
+            <img src="https://static.tildacdn.com/tild6630-3237-4638-a534-313664333931/___.svg" alt="logo">
+        </div>
+
+        <!-- Фигура сверху справа -->
+        <div id="top-right-figure" class="hidden">
+            <svg width="145" height="229" viewBox="0 0 145 229" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M233.258 -115.113C255.365 -136.922 292.071 -117.389 286.656 -86.5986L286.656 -86.5976C282.841 -64.8441 300.112 -45.2767 321.851 -46.6241L322.366 -46.6595C353.075 -49.0339 368.734 -10.1292 345.03 10.0048L345.03 10.0058C328.156 24.3594 329.085 50.9086 346.931 63.8836L346.931 63.8846C371.948 82.0929 359.113 122.13 328.279 122.19C306.418 122.233 290.357 142.924 295.37 164.298L295.493 164.803C303.042 195.108 267.795 217.452 244.229 197.462C227.383 183.169 201.696 188.809 192.097 208.89C178.646 237.023 137.529 231.341 132.211 200.615C128.432 178.684 105.237 166.29 85.1332 175.476L85.1322 175.476C57.0405 188.328 29.1612 157.259 44.6605 130.139C55.6765 110.855 45.8419 86.2482 24.6595 80.232C-5.00273 71.812 -6.49911 29.7937 22.5182 19.0524C43.2151 11.404 51.3115 -13.8988 38.9477 -32.2932C21.7418 -57.898 46.8181 -90.7826 75.4664 -80.9258L76.144 -80.6853C96.8424 -73.096 119.088 -87.2984 121.333 -109.444L121.333 -109.445C124.472 -140.55 165.1 -149.396 180.464 -122.409L180.463 -122.408C191.442 -103.136 217.464 -99.5397 233.258 -115.112L233.258 -115.113Z" stroke="#66CAA5" stroke-width="2" />
+            </svg>
+        </div>
+
+        <!-- Круг справа по центру -->
+        <div id="left-centre-figure" class="hidden">
+            <svg width="80" height="356" viewBox="0 0 80 356" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M-107.367 1.1543C-4.79992 1.15453 78.2646 80.41 78.2646 178.077C78.2646 275.744 -4.79992 355 -107.367 355C-209.935 355 -293 275.744 -293 178.077C-293 80.4099 -209.935 1.1543 -107.367 1.1543Z" stroke="#F1CD21" stroke-width="2" />
+            </svg>
+        </div>
+
+        <!-- Треугольник снизу справа -->
+        <div id="bottom-right-figure" class="hidden">
+            <svg width="163" height="182" viewBox="0 0 163 182" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M299.339 71.8574C297.101 60.8249 289.232 51.71 276.643 49.1548L48.4975 2.87104C35.8601 0.306387 23.1586 5.30911 14.2297 14.2379C5.30076 23.1669 0.297334 35.8688 2.86214 48.5064L49.1555 276.642C51.7108 289.232 60.8236 297.102 71.8548 299.341C82.9102 301.586 95.935 298.168 106.129 287.973L287.973 106.129C298.163 95.9393 301.582 82.9144 299.339 71.8574Z" stroke="#BD92CE" stroke-width="2.76836" />
+            </svg>
+        </div>
+        
+        <aside id="form-aside">
+            <h3>После заполнения анкеты вам откроется доступ к диагностике<br><span>«Я на работе»</span></h3>
+            <p>Пожалуйста, внимательно прочитайте инструкцию, прежде чем переходить к самой диагностике. Инструкция будет доступна вам после заполнения данной формы.</p>
+        </aside>
+
+        <section id="form-section">
+            <form>
+                <div id="form-logo">
+                    <img src="https://sun9-33.userapi.com/impg/o7UasFLuPHffAw7M354dhIyAw-ywr1TdpgWp7w/AU35d9CQutY.jpg?size=192x140&quality=96&sign=65f29d920ee520f801e55492621ceaed&type=album" alt="mini-logo">
+                </div>
+
+                <label class="p1" for="form-name">ФИО</label>
+                <input class="p1" type="text" id="form-name" name="form-name" maxlength="100" required>
+
+                <label class="p1" for="form-phone">Телефон</label>
+                <input class="p1" type="tel" id="form-phone" name="form-phone" maxlength="20" required>
+
+                <label class="p1" for="form-email">Email</label>
+                <input class="p1" type="email" id="form-email" name="form-email" maxlength="100" required>
+
+                <p id="form-error">Неверный формат ФИО</p>
+
+                <div class="form-checkbox">
+                    <div id="policy"></div>
+                    <label id="label-policy" for="policy" class="p1">Я принимаю условия <span>Пользовательского соглашения</span> и даю свое <span>согласие на обработку персональных данных</span> в соответствии с <span>Политикой</span>.</label>
+                </div>
+                
+                <button class="p1" type="submit" id="submit-form">Далее</button>
+            </form>
+        </section>
+
+
+        <!-- Инструкция -->
+        <section id="section-instruction" class="hidden">
+            <h2>Я на работе</h2>
+            <div class="section-instruction__row">
+                <div class="section-instruction-1">
+                    <h3>Задание</h3>
+                    <p>Вам будет предложено 22 утверждения о различных чувствах и переживаниях, связанных с работой.</p>
+                </div>
+                <div class="section-instruction__col">
+                    <div class="section-instruction-2">
+                        <h3>Важно</h3>
+                        <p>Пожалуйста, прочитайте внимательно каждое утверждение и решите, как часто вы испытываете данные чувства.</p>
+                    </div>
+                    <div class="section-instruction-3">
+                        <h3>Инструкция</h3>
+                        <p>Выберите по каждому пункту позицию, которая соответствует частоте ваших мыслей и переживаний в течение последних месяцев: «никогда», «очень редко», «редко», «иногда», «часто», «очень часто», «ежедневно».</p>
+                    </div>
+                </div>
+            </div>
+            <button id="submit-instruction">Начать тестирование</button>
+        </section>
+
+        <!-- Контент -->
+        <section id="section-content" class="hidden">
+            <h2>Я на работе</h2>
+            <div class="section-content__column">
+                <div class="question-wrapper">
+                    <p id="question"></p>
+                </div>
+
+                <div class="grade-wrapper">
+                    <button class="grade" id="grade-1">
+                        <div class="grade-mark"></div>
+                        <h3>Никогда</h3>
+                    </button>
+                    <button class="grade" id="grade-2">
+                        <div class="grade-mark"></div>
+                        <h3>Очень редко</h3>
+                    </button>
+                    <button class="grade" id="grade-3">
+                        <div class="grade-mark"></div>
+                        <h3>Редко</h3>
+                    </button>
+                    <button class="grade" id="grade-4">
+                        <div class="grade-mark"></div>
+                        <h3>Иногда</h3>
+                    </button>
+                    <button class="grade" id="grade-5">
+                        <div class="grade-mark"></div>
+                        <h3>Часто</h3>
+                    </button>
+                    <button class="grade" id="grade-6">
+                        <div class="grade-mark"></div>
+                        <h3>Очень часто</h3>
+                    </button>
+                    <button class="grade" id="grade-7">
+                        <div class="grade-mark"></div>
+                        <h3>Ежедневно</h3>
+                    </button>
+                </div>
+
+                <div class="grade-range">
+                    <div class="grade-circle"></div>
+                </div>
+
+                <div class="question-buttons">
+                    <button id="button-back">Назад</button>
+                    <p id="question-counter">1/22</p>
+                    <button id="button-next">Далее</button>
+                    <button class="hidden" id="button-end" disabled>Завершить</button>
+                </div>
+            </div>
+        </section>
+    </article>
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script src="../../config.js"></script>
+    <script src="./global/inputError.js"></script>
+    <script src="./im-at-work/scripts/form.js"></script>
+    <script src="./im-at-work/scripts/script.js"></script>
+    <script src="./im-at-work/scripts/calculatesBurnout.js"></script>
+</body>
+</html>

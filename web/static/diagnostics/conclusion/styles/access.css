@@ -1,0 +1,101 @@
+/* Окно с сообщением о проверке данных */
+.access-wrapper {
+    width: 100%;
+    height: 100%;
+    padding: 24px;
+    box-sizing: border-box;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+
+    background-color: #d9d9d988;
+}
+
+.access {
+    width: min(450px, 100%);
+    height: 235px;
+    padding: 24px;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 12px;
+    
+    background: #FFFFFF;
+    border-radius: 20px;
+}
+
+.access__title {
+    width: fit-content;
+    font-weight: 700;
+    font-size: 20px;
+    background: linear-gradient(90deg, #bd92ce 0%, #66caa5 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.access__text {
+    width: 283px;
+    font-size: 16px;
+    white-space: pre-wrap;
+}
+
+/* Убираем перенос номера телефона */
+.access__text span {
+    font-size: inherit;
+    font-weight: inherit;
+    color: inherit;
+    white-space: nowrap;
+}
+
+.access__bg {
+    width: 142px;
+    height: 235px;
+
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.access__bg svg {
+    width: 142px;
+    height: 235px;
+}
+
+.access__logo {
+    width: 92px;
+    height: 42px;
+    position: absolute;
+    top: 96px;
+    right: 4px;
+}
+
+@media screen and (max-width: 500px) {
+    .access {
+        height: auto;
+    }
+
+    .access__text {
+        width: 100%;
+    }
+
+    .access__bg, .access__logo {
+        display: none;
+    }
+}
+
+
+/* Блюр страницы */
+.article-blur {
+    filter: blur(4px);
+}
