@@ -86,7 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bare timers auto-create tasks in Inbox.
 
 ### Changed
-- Next.js frontend теперь обслуживает страницы `/areas`, `/projects` и `/tasks`: новые формы CRUD работают через React Query, дерево PARA редактируется через современный UI, а legacy-шаблоны FastAPI удалены.
+- Next.js frontend теперь обслуживает страницы `/areas`, `/projects`, `/resources` и `/tasks`: новые формы CRUD работают через React Query, дерево PARA редактируется через современный UI, каталог ресурсов получил поиск и современную форму, а legacy-шаблоны FastAPI удалены.
 - Next.js frontend получил AppShell-лейаут с дизайн-токенами, адаптивной навигацией и обновлённым опытом для страниц `/` и `/inbox` (поиск, skeleton, error-state).
 - Избранное в меню профиля автоматически очищается от устаревших ссылок (`https://intdata.pro/admin`) и использует относительные пути, включая якорь `/settings#areas`.
 - Сброс глобальной темы через `/settings` очищает значения `theme.global.*` и возвращает дефолтную палитру без ручного редактирования БД.

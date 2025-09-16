@@ -13,7 +13,6 @@ from ..template_env import templates
 
 
 router = APIRouter(prefix="/resources", tags=["resources"])
-ui_router = APIRouter(prefix="/resources", tags=["resources"], include_in_schema=False)
 
 
 class ResourceCreate(BaseModel):
@@ -53,17 +52,6 @@ async def create_resource(payload: ResourceCreate, current_user: TgUser | None =
             type=payload.type,
         )
     return ResourceResponse.from_model(r)
-
-
-@ui_router.get("")
-async def resources_page(request: Request, current_user: WebUser | None = Depends(get_current_web_user)):
-    context = {
-        "current_user": current_user,
-        "current_role_name": getattr(current_user, "role", ""),
-        "is_admin": getattr(current_user, "role", "") == "admin",
-        "page_title": "Resources",
-    }
-    return templates.TemplateResponse(request, "resources.html", context)
 
 
 def _build_profile_context(access: ProfileAccess) -> dict[str, Any]:
@@ -123,4 +111,3 @@ async def resource_profile_page(
 
 # Alias for centralized API mounting
 api = router
-

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
 from core.models import Area, TgUser
@@ -10,9 +10,11 @@ from core.services.para_service import ParaService
 from core.services.area_service import AreaService
 from core.services.profile_service import ProfileService, ProfileAccess
 from web.dependencies import get_current_tg_user
+from ..template_env import templates
 
 
 router = APIRouter(prefix="/areas", tags=["areas"])
+ui_router = APIRouter(prefix="/areas", tags=["areas"], include_in_schema=False)
 
 
 class AreaCreate(BaseModel):
