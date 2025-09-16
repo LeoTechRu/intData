@@ -49,12 +49,14 @@ async def users_catalog(
     request: Request,
     current_user: Optional[WebUser] = Depends(get_current_web_user),
 ):
+    query = request.query_params.get("q")
     async with ProfileService() as service:
         items = await service.list_catalog(
             entity_type="user",
             viewer=current_user,
             limit=200,
             offset=0,
+            search=query,
         )
     context = {
         "current_user": current_user,
@@ -69,6 +71,7 @@ async def users_catalog(
             }
             for access in items
         ],
+        "search": query or "",
         "MODULE_TITLE": "Команда",
         "page_title": "Каталог пользователей",
     }
