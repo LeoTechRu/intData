@@ -94,6 +94,9 @@
 - [x] P0•S — `projects.area_id` сделать `NOT NULL` и проиндексировать.
 - [ ] P0•M — CHECK‑инвариант: у сущностей (`calendar_items`, `tasks`, `time_entries`, `habits/dailies/rewards`) должен быть ровно один из `project_id`/`area_id`.
 - [ ] P0•S — Индексы `(owner_id, project_id)` и `(owner_id, area_id)` на основные таблицы для фильтрации и include_sub.
+- [ ] P0•M — Подготовить baseline (pg_dump) и инициализировать Alembic, зафиксировать стартовую ревизию.
+- [ ] P0•L — Вынести диагностические таблицы/колонки в Alembic и описать сценарий отката.
+- [ ] P0•L — Решить стратегию идентификаторов (INTEGER ↔ UUID) и подготовить детальный план миграции.
 - [ ] P1•M — Триггеры наследования `area_id` от `project_id` для `tasks` и `resources`.
 - [ ] P2•S — Таблица `para_overrides` для субъективных привязок (owner, entity_type, entity_id, override_project_id?, override_area_id?).
 - [ ] P2•S — Линтер `utils/para_lint.py` и запуск в CI.
