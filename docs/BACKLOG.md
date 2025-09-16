@@ -342,7 +342,7 @@
 - [x] P0•M — Добавить таблицу `task_watchers(task_id, watcher_id, added_by, state{'active','left'}, left_reason{'done','wont_do','manual'})` и API в `core/services/task_service` для управления наблюдателями.
 - [x] P0•M — Реализовать в боте FSM-команды `/task_add`, `/task_rename`, `/task_due`, `/task_remind`, `/task_control`, `/task_forget` c подтверждением выбора причины «выполнена» или «не будет выполнена» при отказе от контроля.
 - [x] P0•M — Настроить планировщик (cron/worker) на базе `project_notification_worker` для отправки напоминаний и уведомлений наблюдателям (добавление, выполнение, отмена), используя `core/services/telegram_bot`.
-- [ ] P0•S — Добавить команды `/task_stats`, `/task_stats_active`, `/task_stats_dropped` в боте и REST `GET /api/v1/tasks/stats` для подсчёта завершённых, актуальных, отказанных задач.
+- [x] P0•S — Добавить команды `/task_stats`, `/task_stats_active`, `/task_stats_dropped` в боте и REST `GET /api/v1/tasks/stats` для подсчёта завершённых, актуальных, отказанных задач.
 - [x] P0•S — Обновить `/start` справку и документацию бота, описав новые команды и сценарии контроля.
 
 **Acceptance Criteria**

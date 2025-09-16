@@ -4,7 +4,7 @@ import React, { FormEvent, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import PageLayout from '../PageLayout';
 import { apiFetch, ApiError, buildQuery } from '../../lib/api';
-import type { Area, Project, Task } from '../../lib/types';
+import type { Area, Project, Task, TaskStats } from '../../lib/types';
 import { buildAreaOptions } from '../../lib/areas';
 import { formatDateTime, formatMinutes } from '../../lib/time';
 
@@ -66,6 +66,15 @@ function useTasks(filters: TaskFilterState) {
   });
 }
 
+function useTaskStats() {
+  return useQuery<TaskStats>({
+    queryKey: ['tasks', 'stats'],
+    staleTime: 15_000,
+    gcTime: 60_000,
+    queryFn: () => apiFetch<TaskStats>('/api/v1/tasks/stats'),
+  });
+}
+
 export default function TasksModule() {
   const areasQuery = useAreas();
   const projectsQuery = useProjectsQuery();
@@ -77,6 +86,7 @@ export default function TasksModule() {
   const [pendingAction, setPendingAction] = useState<{ type: 'start' | 'stop' | 'done'; taskId: number } | null>(null);
 
   const tasksQuery = useTasks(filters);
+  const statsQuery = useTaskStats();
 
   const areaOptions = useMemo(() => buildAreaOptions(areasQuery.data ?? []), [areasQuery.data]);
   const projectsByArea = useMemo(() => {
@@ -112,6 +122,7 @@ export default function TasksModule() {
       setForm({ title: '', description: '', areaId: '', projectId: '', dueDate: '' });
       setFormError(null);
       tasksQuery.refetch();
+      statsQuery.refetch();
     },
     onError: (error: unknown) => {
       if (error instanceof ApiError) {
@@ -131,6 +142,7 @@ export default function TasksModule() {
     onSuccess: () => {
       setActionError(null);
       tasksQuery.refetch();
+      statsQuery.refetch();
     },
     onError: (error: unknown) => {
       setActionError(error instanceof ApiError ? error.message : 'Не удалось запустить таймер');
@@ -148,6 +160,7 @@ export default function TasksModule() {
     onSuccess: () => {
       setActionError(null);
       tasksQuery.refetch();
+      statsQuery.refetch();
     },
     onError: (error: unknown) => {
       setActionError(error instanceof ApiError ? error.message : 'Не удалось остановить таймер');
@@ -165,6 +178,7 @@ export default function TasksModule() {
     onSuccess: () => {
       setActionError(null);
       tasksQuery.refetch();
+      statsQuery.refetch();
     },
     onError: (error: unknown) => {
       setActionError(error instanceof ApiError ? error.message : 'Не удалось завершить задачу');
@@ -177,6 +191,7 @@ export default function TasksModule() {
   const handleFilterSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFilters({ ...filterForm });
+    statsQuery.refetch();
   };
 
   const handleTaskSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -212,6 +227,7 @@ export default function TasksModule() {
 
   const refetchAll = () => {
     tasksQuery.refetch();
+    statsQuery.refetch();
   };
 
   return (
@@ -352,6 +368,30 @@ export default function TasksModule() {
           <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{loadErrorMessage}</div>
         ) : null}
 
+        <section className="rounded-2xl border border-subtle bg-surface-soft p-6">
+          <div className="card-title text-base font-semibold text-[var(--text-primary)]">Статистика задач</div>
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+            <div className="rounded-xl border border-subtle bg-[var(--surface-0)] px-4 py-3 text-center">
+              <div className="text-xs font-medium uppercase tracking-wide text-muted">Выполнено</div>
+              <div className="mt-1 text-2xl font-semibold text-[var(--text-primary)]">
+                {typeof statsQuery.data?.done === 'number' ? statsQuery.data.done : '—'}
+              </div>
+            </div>
+            <div className="rounded-xl border border-subtle bg-[var(--surface-0)] px-4 py-3 text-center">
+              <div className="text-xs font-medium uppercase tracking-wide text-muted">Актуально</div>
+              <div className="mt-1 text-2xl font-semibold text-[var(--text-primary)]">
+                {typeof statsQuery.data?.active === 'number' ? statsQuery.data.active : '—'}
+              </div>
+            </div>
+            <div className="rounded-xl border border-subtle bg-[var(--surface-0)] px-4 py-3 text-center">
+              <div className="text-xs font-medium uppercase tracking-wide text-muted">Отказались</div>
+              <div className="mt-1 text-2xl font-semibold text-[var(--text-primary)]">
+                {typeof statsQuery.data?.dropped === 'number' ? statsQuery.data.dropped : '—'}
+              </div>
+            </div>
+          </div>
+        </section>
+
         <div className="rounded-2xl border border-subtle">
           <div className="flex items-center justify-between border-b border-subtle bg-surface-soft px-4 py-3">
             <div className="text-sm font-semibold text-[var(--text-primary)]">Мои задачи</div>
@@ -370,6 +410,8 @@ export default function TasksModule() {
                 <th className="px-4 py-3 font-medium">ID</th>
                 <th className="px-4 py-3 font-medium">Название</th>
                 <th className="px-4 py-3 font-medium">Статус</th>
+                <th className="px-4 py-3 font-medium">Контроль</th>
+                <th className="px-4 py-3 font-medium">Наблюдение</th>
                 <th className="px-4 py-3 font-medium">Срок</th>
                 <th className="px-4 py-3 font-medium">Время</th>
                 <th className="px-4 py-3 font-medium">Действия</th>
@@ -392,7 +434,10 @@ export default function TasksModule() {
                       <div className="h-3 w-28 rounded-full bg-surface-soft" />
                     </td>
                     <td className="px-4 py-3">
-                      <div className="h-3 w-16 rounded-full bg-surface-soft" />
+                      <div className="h-3 w-14 rounded-full bg-surface-soft" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-3 w-24 rounded-full bg-surface-soft" />
                     </td>
                     <td className="px-4 py-3">
                       <div className="h-3 w-32 rounded-full bg-surface-soft" />
@@ -401,13 +446,20 @@ export default function TasksModule() {
                 ))
               ) : showEmpty ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-sm text-muted">
+                  <td colSpan={8} className="px-6 py-8 text-center text-sm text-muted">
                     Задач пока нет — создайте первую или скорректируйте фильтры.
                   </td>
                 </tr>
               ) : (
                 tasks.map((task) => {
                   const isRunning = Boolean(task.running_entry_id);
+                  const controlActive = Boolean(task.control_enabled);
+                  const controlLabel = controlActive
+                    ? `${task.control_status === 'done' ? 'Завершён' : 'Активен'}${task.control_frequency ? ` / ${task.control_frequency} мин` : ''}`
+                    : task.control_status === 'done'
+                      ? 'Выполнена'
+                      : '—';
+                  const nextControl = controlActive && task.control_next_at ? formatDateTime(task.control_next_at) : null;
                   return (
                     <tr key={task.id} className="border-t border-subtle">
                       <td className="px-4 py-3 font-mono text-xs text-muted">#{task.id}</td>
@@ -416,7 +468,12 @@ export default function TasksModule() {
                         {task.description ? <div className="text-xs text-muted">{task.description}</div> : null}
                       </td>
                       <td className="px-4 py-3 text-sm capitalize text-[var(--text-primary)]">{task.status}</td>
-                      <td className="px-4 py-3 text-sm text-[var(--text-primary)]">{formatDateTime(task.due_date)}</td>
+                      <td className="px-4 py-3 text-sm text-[var(--text-primary)]">
+                        {controlLabel}
+                        {nextControl ? <div className="text-xs text-muted">след.: {nextControl}</div> : null}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-[var(--text-primary)]">{task.is_watched ? 'Да' : '—'}</td>
+                      <td className="px-4 py-3 text-sm text-[var(--text-primary)]">{task.due_date ? formatDateTime(task.due_date) : '—'}</td>
                       <td className="px-4 py-3 text-sm text-[var(--text-primary)]">{formatMinutes(task.tracked_minutes)}</td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-2">

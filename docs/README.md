@@ -25,6 +25,10 @@ Areas — управляемое дерево без ограничения гл
 
 ## Deployment Notes / Troubleshooting
 
+### Background jobs
+
+- [Task reminder worker](./ops/task_reminder_worker.md) — как настроить systemd/cron для отправки напоминаний по задачам.
+
 ### Troubleshooting /habits
 
 **Симптом:** страница `/habits` показывает «Требуется вход и связанный Telegram» при активной сессии.

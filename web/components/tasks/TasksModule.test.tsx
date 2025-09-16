@@ -47,6 +47,9 @@ describe('TasksModule', () => {
       if (url.endsWith('/api/v1/projects')) {
         return Promise.resolve(jsonResponse([]));
       }
+      if (url.endsWith('/api/v1/tasks/stats')) {
+        return Promise.resolve(jsonResponse({ done: 0, active: 1, dropped: 0 }));
+      }
       if (url.endsWith('/api/v1/tasks') && (!init || init.method === undefined)) {
         tasksCall += 1;
         if (tasksCall === 1) {
@@ -60,6 +63,12 @@ describe('TasksModule', () => {
                 due_date: '2025-09-16T10:00:00Z',
                 tracked_minutes: 0,
                 running_entry_id: null,
+                control_enabled: false,
+                control_status: 'dropped',
+                control_next_at: null,
+                control_frequency: null,
+                remind_policy: {},
+                is_watched: false,
               },
             ]),
           );
@@ -74,6 +83,12 @@ describe('TasksModule', () => {
               due_date: '2025-09-16T10:00:00Z',
               tracked_minutes: 5,
               running_entry_id: 99,
+              control_enabled: false,
+              control_status: 'dropped',
+              control_next_at: null,
+              control_frequency: null,
+              remind_policy: {},
+              is_watched: false,
             },
           ]),
         );
@@ -88,6 +103,12 @@ describe('TasksModule', () => {
             due_date: '2025-09-16T10:00:00Z',
             tracked_minutes: 0,
             running_entry_id: 99,
+            control_enabled: false,
+            control_status: 'dropped',
+            control_next_at: null,
+            control_frequency: null,
+            remind_policy: {},
+            is_watched: false,
           }),
         );
       }
@@ -100,6 +121,12 @@ describe('TasksModule', () => {
           due_date: '2025-09-16T10:00:00Z',
           tracked_minutes: 40,
           running_entry_id: null,
+          control_enabled: false,
+          control_status: 'dropped',
+          control_next_at: null,
+          control_frequency: null,
+          remind_policy: {},
+          is_watched: false,
         }));
       }
       return Promise.resolve(new Response(null, { status: 404 }));
@@ -137,6 +164,9 @@ describe('TasksModule', () => {
       if (url.endsWith('/api/v1/projects')) {
         return Promise.resolve(jsonResponse([{ id: 10, name: 'Pulse', area_id: 2, description: null, slug: 'pulse' }]));
       }
+      if (url.endsWith('/api/v1/tasks/stats')) {
+        return Promise.resolve(jsonResponse({ done: 0, active: 0, dropped: 0 }));
+      }
       if (url.endsWith('/api/v1/tasks') && (!init || init.method === undefined)) {
         tasksCall += 1;
         if (tasksCall === 1) {
@@ -152,6 +182,12 @@ describe('TasksModule', () => {
               due_date: null,
               tracked_minutes: 0,
               running_entry_id: null,
+              control_enabled: false,
+              control_status: 'dropped',
+              control_next_at: null,
+              control_frequency: null,
+              remind_policy: {},
+              is_watched: false,
             },
           ]),
         );
@@ -169,6 +205,12 @@ describe('TasksModule', () => {
               due_date: null,
               tracked_minutes: 0,
               running_entry_id: null,
+              control_enabled: false,
+              control_status: 'dropped',
+              control_next_at: null,
+              control_frequency: null,
+              remind_policy: {},
+              is_watched: false,
             },
             { status: 201 },
           ),

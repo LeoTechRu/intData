@@ -27,7 +27,7 @@ type NavBlueprint =
 const NAV_BLUEPRINT: NavBlueprint[] = [
   { label: 'Обзор', route: '/' },
   { label: 'Входящие', route: '/inbox' },
-  { label: 'Области', legacy: '/areas', badge: 'legacy' },
+  { label: 'Области', route: '/areas', badge: 'новый UI' },
   { label: 'Проекты', route: '/projects', badge: 'новый UI' },
   { label: 'Задачи', route: '/tasks', badge: 'новый UI' },
   { label: 'Привычки', legacy: '/habits', badge: 'beta' },

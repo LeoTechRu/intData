@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Бэкенд задач: таблицы `task_reminders`, `task_watchers`, новые поля контроля (`control_enabled`, `control_frequency`, `control_status`, `control_next_at`, `remind_policy`, `is_watched`) и методы `TaskService` для напоминаний, наблюдателей и статистики бота.
 - Telegram-команды `/task_add`, `/task_rename`, `/task_due`, `/task_remind`, `/task_control`, `/task_forget`, `/task_watch`, `/task_unwatch`, `/task_stats*` с обновлённой справкой `/start`.
 - TaskReminderWorker (`core/services/task_reminder_worker.py`) и TaskNotificationService для доставки напоминаний и оповещений наблюдателям.
+- Tasks (Next.js): статистика по статусам, колонки контроля/наблюдения, обновлённые таблицы и интеграция с новым API `/tasks/stats`.
 - Поддержка профилей продуктов (`/products/{slug}`) с каталогом и контролем доступа.
 - Режим настройки ЦУПа с drag-n-drop, скрытием и панелью скрытых виджетов.
 - Личные и глобальные пресеты темы: выбор режима, палитры и градиента через расширенный color picker на странице `/settings`.
@@ -85,7 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bare timers auto-create tasks in Inbox.
 
 ### Changed
-- Next.js frontend теперь обслуживает страницы `/projects` и `/tasks`: новые формы CRUD работают через React Query, таймеры управляются напрямую из UI, а legacy-шаблоны FastAPI удалены.
+- Next.js frontend теперь обслуживает страницы `/areas`, `/projects` и `/tasks`: новые формы CRUD работают через React Query, дерево PARA редактируется через современный UI, а legacy-шаблоны FastAPI удалены.
 - Next.js frontend получил AppShell-лейаут с дизайн-токенами, адаптивной навигацией и обновлённым опытом для страниц `/` и `/inbox` (поиск, skeleton, error-state).
 - Избранное в меню профиля автоматически очищается от устаревших ссылок (`https://intdata.pro/admin`) и использует относительные пути, включая якорь `/settings#areas`.
 - Сброс глобальной темы через `/settings` очищает значения `theme.global.*` и возвращает дефолтную палитру без ручного редактирования БД.

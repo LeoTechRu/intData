@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
 from core.models import Area, TgUser
@@ -14,7 +13,6 @@ from web.dependencies import get_current_tg_user
 
 
 router = APIRouter(prefix="/areas", tags=["areas"])
-ui_router = APIRouter(prefix="/areas", tags=["areas"], include_in_schema=False)
 
 
 class AreaCreate(BaseModel):
@@ -69,13 +67,6 @@ async def create_area(payload: AreaCreate, current_user: TgUser | None = Depends
             color=payload.color,
         )
     return AreaResponse.from_model(area)
-
-
-@ui_router.get("")
-async def areas_page_redirect() -> RedirectResponse:
-    return RedirectResponse("/settings#areas", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
-
-
 
 class AreaMovePayload(BaseModel):
     new_parent_id: Optional[int] = None
