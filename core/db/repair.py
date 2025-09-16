@@ -386,6 +386,7 @@ def backfill_profile_visibility(conn: Connection) -> dict[str, int]:
     ).fetchall()
 
     grants_added = 0
+    grants_removed = 0
     privacy_updates = 0
     meta_updates = 0
 
@@ -455,7 +456,20 @@ def backfill_profile_visibility(conn: Connection) -> dict[str, int]:
                 {"pid": profile_id},
             )
             grants_added += 1
-
+        if desired_visibility != "public" and "public" in grant_set:
+            conn.execute(
+                sa.text("DELETE FROM entity_profile_grants WHERE profile_id=:pid AND audience_type='public'"),
+                {"pid": profile_id},
+            )
+            grants_removed += 1
+            grant_set.discard("public")
+        if desired_visibility not in {"public", "authenticated"} and "authenticated" in grant_set:
+            conn.execute(
+                sa.text("DELETE FROM entity_profile_grants WHERE profile_id=:pid AND audience_type='authenticated'"),
+                {"pid": profile_id},
+            )
+            grants_removed += 1
+            grant_set.discard("authenticated")
         if desired_visibility and privacy.get("profile_visibility") != desired_visibility:
             privacy["profile_visibility"] = desired_visibility
             conn.execute(
@@ -479,7 +493,12 @@ def backfill_profile_visibility(conn: Connection) -> dict[str, int]:
                 )
                 meta_updates += 1
 
-    return {"grants_added": grants_added, "privacy_updated": privacy_updates, "meta_updated": meta_updates}
+    return {
+        "grants_added": grants_added,
+        "grants_removed": grants_removed,
+        "privacy_updated": privacy_updates,
+        "meta_updated": meta_updates,
+    }
 
 
 
