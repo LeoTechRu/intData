@@ -3,6 +3,9 @@ from __future__ import annotations
 from datetime import timedelta
 from functools import lru_cache
 from pathlib import Path
+import logging
+import os
+import subprocess
 
 from fastapi import APIRouter, Request, Depends, status, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse
@@ -23,6 +26,9 @@ from ..template_env import templates
 NEXT_build_ROOT = Path(__file__).resolve().parents[1] / ".next"
 NEXT_APP_HTML_DIR = NEXT_build_ROOT / "server" / "app"
 NEXT_STATIC_DIR = NEXT_build_ROOT / "static"
+NEXT_SOURCE_DIR = Path(__file__).resolve().parents[1]
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -280,6 +286,22 @@ async def index(
 def _load_next_html(page: str) -> str:
     html_path = NEXT_APP_HTML_DIR / f"{page}.html"
     if not html_path.exists():
+        auto_build = os.getenv("NEXT_AUTO_BUILD", "1") == "1"
+        if auto_build:
+            try:
+                logger.info("Next.js page '%s' отсутствует — запускаем npm run build", page)
+                completed = subprocess.run(
+                    ["npm", "run", "build"],
+                    cwd=str(NEXT_SOURCE_DIR),
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+                logger.info("Next.js build завершён (эмиссия %s байт)", len(completed.stdout))
+            except Exception as exc:  # pragma: no cover - build failures reported as HTTP error
+                logger.error("Не удалось собрать Next.js: %s", exc)
+            if html_path.exists():
+                return html_path.read_text(encoding="utf-8")
         raise HTTPException(status_code=500, detail=f"Next.js page '{page}' отсутствует — запустите npm run build")
     return html_path.read_text(encoding="utf-8")
 
