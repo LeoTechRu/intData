@@ -42,8 +42,11 @@ async def test_profile_access_single_user(client: AsyncClient):
     resp = await client.get("/profile/user1", headers={"Authorization": f"Bearer {uid}"})
     assert resp.status_code == 200
 
-    admin = await client.get("/admin", headers={"Authorization": f"Bearer {uid}"})
-    assert admin.status_code in {401, 403}
+    legacy = await client.get("/admin", headers={"Authorization": f"Bearer {uid}"})
+    assert legacy.status_code == 404
+
+    iframe = await client.get("/cup/admin-embed", headers={"Authorization": f"Bearer {uid}"})
+    assert iframe.status_code in {401, 403}
 
 
 @pytest.mark.asyncio
@@ -51,8 +54,12 @@ async def test_admin_access(client: AsyncClient):
     uid = await _create_user(UserRole.admin, username="admin")
     profile = await client.get("/profile/admin", headers={"Authorization": f"Bearer {uid}"})
     assert profile.status_code == 200
-    admin = await client.get("/admin", headers={"Authorization": f"Bearer {uid}"})
-    assert admin.status_code == 200
+    legacy = await client.get("/admin", headers={"Authorization": f"Bearer {uid}"})
+    assert legacy.status_code == 404
+
+    admin_console = await client.get("/cup/admin-embed", headers={"Authorization": f"Bearer {uid}"})
+    assert admin_console.status_code == 200
+    assert "Админский сектор" in admin_console.text
 
 
 @pytest.mark.asyncio

@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Режим настройки ЦУПа с drag-n-drop, скрытием и панелью скрытых виджетов.
 - Обзор модерации Telegram-групп в ЦУП и админском секторе: активные участники, тихие пользователи и задолженности по оплатам.
 - pre-commit configuration with ruff, black, isort and basic hooks.
 - developer Makefile and type checking via mypy.
@@ -75,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bare timers auto-create tasks in Inbox.
 
 ### Changed
+- Админский сектор теперь рендерится маршрутом `/cup/admin-embed` и подключается в ЦУП через iframe.
 - Команда `/group` теперь выполняет инвентаризацию Telegram-группы и сразу выводит отчёт `/group audit`; бот индексирует участников при добавлении в чат (E5b).
 - Переработан модуль авторизации: битовые права, гибкие пресеты ролей, назначение прав по scope (global/area/project) и аудит операций доступа; обновлены веб-зависимости `role_required`/`permission_required` и настройки избранного.
 - CRM по продуктам выделена в отдельный сервис, управление модерацией групп использует самостоятельный модуль и сводки.
@@ -147,6 +149,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unified owner scoping via `get_current_owner`.
 
 ### Removed
+- Удалён HTML-маршрут `/admin`; админские инструменты доступны только из ЦУПа.
 - Удалён устаревший API напоминаний и связанные сервисы.
 - Исправлены сравнения уровней логирования после перехода на `IntEnum`.
 - Исправлена авторизация через Telegram (создание `TgUser`, проверка `WebUser`, куки) и тесты.
