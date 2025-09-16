@@ -16,6 +16,7 @@ if PROJECT_ROOT not in sys.path:
 from dotenv import load_dotenv
 
 from base import Base
+import core.models  # noqa: F401
 
 config = context.config
 
