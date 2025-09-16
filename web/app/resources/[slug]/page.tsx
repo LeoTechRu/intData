@@ -1,9 +1,14 @@
 import ProfileView from '../../../components/profile/ProfileView';
 
-interface PageProps {
-  params: { slug: string };
+interface PageParams {
+  slug: string;
 }
 
-export default function ResourceProfilePage({ params }: PageProps) {
-  return <ProfileView entity="resources" slug={params.slug} backHref="/resources" backLabel="← К ресурсам" />;
+interface PageProps {
+  params: Promise<PageParams>;
+}
+
+export default async function ResourceProfilePage({ params }: PageProps) {
+  const resolved = await params;
+  return <ProfileView entity="resources" slug={resolved.slug} backHref="/resources" backLabel="← К ресурсам" />;
 }

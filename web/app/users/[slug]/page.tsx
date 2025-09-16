@@ -1,9 +1,14 @@
 import ProfileView from '../../../components/profile/ProfileView';
 
-interface PageProps {
-  params: { slug: string };
+interface PageParams {
+  slug: string;
 }
 
-export default function UserProfilePage({ params }: PageProps) {
-  return <ProfileView entity="users" slug={params.slug} backHref="/users" backLabel="← К каталогу" />;
+interface PageProps {
+  params: Promise<PageParams>;
+}
+
+export default async function UserProfilePage({ params }: PageProps) {
+  const resolved = await params;
+  return <ProfileView entity="users" slug={resolved.slug} backHref="/users" backLabel="← К каталогу" />;
 }

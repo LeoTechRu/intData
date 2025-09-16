@@ -1,9 +1,14 @@
 import ProfileView from '../../../components/profile/ProfileView';
 
-interface PageProps {
-  params: { slug: string };
+interface PageParams {
+  slug: string;
 }
 
-export default function AreaProfilePage({ params }: PageProps) {
-  return <ProfileView entity="areas" slug={params.slug} backHref="/areas" backLabel="← К областям" />;
+interface PageProps {
+  params: Promise<PageParams>;
+}
+
+export default async function AreaProfilePage({ params }: PageProps) {
+  const resolved = await params;
+  return <ProfileView entity="areas" slug={resolved.slug} backHref="/areas" backLabel="← К областям" />;
 }
