@@ -289,6 +289,17 @@ def _load_next_html(page: str) -> str:
         auto_build = os.getenv("NEXT_AUTO_BUILD", "1") == "1"
         if auto_build:
             try:
+                node_modules_dir = NEXT_SOURCE_DIR / "node_modules"
+                if not node_modules_dir.exists():
+                    logger.info("Node modules отсутствуют — запускаем npm ci")
+                    ci_completed = subprocess.run(
+                        ["npm", "ci"],
+                        cwd=str(NEXT_SOURCE_DIR),
+                        check=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                    )
+                    logger.info("npm ci завершён (эмиссия %s байт)", len(ci_completed.stdout))
                 logger.info("Next.js page '%s' отсутствует — запускаем npm run build", page)
                 completed = subprocess.run(
                     ["npm", "run", "build"],
@@ -300,6 +311,8 @@ def _load_next_html(page: str) -> str:
                 logger.info("Next.js build завершён (эмиссия %s байт)", len(completed.stdout))
             except Exception as exc:  # pragma: no cover - build failures reported as HTTP error
                 logger.error("Не удалось собрать Next.js: %s", exc)
+                if isinstance(exc, subprocess.CalledProcessError) and exc.stderr:
+                    logger.error("npm run build stderr:\n%s", exc.stderr.decode("utf-8", "ignore"))
             if html_path.exists():
                 return html_path.read_text(encoding="utf-8")
         raise HTTPException(status_code=500, detail=f"Next.js page '{page}' отсутствует — запустите npm run build")
