@@ -13,7 +13,14 @@ from core.services.web_user_service import WebUserService
 from core.services.profile_service import ProfileService
 from core.services.crm_service import CRMService
 from core.services.group_moderation_service import GroupModerationService
-from core.models import WebUser, GroupType, ProductStatus, UserGroup, EntityProfile
+from core.models import (
+    WebUser,
+    GroupType,
+    ProductStatus,
+    UserGroup,
+    EntityProfile,
+    EntityProfileGrant,
+)
 
 
 @pytest.mark.asyncio
@@ -82,6 +89,24 @@ async def test_profile_service_user_default_visibility(session):
     await session.commit()
 
     service = ProfileService(session)
+    assert await service.list_catalog(entity_type="user", viewer=viewer) == []
+    with pytest.raises(PermissionError):
+        await service.get_profile(entity_type="user", slug="alice", viewer=viewer)
+
+    profile = await session.scalar(
+        select(EntityProfile).where(
+            EntityProfile.entity_type == "user",
+            EntityProfile.entity_id == owner.id,
+        )
+    )
+    session.add(
+        EntityProfileGrant(
+            profile_id=profile.id,
+            audience_type="authenticated",
+        )
+    )
+    await session.commit()
+
     catalog = await service.list_catalog(entity_type="user", viewer=viewer)
     assert [item.profile.slug for item in catalog] == ["alice"]
     access = await service.get_profile(entity_type="user", slug="alice", viewer=viewer)

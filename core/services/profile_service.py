@@ -383,8 +383,8 @@ class ProfileService:
                 return context.is_authenticated
             if visibility == "private":
                 return False
-            # Legacy fallback: default to authenticated visibility when not specified
-            return context.is_authenticated
+            # No implicit access without explicit visibility settings
+            return False
         return False
 
     def _owned_by_viewer(self, profile: EntityProfile, context: ViewerContext) -> bool:
