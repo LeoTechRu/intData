@@ -25,7 +25,6 @@ from .routes import (
     admin as admin_ui,
     auth,
     index,
-    profile,
     settings,
     habits,
     tasks,
@@ -37,6 +36,7 @@ from .routes import (
     resources,
     inbox,
     groups,
+    users,
     api_router,
 )
 from core.db import engine
@@ -341,7 +341,6 @@ async def api_version_header(request: Request, call_next):
 
 
 app.include_router(index.router, include_in_schema=False)
-app.include_router(profile.router, include_in_schema=False)
 app.include_router(settings.router, include_in_schema=False)
 app.include_router(habits.ui_router, include_in_schema=False)
 app.include_router(tasks.ui_router, include_in_schema=False)
@@ -354,6 +353,7 @@ app.include_router(time_entries.ui_router, include_in_schema=False)
 app.include_router(groups.ui_router, include_in_schema=False)
 app.include_router(auth.router, include_in_schema=False)
 app.include_router(admin_ui.router, include_in_schema=False)
+app.include_router(users.router, include_in_schema=False)
 
 # Подключение всех API под единым префиксом
 app.include_router(api_router, prefix="/api/v1")

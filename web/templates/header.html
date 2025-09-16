@@ -37,7 +37,7 @@
     </button>
     <div class="dropdown-menu profile-menu" id="profileMenu" role="menu" aria-hidden="true">
         <ul class="menu-section menu-list">
-          <li><a role="menuitem" href="/profile/{{ header_user.username if header_user else '' }}">Профиль</a></li>
+          <li><a role="menuitem" href="/users/{{ header_user.username if header_user else '' }}">Профиль</a></li>
           <li><a role="menuitem" href="/settings">Настройки</a></li>
         </ul>
         <hr class="menu-sep"/>
