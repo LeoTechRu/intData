@@ -1,8 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 
+import core.db as db
 from core.models import WebUser
 from core.services.web_user_service import WebUserService
 from core.services.telegram_user_service import TelegramUserService
+from core.services.audit_log import AuditLogService
 from ...dependencies import role_required
 
 
@@ -88,3 +91,60 @@ async def restart_service(
         }
     except Exception as e:  # pragma: no cover
         return {"ok": False, "error": str(e)}
+
+
+@router.get("/audit/logs")
+async def list_audit_logs(
+    limit: int = 100,
+    current_user: WebUser = Depends(role_required("admin")),
+):
+    """Expose the access-control audit trail (migrated from NexusCore)."""
+
+    limit = max(1, min(limit, 500))
+
+    async with db.async_session() as session:  # type: ignore
+        audit = AuditLogService(session)
+        entries = await audit.list_recent(limit=limit)
+        user_ids = {entry.target_user_id for entry in entries if entry.target_user_id}
+        user_ids.update(
+            uid for uid in (entry.actor_user_id for entry in entries) if uid
+        )
+        user_map = {}
+        if user_ids:
+            stmt = select(WebUser).where(WebUser.id.in_(user_ids))
+            result = await session.execute(stmt)
+            user_map = {user.id: user for user in result.scalars()}
+
+    def _serialize_user(user_id: int | None) -> dict[str, int | None | str]:
+        if not user_id:
+            return {"id": None, "username": None, "full_name": None}
+        user = user_map.get(user_id)
+        if not user:
+            return {"id": user_id, "username": None, "full_name": None}
+        display_name = user.full_name or user.username
+        return {
+            "id": user.id,
+            "username": user.username,
+            "full_name": user.full_name,
+            "display": display_name,
+        }
+
+    payload = []
+    for entry in entries:
+        payload.append(
+            {
+                "id": entry.id,
+                "actor": _serialize_user(entry.actor_user_id),
+                "target": _serialize_user(entry.target_user_id),
+                "action": entry.action,
+                "role_slug": entry.role_slug,
+                "scope_type": entry.scope_type,
+                "scope_id": entry.scope_id,
+                "details": entry.details or {},
+                "created_at": entry.created_at.isoformat()
+                if entry.created_at
+                else None,
+            }
+        )
+
+    return payload

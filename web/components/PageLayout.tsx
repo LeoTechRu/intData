@@ -1,20 +1,31 @@
-import React, { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
+import AppShell from './AppShell';
+
+interface PageLayoutProps {
+  title: string;
+  subtitle?: string;
+  description?: string;
+  actions?: ReactNode;
+  contentClassName?: string;
+  children: ReactNode;
+}
 
 export default function PageLayout({
   title,
+  subtitle,
+  description,
+  actions,
+  contentClassName,
   children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
+}: PageLayoutProps) {
   return (
-    <div className="ui-layout">
-      <header className="p-4 border-b">
-        <h1 className="text-xl font-bold" data-testid="page-title">
+    <AppShell title={title} subtitle={subtitle} description={description} actions={actions}>
+      <div className={contentClassName ?? 'flex flex-col gap-4 p-6 md:p-8'}>
+        <h1 className="text-xl font-semibold tracking-tight text-[var(--text-primary)]" data-testid="page-title">
           {title}
         </h1>
-      </header>
-      <main className="p-4">{children}</main>
-    </div>
+        {children}
+      </div>
+    </AppShell>
   );
 }

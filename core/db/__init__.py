@@ -11,6 +11,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from dotenv import load_dotenv
 
 from .engine import engine, async_session, init_models, Base
+from .legacy import DBConfig, validate_config, get_raw_connection
 
 logger = logging.getLogger(__name__)
 load_dotenv()
@@ -43,3 +44,16 @@ class _BcryptWrapper:
 
 
 bcrypt = _BcryptWrapper()
+
+__all__ = [
+    "engine",
+    "async_session",
+    "init_models",
+    "Base",
+    "DBConfig",
+    "validate_config",
+    "get_raw_connection",
+    "bot",
+    "dp",
+    "bcrypt",
+]

@@ -9,6 +9,7 @@ from core.db.engine import ENGINE_MODE
 from core.env import env
 from bot.handlers.telegram import user_router, group_router, router
 from bot.handlers.note import router as note_router
+from bot.handlers.task import router as task_router
 from bot.handlers.habit import router as habit_router
 from core.logger import LoggerMiddleware
 from core.models import LogLevel
@@ -29,6 +30,7 @@ async def main() -> None:
     dp.include_router(habit_router)
     dp.include_router(router)
     dp.include_router(note_router)
+    dp.include_router(task_router)
 
     try:
         async with TelegramUserService() as user_service:

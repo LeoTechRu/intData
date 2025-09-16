@@ -6,6 +6,8 @@ from sqlalchemy.orm import sessionmaker
 
 from base import Base
 from core.models import WebUser, UserRole, TgUser, WebTgLink
+from core.services.audit_log import AuditLogService
+from core.services.profile_service import ProfileService
 from sqlalchemy import select
 import core.db as db
 
@@ -33,6 +35,14 @@ async def _create_user(role: UserRole, username: str) -> int:
         async with session.begin():
             user = WebUser(username=username, role=role.name)
             session.add(user)
+        async with session.begin():
+            service = ProfileService(session)
+            await service.ensure_profile(
+                entity_type="user",
+                entity_id=user.id,
+                slug=username,
+                display_name=username,
+            )
         return user.id
 
 
@@ -119,3 +129,31 @@ async def test_role_and_link_operations(client: AsyncClient):
             )
         )
         assert res.scalar_one_or_none() is None
+
+
+@pytest.mark.asyncio
+async def test_admin_audit_logs(client: AsyncClient):
+    admin_id = await _create_user(UserRole.admin, username="chief")
+    target_id = await _create_user(UserRole.single, username="member")
+
+    async with db.async_session() as session:  # type: ignore
+        service = AuditLogService(session)
+        await service.log_role_assignment(
+            actor_user_id=admin_id,
+            target_user_id=target_id,
+            action="grant_role",
+            role_slug="moderator",
+            scope_type="global",
+            scope_id=None,
+            details={"source": "test"},
+        )
+        await session.commit()
+
+    headers = {"Authorization": f"Bearer {admin_id}"}
+    resp = await client.get("/api/v1/admin/audit/logs", headers=headers)
+    assert resp.status_code == 200
+    payload = resp.json()
+    assert payload
+    record = payload[0]
+    assert record["target"]["id"] == target_id
+    assert record["action"] == "grant_role"

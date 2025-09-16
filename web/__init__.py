@@ -344,7 +344,6 @@ async def api_version_header(request: Request, call_next):
 app.include_router(index.router, include_in_schema=False)
 app.include_router(settings.router, include_in_schema=False)
 app.include_router(habits.ui_router, include_in_schema=False)
-app.include_router(tasks.ui_router, include_in_schema=False)
 app.include_router(notes.ui_router, include_in_schema=False)
 app.include_router(areas.ui_router, include_in_schema=False)
 app.include_router(projects.ui_router, include_in_schema=False)

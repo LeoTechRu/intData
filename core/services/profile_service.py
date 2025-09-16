@@ -22,6 +22,8 @@ from core.models import (
 from core.services.access_control import AccessControlService
 from core.utils import utcnow
 
+VISIBILITY_CHOICES = {"private", "authenticated", "public"}
+
 DEFAULT_SECTIONS: list[dict[str, str]] = [
     {"id": "overview", "title": "Обзор"},
     {"id": "activity", "title": "Активность"},
@@ -244,9 +246,15 @@ class ProfileService:
         *,
         actor: Optional[WebUser] = None,
     ) -> list[EntityProfileGrant]:
+        await self.session.refresh(profile, attribute_names=["grants"])
         existing = list(profile.grants)
         keep_ids: set[int] = set()
         now = utcnow()
+        general_payload = {
+            item.get("audience_type")
+            for item in payload
+            if item.get("audience_type") in {"public", "authenticated"}
+        }
         for item in payload:
             audience = item.get("audience_type")
             subject_id = item.get("subject_id")
@@ -284,11 +292,64 @@ class ProfileService:
                 )
                 self.session.add(grant)
         for grant in existing:
-            if grant.id and grant.id not in keep_ids and grant.audience_type not in {"public", "authenticated"}:
-                await self.session.delete(grant)
+            if not grant.id or grant.id in keep_ids:
+                continue
+            if grant.audience_type in {"public", "authenticated"}:
+                if grant.audience_type not in general_payload:
+                    await self.session.delete(grant)
+                continue
+            await self.session.delete(grant)
         await self.session.flush()
         await self.session.refresh(profile)
         return list(profile.grants)
+
+    async def apply_visibility(
+        self,
+        profile: EntityProfile,
+        visibility: str,
+        *,
+        actor: Optional[WebUser] = None,
+    ) -> EntityProfile:
+        """Synchronize high-level visibility with general grants."""
+
+        if visibility not in VISIBILITY_CHOICES:
+            raise ValueError(f"visibility must be one of {sorted(VISIBILITY_CHOICES)}")
+
+        payload: list[dict[str, Any]] = []
+        if visibility == "public":
+            payload.append({
+                "audience_type": "public",
+                "subject_id": None,
+                "sections": None,
+                "expires_at": None,
+            })
+            payload.append({
+                "audience_type": "authenticated",
+                "subject_id": None,
+                "sections": None,
+                "expires_at": None,
+            })
+        elif visibility == "authenticated":
+            payload.append({
+                "audience_type": "authenticated",
+                "subject_id": None,
+                "sections": None,
+                "expires_at": None,
+            })
+
+        for grant in profile.grants:
+            if grant.audience_type in {"public", "authenticated"}:
+                continue
+            payload.append({
+                "audience_type": grant.audience_type,
+                "subject_id": grant.subject_id,
+                "sections": list(grant.sections or []) if grant.sections else None,
+                "expires_at": grant.expires_at,
+            })
+
+        await self.replace_grants(profile, payload, actor=actor)
+        await self.session.refresh(profile)
+        return profile
 
     # ------------------------------------------------------------------
     # Access evaluation & listings

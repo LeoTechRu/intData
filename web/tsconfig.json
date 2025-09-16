@@ -28,7 +28,8 @@
     "app/**/*.{ts,tsx}",
     "components/**/*.{ts,tsx}",
     "next-env.d.ts",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "lib/**/*.{ts,tsx}"
   ],
   "exclude": [
     "node_modules",

@@ -179,17 +179,6 @@ async def list_project_notifications(
     return items
 
 
-@ui_router.get("")
-async def projects_page(request: Request, current_user: WebUser | None = Depends(get_current_web_user)):
-    context = {
-        "current_user": current_user,
-        "current_role_name": getattr(current_user, "role", ""),
-        "is_admin": getattr(current_user, "role", "") == "admin",
-        "page_title": "Projects",
-    }
-    return templates.TemplateResponse(request, "projects.html", context)
-
-
 # Alias for centralized API mounting
 api = router
 

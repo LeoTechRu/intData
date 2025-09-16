@@ -6,7 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Admin API endpoint `/api/v1/admin/audit/logs` для просмотра журнала выдачи прав (миграция из NexusCore Balance).
+- Модуль совместимости `core.db.legacy` c `DBConfig`, `validate_config` и `get_raw_connection` для сценариев старого Flask-приложения.
+- Документ `docs/archive/nexuscore_balance.md` со сводкой переноса функционала NexusCore.
 - Бэкенд задач: таблицы `task_reminders`, `task_watchers`, новые поля контроля (`control_enabled`, `control_frequency`, `control_status`, `control_next_at`, `remind_policy`, `is_watched`) и методы `TaskService` для напоминаний, наблюдателей и статистики бота.
+- Telegram-команды `/task_add`, `/task_rename`, `/task_due`, `/task_remind`, `/task_control`, `/task_forget`, `/task_watch`, `/task_unwatch`, `/task_stats*` с обновлённой справкой `/start`.
+- TaskReminderWorker (`core/services/task_reminder_worker.py`) и TaskNotificationService для доставки напоминаний и оповещений наблюдателям.
 - Поддержка профилей продуктов (`/products/{slug}`) с каталогом и контролем доступа.
 - Режим настройки ЦУПа с drag-n-drop, скрытием и панелью скрытых виджетов.
 - Личные и глобальные пресеты темы: выбор режима, палитры и градиента через расширенный color picker на странице `/settings`.
@@ -80,6 +85,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bare timers auto-create tasks in Inbox.
 
 ### Changed
+- Next.js frontend теперь обслуживает страницы `/projects` и `/tasks`: новые формы CRUD работают через React Query, таймеры управляются напрямую из UI, а legacy-шаблоны FastAPI удалены.
+- Next.js frontend получил AppShell-лейаут с дизайн-токенами, адаптивной навигацией и обновлённым опытом для страниц `/` и `/inbox` (поиск, skeleton, error-state).
 - Избранное в меню профиля автоматически очищается от устаревших ссылок (`https://intdata.pro/admin`) и использует относительные пути, включая якорь `/settings#areas`.
 - Сброс глобальной темы через `/settings` очищает значения `theme.global.*` и возвращает дефолтную палитру без ручного редактирования БД.
 - Админский сектор теперь рендерится маршрутом `/cup/admin-embed` и подключается в ЦУП через iframe.
@@ -156,6 +163,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unified owner scoping via `get_current_owner`.
 
 ### Removed
+- Удалён устаревший каталог `NexusCore/`; весь функционал перенесён в `intdata/`.
 - Удалён HTML-маршрут `/admin`; админские инструменты доступны только из ЦУПа.
 - Удалён устаревший API напоминаний и связанные сервисы.
 - Исправлены сравнения уровней логирования после перехода на `IntEnum`.

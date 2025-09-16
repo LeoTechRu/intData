@@ -63,3 +63,13 @@ async def test_create_and_complete_task(client: AsyncClient):
     tasks = resp.json()
     assert len(tasks) == 1
     assert tasks[0]["status"] == "done"
+    assert tasks[0]["control_enabled"] is False
+    assert tasks[0]["control_status"] == "dropped"
+    assert tasks[0]["is_watched"] is False
+
+    stats_resp = await client.get("/api/v1/tasks/stats", cookies=cookies)
+    assert stats_resp.status_code == 200
+    stats = stats_resp.json()
+    assert stats["done"] == 1
+    assert stats["active"] == 0
+    assert stats["dropped"] == 0

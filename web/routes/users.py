@@ -31,6 +31,11 @@ def _build_profile_context(access: ProfileAccess) -> dict[str, Any]:
                     "expires_at": grant.expires_at,
                 }
             )
+    visibility = "private"
+    if any(grant.audience_type == "public" for grant in profile.grants):
+        visibility = "public"
+    elif any(grant.audience_type == "authenticated" for grant in profile.grants):
+        visibility = "authenticated"
     return {
         "slug": profile.slug,
         "display_name": profile.display_name,
@@ -42,6 +47,7 @@ def _build_profile_context(access: ProfileAccess) -> dict[str, Any]:
         "meta": profile.profile_meta or {},
         "sections": sections,
         "grants": grants,
+        "visibility": visibility,
         "can_edit": access.is_owner or access.is_admin,
         "is_owner": access.is_owner,
     }
@@ -147,6 +153,11 @@ async def update_user_profile(
         data["tags"] = [tag.strip() for tag in tags.split(",") if tag.strip()]
     else:
         data.pop("tags", None)
+    visibility = data.get("directory_visibility")
+    if isinstance(visibility, str):
+        data["directory_visibility"] = visibility.strip().lower()
+    else:
+        data.pop("directory_visibility", None)
     async with WebUserService() as users:
         await users.update_profile(access.profile.entity_id, data)
     return RedirectResponse(f"/users/{slug}", status_code=status.HTTP_303_SEE_OTHER)

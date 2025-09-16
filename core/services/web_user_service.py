@@ -12,7 +12,7 @@ from core import db
 from core.models import WebUser, TgUser, WebTgLink, UserRole, Role, UserRoleLink
 from core.db import bcrypt
 from core.services.access_control import AccessControlService, AccessScope
-from core.services.profile_service import ProfileService
+from core.services.profile_service import ProfileService, VISIBILITY_CHOICES
 
 
 def _parse_birthday(value: Optional[str]):
@@ -228,6 +228,7 @@ class WebUserService:
         if not user:
             return None
         profile_updates: dict[str, Any] = {}
+        privacy_settings = dict(user.privacy_settings or {})
         if "birthday" in data:
             birthday = data.get("birthday")
             if isinstance(birthday, str):
@@ -250,9 +251,7 @@ class WebUserService:
             profile_updates["summary"] = data["bio"]
         if data.get("avatar_url"):
             profile_updates["avatar_url"] = data["avatar_url"]
-            privacy = user.privacy_settings or {}
-            privacy["avatar_url"] = data["avatar_url"]
-            user.privacy_settings = privacy
+            privacy_settings["avatar_url"] = data["avatar_url"]
         if data.get("cover_url"):
             profile_updates["cover_url"] = data["cover_url"]
         if data.get("tags"):
@@ -268,12 +267,28 @@ class WebUserService:
         )
         profile_updates.setdefault("slug", user.username)
         profile_updates.setdefault("force_slug", True)
+
+        raw_visibility = data.get("directory_visibility") or data.get("profile_visibility")
+        normalized_visibility = None
+        if isinstance(raw_visibility, str):
+            candidate = raw_visibility.strip().lower()
+            if candidate in VISIBILITY_CHOICES:
+                normalized_visibility = candidate
+
         async with ProfileService(self.session) as profiles:
-            await profiles.upsert_profile_meta(
+            profile = await profiles.upsert_profile_meta(
                 entity_type="user",
                 entity_id=user.id,
                 updates=profile_updates,
             )
+            if normalized_visibility:
+                await profiles.apply_visibility(profile, normalized_visibility, actor=user)
+
+        if normalized_visibility:
+            privacy_settings["profile_visibility"] = normalized_visibility
+
+        if privacy_settings != (user.privacy_settings or {}):
+            user.privacy_settings = privacy_settings
         await self.session.flush()
         return user
 

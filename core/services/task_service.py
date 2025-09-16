@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import List, Optional, Sequence
 
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core import db
@@ -105,7 +105,15 @@ class TaskService:
             remind_policy=remind_policy or {},
             control_enabled=control_enabled,
             control_frequency=control_frequency,
-            control_status=control_status or TaskControlStatus.active,
+            control_status=(
+                control_status
+                if control_status is not None
+                else (
+                    TaskControlStatus.active
+                    if control_enabled
+                    else TaskControlStatus.dropped
+                )
+            ),
             control_next_at=control_next_at,
             refused_reason=refused_reason,
             is_watched=is_watched if is_watched is not None else False,
@@ -115,6 +123,24 @@ class TaskService:
         self.session.add(task)
         await self.session.flush()
         return task
+
+    async def ensure_default_area(self, owner_id: int) -> Area:
+        """Return user's Inbox area, create it if missing."""
+
+        stmt = select(Area).where(
+            Area.owner_id == owner_id,
+            or_(Area.slug == "inbox", Area.name.ilike("входящие")),
+        )
+        res = await self.session.execute(stmt)
+        inbox = res.scalars().first()
+        if inbox is None:
+            inbox = Area(owner_id=owner_id, name="Входящие", title="Входящие")
+            inbox.slug = "inbox"
+            inbox.mp_path = "inbox."
+            inbox.depth = 0
+            self.session.add(inbox)
+            await self.session.flush()
+        return inbox
 
     async def list_tasks(
         self,
@@ -417,13 +443,30 @@ class TaskService:
     async def stats_by_owner(self, owner_id: int) -> dict[str, int]:
         """Return counts of done, active and dropped tasks for owner."""
 
-        stmt = select(Task.status, Task.control_status).where(Task.owner_id == owner_id)
-        res = await self.session.execute(stmt)
+        tasks = await self.list_tasks(owner_id=owner_id)
         done = active = dropped = 0
-        for status, control_status in res:
+        for task in tasks:
+            status = task.status if isinstance(task.status, TaskStatus) else TaskStatus(task.status)
+            control_status = (
+                task.control_status
+                if isinstance(task.control_status, TaskControlStatus)
+                else TaskControlStatus(task.control_status)
+                if task.control_status
+                else None
+            )
+            refused_reason = (
+                task.refused_reason
+                if isinstance(task.refused_reason, TaskRefuseReason)
+                else TaskRefuseReason(task.refused_reason)
+                if task.refused_reason
+                else None
+            )
             if status == TaskStatus.done:
                 done += 1
-            elif control_status == TaskControlStatus.dropped and status != TaskStatus.done:
+            elif (
+                control_status == TaskControlStatus.dropped
+                and refused_reason == TaskRefuseReason.wont_do
+            ):
                 dropped += 1
             else:
                 active += 1

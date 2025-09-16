@@ -6,7 +6,7 @@
 - Бот: **https://intdata.pro/bot**  → @intDataBot
 - Технологии: **Python (FastAPI/Aiogram), React, PostgreSQL**
 
-Документация: [Backlog](./docs/BACKLOG.md), [Changelog](./docs/CHANGELOG.md). Подробности изменений ищите в Changelog.
+Документация: [Backlog](./docs/BACKLOG.md), [Changelog](./docs/CHANGELOG.md), [Legacy NexusCore Balance](./docs/archive/nexuscore_balance.md). Подробности изменений ищите в Changelog.
 
 > **Важно:** функционал прежних отдельных проектов **HabitMinder** и **NexusCore Balance** полностью **интегрирован** в Intelligent Data Pro. Отдельные репозитории считаются устаревшими. Ничего не потеряно: трекинг привычек, когнитивные принципы, сетевые связи и лимиты — теперь часть ядра IDP.
 

@@ -10,6 +10,7 @@ from core.models import (
     TaskWatcherState,
     TaskWatcherLeftReason,
     TaskControlStatus,
+    TaskRefuseReason,
     Area,
 )
 
@@ -121,8 +122,18 @@ async def test_stats_by_owner(session):
         dropped_task.id,
         control_status=TaskControlStatus.dropped,
         control_enabled=False,
+        refused_reason=TaskRefuseReason.wont_do,
     )
     stats = await service.stats_by_owner(owner_id=1)
     assert stats["done"] == 1
     assert stats["active"] == 1
     assert stats["dropped"] == 1
+
+
+@pytest.mark.asyncio
+async def test_ensure_default_area(session):
+    service = TaskService(session)
+    area = await service.ensure_default_area(owner_id=7)
+    assert area.slug == "inbox"
+    again = await service.ensure_default_area(owner_id=7)
+    assert again.id == area.id

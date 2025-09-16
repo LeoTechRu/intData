@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from core.models import WebUser
+from core.services.web_user_service import WebUserService
 from core.services.profile_service import ProfileService, ProfileAccess
 from web.dependencies import get_current_web_user
 
@@ -253,6 +254,18 @@ async def update_profile_grants(
             slug=access.profile.slug,
             viewer=current_user,
         )
+        visibility = "private"
+        if any(grant.audience_type == "public" for grant in refreshed.profile.grants):
+            visibility = "public"
+        elif any(grant.audience_type == "authenticated" for grant in refreshed.profile.grants):
+            visibility = "authenticated"
+        if entity_type == "user":
+            user_service = WebUserService(service.session)
+            owner = await user_service.get_by_id(refreshed.profile.entity_id)
+            if owner:
+                privacy = dict(owner.privacy_settings or {})
+                privacy["profile_visibility"] = visibility
+                owner.privacy_settings = privacy
     include_grants = True
     return _profile_to_response(refreshed, include_grants=include_grants)
 

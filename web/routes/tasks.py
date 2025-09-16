@@ -1,20 +1,17 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from pydantic import BaseModel, model_validator
 
 from core.models import Task, TaskStatus, TgUser
 from core.services.task_service import TaskService
-from web.dependencies import get_current_tg_user, get_current_web_user
-from core.models import WebUser
-from ..template_env import templates
+from web.dependencies import get_current_tg_user
 
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
-ui_router = APIRouter(prefix="/tasks", tags=["tasks"], include_in_schema=False)
 
 
 class TaskCreate(BaseModel):
@@ -43,6 +40,12 @@ class TaskResponse(BaseModel):
     due_date: Optional[datetime]
     tracked_minutes: int = 0
     running_entry_id: Optional[int] = None
+    control_enabled: bool
+    control_status: Optional[str]
+    control_next_at: Optional[datetime]
+    control_frequency: Optional[int]
+    remind_policy: dict[str, Any] = {}
+    is_watched: bool
 
     @classmethod
     def from_model(cls, task: Task, *, tracked_minutes: int = 0, running_entry_id: int | None = None) -> "TaskResponse":
@@ -58,6 +61,16 @@ class TaskResponse(BaseModel):
             due_date=task.due_date,
             tracked_minutes=tracked_minutes,
             running_entry_id=running_entry_id,
+            control_enabled=bool(getattr(task, "control_enabled", False)),
+            control_status=(
+                getattr(task.control_status, "value", task.control_status)
+                if getattr(task, "control_status", None) is not None
+                else None
+            ),
+            control_next_at=getattr(task, "control_next_at", None),
+            control_frequency=getattr(task, "control_frequency", None),
+            remind_policy=getattr(task, "remind_policy", {}) or {},
+            is_watched=bool(getattr(task, "is_watched", False)),
         )
 
 
@@ -70,6 +83,12 @@ class TaskTodayItem(BaseModel):
     time: str | None = None
     due_date: str | None = None
     due_time: str | None = None
+
+
+class TaskStats(BaseModel):
+    done: int
+    active: int
+    dropped: int
 
 
 @router.get("/today", response_model=List[TaskTodayItem])
@@ -139,6 +158,15 @@ async def list_tasks(
             running = await time_svc.get_running_entry(owner_id=current_user.telegram_id, task_id=t.id)
             enriched.append(TaskResponse.from_model(t, tracked_minutes=mins, running_entry_id=getattr(running, 'id', None)))
     return enriched
+
+
+@router.get("/stats", response_model=TaskStats)
+async def task_stats(current_user: TgUser | None = Depends(get_current_tg_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    async with TaskService() as service:
+        stats = await service.stats_by_owner(current_user.telegram_id)
+    return TaskStats(**stats)
 
 
 @router.post(
@@ -222,23 +250,6 @@ async def stop_timer_for_task(task_id: int, current_user: TgUser | None = Depend
         await time_svc.stop_timer(running.id)
         mins = await service.total_tracked_minutes(task_id)
         return TaskResponse.from_model(task, tracked_minutes=mins, running_entry_id=None)
-
-
-@ui_router.get("")
-async def tasks_page(
-    request: Request,
-    current_user: WebUser | None = Depends(get_current_web_user),
-):
-    """Render simple UI for tasks with role-aware header."""
-
-    context = {
-        "current_user": current_user,
-        "current_role_name": getattr(current_user, "role", ""),
-        "is_admin": getattr(current_user, "role", "") == "admin",
-        "page_title": "Задачи",
-    }
-    return templates.TemplateResponse(request, "tasks.html", context)
-
 
 # Alias for centralized API mounting
 api = router

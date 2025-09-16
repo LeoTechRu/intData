@@ -338,12 +338,12 @@
 5. Как пользователь, я добавляю наблюдателей к задаче, чтобы они получали уведомления и могли отказаться от наблюдения.
 
 **Tasks**
-- [ ] P0•M — Расширить модель задач и DDL (`tasks`, `task_checkpoints` и др.) полями контроля: `control_enabled`, `control_frequency`, `control_status{'active','done','dropped'}`, `control_next_at`, `is_watched`, `refused_reason{'done','wont_do'}`, `remind_policy` и вынести расписание напоминаний в отдельную таблицу `task_reminders`.
-- [ ] P0•M — Добавить таблицу `task_watchers(task_id, watcher_id, added_by, state{'active','left'}, left_reason{'done','wont_do','manual'})` и API в `core/services/task_service` для управления наблюдателями.
-- [ ] P0•M — Реализовать в боте FSM-команды `/task_add`, `/task_rename`, `/task_due`, `/task_remind`, `/task_control`, `/task_forget` c подтверждением выбора причины «выполнена» или «не будет выполнена» при отказе от контроля.
-- [ ] P0•M — Настроить планировщик (cron/worker) на базе `project_notification_worker` для отправки напоминаний и уведомлений наблюдателям (добавление, выполнение, отмена), используя `core/services/telegram_bot`.
+- [x] P0•M — Расширить модель задач и DDL (`tasks`, `task_checkpoints` и др.) полями контроля: `control_enabled`, `control_frequency`, `control_status{'active','done','dropped'}`, `control_next_at`, `is_watched`, `refused_reason{'done','wont_do'}`, `remind_policy` и вынести расписание напоминаний в отдельную таблицу `task_reminders`.
+- [x] P0•M — Добавить таблицу `task_watchers(task_id, watcher_id, added_by, state{'active','left'}, left_reason{'done','wont_do','manual'})` и API в `core/services/task_service` для управления наблюдателями.
+- [x] P0•M — Реализовать в боте FSM-команды `/task_add`, `/task_rename`, `/task_due`, `/task_remind`, `/task_control`, `/task_forget` c подтверждением выбора причины «выполнена» или «не будет выполнена» при отказе от контроля.
+- [x] P0•M — Настроить планировщик (cron/worker) на базе `project_notification_worker` для отправки напоминаний и уведомлений наблюдателям (добавление, выполнение, отмена), используя `core/services/telegram_bot`.
 - [ ] P0•S — Добавить команды `/task_stats`, `/task_stats_active`, `/task_stats_dropped` в боте и REST `GET /api/v1/tasks/stats` для подсчёта завершённых, актуальных, отказанных задач.
-- [ ] P0•S — Обновить `/start` справку и документацию бота, описав новые команды и сценарии контроля.
+- [x] P0•S — Обновить `/start` справку и документацию бота, описав новые команды и сценарии контроля.
 
 **Acceptance Criteria**
 - Команды `/task_add` и `/task_rename` создают задачу и меняют название с подтверждением результата, изменения видны в `/tasks` и API.
@@ -473,6 +473,7 @@ Reference: см. архивный отчёт `docs/archive/report_frontend_moder
 - [x] P1•S — Настроен базовый layout и провайдер React Query.
 - [x] P1•L — Страница `/inbox` перенесена на новый стек и покрыта тестами.
 - P2•S — Удалять legacy‑шаблоны и скрипты после миграции, чистить `web/static` и пути в конфиге Tailwind.
+- [x] P2•M — Внедрить AppShell-лейаут Next.js с дизайн-токенами, адаптивной навигацией и современными UI паттернами для перенесённых страниц.
 
 **User Stories**
 1. Как разработчик, я хочу единый современный фронтенд‑стек, чтобы страницы собирались одним тулчейном.

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Optional, Any
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core import db
@@ -52,3 +53,12 @@ class AuditLogService:
         self.session.add(entry)
         await self.session.flush()
         return entry
+
+    async def list_recent(self, *, limit: int = 100) -> list[AuthAuditEntry]:
+        """Return audit entries ordered from newest to oldest."""
+
+        stmt = select(AuthAuditEntry).order_by(AuthAuditEntry.created_at.desc())
+        if limit and limit > 0:
+            stmt = stmt.limit(limit)
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())

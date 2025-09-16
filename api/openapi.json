@@ -1248,6 +1248,16 @@
             "title": "Difficulty",
             "type": "string"
           },
+          "frequency": {
+            "default": "daily",
+            "enum": [
+              "daily",
+              "weekly",
+              "monthly"
+            ],
+            "title": "Frequency",
+            "type": "string"
+          },
           "name": {
             "title": "Name",
             "type": "string"
@@ -1284,6 +1294,50 @@
           "name"
         ],
         "title": "HabitIn",
+        "type": "object"
+      },
+      "HabitUpdate": {
+        "properties": {
+          "frequency": {
+            "anyOf": [
+              {
+                "enum": [
+                  "daily",
+                  "weekly",
+                  "monthly"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frequency"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "title": "HabitUpdate",
         "type": "object"
       },
       "InboxNote": {
@@ -2347,6 +2401,44 @@
       "TaskResponse": {
         "description": "Representation of a task for responses.",
         "properties": {
+          "control_enabled": {
+            "title": "Control Enabled",
+            "type": "boolean"
+          },
+          "control_frequency": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Control Frequency"
+          },
+          "control_next_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Control Next At"
+          },
+          "control_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Control Status"
+          },
           "description": {
             "anyOf": [
               {
@@ -2373,6 +2465,16 @@
           "id": {
             "title": "Id",
             "type": "integer"
+          },
+          "is_watched": {
+            "title": "Is Watched",
+            "type": "boolean"
+          },
+          "remind_policy": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Remind Policy",
+            "type": "object"
           },
           "running_entry_id": {
             "anyOf": [
@@ -2404,9 +2506,37 @@
           "title",
           "description",
           "status",
-          "due_date"
+          "due_date",
+          "control_enabled",
+          "control_status",
+          "control_next_at",
+          "control_frequency",
+          "is_watched"
         ],
         "title": "TaskResponse",
+        "type": "object"
+      },
+      "TaskStats": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "integer"
+          },
+          "done": {
+            "title": "Done",
+            "type": "integer"
+          },
+          "dropped": {
+            "title": "Dropped",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "done",
+          "active",
+          "dropped"
+        ],
+        "title": "TaskStats",
         "type": "object"
       },
       "TaskTodayItem": {
@@ -2622,6 +2752,48 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/admin/audit/logs": {
+      "get": {
+        "description": "Expose the access-control audit trail (migrated from NexusCore).",
+        "operationId": "list_audit_logs_api_v1_admin_audit_logs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Audit Logs",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/admin/restart": {
       "post": {
         "description": "Restart systemd unit for 'web' or 'bot' (requires sudoers setup).\n\nReturns JSON with result. The service user must have passwordless sudo for\nthe corresponding units, e.g. in /etc/sudoers.d/intData:\n    www-data ALL=NOPASSWD: /bin/systemctl restart intdata-web, /bin/systemctl restart intdata-bot",
@@ -4362,6 +4534,109 @@
         ]
       }
     },
+    "/api/v1/habits/{habit_id}": {
+      "delete": {
+        "operationId": "api_delete_habit_api_v1_habits__habit_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "habit_id",
+            "required": true,
+            "schema": {
+              "title": "Habit Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkRequiredError"
+                }
+              }
+            },
+            "description": "Telegram link required"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Delete Habit",
+        "tags": [
+          "Habits"
+        ]
+      },
+      "patch": {
+        "operationId": "api_update_habit_api_v1_habits__habit_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "habit_id",
+            "required": true,
+            "schema": {
+              "title": "Habit Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HabitUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TgLinkRequiredError"
+                }
+              }
+            },
+            "description": "Telegram link required"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Update Habit",
+        "tags": [
+          "Habits"
+        ]
+      }
+    },
     "/api/v1/habits/{habit_id}/down": {
       "post": {
         "operationId": "api_habit_down_api_v1_habits__habit_id__down_post",
@@ -4448,7 +4723,15 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DatePayload"
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/DatePayload"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Payload"
               }
             }
           }
@@ -5683,6 +5966,27 @@
           }
         },
         "summary": "Create Task",
+        "tags": [
+          "tasks"
+        ]
+      }
+    },
+    "/api/v1/tasks/stats": {
+      "get": {
+        "operationId": "task_stats_api_v1_tasks_stats_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskStats"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Task Stats",
         "tags": [
           "tasks"
         ]

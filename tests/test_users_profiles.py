@@ -25,6 +25,7 @@ class FakeProfileAccess:
             profile_meta={"links": []},
             tags=["education", "onboarding"],
             grants=[],
+            entity_id=1,
         )
         self.sections = [{"id": "overview", "title": "Обзор"}]
         self.matched_grants = []

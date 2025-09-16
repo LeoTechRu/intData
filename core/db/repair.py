@@ -369,6 +369,93 @@ def backfill_user_stats(conn: Connection) -> int:
             created += 1
     logger.info("backfill_user_stats: created=%s", created)
     return created
+def backfill_profile_visibility(conn: Connection) -> dict[str, int]:
+    """Ensure user profiles have coherent visibility grants and metadata."""
+
+    if not _table_exists(conn, "entity_profiles") or not _table_exists(conn, "users_web"):
+        return {"grants_added": 0, "privacy_updated": 0}
+
+    result = conn.execute(
+        sa.text(
+            """
+            SELECT p.id, p.entity_id, u.privacy_settings
+            FROM entity_profiles AS p
+            JOIN users_web AS u ON p.entity_type = 'user' AND u.id = p.entity_id
+            """
+        )
+    ).fetchall()
+
+    grants_added = 0
+    privacy_updates = 0
+
+    for profile_id, user_id, raw_privacy in result:
+        grants_rows = conn.execute(
+            sa.text(
+                "SELECT audience_type FROM entity_profile_grants WHERE profile_id = :pid"
+            ),
+            {"pid": profile_id},
+        ).fetchall()
+        grant_set = {row[0] for row in grants_rows}
+
+        if isinstance(raw_privacy, dict):
+            privacy = dict(raw_privacy)
+        elif isinstance(raw_privacy, str) and raw_privacy:
+            try:
+                privacy = json.loads(raw_privacy)
+            except json.JSONDecodeError:
+                privacy = {}
+        else:
+            privacy = {}
+
+        existing_visibility = str(privacy.get("profile_visibility") or "").lower()
+        if existing_visibility == "private":
+            desired_visibility = "private"
+        elif existing_visibility in {"authenticated", "public"}:
+            desired_visibility = existing_visibility
+        elif "public" in grant_set:
+            desired_visibility = "public"
+        elif "authenticated" in grant_set:
+            desired_visibility = "authenticated"
+        else:
+            desired_visibility = "authenticated"
+
+        if desired_visibility == "public":
+            if "public" not in grant_set:
+                conn.execute(
+                    sa.text(
+                        "INSERT INTO entity_profile_grants (profile_id, audience_type) VALUES (:pid, 'public') ON CONFLICT DO NOTHING"
+                    ),
+                    {"pid": profile_id},
+                )
+                grants_added += 1
+            if "authenticated" not in grant_set:
+                conn.execute(
+                    sa.text(
+                        "INSERT INTO entity_profile_grants (profile_id, audience_type) VALUES (:pid, 'authenticated') ON CONFLICT DO NOTHING"
+                    ),
+                    {"pid": profile_id},
+                )
+                grants_added += 1
+        elif desired_visibility == "authenticated" and "authenticated" not in grant_set:
+            conn.execute(
+                sa.text(
+                    "INSERT INTO entity_profile_grants (profile_id, audience_type) VALUES (:pid, 'authenticated') ON CONFLICT DO NOTHING"
+                ),
+                {"pid": profile_id},
+            )
+            grants_added += 1
+
+        if desired_visibility and privacy.get("profile_visibility") != desired_visibility:
+            privacy["profile_visibility"] = desired_visibility
+            conn.execute(
+                sa.text("UPDATE users_web SET privacy_settings=:val WHERE id=:uid"),
+                {"val": json.dumps(privacy), "uid": user_id},
+            )
+            privacy_updates += 1
+
+    return {"grants_added": grants_added, "privacy_updated": privacy_updates}
+
+
 
 
 def backfill_tasks_resources(conn: Connection) -> dict[str, int]:
@@ -566,6 +653,7 @@ def run_repair(conn: Connection) -> dict[str, object]:
     _step("rewards_area", backfill_rewards_area)
     _step("habits_antifarm", backfill_habits_antifarm)
     _step("user_stats", backfill_user_stats)
+    _step("profile_visibility", backfill_profile_visibility)
     _step("tasks_resources", backfill_tasks_resources)
     _step("time_entries", backfill_time_entries)
     _step("migrate_favorites", _migrate_favorites)
