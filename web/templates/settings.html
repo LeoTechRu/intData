@@ -49,6 +49,92 @@
       </div>
     </section>
 
+    <section class="settings-section" id="areas">
+      <header class="settings-section__header">
+        <h2 class="settings-section__title">Области жизни (PARA)</h2>
+        <p class="settings-section__subtitle">Области задают глобальную структуру: проекты, задачи и ресурсы наследуют выбранную область автоматически. Управляйте деревом будто это ваша карта приоритетов.</p>
+      </header>
+      <section class="settings-card settings-card--wide areas-settings" aria-labelledby="areas-settings-title" data-areas-root>
+        <div class="settings-card__header">
+          <h3 id="areas-settings-title">Структура иерархии</h3>
+          <p>Создавайте новые области, группируйте их вложенно и держите систему PARA в актуальном состоянии. Изменения применяются мгновенно во всех модулях.</p>
+        </div>
+        <div class="areas-layout" data-areas-pane>
+          <div class="areas-layout__column areas-layout__column--tree">
+            <form class="areas-create" data-areas-create data-feedback>
+              <div class="areas-create__group">
+                <label class="areas-field">
+                  <span class="areas-field__label">Название области</span>
+                  <input class="areas-field__control" type="text" name="name" placeholder="Напр.: Здоровье" autocomplete="off" required>
+                </label>
+              </div>
+              <div class="areas-create__inline">
+                <label class="areas-field">
+                  <span class="areas-field__label">Цвет</span>
+                  <input class="areas-field__control areas-field__control--color" type="color" name="color" value="#F1F5F9" aria-label="Цвет области">
+                </label>
+                <label class="areas-field areas-field--grow">
+                  <span class="areas-field__label">Разместить внутри</span>
+                  <select class="areas-field__control" name="parent_id" data-areas-parent>
+                    <option value="">Верхний уровень</option>
+                  </select>
+                </label>
+              </div>
+              <div class="settings-actions">
+                <button class="button" type="submit">Создать область</button>
+                <button class="button button--ghost" type="reset">Сбросить</button>
+              </div>
+            </form>
+            <div class="areas-tree-wrapper" data-areas-scroll>
+              <div class="areas-skeleton" data-areas-skeleton>
+                <div></div>
+                <div></div>
+                <div></div>
+              </div>
+              <ul class="areas-tree" data-areas-tree role="tree" aria-describedby="areas-tree-hint" tabindex="0"></ul>
+              <p class="areas-empty" data-areas-empty hidden>Пока нет ни одной области. Создайте первую, чтобы подключить проекты и задачи.</p>
+              <p class="areas-status" data-areas-status></p>
+              <p id="areas-tree-hint" class="areas-hint">Используйте клавиши стрелок и Enter, чтобы выбрать область, либо мышь/тач. Выбранная область появится справа.</p>
+            </div>
+          </div>
+          <div class="areas-layout__column areas-layout__column--detail">
+            <div class="areas-detail" data-areas-detail data-state="empty">
+              <div class="areas-detail__empty" data-areas-detail-empty>
+                <h4>Выберите область</h4>
+                <p>Нажмите на область слева, чтобы настроить её имя и расположение. Мы также покажем полный путь в дереве для контекста.</p>
+              </div>
+              <div class="areas-detail__panel" data-areas-detail-panel hidden>
+                <header class="areas-detail__header">
+                  <h4 data-areas-detail-name></h4>
+                  <span class="areas-detail__badge" data-areas-detail-path></span>
+                </header>
+                <form class="areas-detail__form settings-form" data-areas-detail-form data-feedback>
+                  <label class="areas-field">
+                    <span class="areas-field__label">Переименовать</span>
+                    <input class="areas-field__control" type="text" name="name" autocomplete="off" required>
+                  </label>
+                  <label class="areas-field">
+                    <span class="areas-field__label">Переместить в</span>
+                    <select class="areas-field__control" name="parent_id" data-areas-detail-parent>
+                      <option value="">Верхний уровень</option>
+                    </select>
+                  </label>
+                  <div class="settings-actions">
+                    <button class="button" type="submit">Сохранить изменения</button>
+                    <button class="button button--ghost" type="button" data-areas-detail-cancel>Отменить</button>
+                  </div>
+                </form>
+                <footer class="areas-detail__footer">
+                  <p class="areas-detail__meta" data-areas-detail-meta></p>
+                  <p class="areas-detail__help">Напоминание: у каждой сущности должна быть область. Изменения здесь моментально обновят фильтры в задачах, календаре и привычках.</p>
+                </footer>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+
     <section class="settings-section">
       <header class="settings-section__header">
         <h2 class="settings-section__title">Тема интерфейса</h2>
