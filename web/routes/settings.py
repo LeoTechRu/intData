@@ -42,6 +42,42 @@ FAVORITE_PAGES = [
     {"path": "/#cup-admin-tools", "label": "Админ", "role": "admin"},
 ]
 
+THEME_PRESETS = [
+    {
+        "id": "aurora",
+        "label": "Aurora",
+        "mode": "light",
+        "primary": "#2563eb",
+        "accent": "#a855f7",
+        "gradient": {"from": "#6366f1", "to": "#8b5cf6"},
+    },
+    {
+        "id": "sunrise",
+        "label": "Sunrise",
+        "mode": "light",
+        "primary": "#f97316",
+        "accent": "#fb7185",
+        "gradient": {"from": "#facc15", "to": "#f97316"},
+    },
+    {
+        "id": "noir",
+        "label": "Noir",
+        "mode": "dark",
+        "primary": "#0ea5e9",
+        "accent": "#6366f1",
+        "surface": "#111827",
+        "gradient": {"from": "#0f172a", "to": "#1f2937"},
+    },
+    {
+        "id": "forest",
+        "label": "Forest",
+        "mode": "system",
+        "primary": "#16a34a",
+        "accent": "#22d3ee",
+        "gradient": {"from": "#134e4a", "to": "#0f766e"},
+    },
+]
+
 
 @router.get("/settings", include_in_schema=False)
 async def settings_page(
@@ -73,5 +109,6 @@ async def settings_page(
         "page_title": "Настройки",
         "dashboard_widgets": DASHBOARD_WIDGETS,
         "favorite_pages": favorite_pages,
+        "theme_presets": THEME_PRESETS,
     }
     return templates.TemplateResponse(request, "settings.html", context)
