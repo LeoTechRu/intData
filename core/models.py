@@ -154,6 +154,62 @@ class WebUser(Base):
         return None
 
 
+class EntityProfile(Base):
+    """Unified profile representation for users, groups, projects and areas."""
+
+    __tablename__ = "entity_profiles"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    entity_type = Column(String(32), nullable=False)
+    entity_id = Column(BigInteger, nullable=False)
+    slug = Column(String(255), nullable=False)
+    display_name = Column(String(255), nullable=False)
+    headline = Column(String(255))
+    summary = Column(Text)
+    avatar_url = Column(String(512))
+    cover_url = Column(String(512))
+    tags = Column(JSON, default=list)
+    profile_meta = Column(JSON, default=dict)
+    sections = Column(JSON, default=list)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    grants = relationship(
+        "EntityProfileGrant",
+        back_populates="profile",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+    __table_args__ = (
+        UniqueConstraint("entity_type", "entity_id", name="uq_entity_profiles_entity"),
+        UniqueConstraint("entity_type", "slug", name="uq_entity_profiles_slug"),
+    )
+
+
+class EntityProfileGrant(Base):
+    """Audience grants defining who may view a profile and which sections are visible."""
+
+    __tablename__ = "entity_profile_grants"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    profile_id = Column(
+        Integer,
+        ForeignKey("entity_profiles.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    audience_type = Column(String(32), nullable=False)
+    subject_id = Column(BigInteger)
+    sections = Column(JSON)
+    created_by = Column(Integer, ForeignKey("users_web.id"))
+    expires_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+
+    profile = relationship("EntityProfile", back_populates="grants")
+    created_by_user = relationship("WebUser", foreign_keys=[created_by])
+
 class WebTgLink(Base):
     """Link between web users and their Telegram accounts."""
 

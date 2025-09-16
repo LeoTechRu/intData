@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core import db
 from core.models import Area
+from core.services.profile_service import ProfileService
 
 
 def _slugify(name: str) -> str:
@@ -80,6 +81,24 @@ class AreaService:
         )
         self.session.add(a)
         await self.session.flush()
+        async with ProfileService(self.session) as profiles:
+            await profiles.upsert_profile_meta(
+                entity_type="area",
+                entity_id=a.id,
+                updates={
+                    "slug": a.slug or f"area-{a.id}",
+                    "display_name": a.title or a.name,
+                    "profile_meta": {
+                        "color": a.color,
+                        "depth": int(a.depth or 0),
+                    },
+                    "sections": [
+                        {"id": "overview", "title": "Область"},
+                        {"id": "initiatives", "title": "Инициативы"},
+                        {"id": "contacts", "title": "Контакты"},
+                    ],
+                },
+            )
         return a
 
     async def move_area(self, area_id: int, new_parent_id: int | None) -> Area:

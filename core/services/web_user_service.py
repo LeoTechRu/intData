@@ -12,6 +12,7 @@ from core import db
 from core.models import WebUser, TgUser, WebTgLink, UserRole, Role, UserRoleLink
 from core.db import bcrypt
 from core.services.access_control import AccessControlService, AccessScope
+from core.services.profile_service import ProfileService
 
 
 def _parse_birthday(value: Optional[str]):
@@ -226,6 +227,7 @@ class WebUserService:
         user = await self.get_by_id(web_user_id)
         if not user:
             return None
+        profile_updates: dict[str, Any] = {}
         if "birthday" in data:
             birthday = data.get("birthday")
             if isinstance(birthday, str):
@@ -240,6 +242,37 @@ class WebUserService:
         ]:
             if field in data and data[field] is not None:
                 setattr(user, field, data[field])
+        if data.get("headline"):
+            profile_updates["headline"] = data["headline"]
+        if data.get("summary"):
+            profile_updates["summary"] = data["summary"]
+        if data.get("bio") and "summary" not in data:
+            profile_updates["summary"] = data["bio"]
+        if data.get("avatar_url"):
+            profile_updates["avatar_url"] = data["avatar_url"]
+            privacy = user.privacy_settings or {}
+            privacy["avatar_url"] = data["avatar_url"]
+            user.privacy_settings = privacy
+        if data.get("cover_url"):
+            profile_updates["cover_url"] = data["cover_url"]
+        if data.get("tags"):
+            profile_updates["tags"] = data["tags"]
+        if data.get("sections"):
+            profile_updates["sections"] = data["sections"]
+        links = data.get("links") or data.get("profile_links")
+        if links:
+            profile_meta = profile_updates.setdefault("profile_meta", {})
+            profile_meta["links"] = links
+        profile_updates.setdefault(
+            "display_name", user.full_name or user.username
+        )
+        profile_updates.setdefault("slug", user.username)
+        async with ProfileService(self.session) as profiles:
+            await profiles.upsert_profile_meta(
+                entity_type="user",
+                entity_id=user.id,
+                updates=profile_updates,
+            )
         await self.session.flush()
         return user
 
