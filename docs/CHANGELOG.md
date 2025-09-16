@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API `/api/v1/user/settings` to read and write settings.
 - Repair step to migrate legacy favorites into user_settings.
 - Возможность управлять избранными пунктами меню на странице `/settings`.
+- Панель «Области жизни» на странице `/settings` с деревом PARA, быстрым созданием, переименованием и перемещением областей.
 - Простые SQL-миграции и раннер `core/db/migrate.py` с таблицами календаря и уведомлений.
 - Асинхронный бэкенд на aiogram + SQLAlchemy с подключением к PostgreSQL.
 - Модели пользователей, групп, каналов и настроек логирования.
@@ -77,6 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bare timers auto-create tasks in Inbox.
 
 ### Changed
+- Избранное в меню профиля автоматически очищается от устаревших ссылок (`https://intdata.pro/admin`) и использует относительные пути, включая якорь `/settings#areas`.
 - Админский сектор теперь рендерится маршрутом `/cup/admin-embed` и подключается в ЦУП через iframe.
 - Административные настройки объединены на `/settings`: бренд, Telegram-интеграции и глобальная тема доступны только администраторам.
 - Команда `/group` теперь выполняет инвентаризацию Telegram-группы и сразу выводит отчёт `/group audit`; бот индексирует участников при добавлении в чат (E5b).
