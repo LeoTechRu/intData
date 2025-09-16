@@ -1,7 +1,7 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Optional, Literal
 
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, Response
 from pydantic import BaseModel, Field
 
 from core.auth.owner import OwnerCtx, get_current_owner
@@ -14,6 +14,7 @@ from core.services.habits import (
     HabitsCronService,
     habits,
 )
+from core.services.nexus_service import HabitService
 from sqlalchemy import select
 
 router = APIRouter()
@@ -56,9 +57,19 @@ class HabitIn(BaseModel):
     title: str = Field(..., alias="name")
     type: str = "positive"
     difficulty: str = "easy"
+    frequency: Literal["daily", "weekly", "monthly"] = "daily"
     note: Optional[str] = None
     area_id: Optional[int] = None
     project_id: Optional[int] = None
+
+    class Config:
+        populate_by_name = True
+
+
+class HabitUpdate(BaseModel):
+    title: Optional[str] = Field(None, alias="name")
+    frequency: Optional[Literal["daily", "weekly", "monthly"]] = None
+    note: Optional[str] = None
 
     class Config:
         populate_by_name = True
@@ -72,10 +83,31 @@ async def api_list_habits(owner: OwnerCtx | None = Depends(get_current_owner)):
         res = await svc.session.execute(
             select(habits).where(habits.c.owner_id == owner.owner_id)
         )
-        return [
-            {**dict(r), "name": r["title"], "progress": []}
-            for r in res.mappings().all()
-        ]
+        payload = []
+        for row in res.mappings().all():
+            progress_dict = row.get("progress") or {}
+            completed = [
+                day
+                for day, done in progress_dict.items()
+                if isinstance(done, bool) and done
+            ]
+            created = row.get("created_at")
+            payload.append(
+                {
+                    "id": row["id"],
+                    "name": row["title"],
+                    "title": row["title"],
+                    "type": row["type"],
+                    "difficulty": row["difficulty"],
+                    "frequency": row.get("frequency", "daily"),
+                    "note": row.get("note"),
+                    "area_id": row.get("area_id"),
+                    "project_id": row.get("project_id"),
+                    "progress": completed,
+                    "created_at": created.isoformat() if isinstance(created, datetime) else created,
+                }
+            )
+        return payload
 
 
 @router.post("/habits", tags=["Habits"], status_code=201, responses=TG_RESP)
@@ -97,14 +129,63 @@ async def api_create_habit(
                 area_id=payload.area_id,
                 project_id=payload.project_id,
                 note=payload.note,
+                frequency=payload.frequency,
             )
-    except ValueError:
-        raise HTTPException(status_code=400, detail="area_or_project_required")
+    except ValueError as exc:
+        detail = "area_or_project_required"
+        if str(exc) == "invalid_frequency":
+            detail = "invalid_frequency"
+        raise HTTPException(status_code=400, detail=detail)
     return {"id": hid}
 
 
 class DatePayload(BaseModel):
     date: Optional[date] = None
+
+
+@router.patch("/habits/{habit_id}", tags=["Habits"], responses=TG_RESP)
+async def api_update_habit(
+    habit_id: int,
+    payload: HabitUpdate,
+    owner: OwnerCtx | None = Depends(get_current_owner),
+):
+    if owner is None:
+        raise HTTPException(status_code=401)
+    if not owner.has_tg:
+        raise HTTPException(status_code=403, detail=TG_LINK_ERROR)
+    try:
+        async with HabitsService() as svc:
+            updated = await svc.update_habit(
+                habit_id,
+                owner_id=owner.owner_id,
+                title=payload.title,
+                note=payload.note,
+                frequency=payload.frequency,
+            )
+    except ValueError as exc:
+        detail = {"error": str(exc)}
+        if str(exc) == "invalid_frequency":
+            detail = {"error": "invalid_frequency"}
+        raise HTTPException(status_code=400, detail=detail)
+    if not updated:
+        raise HTTPException(status_code=404)
+    return {"status": "ok"}
+
+
+@router.delete("/habits/{habit_id}", tags=["Habits"], status_code=204, responses=TG_RESP)
+async def api_delete_habit(
+    habit_id: int,
+    owner: OwnerCtx | None = Depends(get_current_owner),
+):
+    if owner is None:
+        raise HTTPException(status_code=401)
+    if not owner.has_tg:
+        raise HTTPException(status_code=403, detail=TG_LINK_ERROR)
+    async with HabitsService() as svc:
+        deleted = await svc.delete_habit(habit_id, owner_id=owner.owner_id)
+    if not deleted:
+        raise HTTPException(status_code=404)
+    return Response(status_code=204)
 
 
 @router.post(
@@ -114,25 +195,33 @@ class DatePayload(BaseModel):
 )
 async def api_habit_toggle(
     habit_id: int,
-    payload: DatePayload = Body(default=None),
+    payload: DatePayload | None = Body(default=None),
     owner: OwnerCtx | None = Depends(get_current_owner),
 ):
     if owner is None:
         raise HTTPException(status_code=401)
     if not owner.has_tg:
         raise HTTPException(status_code=403, detail=TG_LINK_ERROR)
-    try:
-        async with HabitsService() as svc:
-            res = await svc.up(habit_id, owner_id=owner.owner_id)
-    except CooldownError as e:
-        raise HTTPException(
-            status_code=429,
-            detail={"error": "cooldown", "retry_after": e.seconds},
-            headers={"Retry-After": str(e.seconds)},
-        )
-    if res is None:
+    target_day = (payload.date if payload else None) or date.today()
+    if target_day > date.today():
+        raise HTTPException(status_code=400, detail={"error": "future_date_not_allowed"})
+    async with HabitService() as svc:
+        habit = await svc.get(habit_id)
+        if habit is None or habit.owner_id != owner.owner_id:
+            raise HTTPException(status_code=404)
+        try:
+            updated = await svc.toggle_progress(habit_id, target_day)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail={"error": str(exc)})
+    if updated is None:
         raise HTTPException(status_code=404)
-    return res
+    progress_dict = updated.progress or {}
+    completed = [
+        day
+        for day, done in progress_dict.items()
+        if isinstance(done, bool) and done
+    ]
+    return {"id": updated.id, "progress": completed}
 
 
 @router.post(

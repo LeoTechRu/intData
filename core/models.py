@@ -424,9 +424,40 @@ class GroupRemovalLog(Base):
 
 class TaskStatus(PyEnum):
     """Possible statuses for :class:`Task`."""
+
     todo = "todo"
     in_progress = "in_progress"
     done = "done"
+
+
+class TaskControlStatus(PyEnum):
+    """Lifecycle state for supervised tasks."""
+
+    active = "active"
+    done = "done"
+    dropped = "dropped"
+
+
+class TaskRefuseReason(PyEnum):
+    """Explicit outcome fixed when supervision is stopped."""
+
+    done = "done"
+    wont_do = "wont_do"
+
+
+class TaskWatcherState(PyEnum):
+    """Current watcher subscription state."""
+
+    active = "active"
+    left = "left"
+
+
+class TaskWatcherLeftReason(PyEnum):
+    """Reason provided when watcher leaves."""
+
+    done = "done"
+    wont_do = "wont_do"
+    manual = "manual"
 
 
 # PARA/PKM enums
@@ -477,6 +508,15 @@ class Task(Base):
     custom_properties = Column(JSON, default=dict)
     schedule_type = Column(String(50))
     reschedule_count = Column(Integer, default=0)
+    control_enabled = Column(Boolean, default=False, nullable=False)
+    control_frequency = Column(Integer)
+    control_status = Column(
+        Enum(TaskControlStatus), nullable=False, default=TaskControlStatus.active
+    )
+    control_next_at = Column(DateTime(timezone=True))
+    refused_reason = Column(Enum(TaskRefuseReason))
+    remind_policy = Column(JSON, default=dict)
+    is_watched = Column(Boolean, default=False, nullable=False)
 
     checkpoints = relationship(
         "TaskCheckpoint", backref="task", cascade="all, delete-orphan"
@@ -487,6 +527,12 @@ class Task(Base):
     # Link to time tracking entries (work logs)
     time_entries = relationship(
         "TimeEntry", backref="task", cascade="all, delete-orphan"
+    )
+    reminders = relationship(
+        "TaskReminder", backref="task", cascade="all, delete-orphan"
+    )
+    watchers = relationship(
+        "TaskWatcher", backref="task", cascade="all, delete-orphan"
     )
 
     # PARA links
@@ -499,6 +545,59 @@ class Task(Base):
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
 
+
+class TaskReminder(Base):
+    """Reminder schedule records for tasks."""
+
+    __tablename__ = "task_reminders"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
+    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"), nullable=False)
+    kind = Column(String(32), nullable=False, default="custom")
+    trigger_at = Column(DateTime(timezone=True), nullable=False)
+    frequency_minutes = Column(Integer)
+    is_active = Column(Boolean, nullable=False, default=True)
+    last_triggered_at = Column(DateTime(timezone=True))
+    payload = Column(JSON, default=dict)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    __table_args__ = (
+        Index("ix_task_reminders_active", "task_id", "trigger_at"),
+    )
+
+
+class TaskWatcher(Base):
+    """Subscribers tracking task lifecycle."""
+
+    __tablename__ = "task_watchers"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
+    watcher_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"), nullable=False)
+    added_by = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
+    state = Column(
+        Enum(TaskWatcherState), nullable=False, default=TaskWatcherState.active
+    )
+    left_reason = Column(Enum(TaskWatcherLeftReason))
+    left_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow
+    )
+
+    __table_args__ = (
+        Index(
+            "ux_task_watchers_active",
+            "task_id",
+            "watcher_id",
+            unique=True,
+            postgresql_where=sa.text("state = 'active'"),
+        ),
+    )
 
 # ---------------------------------------------------------------------------
 # CalendarEvent model
@@ -623,13 +722,15 @@ class Habit(Base):
     __tablename__ = "habits"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    owner_id = Column(BigInteger, ForeignKey("users_web.id"))
+    owner_id = Column(BigInteger, ForeignKey("users_tg.telegram_id"))
     area_id = Column(Integer, ForeignKey("areas.id"), nullable=False)
     project_id = Column(Integer, ForeignKey("projects.id"))
     title = Column(String(255), nullable=False)
     note = Column(Text)
-    type = Column(String(8), nullable=False)
-    difficulty = Column(String(8), nullable=False)
+    type = Column(String(8), nullable=False, default="positive")
+    difficulty = Column(String(8), nullable=False, default="easy")
+    frequency = Column(String(20), nullable=False, default="daily")
+    progress = Column(JSON, default=dict)
     up_enabled = Column(Boolean, default=True)
     down_enabled = Column(Boolean, default=True)
     val = Column(Float, default=0.0)
@@ -642,6 +743,29 @@ class Habit(Base):
 
     area = relationship("Area")
     project = relationship("Project")
+
+    @property
+    def name(self) -> str:
+        return self.title
+
+    @name.setter
+    def name(self, value: str) -> None:
+        self.title = value
+
+    def toggle_progress(self, day: date) -> None:
+        """Toggle completion status for a given day.
+
+        HabitMinder/Nexus logic allowed only current day toggling. We retain
+        that behaviour to avoid backfilling historical data accidentally.
+        """
+
+        today = date.today()
+        if day != today:
+            raise ValueError("Can only toggle progress for the current day")
+        progress = self.progress or {}
+        key = day.isoformat()
+        progress[key] = not progress.get(key, False)
+        self.progress = progress
 
 
 class HabitLog(Base):

@@ -39,7 +39,7 @@ async def _create_user(role: UserRole, username: str) -> int:
 @pytest.mark.asyncio
 async def test_profile_access_single_user(client: AsyncClient):
     uid = await _create_user(UserRole.single, username="user1")
-    resp = await client.get("/profile/user1", headers={"Authorization": f"Bearer {uid}"})
+    resp = await client.get("/users/user1", headers={"Authorization": f"Bearer {uid}"})
     assert resp.status_code == 200
 
     legacy = await client.get("/admin", headers={"Authorization": f"Bearer {uid}"})
@@ -52,7 +52,7 @@ async def test_profile_access_single_user(client: AsyncClient):
 @pytest.mark.asyncio
 async def test_admin_access(client: AsyncClient):
     uid = await _create_user(UserRole.admin, username="admin")
-    profile = await client.get("/profile/admin", headers={"Authorization": f"Bearer {uid}"})
+    profile = await client.get("/users/admin", headers={"Authorization": f"Bearer {uid}"})
     assert profile.status_code == 200
     legacy = await client.get("/admin", headers={"Authorization": f"Bearer {uid}"})
     assert legacy.status_code == 404

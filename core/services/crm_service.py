@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core import db
 from core.models import Product, ProductStatus, UserProduct
+from core.services.profile_service import ProfileService, normalize_slug
 from core.utils import utcnow
 
 
@@ -78,6 +79,7 @@ class CRMService:
                 changed = True
             if changed:
                 product.updated_at = utcnow()
+            await self._sync_product_profile(product)
             return product
         product = Product(
             slug=slug,
@@ -88,6 +90,7 @@ class CRMService:
         )
         self.session.add(product)
         await self.session.flush()
+        await self._sync_product_profile(product)
         return product
 
     # ------------------------------------------------------------------
@@ -128,6 +131,24 @@ class CRMService:
         self.session.add(link)
         await self.session.flush()
         return link
+
+    async def _sync_product_profile(self, product: Product) -> None:
+        updates = {
+            "slug": normalize_slug(product.slug or product.title, f"product-{product.id}"),
+            "display_name": product.title,
+            "summary": product.description,
+            "profile_meta": {"active": product.active},
+        }
+        attrs = product.attributes or {}
+        tags = attrs.get("tags")
+        if tags:
+            updates["tags"] = tags
+        async with ProfileService(self.session) as profiles:
+            await profiles.upsert_profile_meta(
+                entity_type="product",
+                entity_id=product.id,
+                updates=updates,
+            )
 
     async def revoke_product(self, *, user_id: int, product_id: int) -> bool:
         link = await self.session.get(UserProduct, (user_id, product_id))

@@ -28,6 +28,8 @@ habits = sa.Table(
     sa.Column("note", sa.Text),
     sa.Column("type", sa.String(8), nullable=False),
     sa.Column("difficulty", sa.String(8), nullable=False),
+    sa.Column("frequency", sa.String(20), nullable=False, server_default=sa.text("'daily'")),
+    sa.Column("progress", sa.JSON, server_default=sa.text("'{}'")),
     sa.Column("up_enabled", sa.Boolean, nullable=False, server_default=sa.true()),
     sa.Column("down_enabled", sa.Boolean, nullable=False, server_default=sa.true()),
     sa.Column("val", sa.Float, nullable=False, server_default="0"),
@@ -260,7 +262,10 @@ class HabitsService:
         area_id: Optional[int] = None,
         project_id: Optional[int] = None,
         note: str | None = None,
+        frequency: str = "daily",
     ) -> int:
+        if frequency not in {"daily", "weekly", "monthly"}:
+            raise ValueError("invalid_frequency")
         area_id = await self._resolve_area(owner_id, area_id, project_id)
         stmt = (
             insert(habits)
@@ -272,6 +277,8 @@ class HabitsService:
                 note=note,
                 type=type,
                 difficulty=difficulty,
+                frequency=frequency,
+                progress={},
                 up_enabled=True,
                 down_enabled=True,
                 val=0.0,
@@ -285,6 +292,41 @@ class HabitsService:
         res = await self.session.execute(select(habits).where(habits.c.id == habit_id))
         row = res.mappings().first()
         return dict(row) if row else None
+
+    async def update_habit(
+        self,
+        habit_id: int,
+        *,
+        owner_id: int,
+        title: Optional[str] = None,
+        note: Optional[str] = None,
+        frequency: Optional[str] = None,
+    ) -> bool:
+        changes: Dict[str, Any] = {}
+        if title is not None:
+            changes["title"] = title
+        if note is not None:
+            changes["note"] = note
+        if frequency is not None:
+            if frequency not in {"daily", "weekly", "monthly"}:
+                raise ValueError("invalid_frequency")
+            changes["frequency"] = frequency
+        if not changes:
+            return False
+        stmt = (
+            update(habits)
+            .where(habits.c.id == habit_id, habits.c.owner_id == owner_id)
+            .values(**changes)
+        )
+        res = await self.session.execute(stmt)
+        return res.rowcount > 0
+
+    async def delete_habit(self, habit_id: int, *, owner_id: int) -> bool:
+        stmt = delete(habits).where(
+            habits.c.id == habit_id, habits.c.owner_id == owner_id
+        )
+        res = await self.session.execute(stmt)
+        return res.rowcount > 0
 
     async def up(self, habit_id: int, *, owner_id: int) -> Optional[Dict[str, Any]]:
         habit = await self.get(habit_id)

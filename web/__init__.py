@@ -34,6 +34,7 @@ from .routes import (
     areas,
     projects,
     resources,
+    products,
     inbox,
     groups,
     users,
@@ -348,6 +349,7 @@ app.include_router(notes.ui_router, include_in_schema=False)
 app.include_router(areas.ui_router, include_in_schema=False)
 app.include_router(projects.ui_router, include_in_schema=False)
 app.include_router(resources.ui_router, include_in_schema=False)
+app.include_router(products.ui_router, include_in_schema=False)
 app.include_router(calendar.ui_router, include_in_schema=False)
 app.include_router(time_entries.ui_router, include_in_schema=False)
 app.include_router(groups.ui_router, include_in_schema=False)

@@ -12,7 +12,7 @@ from web.dependencies import get_current_web_user
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
-EntityKind = Literal["users", "groups", "projects", "areas"]
+EntityKind = Literal["users", "groups", "projects", "areas", "resources", "products"]
 AUDIENCE_VALUES = {"public", "authenticated", "user", "group", "project", "area"}
 
 _TYPE_MAP = {
@@ -20,6 +20,8 @@ _TYPE_MAP = {
     "groups": "group",
     "projects": "project",
     "areas": "area",
+    "resources": "resource",
+    "products": "product",
 }
 
 

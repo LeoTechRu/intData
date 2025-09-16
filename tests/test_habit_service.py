@@ -16,7 +16,7 @@ from core.services.habits import (
     habits,
 )
 from core.services.nexus_service import HabitService
-from core.models import Base, WebUser, Area, Project, Habit as HabitModel
+from core.models import Base, WebUser, Area, Project, Habit as HabitModel, TgUser
 
 
 @pytest_asyncio.fixture
@@ -194,6 +194,7 @@ async def test_list_habits_preloads_area_project():
             Base.metadata.create_all,
             tables=[
                 WebUser.__table__,
+                TgUser.__table__,
                 Area.__table__,
                 Project.__table__,
                 HabitModel.__table__,
@@ -202,6 +203,9 @@ async def test_list_habits_preloads_area_project():
     db.async_session = async_session
     async with HabitService() as svc:
         await svc.session.execute(sa.insert(WebUser).values(id=4, username="u4"))
+        await svc.session.execute(
+            sa.insert(TgUser).values(telegram_id=4, first_name="tg4")
+        )
         await svc.session.execute(
             sa.insert(Area).values(id=4, owner_id=4, name="A", title="A")
         )
@@ -216,6 +220,7 @@ async def test_list_habits_preloads_area_project():
                 title="H",
                 type="positive",
                 difficulty="easy",
+                frequency="daily",
             )
         )
         await svc.session.flush()

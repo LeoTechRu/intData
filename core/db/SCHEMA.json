@@ -1,8 +1,8 @@
 {
   "version": 1,
   "dialect": "postgresql",
-  "generated_at": "2025-09-15T22:54:53Z",
-  "metadata_hash": "9028ccdc18301782019f9959408f510d7683473bb395ac378206ae250ae7d18e",
+  "generated_at": "2025-09-16T14:16:08Z",
+  "metadata_hash": "4866a64090b8bd2770cf81708c17280315d4219f2cd819fc7a99a84d619c9066",
   "enums": [
     {
       "name": "activitytype",
@@ -118,11 +118,41 @@
       ]
     },
     {
+      "name": "taskcontrolstatus",
+      "values": [
+        "active",
+        "done",
+        "dropped"
+      ]
+    },
+    {
+      "name": "taskrefusereason",
+      "values": [
+        "done",
+        "wont_do"
+      ]
+    },
+    {
       "name": "taskstatus",
       "values": [
         "done",
         "in_progress",
         "todo"
+      ]
+    },
+    {
+      "name": "taskwatcherleftreason",
+      "values": [
+        "done",
+        "manual",
+        "wont_do"
+      ]
+    },
+    {
+      "name": "taskwatcherstate",
+      "values": [
+        "active",
+        "left"
       ]
     },
     {
@@ -1386,6 +1416,290 @@
           "columns": [
             "daily_id",
             "date"
+          ]
+        }
+      ],
+      "indexes": [],
+      "checks": []
+    },
+    "entity_profile_grants": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "audience_type",
+          "type": "VARCHAR(32)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_by",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "expires_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "profile_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "sections",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "subject_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "created_by"
+          ],
+          "ref_table": "users_web",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "profile_id"
+          ],
+          "ref_table": "entity_profiles",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "CASCADE",
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "entity_profiles": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "avatar_url",
+          "type": "VARCHAR(512)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "cover_url",
+          "type": "VARCHAR(512)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "display_name",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "entity_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "entity_type",
+          "type": "VARCHAR(32)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "headline",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "profile_meta",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "sections",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "slug",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "summary",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "tags",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [],
+      "unique_constraints": [
+        {
+          "name": "uq_entity_profiles_entity",
+          "columns": [
+            "entity_type",
+            "entity_id"
+          ]
+        },
+        {
+          "name": "uq_entity_profiles_slug",
+          "columns": [
+            "entity_type",
+            "slug"
           ]
         }
       ],
@@ -4130,6 +4444,310 @@
       "indexes": [],
       "checks": []
     },
+    "task_reminders": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "frequency_minutes",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": true,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "kind",
+          "type": "VARCHAR(32)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "custom",
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "last_triggered_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "payload",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "task_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "trigger_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "owner_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "task_id"
+          ],
+          "ref_table": "tasks",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [
+        {
+          "name": "ix_task_reminders_active",
+          "columns": [
+            "task_id",
+            "trigger_at"
+          ],
+          "unique": false
+        }
+      ],
+      "checks": []
+    },
+    "task_watchers": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "added_by",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "left_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "left_reason",
+          "type": "taskwatcherleftreason",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "state",
+          "type": "taskwatcherstate",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "active",
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "task_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "watcher_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "added_by"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "task_id"
+          ],
+          "ref_table": "tasks",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "watcher_id"
+          ],
+          "ref_table": "users_tg",
+          "ref_columns": [
+            "telegram_id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [
+        {
+          "name": "ux_task_watchers_active",
+          "columns": [
+            "task_id",
+            "watcher_id"
+          ],
+          "unique": true
+        }
+      ],
+      "checks": []
+    },
     "tasks": {
       "comment": "",
       "columns": [
@@ -4150,6 +4768,46 @@
           "primary_key": false,
           "autoincrement": true,
           "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "control_enabled",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": false,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "control_frequency",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "control_next_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "control_status",
+          "type": "taskcontrolstatus",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "active",
           "server_default": null,
           "comment": ""
         },
@@ -4224,6 +4882,16 @@
           "comment": ""
         },
         {
+          "name": "is_watched",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": false,
+          "server_default": null,
+          "comment": ""
+        },
+        {
           "name": "neural_priority",
           "type": "FLOAT",
           "nullable": true,
@@ -4256,6 +4924,26 @@
         {
           "name": "recurrence",
           "type": "VARCHAR(50)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "refused_reason",
+          "type": "taskrefusereason",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "remind_policy",
+          "type": "JSON",
           "nullable": true,
           "primary_key": false,
           "autoincrement": true,

@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 
@@ -98,7 +101,12 @@ async def view_user_profile(
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     profile_ctx = _build_profile_context(access)
     async with WebUserService() as users:
-        profile_user = await users.get_by_id(access.profile.entity_id)
+        result = await users.session.execute(
+            select(WebUser)
+            .options(selectinload(WebUser.telegram_accounts))
+            .where(WebUser.id == access.profile.entity_id)
+        )
+        profile_user = result.scalar_one_or_none()
     context = {
         "current_user": current_user,
         "profile": profile_ctx,

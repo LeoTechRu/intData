@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List, Optional, Sequence
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +11,12 @@ from core import db
 from core.models import (
     Task,
     TaskStatus,
+    TaskControlStatus,
+    TaskRefuseReason,
+    TaskReminder,
+    TaskWatcher,
+    TaskWatcherState,
+    TaskWatcherLeftReason,
     TaskCheckpoint,
     ScheduleException,
     Project,
@@ -18,6 +24,7 @@ from core.models import (
 )
 from core.services.time_service import TimeService
 from sqlalchemy import func
+from core.utils import utcnow
 
 
 class TaskService:
@@ -57,6 +64,13 @@ class TaskService:
         project_id: int | None = None,
         area_id: int | None = None,
         estimate_minutes: int | None = None,
+        remind_policy: dict | None = None,
+        control_enabled: bool = False,
+        control_frequency: int | None = None,
+        control_status: TaskControlStatus | None = None,
+        control_next_at=None,
+        refused_reason: TaskRefuseReason | None = None,
+        is_watched: bool | None = None,
     ) -> Task:
         """Create a new task for the given owner."""
 
@@ -88,6 +102,13 @@ class TaskService:
             project_id=project_id,
             area_id=area_id,
             estimate_minutes=estimate_minutes,
+            remind_policy=remind_policy or {},
+            control_enabled=control_enabled,
+            control_frequency=control_frequency,
+            control_status=control_status or TaskControlStatus.active,
+            control_next_at=control_next_at,
+            refused_reason=refused_reason,
+            is_watched=is_watched if is_watched is not None else False,
         )
         if cognitive_cost:
             task.neural_priority = 1 / cognitive_cost
@@ -147,6 +168,90 @@ class TaskService:
         await self.session.flush()
         return True
 
+    async def set_control_settings(
+        self,
+        task_id: int,
+        *,
+        enabled: bool,
+        frequency_minutes: int | None,
+        next_at,
+        remind_policy: dict | None = None,
+        status: TaskControlStatus | None = None,
+        refused_reason: TaskRefuseReason | None = None,
+    ) -> Task | None:
+        """Adjust control loop configuration for a task."""
+
+        task = await self.session.get(Task, task_id)
+        if task is None:
+            return None
+        task.control_enabled = enabled
+        task.control_frequency = frequency_minutes
+        task.control_next_at = next_at
+        task.remind_policy = remind_policy or {}
+        if enabled:
+            task.control_status = status or TaskControlStatus.active
+            task.refused_reason = None
+        else:
+            task.control_status = status or TaskControlStatus.dropped
+            task.refused_reason = refused_reason
+        await self.session.flush()
+        return task
+
+    async def schedule_reminder(
+        self,
+        task_id: int,
+        owner_id: int,
+        *,
+        trigger_at,
+        kind: str = "custom",
+        frequency_minutes: int | None = None,
+        payload: dict | None = None,
+        is_active: bool = True,
+    ) -> TaskReminder:
+        """Persist reminder configuration for the task owner."""
+
+        task = await self.session.get(Task, task_id)
+        if task is None or task.owner_id != owner_id:
+            raise PermissionError("Task not found or belongs to different owner")
+        reminder = TaskReminder(
+            task_id=task_id,
+            owner_id=owner_id,
+            kind=kind,
+            trigger_at=trigger_at,
+            frequency_minutes=frequency_minutes,
+            payload=payload or {},
+            is_active=is_active,
+        )
+        self.session.add(reminder)
+        await self.session.flush()
+        return reminder
+
+    async def deactivate_reminders(
+        self, task_id: int, *, kind: str | None = None
+    ) -> int:
+        """Mark reminders inactive and return affected count."""
+
+        stmt = select(TaskReminder).where(TaskReminder.task_id == task_id)
+        if kind:
+            stmt = stmt.where(TaskReminder.kind == kind)
+        res = await self.session.execute(stmt)
+        reminders: Sequence[TaskReminder] = res.scalars().all()
+        for reminder in reminders:
+            reminder.is_active = False
+            reminder.updated_at = utcnow()
+        if reminders:
+            await self.session.flush()
+        return len(reminders)
+
+    async def list_reminders(
+        self, task_id: int, *, only_active: bool = True
+    ) -> List[TaskReminder]:
+        stmt = select(TaskReminder).where(TaskReminder.task_id == task_id)
+        if only_active:
+            stmt = stmt.where(TaskReminder.is_active.is_(True))
+        res = await self.session.execute(stmt)
+        return res.scalars().all()
+
     async def mark_done(self, task_id: int) -> Task | None:
         """Mark task as done."""
 
@@ -180,6 +285,88 @@ class TaskService:
         self.session.add(exc)
         await self.session.flush()
         return exc
+
+    async def add_watcher(
+        self,
+        task_id: int,
+        watcher_id: int,
+        *,
+        added_by: int | None = None,
+    ) -> TaskWatcher:
+        """Subscribe watcher to task updates (idempotent)."""
+
+        task = await self.session.get(Task, task_id)
+        if task is None:
+            raise ValueError("Task not found")
+        stmt = select(TaskWatcher).where(
+            TaskWatcher.task_id == task_id,
+            TaskWatcher.watcher_id == watcher_id,
+            TaskWatcher.state == TaskWatcherState.active,
+        )
+        res = await self.session.execute(stmt)
+        existing = res.scalars().first()
+        if existing:
+            return existing
+        watcher = TaskWatcher(
+            task_id=task_id,
+            watcher_id=watcher_id,
+            added_by=added_by,
+            state=TaskWatcherState.active,
+        )
+        self.session.add(watcher)
+        task.is_watched = True
+        await self.session.flush()
+        return watcher
+
+    async def leave_watcher(
+        self,
+        task_id: int,
+        watcher_id: int,
+        *,
+        reason: TaskWatcherLeftReason | None = None,
+    ) -> bool:
+        """Mark watcher as left; returns True if updated."""
+
+        stmt = (
+            select(TaskWatcher)
+            .where(TaskWatcher.task_id == task_id)
+            .where(TaskWatcher.watcher_id == watcher_id)
+            .order_by(TaskWatcher.created_at.desc())
+        )
+        res = await self.session.execute(stmt)
+        watcher = res.scalars().first()
+        if watcher is None or watcher.state == TaskWatcherState.left:
+            return False
+        watcher.state = TaskWatcherState.left
+        watcher.left_reason = reason
+        watcher.left_at = utcnow()
+        watcher.updated_at = utcnow()
+        await self.session.flush()
+        await self._sync_watch_flag(task_id)
+        return True
+
+    async def list_watchers(
+        self, task_id: int, *, only_active: bool = True
+    ) -> List[TaskWatcher]:
+        stmt = select(TaskWatcher).where(TaskWatcher.task_id == task_id)
+        if only_active:
+            stmt = stmt.where(TaskWatcher.state == TaskWatcherState.active)
+        res = await self.session.execute(stmt)
+        return res.scalars().all()
+
+    async def _sync_watch_flag(self, task_id: int) -> None:
+        stmt = (
+            select(func.count())
+            .select_from(TaskWatcher)
+            .where(TaskWatcher.task_id == task_id)
+            .where(TaskWatcher.state == TaskWatcherState.active)
+        )
+        res = await self.session.execute(stmt)
+        count = res.scalar_one()
+        task = await self.session.get(Task, task_id)
+        if task is not None:
+            task.is_watched = bool(count)
+            await self.session.flush()
 
     # --- Time tracking helpers -------------------------------------------------
     async def start_timer(
@@ -226,3 +413,18 @@ class TaskService:
         )
         res = await self.session.execute(stmt)
         return res.scalars().all()
+
+    async def stats_by_owner(self, owner_id: int) -> dict[str, int]:
+        """Return counts of done, active and dropped tasks for owner."""
+
+        stmt = select(Task.status, Task.control_status).where(Task.owner_id == owner_id)
+        res = await self.session.execute(stmt)
+        done = active = dropped = 0
+        for status, control_status in res:
+            if status == TaskStatus.done:
+                done += 1
+            elif control_status == TaskControlStatus.dropped and status != TaskStatus.done:
+                dropped += 1
+            else:
+                active += 1
+        return {"done": done, "active": active, "dropped": dropped}

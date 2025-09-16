@@ -2,6 +2,7 @@ import sqlalchemy as sa
 import pytest
 import pytest_asyncio
 import sqlalchemy as sa
+from datetime import date
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -114,6 +115,48 @@ async def test_habit_and_reward_flow(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_toggle_and_update_habit(client: AsyncClient):
+    await _seed(owner_id=9, tg_id=9, area_id=9)
+    cookies = {"web_user_id": "9", "telegram_id": "9"}
+
+    resp = await client.post(
+        "/api/v1/habits",
+        json={"title": "Morning", "type": "positive", "difficulty": "easy", "area_id": 9},
+        cookies=cookies,
+    )
+    habit_id = resp.json()["id"]
+
+    resp = await client.post(f"/api/v1/habits/{habit_id}/toggle", cookies=cookies)
+    assert resp.status_code == 200
+    today = date.today().isoformat()
+    assert today in resp.json()["progress"]
+
+    resp = await client.get("/api/v1/habits", cookies=cookies)
+    payload = resp.json()
+    assert payload[0]["frequency"] == "daily"
+    assert today in payload[0]["progress"]
+
+    resp = await client.patch(
+        f"/api/v1/habits/{habit_id}",
+        json={"name": "Evening Stretch", "frequency": "weekly"},
+        cookies=cookies,
+    )
+    assert resp.status_code == 200
+
+    resp = await client.get("/api/v1/habits", cookies=cookies)
+    payload = resp.json()[0]
+    assert payload["name"] == "Evening Stretch"
+    assert payload["frequency"] == "weekly"
+    assert today in payload["progress"]
+
+    resp = await client.delete(f"/api/v1/habits/{habit_id}", cookies=cookies)
+    assert resp.status_code == 204
+
+    resp = await client.get("/api/v1/habits", cookies=cookies)
+    assert resp.json() == []
+
+
+@pytest.mark.asyncio
 async def test_daily_and_cron(client: AsyncClient):
     await _seed(owner_id=2, tg_id=2, area_id=2)
     cookies = {"web_user_id": "2", "telegram_id": "2"}
@@ -218,4 +261,3 @@ async def test_habits_auth_and_cooldown(client: AsyncClient):
     data = resp.json().get("detail", {})
     assert data.get("error") == "cooldown"
     assert data.get("retry_after", 0) > 0
-

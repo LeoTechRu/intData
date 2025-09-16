@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Бэкенд задач: таблицы `task_reminders`, `task_watchers`, новые поля контроля (`control_enabled`, `control_frequency`, `control_status`, `control_next_at`, `remind_policy`, `is_watched`) и методы `TaskService` для напоминаний, наблюдателей и статистики бота.
+- Поддержка профилей продуктов (`/products/{slug}`) с каталогом и контролем доступа.
 - Режим настройки ЦУПа с drag-n-drop, скрытием и панелью скрытых виджетов.
 - Личные и глобальные пресеты темы: выбор режима, палитры и градиента через расширенный color picker на странице `/settings`.
 - Обзор модерации Telegram-групп в ЦУП и админском секторе: активные участники, тихие пользователи и задолженности по оплатам.

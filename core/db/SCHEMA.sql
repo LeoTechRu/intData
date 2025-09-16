@@ -149,6 +149,40 @@ CREATE TABLE daily_logs (
 	FOREIGN KEY(daily_id) REFERENCES dailies (id) ON DELETE CASCADE
 );
 
+CREATE TABLE entity_profile_grants (
+	id SERIAL NOT NULL, 
+	profile_id INTEGER NOT NULL, 
+	audience_type VARCHAR(32) NOT NULL, 
+	subject_id BIGINT, 
+	sections JSON, 
+	created_by INTEGER, 
+	expires_at TIMESTAMP WITH TIME ZONE, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(profile_id) REFERENCES entity_profiles (id) ON DELETE CASCADE, 
+	FOREIGN KEY(created_by) REFERENCES users_web (id)
+);
+
+CREATE TABLE entity_profiles (
+	id SERIAL NOT NULL, 
+	entity_type VARCHAR(32) NOT NULL, 
+	entity_id BIGINT NOT NULL, 
+	slug VARCHAR(255) NOT NULL, 
+	display_name VARCHAR(255) NOT NULL, 
+	headline VARCHAR(255), 
+	summary TEXT, 
+	avatar_url VARCHAR(512), 
+	cover_url VARCHAR(512), 
+	tags JSON, 
+	profile_meta JSON, 
+	sections JSON, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	updated_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	CONSTRAINT uq_entity_profiles_entity UNIQUE (entity_type, entity_id), 
+	CONSTRAINT uq_entity_profiles_slug UNIQUE (entity_type, slug)
+);
+
 CREATE TABLE gcal_links (
 	id SERIAL NOT NULL, 
 	owner_id BIGINT, 
@@ -482,6 +516,39 @@ CREATE TABLE task_checkpoints (
 	FOREIGN KEY(task_id) REFERENCES tasks (id)
 );
 
+CREATE TABLE task_reminders (
+	id SERIAL NOT NULL, 
+	task_id INTEGER NOT NULL, 
+	owner_id BIGINT NOT NULL, 
+	kind VARCHAR(32) NOT NULL, 
+	trigger_at TIMESTAMP WITH TIME ZONE NOT NULL, 
+	frequency_minutes INTEGER, 
+	is_active BOOLEAN NOT NULL, 
+	last_triggered_at TIMESTAMP WITH TIME ZONE, 
+	payload JSON, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	updated_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(task_id) REFERENCES tasks (id), 
+	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id)
+);
+
+CREATE TABLE task_watchers (
+	id SERIAL NOT NULL, 
+	task_id INTEGER NOT NULL, 
+	watcher_id BIGINT NOT NULL, 
+	added_by BIGINT, 
+	state taskwatcherstate NOT NULL, 
+	left_reason taskwatcherleftreason, 
+	left_at TIMESTAMP WITH TIME ZONE, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	updated_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(task_id) REFERENCES tasks (id), 
+	FOREIGN KEY(watcher_id) REFERENCES users_tg (telegram_id), 
+	FOREIGN KEY(added_by) REFERENCES users_tg (telegram_id)
+);
+
 CREATE TABLE tasks (
 	id SERIAL NOT NULL, 
 	owner_id BIGINT, 
@@ -497,6 +564,13 @@ CREATE TABLE tasks (
 	custom_properties JSON, 
 	schedule_type VARCHAR(50), 
 	reschedule_count INTEGER, 
+	control_enabled BOOLEAN NOT NULL, 
+	control_frequency INTEGER, 
+	control_status taskcontrolstatus NOT NULL, 
+	control_next_at TIMESTAMP WITH TIME ZONE, 
+	refused_reason taskrefusereason, 
+	remind_policy JSON, 
+	is_watched BOOLEAN NOT NULL, 
 	project_id INTEGER, 
 	area_id INTEGER, 
 	estimate_minutes INTEGER, 
@@ -660,6 +734,10 @@ CREATE TABLE users_web_tg (
 CREATE INDEX ix_group_removal_group_created ON group_removal_log (group_id, created_at);
 
 CREATE INDEX ix_group_removal_product ON group_removal_log (product_id);
+
+CREATE INDEX ix_task_reminders_active ON task_reminders (task_id, trigger_at);
+
+CREATE UNIQUE INDEX ux_task_watchers_active ON task_watchers (task_id, watcher_id) WHERE state = 'active';
 
 CREATE INDEX ix_users_favorites_owner_position ON users_favorites (owner_id, position);
 

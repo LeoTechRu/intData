@@ -120,7 +120,7 @@ class HabitService(CRUDService[Habit]):
             area_id = inbox.id
         return await self.create(
             owner_id=owner_id,
-            name=name,
+            title=name,
             frequency=frequency,
             area_id=area_id,
             project_id=project_id,

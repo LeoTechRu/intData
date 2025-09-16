@@ -100,7 +100,7 @@ async def test_login_nonexistent_user_creates_account(client: AsyncClient):
         follow_redirects=False,
     )
     assert resp.status_code == 303
-    assert resp.headers["location"].startswith("/profile/nope")
+    assert resp.headers["location"].startswith("/users/nope")
 
 
 @pytest.mark.asyncio
@@ -158,7 +158,7 @@ async def test_telegram_registration_flow(client: AsyncClient):
         follow_redirects=False,
     )
     assert resp2.status_code == 303
-    assert resp2.headers["location"].startswith("/profile/reguser")
+    assert resp2.headers["location"].startswith("/users/reguser")
     assert client.cookies.get("web_user_id") is not None
     assert client.cookies.get("telegram_id") == "999"
 
