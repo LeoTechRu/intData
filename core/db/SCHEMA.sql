@@ -149,6 +149,51 @@ CREATE TABLE daily_logs (
 	FOREIGN KEY(daily_id) REFERENCES dailies (id) ON DELETE CASCADE
 );
 
+CREATE TABLE diagnostic_clients (
+	id SERIAL NOT NULL, 
+	user_id INTEGER NOT NULL, 
+	specialist_id INTEGER, 
+	is_new BOOLEAN DEFAULT true NOT NULL, 
+	in_archive BOOLEAN DEFAULT false NOT NULL, 
+	contact_permission BOOLEAN DEFAULT true NOT NULL, 
+	last_result_at TIMESTAMP WITH TIME ZONE, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	updated_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	UNIQUE (user_id), 
+	FOREIGN KEY(user_id) REFERENCES users_web (id) ON DELETE CASCADE, 
+	FOREIGN KEY(specialist_id) REFERENCES users_web (id) ON DELETE SET NULL
+);
+
+CREATE TABLE diagnostic_results (
+	id BIGSERIAL NOT NULL, 
+	client_id INTEGER NOT NULL, 
+	specialist_id INTEGER, 
+	diagnostic_id SMALLINT, 
+	payload JSON DEFAULT '{}'::jsonb NOT NULL, 
+	open_answer TEXT, 
+	submitted_at TIMESTAMP WITH TIME ZONE NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(client_id) REFERENCES diagnostic_clients (id) ON DELETE CASCADE, 
+	FOREIGN KEY(specialist_id) REFERENCES users_web (id) ON DELETE SET NULL, 
+	FOREIGN KEY(diagnostic_id) REFERENCES diagnostic_templates (id)
+);
+
+CREATE TABLE diagnostic_templates (
+	id SMALLSERIAL NOT NULL, 
+	slug VARCHAR(128) NOT NULL, 
+	title VARCHAR(255) NOT NULL, 
+	form_path VARCHAR(255) NOT NULL, 
+	sort_order SMALLINT DEFAULT 0 NOT NULL, 
+	is_active BOOLEAN DEFAULT true NOT NULL, 
+	config JSON DEFAULT '{}'::jsonb NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	updated_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	UNIQUE (slug)
+);
+
 CREATE TABLE entity_profile_grants (
 	id SERIAL NOT NULL, 
 	profile_id INTEGER NOT NULL, 
@@ -265,6 +310,8 @@ CREATE TABLE habits (
 	note TEXT, 
 	type VARCHAR(8) NOT NULL, 
 	difficulty VARCHAR(8) NOT NULL, 
+	frequency VARCHAR(20) NOT NULL, 
+	progress JSON, 
 	up_enabled BOOLEAN, 
 	down_enabled BOOLEAN, 
 	val FLOAT, 
@@ -275,7 +322,7 @@ CREATE TABLE habits (
 	archived_at TIMESTAMP WITH TIME ZONE, 
 	created_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 
-	FOREIGN KEY(owner_id) REFERENCES users_web (id), 
+	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id), 
 	FOREIGN KEY(area_id) REFERENCES areas (id), 
 	FOREIGN KEY(project_id) REFERENCES projects (id)
 );
@@ -713,6 +760,9 @@ CREATE TABLE users_web (
 	privacy_settings JSON, 
 	birthday DATE, 
 	language VARCHAR(10), 
+	diagnostics_enabled BOOLEAN DEFAULT false NOT NULL, 
+	diagnostics_active BOOLEAN DEFAULT true NOT NULL, 
+	diagnostics_available SMALLINT[] DEFAULT '{}'::smallint[] NOT NULL, 
 	created_at TIMESTAMP WITH TIME ZONE, 
 	updated_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 

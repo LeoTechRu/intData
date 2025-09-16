@@ -138,6 +138,7 @@ class WebUser(Base):
         back_populates="user",
         uselist=False,
         cascade="all, delete-orphan",
+        foreign_keys="DiagnosticClient.user_id",
     )
     diagnostics_clients = relationship(
         "DiagnosticClient",

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "dialect": "postgresql",
-  "generated_at": "2025-09-16T14:16:08Z",
-  "metadata_hash": "4866a64090b8bd2770cf81708c17280315d4219f2cd819fc7a99a84d619c9066",
+  "generated_at": "2025-09-16T21:02:37Z",
+  "metadata_hash": "75cc4b5988236cdea38071b5e916772f867dae957507a6d0363db61387400f3b",
   "enums": [
     {
       "name": "activitytype",
@@ -1422,6 +1422,378 @@
       "indexes": [],
       "checks": []
     },
+    "diagnostic_clients": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "contact_permission",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": true,
+          "server_default": "true",
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "in_archive",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": false,
+          "server_default": "false",
+          "comment": ""
+        },
+        {
+          "name": "is_new",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": true,
+          "server_default": "true",
+          "comment": ""
+        },
+        {
+          "name": "last_result_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "specialist_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "user_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "specialist_id"
+          ],
+          "ref_table": "users_web",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "user_id"
+          ],
+          "ref_table": "users_web",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "CASCADE",
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [
+        {
+          "name": null,
+          "columns": [
+            "user_id"
+          ]
+        }
+      ],
+      "indexes": [],
+      "checks": []
+    },
+    "diagnostic_results": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "client_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "diagnostic_id",
+          "type": "SMALLINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "open_answer",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "payload",
+          "type": "JSON",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": "'{}'::jsonb",
+          "comment": ""
+        },
+        {
+          "name": "specialist_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "submitted_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "client_id"
+          ],
+          "ref_table": "diagnostic_clients",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "CASCADE",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "diagnostic_id"
+          ],
+          "ref_table": "diagnostic_templates",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": null,
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "specialist_id"
+          ],
+          "ref_table": "users_web",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "diagnostic_templates": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "config",
+          "type": "JSON",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": "'{}'::jsonb",
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "form_path",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "SMALLINT",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": true,
+          "server_default": "true",
+          "comment": ""
+        },
+        {
+          "name": "slug",
+          "type": "VARCHAR(128)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "sort_order",
+          "type": "SMALLINT",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": 0,
+          "server_default": "0",
+          "comment": ""
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [],
+      "unique_constraints": [
+        {
+          "name": null,
+          "columns": [
+            "slug"
+          ]
+        }
+      ],
+      "indexes": [],
+      "checks": []
+    },
     "entity_profile_grants": {
       "comment": "",
       "columns": [
@@ -2393,7 +2765,7 @@
           "nullable": false,
           "primary_key": false,
           "autoincrement": true,
-          "default": null,
+          "default": "easy",
           "server_default": null,
           "comment": ""
         },
@@ -2404,6 +2776,16 @@
           "primary_key": false,
           "autoincrement": true,
           "default": true,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "frequency",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "daily",
           "server_default": null,
           "comment": ""
         },
@@ -2448,6 +2830,16 @@
           "comment": ""
         },
         {
+          "name": "progress",
+          "type": "JSON",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
           "name": "project_id",
           "type": "INTEGER",
           "nullable": true,
@@ -2483,7 +2875,7 @@
           "nullable": false,
           "primary_key": false,
           "autoincrement": true,
-          "default": null,
+          "default": "positive",
           "server_default": null,
           "comment": ""
         },
@@ -2529,9 +2921,9 @@
           "columns": [
             "owner_id"
           ],
-          "ref_table": "users_web",
+          "ref_table": "users_tg",
           "ref_columns": [
-            "id"
+            "telegram_id"
           ],
           "ondelete": null,
           "onupdate": null
@@ -6089,6 +6481,36 @@
           "autoincrement": true,
           "default": null,
           "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "diagnostics_active",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": true,
+          "server_default": "true",
+          "comment": ""
+        },
+        {
+          "name": "diagnostics_available",
+          "type": "SMALLINT[]",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": "'{}'::smallint[]",
+          "comment": ""
+        },
+        {
+          "name": "diagnostics_enabled",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": false,
+          "server_default": "false",
           "comment": ""
         },
         {
