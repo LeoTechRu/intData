@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from functools import lru_cache
+from pathlib import Path
 
-from fastapi import APIRouter, Request, Depends, status
+from fastapi import APIRouter, Request, Depends, status, HTTPException
+from fastapi.responses import HTMLResponse, FileResponse
 
 from core.models import WebUser, TgUser, TaskStatus
 from core.services.telegram_user_service import TelegramUserService
@@ -16,6 +19,10 @@ from core.utils import utcnow
 from core.utils.habit_utils import calc_progress
 from web.dependencies import get_current_web_user, get_effective_permissions
 from ..template_env import templates
+
+NEXT_build_ROOT = Path(__file__).resolve().parents[1] / ".next"
+NEXT_APP_HTML_DIR = NEXT_build_ROOT / "server" / "app"
+NEXT_STATIC_DIR = NEXT_build_ROOT / "static"
 
 router = APIRouter()
 
@@ -267,3 +274,31 @@ async def index(
     from fastapi.responses import RedirectResponse
 
     return RedirectResponse("/auth", status_code=status.HTTP_302_FOUND)
+
+
+@lru_cache(maxsize=None)
+def _load_next_html(page: str) -> str:
+    html_path = NEXT_APP_HTML_DIR / f"{page}.html"
+    if not html_path.exists():
+        raise HTTPException(status_code=500, detail=f"Next.js page '{page}' отсутствует — запустите npm run build")
+    return html_path.read_text(encoding="utf-8")
+
+
+@router.get("/_next/static/{asset_path:path}", include_in_schema=False, response_class=FileResponse)
+async def next_static(asset_path: str) -> FileResponse:
+    target = NEXT_STATIC_DIR / asset_path
+    if not target.exists() or not target.is_file():
+        raise HTTPException(status_code=404)
+    return FileResponse(target)
+
+
+@router.get("/users", include_in_schema=False, response_class=HTMLResponse)
+@router.get("/users/", include_in_schema=False, response_class=HTMLResponse)
+async def users_directory_page() -> HTMLResponse:
+    return HTMLResponse(_load_next_html("users"))
+
+
+@router.get("/users/{slug}", include_in_schema=False, response_class=HTMLResponse)
+@router.get("/users/{slug}/", include_in_schema=False, response_class=HTMLResponse)
+async def users_profile_page(slug: str) -> HTMLResponse:  # noqa: ARG001 - handled client-side
+    return HTMLResponse(_load_next_html("users"))
