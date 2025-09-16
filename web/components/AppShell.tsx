@@ -174,7 +174,13 @@ export default function AppShell({
                 );
               }
               return (
-                <Link key={key} href={item.href} className={className} aria-current={item.active ? 'page' : undefined}>
+                <Link
+                  key={key}
+                  href={item.href}
+                  className={className}
+                  aria-current={item.active ? 'page' : undefined}
+                  prefetch={false}
+                >
                   {content}
                 </Link>
               );
