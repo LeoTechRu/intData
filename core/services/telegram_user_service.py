@@ -210,6 +210,7 @@ class TelegramUserService:
                             "type": group.type.value if group.type else None,
                             "participants_count": group.participants_count,
                         },
+                        "force_slug": True,
                     },
                 )
             return group
@@ -234,6 +235,7 @@ class TelegramUserService:
                                 "type": group.type.value if group.type else None,
                                 "participants_count": group.participants_count,
                             },
+                            "force_slug": True,
                         },
                     )
                 return group
@@ -473,7 +475,6 @@ class TelegramUserService:
                     entity_type="group",
                     entity_id=group.telegram_id,
                     updates={
-                        "slug": group.slug if hasattr(group, "slug") else normalize_slug(group.title, f"group-{group.telegram_id}"),
                         "display_name": group.title,
                         "summary": group.description,
                     },
