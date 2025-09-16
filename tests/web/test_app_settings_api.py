@@ -61,3 +61,33 @@ async def test_put_validation(client: AsyncClient):
     bad = {"entries": {"ui.persona.single.label.ru": "<bad>"}}
     resp = await client.put('/api/v1/app-settings', json=bad, headers={'Authorization': f'Bearer {admin_id}'})
     assert resp.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_reset_prefix(client: AsyncClient):
+    admin_id = await _create_admin()
+    prefix = 'theme.global.'
+    # set custom value
+    payload = {"entries": {f"{prefix}primary": "#123456"}}
+    resp = await client.put('/api/v1/app-settings', json=payload, headers={'Authorization': f'Bearer {admin_id}'})
+    assert resp.status_code == 200
+    resp_get = await client.get(f'/api/v1/app-settings?prefix={prefix}')
+    assert resp_get.json()['entries'][f'{prefix}primary'] == '#123456'
+
+    # reset back to defaults
+    reset_payload = {"entries": {}, "reset_prefix": prefix}
+    resp_reset = await client.put('/api/v1/app-settings', json=reset_payload, headers={'Authorization': f'Bearer {admin_id}'})
+    assert resp_reset.status_code == 200
+    resp_after = await client.get(f'/api/v1/app-settings?prefix={prefix}')
+    assert f'{prefix}primary' not in resp_after.json()['entries']
+
+
+@pytest.mark.asyncio
+async def test_put_requires_changes(client: AsyncClient):
+    admin_id = await _create_admin()
+    resp = await client.put(
+        '/api/v1/app-settings',
+        json={"entries": {}},
+        headers={'Authorization': f'Bearer {admin_id}'},
+    )
+    assert resp.status_code == 400

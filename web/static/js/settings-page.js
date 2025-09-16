@@ -723,7 +723,9 @@ if (root) {
       setDraftTheme(layer, theme);
       try {
         if (layer === 'global') {
-          const body = form.dataset.reset ? { entries: {} } : { entries: entriesFromTheme(theme) };
+          const body = form.dataset.reset
+            ? { entries: {}, reset_prefix: 'theme.global.' }
+            : { entries: entriesFromTheme(theme) };
           await fetch(`${API_BASE}/app-settings`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },

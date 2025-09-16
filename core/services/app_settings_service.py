@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Dict, Optional
 from uuid import UUID
 
-from sqlalchemy import insert, select, update
+from sqlalchemy import delete, insert, select, update
 
 from core import db
 from core.settings_store import app_settings, metadata
@@ -62,3 +62,14 @@ async def upsert_settings(
                     )
                 await session.execute(stmt)
     logger.info("app_settings updated", extra={"updated_by": updated_by})
+
+
+async def delete_settings_by_prefix(prefix: str) -> None:
+    """Remove settings whose keys start with the given prefix."""
+    await _ensure_table()
+    async with db.async_session() as session:  # type: ignore
+        async with session.begin():
+            await session.execute(
+                delete(app_settings).where(app_settings.c.key.like(f"{prefix}%"))
+            )
+    logger.info("app_settings cleared", extra={"prefix": prefix})

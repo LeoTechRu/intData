@@ -11,7 +11,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel
 
 from core.models import WebUser
-from core.services.app_settings_service import get_settings_by_prefix, upsert_settings
+from core.services.app_settings_service import (
+    delete_settings_by_prefix,
+    get_settings_by_prefix,
+    upsert_settings,
+)
 from web.dependencies import get_current_web_user, role_required
 
 PERSONA_DEFAULTS: Dict[str, str] = {
@@ -38,7 +42,8 @@ router = APIRouter(prefix="/app-settings", tags=["app-settings"])
 
 
 class SettingsIn(BaseModel):
-    entries: Dict[str, str]
+    entries: Dict[str, str] | None = None
+    reset_prefix: str | None = None
 
 
 def _apply_defaults(prefix: str, entries: Dict[str, str]) -> Dict[str, str]:
@@ -72,7 +77,11 @@ async def api_put_settings(
     current_user: WebUser = Depends(get_current_web_user),
 ):
     link_re = re.compile(r"\[[^\]]+\]\((https?://[^)]+)\)")
-    for key, value in payload.entries.items():
+    entries = payload.entries or {}
+    reset_prefix = payload.reset_prefix
+    if not entries and not reset_prefix:
+        raise HTTPException(status_code=400, detail="No changes supplied")
+    for key, value in entries.items():
         if "<" in value or ">" in value or "javascript:" in value.lower():
             raise HTTPException(status_code=400, detail="HTML not allowed")
         if ".label." in key:
@@ -92,5 +101,8 @@ async def api_put_settings(
             updated_by = UUID(int=current_user.id)
         except Exception:
             updated_by = None
-    await upsert_settings(payload.entries, updated_by)
+    if reset_prefix:
+        await delete_settings_by_prefix(reset_prefix)
+    if entries:
+        await upsert_settings(entries, updated_by)
     return {"ok": True}

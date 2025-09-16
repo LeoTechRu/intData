@@ -2128,16 +2128,31 @@
       "SettingsIn": {
         "properties": {
           "entries": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "title": "Entries",
-            "type": "object"
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entries"
+          },
+          "reset_prefix": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reset Prefix"
           }
         },
-        "required": [
-          "entries"
-        ],
         "title": "SettingsIn",
         "type": "object"
       },
