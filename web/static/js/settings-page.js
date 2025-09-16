@@ -21,6 +21,10 @@ if (root) {
     themeUserDraft: {},
     themeGlobalSaved: {},
     themeGlobalDraft: {},
+    areas: [],
+    areasLoading: false,
+    areasError: null,
+    selectedAreaId: null,
   };
 
   const forms = {
@@ -31,6 +35,28 @@ if (root) {
     branding: document.getElementById('branding-form'),
     telegram: document.getElementById('telegram-form'),
   };
+
+  const areasUI = {
+    root: root.querySelector('[data-areas-root]'),
+  };
+
+  if (areasUI.root) {
+    areasUI.tree = areasUI.root.querySelector('[data-areas-tree]');
+    areasUI.skeleton = areasUI.root.querySelector('[data-areas-skeleton]');
+    areasUI.empty = areasUI.root.querySelector('[data-areas-empty]');
+    areasUI.status = areasUI.root.querySelector('[data-areas-status]');
+    areasUI.createForm = areasUI.root.querySelector('[data-areas-create]');
+    areasUI.createParent = areasUI.root.querySelector('[data-areas-parent]');
+    areasUI.detail = areasUI.root.querySelector('[data-areas-detail]');
+    areasUI.detailPanel = areasUI.root.querySelector('[data-areas-detail-panel]');
+    areasUI.detailForm = areasUI.root.querySelector('[data-areas-detail-form]');
+    areasUI.detailName = areasUI.root.querySelector('[data-areas-detail-name]');
+    areasUI.detailPath = areasUI.root.querySelector('[data-areas-detail-path]');
+    areasUI.detailParent = areasUI.root.querySelector('[data-areas-detail-parent]');
+    areasUI.detailMeta = areasUI.root.querySelector('[data-areas-detail-meta]');
+    areasUI.detailEmpty = areasUI.root.querySelector('[data-areas-detail-empty]');
+    areasUI.detailCancel = areasUI.root.querySelector('[data-areas-detail-cancel]');
+  }
 
   function feedback(container, message, type = 'success') {
     if (!container) return;
