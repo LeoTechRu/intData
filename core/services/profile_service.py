@@ -310,6 +310,13 @@ class ProfileService:
             return True
         if profile.entity_type == "area" and profile.entity_id in context.area_ids:
             return True
+        if profile.entity_type == "resource" and context.telegram_ids:
+            try:
+                owner_id = (profile.profile_meta or {}).get("owner_id")
+                if owner_id and owner_id in context.telegram_ids:
+                    return True
+            except AttributeError:
+                pass
         return False
 
     def _grants_for_viewer(
