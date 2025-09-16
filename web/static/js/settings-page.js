@@ -78,6 +78,403 @@ if (root) {
     }, 4000);
   }
 
+  function setFormDisabled(form, disabled) {
+    if (!form) return;
+    Array.from(form.elements || []).forEach((el) => {
+      if (el && typeof el.disabled === 'boolean') {
+        // eslint-disable-next-line no-param-reassign
+        el.disabled = disabled;
+      }
+    });
+    if (disabled) {
+      form.setAttribute('aria-disabled', 'true');
+    } else {
+      form.removeAttribute('aria-disabled');
+    }
+  }
+
+  function sortAreas(items) {
+    return [...items].sort((a, b) => {
+      const left = (a.mp_path || '').toLowerCase();
+      const right = (b.mp_path || '').toLowerCase();
+      return left.localeCompare(right);
+    });
+  }
+
+  function getAreaById(id) {
+    return state.areas.find((area) => area.id === id) || null;
+  }
+
+  function buildAreaTrail(area) {
+    if (!area) return [];
+    const map = new Map(state.areas.map((item) => [item.id, item]));
+    const trail = [];
+    let current = area;
+    while (current) {
+      trail.push(current);
+      current = current.parent_id ? map.get(current.parent_id) : null;
+    }
+    return trail.reverse();
+  }
+
+  function isDescendant(candidate, ancestor) {
+    const ancestorArea = typeof ancestor === 'object' ? ancestor : getAreaById(Number(ancestor));
+    if (!ancestorArea || !candidate) return false;
+    if (candidate.id === ancestorArea.id) return false;
+    const prefix = ancestorArea.mp_path || '';
+    if (!prefix) return false;
+    const path = candidate.mp_path || '';
+    return path.startsWith(prefix);
+  }
+
+  function renderParentSelect(select, { excludeAreaId = null, defaultValue } = {}) {
+    if (!select) return;
+    const previous = select.value;
+    const sorted = sortAreas(state.areas);
+    select.innerHTML = '';
+    const noneOption = document.createElement('option');
+    noneOption.value = '';
+    noneOption.textContent = 'Верхний уровень';
+    select.appendChild(noneOption);
+    const excluded = excludeAreaId ? getAreaById(excludeAreaId) : null;
+    sorted.forEach((area) => {
+      if (excludeAreaId && (area.id === excludeAreaId || isDescendant(area, excluded))) {
+        return;
+      }
+      const option = document.createElement('option');
+      option.value = String(area.id);
+      option.textContent = `${'— '.repeat(area.depth || 0)}${area.name}`;
+      select.appendChild(option);
+    });
+    if (defaultValue !== undefined && defaultValue !== null) {
+      select.value = String(defaultValue);
+    } else if (defaultValue === null) {
+      select.value = '';
+    } else if (previous) {
+      select.value = previous;
+    }
+    if (!select.value && excludeAreaId === null && state.selectedAreaId) {
+      const exists = sorted.some((item) => String(item.id) === String(state.selectedAreaId));
+      if (exists) {
+        select.value = String(state.selectedAreaId);
+      }
+    }
+  }
+
+  function renderAreasStatus() {
+    if (!areasUI.status) return;
+    areasUI.status.textContent = '';
+    areasUI.status.dataset.type = '';
+    if (state.areasError === 'unauthorized') {
+      areasUI.status.dataset.type = 'info';
+      areasUI.status.innerHTML = 'Подключите Telegram-аккаунт, чтобы управлять областями из веб-интерфейса. Бот: <a href="https://intdata.pro/bot" target="_blank" rel="noopener">@intDataBot</a>.';
+    } else if (state.areasError === 'network') {
+      areasUI.status.dataset.type = 'error';
+      areasUI.status.textContent = 'Не удалось загрузить области. Проверьте соединение и повторите попытку.';
+    }
+  }
+
+  function renderAreasTree() {
+    if (!areasUI.tree) return;
+    areasUI.tree.innerHTML = '';
+    if (!state.areas.length || state.areasLoading || state.areasError) {
+      areasUI.tree.setAttribute('aria-activedescendant', '');
+      return;
+    }
+    const sorted = sortAreas(state.areas);
+    sorted.forEach((area) => {
+      const li = document.createElement('li');
+      li.className = 'areas-tree__item';
+      li.dataset.areaId = String(area.id);
+      li.setAttribute('role', 'treeitem');
+      li.setAttribute('aria-level', String((area.depth || 0) + 1));
+      const isSelected = state.selectedAreaId === area.id;
+      li.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `areas-node__button${isSelected ? ' areas-node__button--selected' : ''}`;
+      button.dataset.areaId = String(area.id);
+      button.id = `area-node-${area.id}`;
+      const color = document.createElement('span');
+      color.className = 'areas-node__color';
+      color.style.backgroundColor = area.color || '#F1F5F9';
+      button.appendChild(color);
+      const label = document.createElement('span');
+      label.className = 'areas-node__label';
+      label.textContent = area.name;
+      button.appendChild(label);
+      const meta = document.createElement('span');
+      meta.className = 'areas-node__meta';
+      meta.textContent = area.mp_path ? area.mp_path.replace(/\.$/, '') : '';
+      button.appendChild(meta);
+      li.appendChild(button);
+      areasUI.tree.appendChild(li);
+      if (isSelected) {
+        areasUI.tree.setAttribute('aria-activedescendant', button.id);
+      }
+    });
+  }
+
+  function renderAreasDetail() {
+    if (!areasUI.detail) return;
+    const area = getAreaById(state.selectedAreaId);
+    const hasArea = Boolean(area);
+    if (!areasUI.detailEmpty || !areasUI.detailPanel) return;
+    areasUI.detail.dataset.state = hasArea ? 'selected' : 'empty';
+    areasUI.detailEmpty.hidden = !!hasArea;
+    areasUI.detailPanel.hidden = !hasArea;
+    if (!hasArea) {
+      if (areasUI.detailForm) {
+        areasUI.detailForm.reset();
+      }
+      return;
+    }
+    const trail = buildAreaTrail(area);
+    if (areasUI.detailName) {
+      areasUI.detailName.textContent = area.name;
+    }
+    if (areasUI.detailPath) {
+      areasUI.detailPath.textContent = trail.map((item) => item.name).join(' → ');
+    }
+    if (areasUI.detailForm) {
+      const nameField = areasUI.detailForm.querySelector('input[name="name"]');
+      if (nameField) {
+        nameField.value = area.name;
+      }
+      renderParentSelect(areasUI.detailParent, { excludeAreaId: area.id, defaultValue: area.parent_id ?? '' });
+    }
+    if (areasUI.detailMeta) {
+      areasUI.detailMeta.textContent = `ID: ${area.id} • slug: ${area.slug || '—'}`;
+    }
+  }
+
+  function renderAreas() {
+    if (!areasUI.root) return;
+    if (areasUI.skeleton) {
+      areasUI.skeleton.hidden = !state.areasLoading;
+    }
+    if (areasUI.tree) {
+      areasUI.tree.hidden = Boolean(state.areasLoading || state.areasError);
+    }
+    const lockForms = state.areasError === 'unauthorized';
+    if (areasUI.createForm) {
+      setFormDisabled(areasUI.createForm, lockForms);
+    }
+    if (areasUI.detailForm) {
+      setFormDisabled(areasUI.detailForm, lockForms);
+    }
+    if (areasUI.empty) {
+      areasUI.empty.hidden = !(!state.areasLoading && !state.areasError && state.areas.length === 0);
+    }
+    renderAreasStatus();
+    if (!state.areas.length && !state.areasLoading && !state.areasError) {
+      state.selectedAreaId = null;
+    } else if (state.selectedAreaId) {
+      const exists = state.areas.some((item) => item.id === state.selectedAreaId);
+      if (!exists) {
+        state.selectedAreaId = state.areas.length ? state.areas[0].id : null;
+      }
+    } else if (state.areas.length) {
+      state.selectedAreaId = state.areas[0].id;
+    }
+    renderParentSelect(areasUI.createParent, { defaultValue: state.selectedAreaId ?? '' });
+    renderAreasTree();
+    renderAreasDetail();
+  }
+
+  async function fetchAreas(selectAfterId) {
+    if (!areasUI.root) return;
+    state.areasLoading = true;
+    renderAreas();
+    try {
+      const resp = await fetch(`${API_BASE}/areas`, { credentials: 'include' });
+      if (resp.status === 401) {
+        state.areas = [];
+        state.selectedAreaId = null;
+        state.areasError = 'unauthorized';
+        return;
+      }
+      if (!resp.ok) {
+        throw new Error('Failed to load areas');
+      }
+      const data = await resp.json();
+      state.areasError = null;
+      state.areas = Array.isArray(data) ? data : [];
+      if (selectAfterId) {
+        const exists = state.areas.some((item) => item.id === selectAfterId);
+        state.selectedAreaId = exists ? selectAfterId : state.selectedAreaId;
+      }
+    } catch (err) {
+      state.areas = [];
+      state.selectedAreaId = null;
+      state.areasError = 'network';
+    } finally {
+      state.areasLoading = false;
+      renderAreas();
+    }
+  }
+
+  function handleTreeSelection(event) {
+    const target = event.target.closest('[data-area-id]');
+    if (!target) return;
+    const id = Number.parseInt(target.dataset.areaId, 10);
+    if (Number.isNaN(id)) return;
+    state.selectedAreaId = id;
+    renderAreasTree();
+    renderAreasDetail();
+    const nameField = areasUI.detailForm?.querySelector('input[name="name"]');
+    if (nameField) {
+      nameField.focus({ preventScroll: false });
+    }
+  }
+
+  function handleTreeKeydown(event) {
+    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+    if (!state.areas.length) return;
+    event.preventDefault();
+    const sorted = sortAreas(state.areas);
+    const currentIndex = sorted.findIndex((item) => item.id === state.selectedAreaId);
+    let nextIndex = currentIndex;
+    if (event.key === 'ArrowDown') {
+      nextIndex = currentIndex < sorted.length - 1 ? currentIndex + 1 : 0;
+    } else if (event.key === 'ArrowUp') {
+      nextIndex = currentIndex > 0 ? currentIndex - 1 : sorted.length - 1;
+    } else if (event.key === 'Home') {
+      nextIndex = 0;
+    } else if (event.key === 'End') {
+      nextIndex = sorted.length - 1;
+    }
+    const nextArea = sorted[nextIndex];
+    if (nextArea) {
+      state.selectedAreaId = nextArea.id;
+      renderAreasTree();
+      renderAreasDetail();
+      const button = areasUI.tree?.querySelector(`[data-area-id="${nextArea.id}"]`);
+      if (button) button.focus({ preventScroll: false });
+    }
+  }
+
+  async function handleCreateAreaSubmit(event) {
+    event.preventDefault();
+    if (!areasUI.createForm) return;
+    const fd = new FormData(areasUI.createForm);
+    const name = (fd.get('name') || '').toString().trim();
+    if (!name) {
+      feedback(areasUI.createForm, 'Название обязательно.', 'error');
+      return;
+    }
+    const colorRaw = (fd.get('color') || '').toString().trim();
+    const parentRaw = (fd.get('parent_id') || '').toString().trim();
+    const payload = {
+      name,
+      color: colorRaw || null,
+      parent_id: parentRaw ? Number(parentRaw) : null,
+    };
+    try {
+      setFormDisabled(areasUI.createForm, true);
+      const resp = await fetch(`${API_BASE}/areas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+      if (!resp.ok) {
+        const error = await resp.json().catch(() => ({}));
+        throw new Error(error.detail || 'Не удалось создать область');
+      }
+      const data = await resp.json();
+      areasUI.createForm.reset();
+      areasUI.createForm.querySelector('input[name="color"]').value = '#F1F5F9';
+      feedback(areasUI.createForm, 'Область создана.');
+      await fetchAreas(data?.id);
+    } catch (err) {
+      feedback(areasUI.createForm, err.message || 'Не удалось создать область.', 'error');
+    } finally {
+      setFormDisabled(areasUI.createForm, false);
+    }
+  }
+
+  async function handleDetailSubmit(event) {
+    event.preventDefault();
+    if (!areasUI.detailForm) return;
+    const area = getAreaById(state.selectedAreaId);
+    if (!area) {
+      feedback(areasUI.detailForm, 'Выберите область для редактирования.', 'error');
+      return;
+    }
+    const fd = new FormData(areasUI.detailForm);
+    const newName = (fd.get('name') || '').toString().trim();
+    const parentRaw = (fd.get('parent_id') || '').toString().trim();
+    const nextParent = parentRaw ? Number(parentRaw) : null;
+    const ops = [];
+    try {
+      setFormDisabled(areasUI.detailForm, true);
+      if (newName && newName !== area.name) {
+        const resp = await fetch(`${API_BASE}/areas/${area.id}/rename`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ name: newName }),
+        });
+        if (!resp.ok) {
+          const error = await resp.json().catch(() => ({}));
+          throw new Error(error.detail || 'Не удалось переименовать область');
+        }
+        ops.push('rename');
+      }
+      const currentParent = area.parent_id ?? null;
+      if (nextParent !== currentParent) {
+        const resp = await fetch(`${API_BASE}/areas/${area.id}/move`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ new_parent_id: nextParent }),
+        });
+        if (!resp.ok) {
+          const error = await resp.json().catch(() => ({}));
+          throw new Error(error.detail || 'Не удалось переместить область');
+        }
+        ops.push('move');
+      }
+      if (!ops.length) {
+        feedback(areasUI.detailForm, 'Изменений не обнаружено.');
+        return;
+      }
+      await fetchAreas(area.id);
+      feedback(areasUI.detailForm, 'Изменения сохранены.');
+    } catch (err) {
+      feedback(areasUI.detailForm, err.message || 'Не удалось обновить область.', 'error');
+    } finally {
+      setFormDisabled(areasUI.detailForm, false);
+    }
+  }
+
+  function handleDetailCancel(event) {
+    event.preventDefault();
+    renderAreasDetail();
+    if (areasUI.detailForm) {
+      feedback(areasUI.detailForm, 'Изменения отменены.');
+    }
+  }
+
+  function initAreasSection() {
+    if (!areasUI.root) return;
+    if (areasUI.createForm) {
+      areasUI.createForm.addEventListener('submit', handleCreateAreaSubmit);
+    }
+    if (areasUI.detailForm) {
+      areasUI.detailForm.addEventListener('submit', handleDetailSubmit);
+    }
+    if (areasUI.detailCancel) {
+      areasUI.detailCancel.addEventListener('click', handleDetailCancel);
+    }
+    if (areasUI.tree) {
+      areasUI.tree.addEventListener('click', handleTreeSelection);
+      areasUI.tree.addEventListener('keydown', handleTreeKeydown);
+    }
+    fetchAreas();
+  }
+
   function parseSettingsResponse(data) {
     state.favorites = data.favorites || { v: 1, items: [] };
     state.layout = data.dashboard_layout || state.layout;
@@ -518,6 +915,7 @@ if (root) {
   }
 
   (async function init() {
+    initAreasSection();
     await fetchUserSettings();
     if (isAdmin) {
       await fetchGlobalTheme();
