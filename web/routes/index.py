@@ -258,7 +258,6 @@ async def index(
                         "admin_anchor_id": "cup-admin-tools",
                         "admin_heading_description": (
                             "Админские утилиты доступны только вам. "
-                            "Ниже собраны инструменты из прежнего раздела /admin."
                         ),
                         "admin_iframe_src": "/cup/admin-embed",
                     }
