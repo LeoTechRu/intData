@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 import secrets
 import hashlib
 
 from aiogram import Bot
+from aiogram.enums import ChatMemberStatus
+from aiogram.exceptions import TelegramBadRequest
+from aiogram.types import ChatMember, User
 from sqlalchemy import select, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -231,25 +234,60 @@ class TelegramUserService:
         )
         return result.scalar_one_or_none() is not None
 
-    async def add_user_to_group(
-        self, user_id: int, group_id: int, is_moderator: bool = False
-    ) -> Tuple[bool, str]:
-        if await self.is_user_in_group(user_id, group_id):
-            return False, "Вы уже состоите в этой группе"
-        try:
-            link = UserGroup(
-                user_id=user_id, group_id=group_id, is_moderator=is_moderator
-            )
-            self.session.add(link)
-            await self.session.flush()
+    async def upsert_user_group_link(
+        self,
+        user_id: int,
+        group_id: int,
+        *,
+        is_owner: bool = False,
+        is_moderator: bool = False,
+    ) -> Tuple[UserGroup, bool]:
+        """Ensure ``UserGroup`` link exists and reflect moderator/owner flags."""
 
-            result = await self.session.execute(
-                select(Group).where(Group.telegram_id == group_id)
+        link = await self.session.get(UserGroup, (user_id, group_id))
+        target_is_moderator = is_owner or is_moderator
+        if link:
+            changed = False
+            if is_owner and not link.is_owner:
+                link.is_owner = True
+                changed = True
+            if link.is_moderator != target_is_moderator:
+                link.is_moderator = target_is_moderator
+                changed = True
+            return link, False
+
+        link = UserGroup(
+            user_id=user_id,
+            group_id=group_id,
+            is_owner=is_owner,
+            is_moderator=target_is_moderator,
+        )
+        self.session.add(link)
+
+        group = await self.get_group_by_telegram_id(group_id)
+        if group:
+            current = group.participants_count or 0
+            group.participants_count = current + 1
+        await self.session.flush()
+        return link, True
+
+    async def add_user_to_group(
+        self,
+        user_id: int,
+        group_id: int,
+        is_moderator: bool = False,
+        *,
+        is_owner: bool = False,
+    ) -> Tuple[bool, str]:
+        try:
+            _, created = await self.upsert_user_group_link(
+                user_id,
+                group_id,
+                is_owner=is_owner,
+                is_moderator=is_moderator,
             )
-            group = result.scalar_one_or_none()
-            if group:
-                group.participants_count += 1
-                await self.session.flush()
+            if not created:
+                return False, "Вы уже состоите в этой группе"
             return True, "Вы успешно добавлены в группу"
         except Exception as e:
             logger.error(f"Ошибка добавления в группу: {e}")
@@ -280,6 +318,113 @@ class TelegramUserService:
             group.participants_count -= 1
         await self.session.flush()
         return True
+
+    async def sync_group_members_from_bot(
+        self,
+        *,
+        bot: Bot,
+        chat_id: int,
+        chat_title: Optional[str] = None,
+        chat_type: Optional[str] = None,
+        extra_users: Sequence[User] | None = None,
+    ) -> int:
+        """Fetch available roster information from Bot API and persist it."""
+
+        extra_users = extra_users or []
+
+        group_kwargs: Dict[str, Any] = {}
+        if chat_title:
+            group_kwargs["title"] = chat_title
+        if chat_type:
+            try:
+                group_kwargs["type"] = GroupType(chat_type)
+            except ValueError:
+                logger.debug("Unknown group type %s when syncing", chat_type)
+        if extra_users:
+            group_kwargs.setdefault("owner_id", extra_users[0].id)
+
+        group, created = await self.get_or_create_group(chat_id, **group_kwargs)
+        if not created:
+            updated = False
+            if chat_title and group.title != chat_title:
+                group.title = chat_title
+                updated = True
+            if chat_type:
+                try:
+                    group_type = GroupType(chat_type)
+                    if group.type != group_type:
+                        group.type = group_type
+                        updated = True
+                except ValueError:
+                    pass
+            if updated:
+                await self.session.flush()
+
+        members: Sequence[ChatMember] = []
+        try:
+            members = await bot.get_chat_administrators(chat_id)
+        except TelegramBadRequest as exc:
+            logger.debug("Failed to fetch administrators for %s: %s", chat_id, exc)
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.warning("Unexpected error fetching admins for %s: %s", chat_id, exc)
+
+        processed = 0
+        seen_ids: Set[int] = set()
+        admin_statuses = {
+            ChatMemberStatus.ADMINISTRATOR,
+            ChatMemberStatus.CREATOR,
+        }
+
+        for member in members:
+            user_obj = member.user
+            if user_obj.is_bot:
+                continue
+            tg_user = await self.update_from_telegram(
+                telegram_id=user_obj.id,
+                username=user_obj.username,
+                first_name=user_obj.first_name,
+                last_name=user_obj.last_name,
+                language_code=user_obj.language_code,
+            )
+            is_owner = member.status == ChatMemberStatus.CREATOR
+            is_moderator = member.status in admin_statuses
+            await self.upsert_user_group_link(
+                tg_user.telegram_id,
+                chat_id,
+                is_owner=is_owner,
+                is_moderator=is_moderator,
+            )
+            seen_ids.add(tg_user.telegram_id)
+            processed += 1
+
+        for user_obj in extra_users:
+            if user_obj.is_bot or user_obj.id in seen_ids:
+                continue
+            tg_user = await self.update_from_telegram(
+                telegram_id=user_obj.id,
+                username=user_obj.username,
+                first_name=user_obj.first_name,
+                last_name=user_obj.last_name,
+                language_code=user_obj.language_code,
+            )
+            await self.upsert_user_group_link(tg_user.telegram_id, chat_id)
+            seen_ids.add(tg_user.telegram_id)
+            processed += 1
+
+        try:
+            count = await bot.get_chat_member_count(chat_id)
+        except TelegramBadRequest:
+            count = None
+        except Exception as exc:  # pragma: no cover - defensive logging
+            logger.warning("Failed to fetch member count for %s: %s", chat_id, exc)
+            count = None
+
+        if count is not None:
+            group = await self.get_group_by_telegram_id(chat_id)
+            if group:
+                group.participants_count = count
+
+        return processed
 
     async def update_group_description(self, group_id: int, description: str) -> bool:
         """Update group's description."""

@@ -1,14 +1,21 @@
 import pytest
 import pytest_asyncio
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+
+from aiogram.types import (
+    ChatMemberAdministrator,
+    ChatMemberOwner,
+    User as AiogramUser,
+)
 
 from base import Base
 from core.services.telegram_user_service import TelegramUserService
 from core.services.web_user_service import WebUserService
 from core.services.crm_service import CRMService
 from core.services.group_moderation_service import GroupModerationService
-from core.models import WebUser, GroupType, ProductStatus
+from core.models import WebUser, GroupType, ProductStatus, UserGroup
 
 
 @pytest_asyncio.fixture
@@ -154,3 +161,75 @@ async def test_group_crm_flow(session):
         group_ids=[group.telegram_id], since_days=30
     )
     assert overview and overview[0]["members_total"] == 2
+
+
+@pytest.mark.asyncio
+async def test_sync_group_members_from_bot(session):
+    tsvc = TelegramUserService(session)
+
+    owner_member = ChatMemberOwner.model_validate(
+        {
+            "status": "creator",
+            "user": {"id": 42, "is_bot": False, "first_name": "Owner"},
+            "is_anonymous": False,
+        }
+    )
+    admin_member = ChatMemberAdministrator.model_validate(
+        {
+            "status": "administrator",
+            "user": {"id": 52, "is_bot": False, "first_name": "Mod"},
+            "can_be_edited": False,
+            "is_anonymous": False,
+            "can_manage_chat": True,
+            "can_delete_messages": True,
+            "can_manage_video_chats": True,
+            "can_restrict_members": True,
+            "can_promote_members": False,
+            "can_change_info": True,
+            "can_invite_users": True,
+            "can_post_stories": False,
+            "can_edit_stories": False,
+            "can_delete_stories": False,
+        }
+    )
+
+    class DummyBot:
+        def __init__(self, admins, count):
+            self._admins = admins
+            self._count = count
+
+        async def get_chat_administrators(self, chat_id):
+            return self._admins
+
+        async def get_chat_member_count(self, chat_id):
+            return self._count
+
+    extra_user = AiogramUser.model_validate(
+        {"id": 99, "is_bot": False, "first_name": "Member"}
+    )
+    bot = DummyBot([owner_member, admin_member], count=3)
+    chat_id = -7001
+
+    await tsvc.sync_group_members_from_bot(
+        bot=bot,
+        chat_id=chat_id,
+        chat_title="Test Group",
+        chat_type="supergroup",
+        extra_users=[extra_user],
+    )
+
+    group = await tsvc.get_group_by_telegram_id(chat_id)
+    assert group is not None
+    assert group.title == "Test Group"
+    assert group.participants_count == 3
+
+    members = await tsvc.get_group_members(chat_id)
+    assert {m.telegram_id for m in members} == {42, 52, 99}
+
+    link_rows = await session.execute(
+        select(UserGroup).where(UserGroup.group_id == chat_id)
+    )
+    links = {link.user_id: link for link in link_rows.scalars()}
+    assert links[42].is_owner is True
+    assert links[52].is_moderator is True and links[52].is_owner is False
+    assert links[99].is_moderator is False

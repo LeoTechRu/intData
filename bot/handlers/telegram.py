@@ -2,13 +2,21 @@
 import re
 
 from aiogram import Router, F
+from aiogram.enums import ChatMemberStatus
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command
-from aiogram.types import Message
+from aiogram.types import (
+    Chat,
+    ChatMemberUpdated,
+    Message,
+    User as AiogramUser,
+)
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from datetime import datetime, date, timedelta, timezone
-from typing import Callable, Optional, Tuple, List
+from typing import Callable, Optional, Tuple, List, Set
 from decorators import role_required, group_required
+from core.db import bot as telegram_bot
 from core.models import GroupType, LogLevel, UserRole, ProductStatus, TgUser
 from core.services.telegram_user_service import TelegramUserService
 from core.services.crm_service import CRMService
@@ -64,6 +72,41 @@ async def _resolve_target_user(
     if identifier.isdigit():
         return await service.get_user_by_telegram_id(int(identifier))
     return None
+
+
+async def _sync_group_roster(
+    chat: Chat,
+    *,
+    actor: Optional[AiogramUser] = None,
+    extras: Optional[List[AiogramUser]] = None,
+) -> None:
+    if chat.type not in GROUP_CHAT_TYPES:
+        return
+
+    unique: List[AiogramUser] = []
+    seen: Set[int] = set()
+    candidates: List[AiogramUser] = []
+    if actor:
+        candidates.append(actor)
+    if extras:
+        candidates.extend(extras)
+
+    for user in candidates:
+        if not user or user.is_bot:
+            continue
+        if user.id in seen:
+            continue
+        seen.add(user.id)
+        unique.append(user)
+
+    async with TelegramUserService() as service:
+        await service.sync_group_members_from_bot(
+            bot=telegram_bot,
+            chat_id=chat.id,
+            chat_title=chat.title,
+            chat_type=chat.type,
+            extra_users=unique or None,
+        )
 
 # -----------------------------
 # Универсальные функции
@@ -461,51 +504,31 @@ async def process_birthday_input(message: Message, state: FSMContext):
 async def cmd_group(message: Message):
     subcommand, remainder = _parse_group_subcommand(message)
     if subcommand == "audit":
+        await _sync_group_roster(
+            message.chat,
+            actor=message.from_user,
+        )
         await handle_group_audit(message, remainder)
         return
     if subcommand == "mark":
+        await _sync_group_roster(
+            message.chat,
+            actor=message.from_user,
+        )
         await handle_group_mark(message, remainder)
         return
     if subcommand == "note":
+        await _sync_group_roster(
+            message.chat,
+            actor=message.from_user,
+        )
         await handle_group_note(message, remainder)
         return
-
-    async with TelegramUserService() as user_service:
-        chat = message.chat
-        chat_title = chat.title or f"{message.from_user.first_name} группа"
-        group = await user_service.get_group_by_telegram_id(chat.id)
-        if not group:
-            group = await user_service.create_group(
-                telegram_id=chat.id,
-                title=chat.title or chat_title,
-                type=GroupType(chat.type.lower()),
-                owner_id=message.from_user.id
-            )
-            await message.answer(f"Группа '{chat_title}' добавлена в БД. Вы — её создатель.")
-            return
-        is_member = await user_service.is_user_in_group(message.from_user.id, chat.id)
-        if not is_member:
-            success, response = await user_service.add_user_to_group(message.from_user.id, chat.id)
-            await message.answer(response if success else f"Ошибка: {response}")
-            return
-        members = await user_service.get_group_members(chat.id)
-        if members:
-            member_list = "\n".join(
-                [
-                    (
-                        m.bot_settings.get("full_display_name")
-                        if isinstance(m.bot_settings, dict)
-                        and m.bot_settings.get("full_display_name")
-                        else f"{m.first_name} {m.last_name or ''}".strip()
-                    )
-                    for m in members
-                ]
-            )
-            await message.answer(
-                f"Участники группы '{chat_title}':\n{member_list}"
-            )
-        else:
-            await message.answer("Группа пока пуста.")
+    await _sync_group_roster(
+        message.chat,
+        actor=message.from_user,
+    )
+    await handle_group_audit(message, remainder)
 
 
 async def handle_group_audit(message: Message, remainder: str) -> None:
@@ -613,6 +636,52 @@ async def handle_group_audit(message: Message, remainder: str) -> None:
     lines.append("Полный контроль и массовое управление доступны на https://intdata.pro/groups")
     await message.answer("\n".join(lines))
 
+
+@group_router.my_chat_member()
+async def handle_bot_membership(update: ChatMemberUpdated) -> None:
+    if update.chat.type not in GROUP_CHAT_TYPES:
+        return
+
+    new_status = update.new_chat_member.status
+    if new_status not in {ChatMemberStatus.MEMBER, ChatMemberStatus.ADMINISTRATOR}:
+        return
+
+    extras: List[AiogramUser] = []
+    if update.from_user:
+        extras.append(update.from_user)
+    await _sync_group_roster(update.chat, extras=extras)
+
+
+@group_router.chat_member()
+async def handle_member_updates(update: ChatMemberUpdated) -> None:
+    if update.chat.type not in GROUP_CHAT_TYPES:
+        return
+
+    status = update.new_chat_member.status
+    if status in {
+        ChatMemberStatus.MEMBER,
+        ChatMemberStatus.ADMINISTRATOR,
+        ChatMemberStatus.CREATOR,
+    }:
+        extras: List[AiogramUser] = [update.new_chat_member.user]
+        if update.from_user:
+            extras.append(update.from_user)
+        await _sync_group_roster(update.chat, extras=extras)
+        return
+
+    if status in {ChatMemberStatus.LEFT, ChatMemberStatus.KICKED}:
+        async with TelegramUserService() as service:
+            user_obj = update.new_chat_member.user
+            if not user_obj.is_bot:
+                await service.remove_user_from_group(user_obj.id, update.chat.id)
+                try:
+                    count = await telegram_bot.get_chat_member_count(update.chat.id)
+                except TelegramBadRequest:
+                    count = None
+                if count is not None:
+                    group = await service.get_group_by_telegram_id(update.chat.id)
+                    if group:
+                        group.participants_count = count
 
 async def handle_group_mark(message: Message, remainder: str) -> None:
     if message.chat.type not in {"group", "supergroup"}:
