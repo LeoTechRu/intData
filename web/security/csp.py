@@ -49,12 +49,19 @@ def _normalize_script_source(token: str) -> str:
         return ""
     stripped = stripped.strip("'")
     if stripped.startswith("sha256-"):
-        return f"'sha256-{stripped.split('sha256-', 1)[1]}'"
+        suffix = stripped.split("sha256-", 1)[1]
+        return f"'sha256-{suffix}'"
     return f"'sha256-{stripped}'"
 
 
 def build_csp(script_hashes: Iterable[str] = ()) -> str:
     """Construct the default CSP string with optional inline script hashes."""
+    normalized_hashes = [
+        token
+        for raw in script_hashes
+        if (token := _normalize_script_source(raw))
+    ]
+
     script_src = ["'self'"]
     frame_src = ["'self'"]
     connect_src = ["'self'"]
@@ -64,10 +71,9 @@ def build_csp(script_hashes: Iterable[str] = ()) -> str:
         frame_src.append("https://oauth.telegram.org")
         connect_src.append("https://oauth.telegram.org")
 
-    for token in script_hashes:
-        normalized = _normalize_script_source(token)
-        if normalized and normalized not in script_src:
-            script_src.append(normalized)
+    for token in normalized_hashes:
+        if token and token not in script_src:
+            script_src.append(token)
 
     return (
         "default-src 'self'; "
@@ -77,3 +83,41 @@ def build_csp(script_hashes: Iterable[str] = ()) -> str:
         f"frame-src {' '.join(frame_src)}; "
         f"connect-src {' '.join(connect_src)}"
     )
+
+
+def _extend_script_src(base_csp: str, normalized_hashes: list[str]) -> str:
+    directives: list[str] = []
+    script_seen = False
+    for raw_directive in base_csp.split(";"):
+        directive = raw_directive.strip()
+        if not directive:
+            continue
+        if directive.lower().startswith("script-src"):
+            parts = directive.split()
+            base = parts[0]
+            tokens = parts[1:]
+            for token in normalized_hashes:
+                if token and token not in tokens:
+                    tokens.append(token)
+            directives.append(" ".join([base] + tokens))
+            script_seen = True
+        else:
+            directives.append(directive)
+    if not script_seen and normalized_hashes:
+        directives.append(" ".join(["script-src"] + normalized_hashes))
+    return "; ".join(directives)
+
+
+def augment_csp(script_hashes: Iterable[str], base: str | None = None) -> str:
+    normalized_hashes = [
+        token
+        for raw in script_hashes
+        if (token := _normalize_script_source(raw))
+    ]
+    if base:
+        if not normalized_hashes:
+            return base
+        return _extend_script_src(base, normalized_hashes)
+    if normalized_hashes:
+        return build_csp(normalized_hashes)
+    return build_csp()

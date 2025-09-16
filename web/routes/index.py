@@ -22,6 +22,7 @@ from core.utils import utcnow
 from core.utils.habit_utils import calc_progress
 from web.dependencies import get_current_web_user, get_effective_permissions
 from ..template_env import templates
+from ..security.csp import augment_csp, extract_inline_script_hashes
 
 NEXT_build_ROOT = Path(__file__).resolve().parents[1] / ".next"
 NEXT_APP_HTML_DIR = NEXT_build_ROOT / "server" / "app"
@@ -319,6 +320,21 @@ def _load_next_html(page: str) -> str:
     return html_path.read_text(encoding="utf-8")
 
 
+@lru_cache(maxsize=None)
+def _load_next_payload(page: str) -> tuple[str, tuple[str, ...]]:
+    html = _load_next_html(page)
+    script_hashes = extract_inline_script_hashes(html)
+    return html, script_hashes
+
+
+def _next_response(page: str) -> HTMLResponse:
+    html, script_hashes = _load_next_payload(page)
+    response = HTMLResponse(html)
+    base_csp = os.getenv("CSP_DEFAULT")
+    response.headers["Content-Security-Policy"] = augment_csp(script_hashes, base=base_csp)
+    return response
+
+
 @router.get("/_next/static/{asset_path:path}", include_in_schema=False, response_class=FileResponse)
 async def next_static(asset_path: str) -> FileResponse:
     target = NEXT_STATIC_DIR / asset_path
@@ -330,10 +346,10 @@ async def next_static(asset_path: str) -> FileResponse:
 @router.get("/users", include_in_schema=False, response_class=HTMLResponse)
 @router.get("/users/", include_in_schema=False, response_class=HTMLResponse)
 async def users_directory_page() -> HTMLResponse:
-    return HTMLResponse(_load_next_html("users"))
+    return _next_response("users")
 
 
 @router.get("/users/{slug}", include_in_schema=False, response_class=HTMLResponse)
 @router.get("/users/{slug}/", include_in_schema=False, response_class=HTMLResponse)
 async def users_profile_page(slug: str) -> HTMLResponse:  # noqa: ARG001 - handled client-side
-    return HTMLResponse(_load_next_html("users"))
+    return _next_response("users")
