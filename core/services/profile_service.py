@@ -351,8 +351,14 @@ class ProfileService:
         await self.session.refresh(profile)
 
         meta = dict(profile.profile_meta or {})
+        updated_meta = False
         if meta.get("visibility") != visibility:
             meta["visibility"] = visibility
+            updated_meta = True
+        if meta.get("profile_visibility") != visibility:
+            meta["profile_visibility"] = visibility
+            updated_meta = True
+        if updated_meta:
             profile.profile_meta = meta
             profile.updated_at = utcnow()
         return profile
@@ -375,6 +381,10 @@ class ProfileService:
                 return True
             if visibility == "authenticated":
                 return context.is_authenticated
+            if visibility == "private":
+                return False
+            # Legacy fallback: default to authenticated visibility when not specified
+            return context.is_authenticated
         return False
 
     def _owned_by_viewer(self, profile: EntityProfile, context: ViewerContext) -> bool:

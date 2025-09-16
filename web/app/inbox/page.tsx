@@ -1,14 +1,14 @@
 import PageLayout from '../../components/PageLayout';
-import InboxTable from '../../components/InboxTable';
+import InboxModule from '../../components/inbox/InboxModule';
 
 const MODULE_TITLE = 'Входящие';
 const MODULE_DESCRIPTION =
-  'Быстрые заметки из бота и веб-форм — отсюда их можно распределять по Areas и Projects.';
+  'Все неразобранные заметки, задачи, события, проекты и ресурсы до назначения в PARA. Разберите их, чтобы они не превратились в потеряшки.';
 
 export default function InboxPage() {
   return (
     <PageLayout title={MODULE_TITLE} description={MODULE_DESCRIPTION}>
-      <InboxTable />
+      <InboxModule />
     </PageLayout>
   );
 }

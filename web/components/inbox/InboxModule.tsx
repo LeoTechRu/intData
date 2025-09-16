@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch, ApiError, buildQuery } from '../../lib/api';
@@ -356,6 +357,7 @@ export default function InboxModule() {
     resourcesQuery.isError;
 
   const nextNote = focusItems[focusIndex];
+  const firstNote = focusItems[0];
 
   const availableAreas = useMemo(
     () => areas.filter((area) => !inboxArea || area.id !== inboxArea.id),
@@ -454,6 +456,32 @@ export default function InboxModule() {
               <SkeletonLine />
               <SkeletonLine />
               <SkeletonLine />
+            </div>
+          ) : !isFocusMode ? (
+            <div className="flex flex-col gap-4 rounded-xl border border-dashed border-subtle-soft bg-surface-soft p-6">
+              <div className="flex flex-col gap-2">
+                <h4 className="text-base font-semibold text-[var(--text-primary)]">Готовы разобраться?</h4>
+                <p className="text-sm text-muted">
+                  Запустите фокус-сессию, чтобы просматривать элементы по одному и назначать им область или проект без переключений.
+                </p>
+                {firstNote ? (
+                  <div className="rounded-lg border border-subtle bg-[var(--surface-0)] p-4">
+                    <div className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">Следующий в очереди</div>
+                    <div className="mt-1 text-sm font-medium text-[var(--text-primary)]">{firstNote.title}</div>
+                    <p className="mt-1 text-sm text-muted">{firstNote.content.substring(0, 140)}{firstNote.content.length > 140 ? '…' : ''}</p>
+                  </div>
+                ) : null}
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFocusMode(true)}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--accent-primary)] px-4 py-2 text-sm font-semibold text-[var(--accent-on-primary)] transition-base hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+                >
+                  Начать разбор
+                </button>
+                <span className="text-xs text-muted">Осталось {formatCount(focusItems.length)} элементов</span>
+              </div>
             </div>
           ) : focusItems.length === 0 ? (
             <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed border-subtle-soft bg-surface-soft p-8 text-center">
@@ -715,12 +743,12 @@ function QueueSection({ title, items, emptyMessage, actionLabel, href }: QueueSe
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-semibold uppercase tracking-[0.2em] text-muted">{title}</h4>
-        <a
+        <Link
           href={href}
           className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent-primary)] transition-base hover:opacity-80"
         >
           {actionLabel}
-        </a>
+        </Link>
       </div>
       {items.length === 0 ? (
         <div className="rounded-xl border border-dashed border-subtle-soft bg-surface-soft px-4 py-6 text-sm text-muted">

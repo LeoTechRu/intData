@@ -464,13 +464,20 @@ def backfill_profile_visibility(conn: Connection) -> dict[str, int]:
             )
             privacy_updates += 1
 
-        if desired_visibility and meta.get("visibility") != desired_visibility:
-            meta["visibility"] = desired_visibility
-            conn.execute(
-                sa.text("UPDATE entity_profiles SET profile_meta=:val WHERE id=:pid"),
-                {"val": json.dumps(meta), "pid": profile_id},
-            )
-            meta_updates += 1
+        if desired_visibility:
+            updated = False
+            if meta.get("visibility") != desired_visibility:
+                meta["visibility"] = desired_visibility
+                updated = True
+            if meta.get("profile_visibility") != desired_visibility:
+                meta["profile_visibility"] = desired_visibility
+                updated = True
+            if updated:
+                conn.execute(
+                    sa.text("UPDATE entity_profiles SET profile_meta=:val WHERE id=:pid"),
+                    {"val": json.dumps(meta), "pid": profile_id},
+                )
+                meta_updates += 1
 
     return {"grants_added": grants_added, "privacy_updated": privacy_updates, "meta_updated": meta_updates}
 
