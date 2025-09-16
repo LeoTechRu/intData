@@ -29,6 +29,7 @@ const NAV_BLUEPRINT: NavBlueprint[] = [
   { label: 'Входящие', route: '/inbox' },
   { label: 'Области', route: '/areas', badge: 'новый UI' },
   { label: 'Проекты', route: '/projects', badge: 'новый UI' },
+  { label: 'Команда', route: '/users', badge: 'новый UI' },
   { label: 'Ресурсы', route: '/resources', badge: 'новый UI' },
   { label: 'Задачи', route: '/tasks', badge: 'новый UI' },
   { label: 'Привычки', legacy: '/habits', badge: 'beta' },

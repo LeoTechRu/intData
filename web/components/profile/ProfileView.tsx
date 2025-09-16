@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import PageLayout from '../PageLayout';
 import { apiFetch, ApiError } from '../../lib/api';
@@ -91,12 +92,12 @@ export default function ProfileView({ entity, slug, backHref, backLabel }: Profi
             </div>
             {backHref ? (
               <div className="flex items-start">
-                <a
+                <Link
                   href={backHref}
                   className="inline-flex items-center gap-2 rounded-full border border-subtle px-4 py-2 text-sm font-medium text-[var(--text-primary)] transition-base hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
                 >
                   {backLabel ?? '← Вернуться'}
-                </a>
+                </Link>
               </div>
             ) : null}
           </div>

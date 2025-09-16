@@ -22,6 +22,14 @@ function jsonResponse(data: unknown, init: ResponseInit = {}) {
   });
 }
 
+function textResponse(message: string, init: ResponseInit = {}) {
+  return new Response(message, {
+    status: 500,
+    headers: { 'Content-Type': 'text/plain' },
+    ...init,
+  });
+}
+
 beforeEach(() => {
   process.env.NEXT_PUBLIC_API_BASE = API_BASE;
 });
@@ -71,5 +79,29 @@ describe('UsersCatalog', () => {
     });
 
     expect(await screen.findByText('Alice')).toBeInTheDocument();
+  });
+
+  it('shows error state and retries fetch', async () => {
+    const fetchMock = vi
+      .spyOn(global, 'fetch')
+      .mockResolvedValueOnce(textResponse('Сервер недоступен', { status: 503 }))
+      .mockResolvedValueOnce(
+        jsonResponse([
+          { slug: 'carol', display_name: 'Carol', headline: 'PM' },
+        ]),
+      );
+
+    renderWithClient(<UsersCatalog />);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Не удалось загрузить каталог');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Повторить' }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    expect(await screen.findByText('Carol')).toBeInTheDocument();
   });
 });

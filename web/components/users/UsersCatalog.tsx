@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import Image from 'next/image';
 import PageLayout from '../PageLayout';
-import { apiFetch } from '../../lib/api';
+import { apiFetch, ApiError } from '../../lib/api';
 
 interface CatalogProfile {
   slug: string;
@@ -22,6 +22,7 @@ function useUsers(search: string) {
     queryKey: ['users', search],
     staleTime: 60_000,
     gcTime: 300_000,
+    retry: false,
     queryFn: () => {
       const params = new URLSearchParams();
       if (search.trim()) {
@@ -45,7 +46,17 @@ export default function UsersCatalog() {
 
   const users = usersQuery.data ?? [];
   const isLoading = usersQuery.isLoading;
+  const isFetching = usersQuery.isFetching;
   const hasResults = users.length > 0;
+  const error = usersQuery.error as unknown;
+  const hasError = Boolean(error);
+  const errorMessage = hasError
+    ? error instanceof ApiError && error.message && !/body is unusable/i.test(error.message)
+      ? error.message
+      : 'Не удалось загрузить каталог'
+    : null;
+
+  const showEmptyState = !isLoading && !isFetching && !hasResults && !hasError;
 
   return (
     <PageLayout title="Команда" description="Каталог пользователей Intelligent Data Pro">      
@@ -74,6 +85,25 @@ export default function UsersCatalog() {
           </button>
         </form>
 
+        {hasError ? (
+          <div
+            role="alert"
+            className="flex items-start justify-between gap-4 rounded-2xl border border-red-200/60 bg-red-50 px-5 py-4 text-sm text-red-700"
+          >
+            <div>
+              <strong className="block text-red-700">{errorMessage}</strong>
+              <span className="text-xs text-muted">Попробуйте обновить страницу или проверьте подключение к сети.</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => usersQuery.refetch()}
+              className="rounded-lg border border-red-400/40 px-3 py-1 text-xs font-medium text-red-700 transition-base hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60"
+            >
+              Повторить
+            </button>
+          </div>
+        ) : null}
+
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {isLoading
             ? Array.from({ length: 6 }).map((_, index) => (
@@ -87,7 +117,7 @@ export default function UsersCatalog() {
                   </div>
                 </article>
               ))
-            : !hasResults ? (
+            : showEmptyState ? (
                 <div className="rounded-2xl border border-dashed border-subtle bg-[var(--surface-0)] p-6 text-sm text-muted">
                   {submittedSearch ? 'Совпадений не найдено.' : 'Команда пока пустая — пригласите коллег и они появятся здесь.'}
                 </div>
