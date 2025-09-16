@@ -184,6 +184,14 @@ class ProfileService:
             if changed:
                 profile.updated_at = utcnow()
             return profile
+        meta_payload = defaults.get("profile_meta") or {}
+        if entity_type == "user":
+            meta_payload = dict(meta_payload)
+            if "visibility" not in meta_payload:
+                meta_payload["visibility"] = "private"
+            if "profile_visibility" not in meta_payload:
+                meta_payload["profile_visibility"] = meta_payload.get("visibility", "private")
+
         profile = EntityProfile(
             entity_type=entity_type,
             entity_id=entity_id,
@@ -194,7 +202,7 @@ class ProfileService:
             avatar_url=defaults.get("avatar_url"),
             cover_url=defaults.get("cover_url"),
             tags=defaults.get("tags", []),
-            profile_meta=defaults.get("profile_meta", {}),
+            profile_meta=meta_payload,
             sections=defaults.get("sections", DEFAULT_SECTIONS.copy()),
         )
         self.session.add(profile)

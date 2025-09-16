@@ -428,7 +428,7 @@ def backfill_profile_visibility(conn: Connection) -> dict[str, int]:
         elif "authenticated" in grant_set:
             desired_visibility = "authenticated"
         else:
-            desired_visibility = "authenticated"
+            desired_visibility = "private"
 
         if desired_visibility == "public":
             if "public" not in grant_set:
