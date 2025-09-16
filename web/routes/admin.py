@@ -10,7 +10,7 @@ from core.services.access_control import AccessControlService
 from ..dependencies import role_required
 from ..template_env import templates
 
-router = APIRouter()
+router = APIRouter(prefix="/cup", tags=["cup"], include_in_schema=False)
 
 
 async def load_admin_console_data() -> dict[str, Any]:
@@ -44,24 +44,23 @@ async def load_admin_console_data() -> dict[str, Any]:
     }
 
 
-@router.get("")
-async def admin_dashboard(
+@router.get("/admin-embed", name="cup:admin-embed")
+async def admin_embed(
     request: Request,
     current_user: WebUser = Depends(role_required("admin")),
 ):
-    """Render consolidated admin landing page with users and groups."""
+    """Serve the admin console markup for iframe embedding inside the dashboard."""
     admin_data = await load_admin_console_data()
-
     context = {
         **admin_data,
         "user": current_user,
         "role_name": current_user.role,
         "is_admin": True,
-        "page_title": "Админ",
-        "page_title_tooltip": "Административные инструменты",
+        "auth_page": True,
+        "page_title": "Админский сектор",
         "admin_heading_description": "Полный набор сервисов для управления платформой.",
     }
-    return templates.TemplateResponse(request, "admin/index.html", context)
+    return templates.TemplateResponse(request, "admin/embed.html", context)
 
 
-"""Admin UI routes only. JSON actions moved to /api/v1/admin/*."""
+"""Admin UI routes only. JSON actions live under /api/v1/admin/*."""

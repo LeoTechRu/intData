@@ -354,7 +354,7 @@ app.include_router(calendar.ui_router, include_in_schema=False)
 app.include_router(time_entries.ui_router, include_in_schema=False)
 app.include_router(groups.ui_router, include_in_schema=False)
 app.include_router(auth.router, include_in_schema=False)
-app.include_router(admin_ui.router, prefix="/admin", include_in_schema=False)
+app.include_router(admin_ui.router, include_in_schema=False)
 app.include_router(admin_settings_ui.router, include_in_schema=False)
 
 # Подключение всех API под единым префиксом

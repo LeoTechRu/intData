@@ -3,7 +3,16 @@
 
 {% block content %}
   <div class="has-dashboard">
-    <div class="dashboard">
+    <div class="dashboard-toolbar">
+      <button type="button" class="button button--ghost" data-dashboard-edit aria-pressed="false">
+        Настроить дашборд
+      </button>
+    </div>
+    <div class="dashboard-editor-panel" data-dashboard-editor hidden>
+      <div class="dashboard-editor-panel__title">Скрытые виджеты</div>
+      <ul class="dashboard-editor-panel__list" data-dashboard-hidden-list></ul>
+    </div>
+    <div class="dashboard" data-dashboard>
 
       {# — Профиль #}
       <section class="card span-2 profile-widget" id="card-profile" data-widget="profile_card">
@@ -325,8 +334,25 @@
       </section>
 
     </div>
-    {% if is_admin and admin_users_web is defined %}
-      {% include "partials/admin_tools.html" with context %}
+    {% if is_admin and admin_iframe_src %}
+      {% set anchor = admin_anchor_id if admin_anchor_id is defined and admin_anchor_id else 'cup-admin-tools' %}
+      <section id="{{ anchor }}" class="cup-admin cup-admin--iframe">
+        <header class="cup-admin__header">
+          <h2 class="cup-admin__title">Админский сектор</h2>
+          {% if admin_heading_description %}
+          <p class="cup-admin__description">{{ admin_heading_description }}</p>
+          {% endif %}
+        </header>
+        <div class="cup-admin__iframe-wrap">
+          <iframe
+            src="{{ admin_iframe_src }}"
+            title="Админский сектор"
+            data-admin-iframe
+            loading="lazy"
+            referrerpolicy="same-origin"
+          ></iframe>
+        </div>
+      </section>
     {% endif %}
   </div>
 {% endblock %}
