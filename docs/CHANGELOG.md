@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Режим настройки ЦУПа с drag-n-drop, скрытием и панелью скрытых виджетов.
+- Личные и глобальные пресеты темы: выбор режима, палитры и градиента через расширенный color picker на странице `/settings`.
 - Обзор модерации Telegram-групп в ЦУП и админском секторе: активные участники, тихие пользователи и задолженности по оплатам.
 - pre-commit configuration with ruff, black, isort and basic hooks.
 - developer Makefile and type checking via mypy.
@@ -77,6 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Админский сектор теперь рендерится маршрутом `/cup/admin-embed` и подключается в ЦУП через iframe.
+- Административные настройки объединены на `/settings`: бренд, Telegram-интеграции и глобальная тема доступны только администраторам.
 - Команда `/group` теперь выполняет инвентаризацию Telegram-группы и сразу выводит отчёт `/group audit`; бот индексирует участников при добавлении в чат (E5b).
 - Переработан модуль авторизации: битовые права, гибкие пресеты ролей, назначение прав по scope (global/area/project) и аудит операций доступа; обновлены веб-зависимости `role_required`/`permission_required` и настройки избранного.
 - CRM по продуктам выделена в отдельный сервис, управление модерацией групп использует самостоятельный модуль и сводки.

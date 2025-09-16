@@ -80,6 +80,8 @@
 - Перенос `users_favorites` → `user_settings` (`key='favorites'`) выполняется в **`core/db/repair.py`** (идемпотентно).
 - API: `GET /api/v1/user/settings`, `GET/PUT /api/v1/user/settings/{key}`.
 - UI: кнопка «Настроить дашборд» в ЦУП включает drag-n-drop и скрытие/возврат виджетов. `layout.widgets` — список видимых карточек по порядку, `layout.hidden` — скрытые. Дефолт – все виджеты до первой сохранённой раскладки.
+- `theme_preferences` хранит персональный пресет темы (`mode`, `primary`, `accent`, `surface`, `gradient{from,to}`) и применяется через `theme-utils.js` (CSS-переменные). Пустой объект = используем глобальный пресет.
+- Глобальный брендовый пресет (`theme.global.*`) живёт в `app_settings`; UI `/settings` синхронно обновляет его и показывает только администраторам.
 
 ## Build, Test, and Development Commands
 - Create venv: `python -m venv venv && source ./venv/bin/activate`

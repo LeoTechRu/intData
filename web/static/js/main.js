@@ -73,9 +73,29 @@ export function initCardLinks() {
 }
 import { initPersonaHeader } from './persona-header.js';
 import { API_BASE } from './services/apiBase.js';
+import { setThemeLayer, clearThemeLayer, themeFromUserSettings, themeFromEntries, getActiveTheme } from './theme-utils.js';
 
 let userFavorites = { v: 1, items: [] };
 let dashboardLayout = { v: 1, layouts: {}, widgets: [], hidden: [] };
+let userThemeValue = {};
+window.__GLOBAL_THEME__ = window.__GLOBAL_THEME__ || {};
+window.__USER_THEME__ = window.__USER_THEME__ || {};
+
+async function loadGlobalTheme() {
+    try {
+        const resp = await fetch(`${API_BASE}/app-settings?prefix=theme.global.`, { credentials: 'include' });
+        if (!resp.ok)
+            return;
+        const data = await resp.json();
+        const entries = data.entries || {};
+        const theme = themeFromEntries(entries);
+        setThemeLayer('global', theme);
+        window.__GLOBAL_THEME__ = theme;
+    }
+    catch (e) {
+        // ignore
+    }
+}
 
 function renderFavorites() {
     const favBox = document.querySelector('[data-fav-box]');
@@ -149,12 +169,21 @@ export function initFavoriteToggle() {
 
 export async function loadUserSettings() {
     try {
-        const resp = await fetch(`${API_BASE}/user/settings?keys=dashboard_layout,favorites`, { credentials: 'include' });
+        const resp = await fetch(`${API_BASE}/user/settings?keys=dashboard_layout,favorites,theme_preferences`, { credentials: 'include' });
         if (!resp.ok)
             return;
         const data = await resp.json();
         userFavorites = data.favorites || { v: 1, items: [] };
         dashboardLayout = data.dashboard_layout || dashboardLayout;
+        const theme = themeFromUserSettings(data.theme_preferences);
+        userThemeValue = theme;
+        window.__USER_THEME__ = theme;
+        if (Object.keys(theme).length) {
+            setThemeLayer('user', theme);
+        }
+        else {
+            clearThemeLayer('user');
+        }
         renderFavorites();
         updateFavToggle();
         applyDashboardLayout();
@@ -474,6 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initFavoriteToggle();
     initDashboardEditor();
     initAdminIframe();
+    loadGlobalTheme();
     loadUserSettings();
 });
 (function(){
