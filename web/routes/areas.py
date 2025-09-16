@@ -117,5 +117,61 @@ async def rename_area(area_id: int, payload: AreaRenamePayload, current_user: Tg
     return AreaResponse.from_model(area)
 
 
+def _build_profile_context(access: ProfileAccess) -> dict[str, Any]:
+    profile = access.profile
+    return {
+        "slug": profile.slug,
+        "display_name": profile.display_name,
+        "headline": profile.headline,
+        "summary": profile.summary,
+        "avatar_url": profile.avatar_url,
+        "cover_url": profile.cover_url,
+        "meta": profile.profile_meta or {},
+        "tags": list(profile.tags or []),
+        "sections": access.sections,
+        "can_edit": access.is_owner or access.is_admin,
+        "is_owner": access.is_owner,
+        "grants": [
+            {
+                "audience_type": grant.audience_type,
+                "subject_id": grant.subject_id,
+                "sections": list(grant.sections or []),
+                "expires_at": grant.expires_at,
+            }
+            for grant in profile.grants
+        ],
+    }
+
+
+@ui_router.get("/{slug}")
+async def area_profile_page(
+    slug: str,
+    request: Request,
+    current_user: TgUser | None = Depends(get_current_tg_user),
+):
+    web_user = current_user.web_accounts[0] if current_user and current_user.web_accounts else None
+    async with ProfileService() as service:
+        try:
+            access = await service.get_profile(
+                entity_type="area",
+                slug=slug,
+                viewer=web_user,
+            )
+        except ValueError:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        except PermissionError:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    profile_ctx = _build_profile_context(access)
+    context = {
+        "current_user": web_user,
+        "profile": profile_ctx,
+        "entity": "areas",
+        "catalog_path": "/areas",
+        "MODULE_TITLE": f"Area: {profile_ctx['display_name']}",
+        "page_title": profile_ctx['display_name'],
+    }
+    return templates.TemplateResponse(request, "profiles/detail.html", context)
+
+
 # Alias for centralized API mounting
 api = router

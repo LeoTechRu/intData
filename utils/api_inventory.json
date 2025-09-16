@@ -2,15 +2,15 @@
   "before": [
     {
       "method": "GET",
-      "path": "/profile"
+      "path": "/users"
     },
     {
       "method": "GET",
-      "path": "/profile/{username}"
+      "path": "/users/{username}"
     },
     {
       "method": "POST",
-      "path": "/profile/{username}"
+      "path": "/users/{username}"
     },
     {
       "method": "GET",
