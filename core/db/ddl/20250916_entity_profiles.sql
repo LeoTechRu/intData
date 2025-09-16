@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS entity_profiles (
     sections JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT ck_entity_profiles_type CHECK (entity_type IN ('user','group','project','area')),
+    CONSTRAINT ck_entity_profiles_type CHECK (entity_type IN ('user','group','project','area','resource')),
     CONSTRAINT ck_entity_profiles_slug CHECK (char_length(slug) BETWEEN 1 AND 255),
     CONSTRAINT ck_entity_profiles_tags CHECK (tags IS NULL OR jsonb_typeof(tags) = 'array'),
     CONSTRAINT ck_entity_profiles_sections CHECK (sections IS NULL OR jsonb_typeof(sections) = 'array'),
@@ -111,6 +111,22 @@ ON CONFLICT (entity_type, entity_id) DO UPDATE SET
     slug = COALESCE(NULLIF(EXCLUDED.slug, ''), entity_profiles.slug),
     display_name = EXCLUDED.display_name,
     summary = COALESCE(EXCLUDED.summary, entity_profiles.summary),
+    updated_at = now();
+
+INSERT INTO entity_profiles (entity_type, entity_id, slug, display_name, summary, profile_meta)
+SELECT
+    'resource',
+    r.id,
+    COALESCE(NULLIF(regexp_replace(lower(r.title), '[^a-z0-9]+', '-', 'g'), ''), 'resource-' || r.id::text),
+    r.title,
+    r.content,
+    jsonb_build_object('type', r.type)
+FROM resources r
+ON CONFLICT (entity_type, entity_id) DO UPDATE SET
+    slug = COALESCE(NULLIF(EXCLUDED.slug, ''), entity_profiles.slug),
+    display_name = EXCLUDED.display_name,
+    summary = COALESCE(EXCLUDED.summary, entity_profiles.summary),
+    profile_meta = COALESCE(EXCLUDED.profile_meta, entity_profiles.profile_meta),
     updated_at = now();
 
 -- Ensure each profile has at least an authenticated grant by default
