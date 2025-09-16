@@ -97,24 +97,41 @@ async def test_api_defaults_and_put(monkeypatch):
     assert res.status_code == 200
     body = res.json()
     assert "dashboard_layout" in body and body["favorites"]["items"]
+    assert any(item["path"] == "/settings#areas" for item in body["favorites"]["items"])
 
-    new_val = {"v": 1, "items": [{"label": "Link", "path": "/l", "position": 1}]}
+    legacy_payload = {
+        "v": 1,
+        "items": [
+            {"label": "Areas", "path": "/settings#areas", "position": 1},
+            {"label": "Legacy", "path": "https://intdata.pro/admin", "position": 2},
+        ],
+    }
     res = client.put(
         "/api/v1/user/settings/favorites",
-        json={"value": new_val},
+        json={"value": legacy_payload},
     )
     assert res.status_code == 200
+    sanitized = res.json()["value"]
+    assert sanitized["items"] == [
+        {"label": "Areas", "path": "/settings#areas", "position": 1}
+    ]
 
-    # repeated PUT should overwrite the value
-    new_val2 = {"v": 1, "items": [{"label": "Other", "path": "/o", "position": 1}]}
+    # repeated PUT should overwrite the value with another allowed link
+    new_val2 = {
+        "v": 1,
+        "items": [
+            {"label": "Tasks", "path": "/tasks", "position": 1},
+        ],
+    }
     res = client.put(
         "/api/v1/user/settings/favorites",
         json={"value": new_val2},
     )
     assert res.status_code == 200
-
-    res = client.get("/api/v1/user/settings/favorites")
-    assert res.json()["value"] == new_val2
+    persisted = client.get("/api/v1/user/settings/favorites").json()["value"]
+    assert persisted["items"] == [
+        {"label": "Tasks", "path": "/tasks", "position": 1}
+    ]
 
 
 def test_no_runtime_utils_imports():
