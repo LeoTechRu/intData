@@ -32,7 +32,7 @@ const NAV_BLUEPRINT: NavBlueprint[] = [
   { label: 'Команда', route: '/users', badge: 'новый UI' },
   { label: 'Ресурсы', route: '/resources', badge: 'новый UI' },
   { label: 'Задачи', route: '/tasks', badge: 'новый UI' },
-  { label: 'Привычки', legacy: '/habits', badge: 'beta' },
+  { label: 'Привычки', route: '/habits', badge: 'новый UI' },
 ];
 
 function resolveNavigation(): NavItem[] {

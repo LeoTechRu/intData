@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Страница `/habits` на Next.js: HUD с XP/Gold/KP, фильтр по областям и управление привычками через React Query.
 - Admin API endpoint `/api/v1/admin/audit/logs` для просмотра журнала выдачи прав (миграция из NexusCore Balance).
 - Модуль совместимости `core.db.legacy` c `DBConfig`, `validate_config` и `get_raw_connection` для сценариев старого Flask-приложения.
 - Документ `docs/archive/nexuscore_balance.md` со сводкой переноса функционала NexusCore.
@@ -174,6 +175,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unified owner scoping via `get_current_owner`.
 
 ### Removed
+- Legacy-шаблон `web/templates/habits.html` и скрипт `web/static/js/habits_v1.js` после миграции на Next.js.
 - Удалён устаревший каталог `NexusCore/`; весь функционал перенесён в `intdata/`.
 - Удалён HTML-маршрут `/admin`; админские инструменты доступны только из ЦУПа.
 - Удалён устаревший API напоминаний и связанные сервисы.

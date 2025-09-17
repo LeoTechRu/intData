@@ -36,6 +36,12 @@ const shortcuts = [
     description: 'Следите за статусами, запускайте таймеры и закрывайте задачи быстрее.',
     badge: 'новый UI',
   },
+  {
+    href: '/habits',
+    title: 'Привычки',
+    description: 'Отмечайте выполнение ритуалов, следите за XP/Gold и планируйте апгрейды экономики.',
+    badge: 'новый UI',
+  },
 ];
 
 export default function Home() {

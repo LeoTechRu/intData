@@ -327,7 +327,7 @@ def _load_next_payload(page: str) -> tuple[str, tuple[str, ...]]:
     return html, script_hashes
 
 
-def _next_response(page: str) -> HTMLResponse:
+def render_next_page(page: str) -> HTMLResponse:
     html, script_hashes = _load_next_payload(page)
     response = HTMLResponse(html)
     if os.getenv("SECURITY_HEADERS_ENABLED", "1") == "1":
@@ -350,10 +350,10 @@ async def next_static(asset_path: str) -> FileResponse:
 @router.get("/users", include_in_schema=False, response_class=HTMLResponse)
 @router.get("/users/", include_in_schema=False, response_class=HTMLResponse)
 async def users_directory_page() -> HTMLResponse:
-    return _next_response("users")
+    return render_next_page("users")
 
 
 @router.get("/users/{slug}", include_in_schema=False, response_class=HTMLResponse)
 @router.get("/users/{slug}/", include_in_schema=False, response_class=HTMLResponse)
 async def users_profile_page(slug: str) -> HTMLResponse:  # noqa: ARG001 - handled client-side
-    return _next_response("users")
+    return render_next_page("users")
