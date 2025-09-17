@@ -4,14 +4,18 @@ from datetime import datetime
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, model_validator
 
 from core.models import Task, TaskStatus, TgUser
 from core.services.task_service import TaskService
 from web.dependencies import get_current_tg_user
 
+from .index import render_next_page
+
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
+ui_router = APIRouter(prefix="/tasks", tags=["tasks"], include_in_schema=False)
 
 
 class TaskCreate(BaseModel):
@@ -250,6 +254,14 @@ async def stop_timer_for_task(task_id: int, current_user: TgUser | None = Depend
         await time_svc.stop_timer(running.id)
         mins = await service.total_tracked_minutes(task_id)
         return TaskResponse.from_model(task, tracked_minutes=mins, running_entry_id=None)
+
+
+@ui_router.get("", include_in_schema=False, response_class=HTMLResponse)
+@ui_router.get("/", include_in_schema=False, response_class=HTMLResponse)
+async def tasks_page() -> HTMLResponse:
+    """Serve the Next.js Tasks page."""
+
+    return render_next_page("tasks")
 
 # Alias for centralized API mounting
 api = router

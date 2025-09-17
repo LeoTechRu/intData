@@ -31,6 +31,8 @@ from .routes import (
     notes,
     areas,
     projects,
+    tasks,
+    resources,
     calendar,
     time_entries,
     products,
@@ -332,6 +334,8 @@ app.include_router(notes.ui_router, include_in_schema=False)
 app.include_router(products.ui_router, include_in_schema=False)
 app.include_router(areas.ui_router, include_in_schema=False)
 app.include_router(projects.ui_router, include_in_schema=False)
+app.include_router(tasks.ui_router, include_in_schema=False)
+app.include_router(resources.ui_router, include_in_schema=False)
 app.include_router(calendar.ui_router, include_in_schema=False)
 app.include_router(time_entries.ui_router, include_in_schema=False)
 app.include_router(groups.ui_router, include_in_schema=False)

@@ -3,14 +3,18 @@ from __future__ import annotations
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 from core.models import Resource, TgUser
 from core.services.para_service import ParaService
 from web.dependencies import get_current_tg_user
 
+from .index import render_next_page
+
 
 router = APIRouter(prefix="/resources", tags=["resources"])
+ui_router = APIRouter(prefix="/resources", tags=["resources"], include_in_schema=False)
 
 
 class ResourceCreate(BaseModel):
@@ -76,6 +80,14 @@ def _build_profile_context(access: ProfileAccess) -> dict[str, Any]:
             for grant in profile.grants
         ],
     }
+
+
+@ui_router.get("", include_in_schema=False, response_class=HTMLResponse)
+@ui_router.get("/", include_in_schema=False, response_class=HTMLResponse)
+async def resources_page() -> HTMLResponse:
+    """Serve the Next.js Resources page."""
+
+    return render_next_page("resources")
 
 
 # Alias for centralized API mounting
