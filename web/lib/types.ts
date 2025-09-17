@@ -263,6 +263,21 @@ export interface TimeEntry {
   description?: string | null;
 }
 
+export interface TimeSummaryDay {
+  day: string;
+  total_seconds: number;
+}
+
+export interface TimeSummaryArea {
+  area_id?: number | null;
+  total_seconds: number;
+}
+
+export interface TimeSummaryProject {
+  project_id?: number | null;
+  total_seconds: number;
+}
+
 export interface AdminWebUserAccount {
   id: number;
   telegram_id: number;

@@ -2,14 +2,15 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 from core.models import TimeEntry, TgUser
 from core.services.time_service import TimeService
-from web.dependencies import get_current_tg_user, get_current_web_user
-from core.models import WebUser
-from ..template_env import templates
+from web.dependencies import get_current_tg_user
+
+from .index import render_next_page
 
 
 router = APIRouter(prefix="/time", tags=["time"])
@@ -181,20 +182,12 @@ async def assign_task(entry_id: int, payload: AssignTaskPayload, current_user: T
     return TimeEntryResponse.from_model(entry)
 
 
-@ui_router.get("")
-async def time_page(
-    request: Request,
-    current_user: WebUser | None = Depends(get_current_web_user),
-):
-    """Render full UI for time tracking with role-aware header."""
+@ui_router.get("", include_in_schema=False, response_class=HTMLResponse)
+@ui_router.get("/", include_in_schema=False, response_class=HTMLResponse)
+async def time_page() -> HTMLResponse:
+    """Serve the modern Next.js time tracking page."""
 
-    context = {
-        "current_user": current_user,
-        "current_role_name": getattr(current_user, "role", ""),
-        "is_admin": getattr(current_user, "role", "") == "admin",
-        "page_title": "Учёт времени",
-    }
-    return templates.TemplateResponse(request, "time.html", context)
+    return render_next_page("time")
 
 
 # Alias for centralized API mounting

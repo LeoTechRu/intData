@@ -39,7 +39,7 @@
 
 | Start (UTC) | Agent | Branch | Epic / Scope | Ключевые файлы | Статус |
 |-------------|-------|--------|--------------|----------------|--------|
-| —           | —     | —      | —            | —              | свободно |
+| 2025-09-17 21:30 | codex-cli | feature/E13/time-ui-codex | E13 / Time overview UI | web/app/time, web/components/time, web/routes/time_entries.py | в работе |
 
 
 ## Решения по архитектуре (ПРОЧНО)
@@ -487,6 +487,7 @@ Reference: см. архивный отчёт `docs/archive/report_frontend_moder
 - P2•S — Удалять legacy‑шаблоны и скрипты после миграции, чистить `web/static` и пути в конфиге Tailwind.
   - [x] `/habits` перенесена на Next.js; шаблон `templates/habits.html` и `static/js/habits_v1.js` удалены.
   - [ ] Очистить оставшиеся legacy-ассеты (calendar, notes) и обновить пути Tailwind.
+- [x] P1•M — Перенести страницу `/time` на Next.js: активный таймер, аналитика, удаление legacy-шаблонов.
 - [x] P2•M — Внедрить AppShell-лейаут Next.js с дизайн-токенами, адаптивной навигацией и современными UI паттернами для перенесённых страниц.
 - [x] P2•S — Страница `/habits` работает на Next.js, использует React Query и HUD с XP/Gold/KP.
 - [x] P1•M — Перенести страницу `/settings` на Next.js, добавить пункт меню «Настройки» и удалить legacy-шаблон.
