@@ -46,7 +46,7 @@ class FakeProfileService:
 
     async def update_profile_data(self, **_kwargs):
         self.updated_payload = _kwargs
-        return FakeProfileAccess("alice")
+        return SimpleNamespace(slug="alice")
 
     async def ensure_default_sections(self, *_args, **_kwargs):
         return None

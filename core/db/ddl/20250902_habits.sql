@@ -1,61 +1,70 @@
+-- Habitica-like module foundations (E16)
+
 -- habits table
 CREATE TABLE IF NOT EXISTS habits (
-    id            BIGSERIAL PRIMARY KEY,
-    owner_id      BIGINT REFERENCES users_tg(telegram_id),
-    area_id       INTEGER NOT NULL REFERENCES areas(id),
-    project_id    INTEGER REFERENCES projects(id),
-    title         VARCHAR(255) NOT NULL,
-    note          TEXT,
-    type          VARCHAR(8) NOT NULL CHECK (type IN ('positive','negative','both')),
-    difficulty    VARCHAR(8) NOT NULL CHECK (difficulty IN ('trivial','easy','medium','hard')),
-    frequency     VARCHAR(20) NOT NULL DEFAULT 'daily',
-    progress      JSON NOT NULL DEFAULT '{}'::json,
-    up_enabled    BOOLEAN NOT NULL DEFAULT TRUE,
-    down_enabled  BOOLEAN NOT NULL DEFAULT TRUE,
-    val           DOUBLE PRECISION NOT NULL DEFAULT 0,
-    daily_limit   INTEGER NOT NULL DEFAULT 10,
-    cooldown_sec  INTEGER NOT NULL DEFAULT 60,
+    id             BIGSERIAL PRIMARY KEY,
+    owner_id       BIGINT REFERENCES users_tg(telegram_id),
+    area_id        INTEGER NOT NULL REFERENCES areas(id),
+    project_id     INTEGER REFERENCES projects(id),
+    title          VARCHAR(255) NOT NULL,
+    note           TEXT,
+    type           VARCHAR(8) NOT NULL CHECK (type IN ('positive','negative','both')),
+    difficulty     VARCHAR(8) NOT NULL CHECK (difficulty IN ('trivial','easy','medium','hard')),
+    frequency      VARCHAR(20) NOT NULL DEFAULT 'daily',
+    progress       JSON NOT NULL DEFAULT '{}'::json,
+    up_enabled     BOOLEAN NOT NULL DEFAULT TRUE,
+    down_enabled   BOOLEAN NOT NULL DEFAULT TRUE,
+    val            DOUBLE PRECISION NOT NULL DEFAULT 0,
+    daily_limit    INTEGER NOT NULL DEFAULT 10,
+    cooldown_sec   INTEGER NOT NULL DEFAULT 60,
     last_action_at TIMESTAMPTZ,
-    tags          JSON,
-    archived_at   TIMESTAMPTZ,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+    tags           JSON,
+    archived_at    TIMESTAMPTZ,
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- extend existing habits table if already present
-ALTER TABLE habits ADD COLUMN IF NOT EXISTS owner_id BIGINT;
-ALTER TABLE habits ADD COLUMN IF NOT EXISTS area_id INTEGER;
-ALTER TABLE habits ADD COLUMN IF NOT EXISTS project_id INTEGER;
-ALTER TABLE habits ADD COLUMN IF NOT EXISTS title VARCHAR(255);
-ALTER TABLE habits ADD COLUMN IF NOT EXISTS note TEXT;
-ALTER TABLE habits ADD COLUMN IF NOT EXISTS type VARCHAR(8);
-ALTER TABLE habits ADD COLUMN IF NOT EXISTS difficulty VARCHAR(8);
-ALTER TABLE habits ADD COLUMN IF NOT EXISTS frequency VARCHAR(20);
-ALTER TABLE habits ADD COLUMN IF NOT EXISTS progress JSON;
-ALTER TABLE habits ADD COLUMN IF NOT EXISTS up_enabled BOOLEAN;
-ALTER TABLE habits ADD COLUMN IF NOT EXISTS down_enabled BOOLEAN;
-ALTER TABLE habits ADD COLUMN IF NOT EXISTS val DOUBLE PRECISION;
-ALTER TABLE habits ADD COLUMN IF NOT EXISTS daily_limit INTEGER;
-ALTER TABLE habits ADD COLUMN IF NOT EXISTS cooldown_sec INTEGER;
-ALTER TABLE habits ADD COLUMN IF NOT EXISTS last_action_at TIMESTAMPTZ;
-ALTER TABLE habits ADD COLUMN IF NOT EXISTS tags JSON;
-ALTER TABLE habits ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
-ALTER TABLE habits ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ;
-
--- legacy column migration
-UPDATE habits SET note = COALESCE(note, description) WHERE note IS NULL AND column_name('habits','description');
+ALTER TABLE habits
+    ADD COLUMN IF NOT EXISTS owner_id BIGINT,
+    ADD COLUMN IF NOT EXISTS area_id INTEGER,
+    ADD COLUMN IF NOT EXISTS project_id INTEGER,
+    ADD COLUMN IF NOT EXISTS title VARCHAR(255),
+    ADD COLUMN IF NOT EXISTS note TEXT,
+    ADD COLUMN IF NOT EXISTS type VARCHAR(8),
+    ADD COLUMN IF NOT EXISTS difficulty VARCHAR(8),
+    ADD COLUMN IF NOT EXISTS frequency VARCHAR(20),
+    ADD COLUMN IF NOT EXISTS progress JSON,
+    ADD COLUMN IF NOT EXISTS up_enabled BOOLEAN,
+    ADD COLUMN IF NOT EXISTS down_enabled BOOLEAN,
+    ADD COLUMN IF NOT EXISTS val DOUBLE PRECISION,
+    ADD COLUMN IF NOT EXISTS daily_limit INTEGER,
+    ADD COLUMN IF NOT EXISTS cooldown_sec INTEGER,
+    ADD COLUMN IF NOT EXISTS last_action_at TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS tags JSON,
+    ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ,
+    ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ;
 
 DO $$
 BEGIN
     IF EXISTS (
         SELECT 1 FROM information_schema.columns
-        WHERE table_name = 'habits' AND column_name = 'name'
+        WHERE table_schema = current_schema()
+          AND table_name = 'habits'
+          AND column_name = 'description'
+    ) THEN
+        UPDATE habits SET note = COALESCE(note, description) WHERE note IS NULL;
+        UPDATE habits SET title = COALESCE(title, description) WHERE title IS NULL;
+    END IF;
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = current_schema()
+          AND table_name = 'habits'
+          AND column_name = 'name'
     ) THEN
         UPDATE habits SET title = COALESCE(title, name);
         ALTER TABLE habits DROP COLUMN name;
     END IF;
 END $$;
-
-UPDATE habits SET title = COALESCE(title, description) WHERE title IS NULL;
 
 ALTER TABLE habits DROP COLUMN IF EXISTS description;
 ALTER TABLE habits DROP COLUMN IF EXISTS schedule;
@@ -64,20 +73,10 @@ ALTER TABLE habits DROP COLUMN IF EXISTS start_date;
 ALTER TABLE habits DROP COLUMN IF EXISTS end_date;
 ALTER TABLE habits DROP COLUMN IF EXISTS updated_at;
 
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_name = 'habits' AND column_name = 'frequency'
-    ) THEN
-        ALTER TABLE habits ADD COLUMN frequency VARCHAR(20);
-    END IF;
-END $$;
-
 UPDATE habits SET frequency = 'daily' WHERE frequency IS NULL;
-ALTER TABLE habits ALTER COLUMN frequency SET DATA TYPE VARCHAR(20);
-ALTER TABLE habits ALTER COLUMN frequency SET NOT NULL;
+ALTER TABLE habits ALTER COLUMN frequency TYPE VARCHAR(20);
 ALTER TABLE habits ALTER COLUMN frequency SET DEFAULT 'daily';
+ALTER TABLE habits ALTER COLUMN frequency SET NOT NULL;
 
 UPDATE habits SET progress = '{}'::json WHERE progress IS NULL;
 ALTER TABLE habits ALTER COLUMN progress SET DEFAULT '{}'::json;
@@ -89,11 +88,34 @@ ALTER TABLE habits ALTER COLUMN down_enabled SET DEFAULT TRUE;
 ALTER TABLE habits ALTER COLUMN down_enabled SET NOT NULL;
 ALTER TABLE habits ALTER COLUMN val SET DEFAULT 0;
 ALTER TABLE habits ALTER COLUMN val SET NOT NULL;
+UPDATE habits SET up_enabled = TRUE WHERE up_enabled IS NULL;
+UPDATE habits SET down_enabled = TRUE WHERE down_enabled IS NULL;
+UPDATE habits SET val = 0 WHERE val IS NULL;
 
 ALTER TABLE habits ALTER COLUMN daily_limit SET DEFAULT 10;
 ALTER TABLE habits ALTER COLUMN cooldown_sec SET DEFAULT 60;
+ALTER TABLE habits ALTER COLUMN created_at SET DEFAULT now();
+UPDATE habits SET daily_limit = 10 WHERE daily_limit IS NULL;
+UPDATE habits SET cooldown_sec = 60 WHERE cooldown_sec IS NULL;
+UPDATE habits SET created_at = now() WHERE created_at IS NULL;
 
 ALTER TABLE habits ALTER COLUMN area_id SET NOT NULL;
+ALTER TABLE habits ALTER COLUMN title TYPE VARCHAR(255);
+ALTER TABLE habits ALTER COLUMN type TYPE VARCHAR(8);
+ALTER TABLE habits ALTER COLUMN difficulty TYPE VARCHAR(8);
+
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = current_schema()
+          AND table_name = 'habits'
+          AND column_name = 'tags'
+          AND data_type = 'ARRAY'
+    ) THEN
+        ALTER TABLE habits ALTER COLUMN tags TYPE JSON USING to_json(tags);
+    END IF;
+END $$;
 
 ALTER TABLE habits DROP CONSTRAINT IF EXISTS fk_habits_owner;
 ALTER TABLE habits DROP CONSTRAINT IF EXISTS habits_owner_id_fkey;
@@ -104,6 +126,10 @@ ALTER TABLE habits ADD CONSTRAINT fk_habits_area FOREIGN KEY (area_id) REFERENCE
 ALTER TABLE habits DROP CONSTRAINT IF EXISTS fk_habits_project;
 ALTER TABLE habits DROP CONSTRAINT IF EXISTS habits_project_id_fkey;
 ALTER TABLE habits ADD CONSTRAINT fk_habits_project FOREIGN KEY (project_id) REFERENCES projects(id);
+ALTER TABLE habits DROP CONSTRAINT IF EXISTS chk_habits_type;
+ALTER TABLE habits ADD CONSTRAINT chk_habits_type CHECK (type IN ('positive','negative','both'));
+ALTER TABLE habits DROP CONSTRAINT IF EXISTS chk_habits_difficulty;
+ALTER TABLE habits ADD CONSTRAINT chk_habits_difficulty CHECK (difficulty IN ('trivial','easy','medium','hard'));
 
 CREATE INDEX IF NOT EXISTS idx_habits_owner_area ON habits(owner_id, area_id);
 CREATE INDEX IF NOT EXISTS idx_habits_project ON habits(project_id);

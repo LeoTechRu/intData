@@ -161,28 +161,6 @@ async def list_profiles(
     ]
 
 
-@router.get("/{entity}/{slug}", response_model=ProfileOut)
-async def get_profile(
-    entity: EntityKind,
-    slug: str,
-    current_user: Optional[WebUser] = Depends(get_current_web_user),
-):
-    entity_type = _ensure_entity(entity)
-    async with ProfileService() as service:
-        try:
-            access = await service.get_profile(
-                entity_type=entity_type,
-                slug=slug,
-                viewer=current_user,
-            )
-        except ValueError as exc:  # profile not found
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
-        except PermissionError:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
-    include_grants = access.is_owner or access.is_admin
-    return _profile_to_response(access, include_grants=include_grants)
-
-
 @router.get("/users/@me", response_model=CurrentUserProfile)
 async def get_current_user_profile(
     current_user: Optional[WebUser] = Depends(get_current_web_user),
@@ -205,6 +183,28 @@ async def get_current_user_profile(
         avatar_url=profile.avatar_url or current_user.avatar_url,
         headline=profile.headline,
     )
+
+
+@router.get("/{entity}/{slug}", response_model=ProfileOut)
+async def get_profile(
+    entity: EntityKind,
+    slug: str,
+    current_user: Optional[WebUser] = Depends(get_current_web_user),
+):
+    entity_type = _ensure_entity(entity)
+    async with ProfileService() as service:
+        try:
+            access = await service.get_profile(
+                entity_type=entity_type,
+                slug=slug,
+                viewer=current_user,
+            )
+        except ValueError as exc:  # profile not found
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+        except PermissionError:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    include_grants = access.is_owner or access.is_admin
+    return _profile_to_response(access, include_grants=include_grants)
 
 
 @router.put("/{entity}/{slug}", response_model=ProfileOut)
