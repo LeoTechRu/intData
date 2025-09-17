@@ -29,6 +29,8 @@ from .routes import (
     settings,
     habits,
     notes,
+    areas,
+    projects,
     calendar,
     time_entries,
     products,
