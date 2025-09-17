@@ -77,7 +77,7 @@ def build_csp(script_hashes: Iterable[str] = ()) -> str:
 
     return (
         "default-src 'self'; "
-        "img-src 'self' data:; "
+        "img-src 'self' data: https:; "
         "style-src 'self' 'unsafe-inline'; "
         f"script-src {' '.join(script_src)}; "
         f"frame-src {' '.join(frame_src)}; "

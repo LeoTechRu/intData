@@ -1,5 +1,5 @@
-import UsersCatalog from '../../components/users/UsersCatalog';
+import UsersRouteView from '../../components/users/UsersRouteView';
 
 export default function UsersPage() {
-  return <UsersCatalog />;
+  return <UsersRouteView />;
 }

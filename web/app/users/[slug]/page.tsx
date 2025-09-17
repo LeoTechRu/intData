@@ -1,14 +1,8 @@
-import ProfileView from '../../../components/profile/ProfileView';
+import UsersRouteView from '../../../components/users/UsersRouteView';
 
-interface PageParams {
-  slug: string;
-}
+export const dynamic = 'force-static';
+export const dynamicParams = true;
 
-interface PageProps {
-  params: Promise<PageParams>;
-}
-
-export default async function UserProfilePage({ params }: PageProps) {
-  const resolved = await params;
-  return <ProfileView entity="users" slug={resolved.slug} backHref="/users" backLabel="← К каталогу" />;
+export default function UserProfilePage() {
+  return <UsersRouteView />;
 }
