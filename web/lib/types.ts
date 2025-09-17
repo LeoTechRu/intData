@@ -344,3 +344,29 @@ export interface AdminSettingsPayload {
     TG_BOT_TOKEN: boolean | string | null;
   };
 }
+
+export interface AuthConfigWarning {
+  code: string;
+  message: string;
+}
+
+export interface AuthOptionsPayload {
+  brand_name: string;
+  tagline: string;
+  tg_login_enabled: boolean;
+  tg_bot_username: string;
+  tg_bot_login_url?: string | null;
+  recaptcha_site_key?: string | null;
+  magic_link_enabled: boolean;
+  config_warnings: AuthConfigWarning[];
+}
+
+export interface AuthFeedbackResponse {
+  ok: boolean;
+  active: string;
+  flash?: string | null;
+  form_values: Record<string, string>;
+  form_errors: Record<string, string>;
+  redirect?: string | null;
+  config_warnings?: AuthConfigWarning[];
+}

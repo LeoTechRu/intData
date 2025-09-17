@@ -162,7 +162,6 @@ SCHEMA.json является единой «точкой истины» стру
 - Фичефлаги: `CALENDAR_V2_ENABLED`, `HABITS_V1_ENABLED`, `HABITS_RPG_ENABLED` (и `.env.example` при необходимости).
 - Тесты (pytest): наследование PARA; один активный таймер; cron ежедневок (идемпотентность); `habits up/down`, `dailies done/undo`, виртуальные записи в agenda; срезы `/time/summary`.
 - Коммиты/PR: императивный заголовок, почему+что; обновление `.env.example`, `docs/BACKLOG.md`, `docs/CHANGELOG.md`; скриншоты UI.
-- Команды Linux выполняй без `sudo` по умолчанию; пользуйся `sudo` только если команда без него завершается ошибкой из-за недостатка прав.
 - Work from repo root, activate venv, install deps, then implement.
 - Keep changes minimal and aligned with existing style. Always finish with: `source ./venv/bin/activate && pip install --quiet -r requirements.txt && pytest -q`.
 - Changes to note models or endpoints require updating `core/db/SCHEMA.*` via `python -m core.db.schema_export generate`; OpenAPI is served at `/api/openapi.json` and used in tests.
