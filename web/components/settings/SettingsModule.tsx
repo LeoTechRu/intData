@@ -119,12 +119,15 @@ function useViewerRole(): string | null {
   return viewer?.role ?? null;
 }
 
-interface ThemeDraftState extends ThemePreferences {
-  mode?: ThemeMode;
-  primary?: string | null;
-  accent?: string | null;
-  surface?: string | null;
-  gradient?: { from?: string | null; to?: string | null } | null;
+interface ThemeDraftGradient {
+  from?: string | null;
+  to?: string | null;
+}
+
+type ThemeDraftBase = Omit<ThemePreferences, 'gradient'>;
+
+interface ThemeDraftState extends ThemeDraftBase {
+  gradient?: ThemeDraftGradient | null;
 }
 
 function normalizeDraft(theme: ThemeDraftState): ThemePreferences {
