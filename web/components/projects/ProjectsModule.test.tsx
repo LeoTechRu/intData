@@ -82,9 +82,8 @@ describe('ProjectsModule (Next UI)', () => {
 
     expect(await screen.findByText('Фитнес')).toBeInTheDocument();
 
-    const allButtons = await screen.findAllByRole('button');
-    const quickButton = allButtons.find((button) => button.textContent?.includes('Быстро'));
-    expect(quickButton).toBeDefined();
+    const quickButton = await screen.findByTestId('projects-quick-create-button');
+    expect(quickButton).toBeInTheDocument();
 
     const totalCard = screen.getByText('Всего проектов').closest('section');
     expect(totalCard).not.toBeNull();
@@ -135,14 +134,7 @@ describe('ProjectsModule (Next UI)', () => {
     const quickInput = await screen.findByLabelText('Название проекта');
     fireEvent.change(quickInput, { target: { value: 'Новый проект' } });
 
-    const quickButton = (await screen.findAllByRole('button')).find((button) =>
-      button.textContent?.includes('Быстро'),
-    );
-    expect(quickButton).toBeDefined();
-    if (!quickButton) {
-      throw new Error('Quick create button not rendered');
-    }
-
+    const quickButton = await screen.findByTestId('projects-quick-create-button');
     fireEvent.click(quickButton);
 
     await waitFor(() => {
