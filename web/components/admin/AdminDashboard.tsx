@@ -36,9 +36,8 @@ export default function AdminDashboard() {
   return (
     <div className="flex flex-col gap-6 pb-16">
       <header className="rounded-2xl border border-subtle bg-[var(--surface-0)] px-6 py-5 shadow-soft">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-semibold text-[var(--text-primary)]">ЛК Админа</h1>
-          <p className="text-sm text-muted">
+        <div className="space-y-2 text-sm text-muted">
+          <p>
             Управляйте пользователями, Telegram-группами и настройками рабочей области из единого центра. Все действия
             требуют роли <strong>admin</strong> и логируются для аудита.
           </p>

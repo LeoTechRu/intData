@@ -148,6 +148,7 @@ export default function AppShell({
   const [isHydrated, setIsHydrated] = useState(false);
   const [isNavEditorOpen, setIsNavEditorOpen] = useState(false);
   const headingId = titleId ?? 'app-shell-title';
+  const headingDescriptionId = subtitle ? `${headingId}-description` : undefined;
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -403,10 +404,16 @@ export default function AppShell({
             <h1
               id={headingId}
               className="truncate text-lg font-semibold leading-tight text-[var(--text-primary)] md:text-xl"
+              title={subtitle ?? undefined}
+              aria-describedby={headingDescriptionId}
             >
               {title}
             </h1>
-            {subtitle ? <p className="truncate text-sm text-muted">{subtitle}</p> : null}
+            {subtitle ? (
+              <p id={headingDescriptionId} className="sr-only">
+                {subtitle}
+              </p>
+            ) : null}
           </div>
           <div className="flex items-center justify-end gap-3">
             {actions ? <div className="flex items-center gap-2">{actions}</div> : null}

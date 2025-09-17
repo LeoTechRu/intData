@@ -29,7 +29,7 @@ DASHBOARD_WIDGETS = [
 ]
 
 FAVORITE_PAGES = [
-    {"path": "/", "label": "ЦУП", "permission": "app.dashboard.view"},
+    {"path": "/", "label": "Обзор", "permission": "app.dashboard.view"},
     {"path": "/tasks", "label": "Задачи", "permission": "app.tasks.manage"},
     {"path": "/projects", "label": "Проекты", "permission": "app.projects.manage"},
     {"path": "/notes", "label": "Заметки", "permission": "app.tasks.manage"},
@@ -39,7 +39,7 @@ FAVORITE_PAGES = [
     {"path": "/habits", "label": "Привычки", "permission": "app.habits.manage"},
     {"path": "/time", "label": "Время", "permission": "app.tasks.manage"},
     {"path": "/inbox", "label": "Входящие", "permission": "app.tasks.manage"},
-    {"path": "/#cup-admin-tools", "label": "Админ", "role": "admin"},
+    {"path": "/admin", "label": "Админ", "role": "admin"},
 ]
 
 THEME_PRESETS = [

@@ -11,7 +11,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'Intelligent Data Pro',
-  description: 'ЦУП и инструменты PARA для управления знаниями, временем и привычками.',
+  description: 'Обзор и инструменты PARA для управления знаниями, временем и привычками.',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

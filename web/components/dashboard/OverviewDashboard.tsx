@@ -247,18 +247,17 @@ export default function OverviewDashboard() {
     queryFn: () => apiFetch<DashboardOverview>('/api/v1/dashboard/overview'),
   });
 
-  const layoutQuery = useQuery<{ key: string; value: DashboardLayoutSettings } | DashboardLayoutSettings>({
+  const layoutQuery = useQuery<DashboardLayoutSettings>({
     queryKey: ['dashboard', 'layout'],
     queryFn: async () => {
-      const response = await apiFetch<{ key: string; value: DashboardLayoutSettings }>(
+      const response = await apiFetch<{ key: string; value: DashboardLayoutSettings } | DashboardLayoutSettings>(
         '/api/v1/user/settings/dashboard_layout',
       );
-      if ('value' in response) {
-        return response;
+      if (response && typeof response === 'object' && 'value' in response) {
+        return response.value;
       }
-      return { key: 'dashboard_layout', value: response as DashboardLayoutSettings };
+      return response as DashboardLayoutSettings;
     },
-    select: (payload) => ('value' in payload ? payload.value : (payload as DashboardLayoutSettings)),
   });
 
   const [layoutState, setLayoutState] = useState<LayoutState>(() => normalizeLayout());
@@ -737,7 +736,6 @@ function QuickNoteWidget({ tick, onSuccess }: { tick: number; onSuccess: () => v
         placeholder="Быстрая заметка…"
         value={value}
         onChange={(event) => setValue(event.target.value)}
-        minRows={3}
       />
       <div className="flex items-center justify-between gap-3">
         <Button type="submit" size="sm" disabled={mutation.isPending}>
