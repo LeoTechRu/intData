@@ -34,22 +34,38 @@ afterEach(() => {
 
 describe('ProfileView', () => {
   it('renders profile data', async () => {
-    const fetchMock = vi.spyOn(global, 'fetch').mockResolvedValue(
-      jsonResponse({
-        slug: 'alpha',
-        display_name: 'Project Alpha',
-        headline: 'Основной проект',
-        summary: 'Запуск нового лендинга',
-        avatar_url: 'https://example.com/avatar.png',
-        cover_url: 'https://example.com/cover.jpg',
-        profile_meta: { owner: 'Иван', status: 'Active' },
-        tags: ['marketing', 'launch'],
-        sections: [
-          { id: 'overview', title: 'Обзор' },
-          { id: 'docs' },
-        ],
-      }),
-    );
+    const fetchMock = vi.spyOn(global, 'fetch').mockImplementation((input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      if (url.includes('/profiles/users/@me')) {
+        return Promise.resolve(
+          jsonResponse({
+            user_id: 7,
+            username: 'tester',
+            role: 'single',
+            profile_slug: 'tester',
+            display_name: 'Test User',
+            avatar_url: null,
+            headline: 'QA Lead',
+          }),
+        );
+      }
+      return Promise.resolve(
+        jsonResponse({
+          slug: 'alpha',
+          display_name: 'Project Alpha',
+          headline: 'Основной проект',
+          summary: 'Запуск нового лендинга',
+          avatar_url: 'https://example.com/avatar.png',
+          cover_url: 'https://example.com/cover.jpg',
+          profile_meta: { owner: 'Иван', status: 'Active' },
+          tags: ['marketing', 'launch'],
+          sections: [
+            { id: 'overview', title: 'Обзор' },
+            { id: 'docs' },
+          ],
+        }),
+      );
+    });
 
     renderWithClient(
       <ProfileView entity="projects" slug="alpha" backHref="/projects" backLabel="← Назад" />,
@@ -70,7 +86,23 @@ describe('ProfileView', () => {
   });
 
   it('shows error message', async () => {
-    vi.spyOn(global, 'fetch').mockResolvedValue(new Response(null, { status: 500 }));
+    vi.spyOn(global, 'fetch').mockImplementation((input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      if (url.includes('/profiles/users/@me')) {
+        return Promise.resolve(
+          jsonResponse({
+            user_id: 7,
+            username: 'tester',
+            role: 'single',
+            profile_slug: 'tester',
+            display_name: 'Test User',
+            avatar_url: null,
+            headline: 'QA Lead',
+          }),
+        );
+      }
+      return Promise.resolve(new Response(null, { status: 500 }));
+    });
 
     renderWithClient(<ProfileView entity="areas" slug="beta" />);
 
