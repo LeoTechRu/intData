@@ -15,6 +15,9 @@ from ..security.csp import augment_csp, extract_inline_script_hashes
 
 NEXT_build_ROOT = Path(__file__).resolve().parents[1] / ".next"
 NEXT_APP_HTML_DIR = NEXT_build_ROOT / "server" / "app"
+NEXT_HTML_ALIASES: dict[str, tuple[str, ...]] = {
+    "page": ("index",),
+}
 NEXT_STATIC_DIR = NEXT_build_ROOT / "static"
 NEXT_SOURCE_DIR = Path(__file__).resolve().parents[1]
 
@@ -63,9 +66,20 @@ async def index(
 
 
 @lru_cache(maxsize=None)
-def _load_next_html(page: str) -> str:
+def _resolve_html_path(page: str) -> Path | None:
     html_path = NEXT_APP_HTML_DIR / f"{page}.html"
-    if not html_path.exists():
+    if html_path.exists():
+        return html_path
+    for alias in NEXT_HTML_ALIASES.get(page, ()):  # pragma: no cover - fallback diff between Next versions
+        alias_path = NEXT_APP_HTML_DIR / f"{alias}.html"
+        if alias_path.exists():
+            return alias_path
+    return None
+
+
+def _load_next_html(page: str) -> str:
+    html_path = _resolve_html_path(page)
+    if html_path is None:
         auto_build = os.getenv("NEXT_AUTO_BUILD", "1") == "1"
         if auto_build:
             try:
@@ -93,7 +107,8 @@ def _load_next_html(page: str) -> str:
                 logger.error("Не удалось собрать Next.js: %s", exc)
                 if isinstance(exc, subprocess.CalledProcessError) and exc.stderr:
                     logger.error("npm run build stderr:\n%s", exc.stderr.decode("utf-8", "ignore"))
-            if html_path.exists():
+            html_path = _resolve_html_path(page)
+            if html_path is not None:
                 return html_path.read_text(encoding="utf-8")
         raise HTTPException(status_code=500, detail=f"Next.js page '{page}' отсутствует — запустите npm run build")
     return html_path.read_text(encoding="utf-8")
