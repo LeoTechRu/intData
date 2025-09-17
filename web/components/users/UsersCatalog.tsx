@@ -59,10 +59,17 @@ export default function UsersCatalog() {
   const showEmptyState = !isLoading && !isFetching && !hasResults && !hasError;
 
   return (
-    <PageLayout title="Команда" description="Каталог пользователей Intelligent Data Pro">      
+    <PageLayout
+      title="Команда"
+      description="Каталог пользователей Intelligent Data Pro"
+      contentClassName="flex flex-col gap-4 p-4 sm:p-6 md:p-8"
+    >
       <section className="flex flex-col gap-6">
-        <form className="flex flex-wrap items-center gap-3" onSubmit={handleSearch}>
-          <label htmlFor="users-search" className="relative flex min-w-[220px] flex-1 items-center gap-2 rounded-xl border border-subtle bg-surface-soft px-3 py-2 text-sm">
+        <form className="flex flex-col gap-3 sm:flex-row sm:items-center" onSubmit={handleSearch}>
+          <label
+            htmlFor="users-search"
+            className="relative flex w-full items-center gap-2 rounded-xl border border-subtle bg-surface-soft px-3 py-2 text-sm sm:flex-1"
+          >
             <span className="text-muted" aria-hidden>
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11 5a6 6 0 015.2 8.94l3.43 3.43a1 1 0 01-1.42 1.42l-3.43-3.43A6 6 0 1111 5z" />
@@ -79,7 +86,7 @@ export default function UsersCatalog() {
           </label>
           <button
             type="submit"
-            className="inline-flex items-center gap-2 rounded-xl bg-[var(--accent-primary)] px-4 py-2 text-sm font-medium text-[var(--accent-on-primary)] transition-base hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent-primary)] px-4 py-2 text-sm font-medium text-[var(--accent-on-primary)] transition-base hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)] sm:w-auto"
           >
             Найти
           </button>
@@ -104,10 +111,10 @@ export default function UsersCatalog() {
           </div>
         ) : null}
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {isLoading
             ? Array.from({ length: 6 }).map((_, index) => (
-                <article key={index} className="rounded-2xl border border-subtle bg-[var(--surface-0)] p-5">
+                <article key={index} className="rounded-2xl border border-subtle bg-[var(--surface-0)] p-4 sm:p-5">
                   <div className="flex items-center gap-3">
                     <div className="h-12 w-12 rounded-xl bg-surface-soft animate-pulse" />
                     <div className="flex flex-col gap-2">
@@ -127,7 +134,7 @@ export default function UsersCatalog() {
                     key={user.slug}
                     href={`/users/${user.slug}`}
                     prefetch={false}
-                    className="group flex flex-col gap-3 rounded-2xl border border-subtle bg-[var(--surface-0)] p-5 transition-base hover:-translate-y-1 hover:border-[var(--accent-primary)]"
+                    className="group flex flex-col gap-3 rounded-2xl border border-subtle bg-[var(--surface-0)] p-4 transition-base hover:-translate-y-1 hover:border-[var(--accent-primary)] sm:p-5"
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-surface-soft">

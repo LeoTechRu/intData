@@ -70,11 +70,68 @@ export default function AppShell({
   children,
 }: AppShellProps) {
   const pathname = usePathname();
-  const [isNavOpen, setIsNavOpen] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    setIsNavOpen(false);
+    setIsMobileNavOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return;
+    }
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
+    setIsDesktop(mediaQuery.matches);
+    const listener = (event: MediaQueryListEvent) => {
+      setIsDesktop(event.matches);
+      if (event.matches) {
+        setIsMobileNavOpen(false);
+      }
+    };
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', listener);
+      return () => mediaQuery.removeEventListener('change', listener);
+    }
+    mediaQuery.addListener(listener);
+    return () => mediaQuery.removeListener(listener);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    setIsHydrated(true);
+    const persisted = window.localStorage.getItem('appShell.sidebarCollapsed');
+    if (persisted === '1') {
+      setIsSidebarCollapsed(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated || typeof window === 'undefined') {
+      return;
+    }
+    window.localStorage.setItem('appShell.sidebarCollapsed', isSidebarCollapsed ? '1' : '0');
+  }, [isSidebarCollapsed, isHydrated]);
+
+  const toggleLabel = isDesktop
+    ? isSidebarCollapsed
+      ? 'Показать меню'
+      : 'Скрыть меню'
+    : isMobileNavOpen
+    ? 'Скрыть меню'
+    : 'Показать меню';
+
+  const handleToggleNav = () => {
+    if (isDesktop) {
+      setIsSidebarCollapsed((prev) => !prev);
+      return;
+    }
+    setIsMobileNavOpen((prev) => !prev);
+  };
 
   const navItems = useMemo(() => {
     const resolved = resolveNavigation();
@@ -95,9 +152,10 @@ export default function AppShell({
         <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-4 py-4 md:px-6">
           <button
             type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-surface-soft text-muted transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] md:hidden"
-            aria-label={isNavOpen ? 'Скрыть меню' : 'Показать меню'}
-            onClick={() => setIsNavOpen((prev) => !prev)}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-surface-soft text-muted transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] md:h-10 md:w-10"
+            aria-label={toggleLabel}
+            aria-pressed={isDesktop ? !isSidebarCollapsed : isMobileNavOpen}
+            onClick={handleToggleNav}
           >
             <span className="sr-only">Меню</span>
             <svg
@@ -108,7 +166,13 @@ export default function AppShell({
               stroke="currentColor"
               strokeWidth={1.5}
             >
-              {isNavOpen ? (
+              {isDesktop ? (
+                isSidebarCollapsed ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l6 7-6 7" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 5l-6 7 6 7" />
+                )
+              ) : isMobileNavOpen ? (
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               ) : (
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M3 12h18M3 18h18" />
@@ -125,10 +189,15 @@ export default function AppShell({
       </header>
       <div className="relative flex flex-1">
         <aside
-          className={`fixed inset-y-0 left-0 z-50 w-72 translate-x-0 transform border-r border-subtle bg-[var(--surface-0)] px-4 py-6 transition-transform duration-200 ease-out md:static md:w-64 md:translate-x-0 md:px-5 md:py-8 ${
-            isNavOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+          className={`${'fixed inset-y-0 left-0 z-50 w-72 translate-x-0 transform border-r border-subtle bg-[var(--surface-0)] px-4 py-6 transition-transform duration-200 ease-out md:static md:px-5 md:py-8'} ${
+            isMobileNavOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+          } ${
+            isSidebarCollapsed
+              ? 'md:-translate-x-full md:w-0 md:px-0 md:py-0 md:opacity-0 md:pointer-events-none'
+              : 'md:w-64 md:translate-x-0'
           }`}
           aria-label="Главное меню"
+          aria-hidden={isSidebarCollapsed && !isMobileNavOpen}
         >
           <nav className="flex flex-col gap-1">
             {navItems.map((item) => {
@@ -187,11 +256,11 @@ export default function AppShell({
             })}
           </nav>
         </aside>
-        {isNavOpen ? (
+        {isMobileNavOpen ? (
           <div
             className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden"
             role="presentation"
-            onClick={() => setIsNavOpen(false)}
+            onClick={() => setIsMobileNavOpen(false)}
           />
         ) : null}
         <div className="flex min-h-full flex-1 justify-center bg-surface">
