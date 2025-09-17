@@ -332,6 +332,7 @@ app.include_router(time_entries.ui_router, include_in_schema=False)
 app.include_router(groups.ui_router, include_in_schema=False)
 app.include_router(auth.router, include_in_schema=False)
 app.include_router(admin_ui.router, include_in_schema=False)
+app.include_router(admin_ui.admin_ui_router, include_in_schema=False)
 
 # Подключение всех API под единым префиксом
 app.include_router(api_router, prefix="/api/v1")

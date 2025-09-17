@@ -9,8 +9,10 @@ from core.services.group_moderation_service import GroupModerationService
 from core.services.access_control import AccessControlService
 from ..dependencies import role_required
 from ..template_env import templates
+from .index import render_next_page
 
 router = APIRouter(prefix="/cup", tags=["cup"], include_in_schema=False)
+admin_ui_router = APIRouter(prefix="/admin", tags=["admin"], include_in_schema=False)
 
 
 async def load_admin_console_data() -> dict[str, Any]:
@@ -61,6 +63,12 @@ async def admin_embed(
         "admin_heading_description": "Полный набор сервисов для управления платформой.",
     }
     return templates.TemplateResponse(request, "admin/embed.html", context)
+
+
+@admin_ui_router.get("", name="admin:dashboard")
+async def admin_dashboard_page(current_user: WebUser = Depends(role_required("admin"))):
+    """Serve the modern admin dashboard implemented in Next.js."""
+    return render_next_page("admin")
 
 
 """Admin UI routes only. JSON actions live under /api/v1/admin/*."""

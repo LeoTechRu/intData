@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Next.js-дэшборд «Обзор» (`/`) с drag-and-drop виджетами, настройками видимости и данными из нового API `/api/v1/dashboard/overview`.
+- Роль-гейтед страница «ЛК Админа» (`/admin`) на Next.js, использующая `/api/v1/admin/overview` и существующие администртивные эндпоинты; legacy-встраивание `/cup/admin-embed` сохранено.
+- API `/api/v1/admin/overview` и обновлённые React-компоненты для управления web/TG-пользователями, группами, брендингом и рестартами сервисов.
 - Страница `/habits` на Next.js: HUD с XP/Gold/KP, фильтр по областям и управление привычками через React Query.
 - API `GET /api/v1/profiles/users/@me` для получения краткого профиля текущего пользователя (аватар, роль, slug) в шапке Next.js.
 - Admin API endpoint `/api/v1/admin/audit/logs` для просмотра журнала выдачи прав (миграция из NexusCore Balance).

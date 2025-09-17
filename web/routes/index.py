@@ -55,12 +55,6 @@ async def index(
             "/ban", status_code=status.HTTP_307_TEMPORARY_REDIRECT
         )
     if current_user:
-        if current_user.role in {"ban", "suspended"}:
-            from fastapi.responses import RedirectResponse
-
-            return RedirectResponse(
-                "/ban", status_code=status.HTTP_307_TEMPORARY_REDIRECT
-            )
         return render_next_page("page")
 
     from fastapi.responses import RedirectResponse

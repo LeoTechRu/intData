@@ -39,8 +39,8 @@
 - Стандарты: **ESLint**, **Prettier**, **Vitest/Jest**; перед PR выполняются `npm run build`, `npm run dev`, `npm run lint`, `npm run test`.
 - Агент codex-cli автоматически запускает `npm run build` после любых изменений, требующих пересборки Node.js (фронтенд в `web/app`, `web/components`, `web/lib`, стили, конфиги, npm-зависимости), фиксируя запуск в отчёте; если выполнить сборку нельзя, агент обязан явно описать причину.
 - Задачи по фронтенду согласуются с [docs/BACKLOG.md#e17-frontend-modernization](./docs/BACKLOG.md#e17-frontend-modernization) как единой SSoT.
-- ЦУП (`web/templates/start.html`) собирается на адаптивной сетке `repeat(auto-fit, minmax(320px, 1fr))`. Каждый виджет — `<section class="card" data-widget="…">` с обязательной `.card-title`, уникальным `data-widget` и классами `span-*` для расширения на 2/3 колонок. Минимальная высота карты задаётся `--dashboard-card-min-height`, порядок и видимость сохраняются в `user_settings.dashboard_layout`.
-- Админский сектор подключается через `<iframe data-admin-iframe>` с маршрута `/cup/admin-embed` и шаблона `web/templates/admin/embed.html`; любые изменения админки вносим там либо в `partials/admin_tools.html`, без прямых блоков в `start.html`.
+- Обзор (`web/app/page.tsx`, `web/components/dashboard/OverviewDashboard.tsx`) работает на Next.js с адаптивной сеткой `repeat(auto-fit, minmax(320px, 1fr))`. Каждый виджет имеет `data-widget` для идентификации; порядок и видимость хранятся в `user_settings.dashboard_layout`.
+- ЛК админа доступен по `/admin` (Next.js, `web/app/admin/page.tsx`, `web/components/admin`). Для legacy-встраивания остаётся `/cup/admin-embed` c шаблоном `web/templates/admin/embed.html`.
 
 ## Инициализация БД (без Alembic)
 - Источник правды по схеме: идемпотентные DDL в **`core/db/ddl/*.sql`** (только `CREATE/ALTER/INDEX IF NOT EXISTS`).
@@ -80,7 +80,7 @@
 - Одна расширяемая таблица **`user_settings`** (K/V JSONB): ключи `dashboard_layout`, `favorites` и др. в будущем.
 - Перенос `users_favorites` → `user_settings` (`key='favorites'`) выполняется в **`core/db/repair.py`** (идемпотентно).
 - API: `GET /api/v1/user/settings`, `GET/PUT /api/v1/user/settings/{key}`.
-- UI: кнопка «Настроить дашборд» в ЦУП включает drag-n-drop и скрытие/возврат виджетов. `layout.widgets` — список видимых карточек по порядку, `layout.hidden` — скрытые. Дефолт – все виджеты до первой сохранённой раскладки.
+- UI: кнопка «Настроить дашборд» в Обзоре включает drag-n-drop (через DnD-kit) и скрытие/возврат виджетов. `layout.widgets` хранит порядок видимых карточек, `layout.hidden` — скрытые. Дефолт — все виджеты в порядке `web/components/dashboard/OverviewDashboard.tsx`.
 - `theme_preferences` хранит персональный пресет темы (`mode`, `primary`, `accent`, `surface`, `gradient{from,to}`) и применяется через `theme-utils.js` (CSS-переменные). Пустой объект = используем глобальный пресет.
 - Глобальный брендовый пресет (`theme.global.*`) живёт в `app_settings`; UI `/settings` синхронно обновляет его и показывает только администраторам.
 

@@ -21,6 +21,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { CSSProperties, FormEvent, ReactNode } from 'react';
 
 import { apiFetch, ApiError } from '../../lib/api';
 import type {
@@ -495,10 +496,10 @@ interface SortableWidgetProps {
 
 function SortableWidget({ id, className, title, description, isEditing, onHide, children }: SortableWidgetProps) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id });
-  const style = {
+  const style: CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-  } satisfies React.CSSProperties;
+  };
 
   return (
     <div
@@ -564,7 +565,7 @@ function renderWidget({
   data: DashboardOverview;
   quickNoteTick: number;
   onQuickNoteSaved: () => void;
-}): React.ReactNode {
+}): ReactNode {
   switch (id) {
     case 'profile_card':
       return <ProfileWidget profile={data.profile} />;
@@ -720,7 +721,7 @@ function QuickNoteWidget({ tick, onSuccess }: { tick: number; onSuccess: () => v
     },
   });
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const trimmed = value.trim();
     if (!trimmed) {
@@ -778,7 +779,7 @@ function ListWidget({
 }: {
   items: DashboardListItem[];
   emptyMessage: string;
-  renderMeta?: (item: DashboardListItem) => React.ReactNode;
+  renderMeta?: (item: DashboardListItem) => ReactNode;
 }) {
   if (!items || items.length === 0) {
     return <SimpleEmptyState message={emptyMessage} size="sm" />;

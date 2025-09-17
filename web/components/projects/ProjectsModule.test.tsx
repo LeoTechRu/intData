@@ -1,18 +1,33 @@
 import React from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
 import ProjectsModule from './ProjectsModule';
 
 expect.extend(matchers);
+
+const pushMock = vi.fn();
+const replaceMock = vi.fn();
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: pushMock,
+    replace: replaceMock,
+    back: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  usePathname: () => '/projects',
+}));
+
+const API_BASE = 'http://localhost';
+const originalFetch = global.fetch;
 
 function renderWithClient(ui: React.ReactElement) {
   const client = new QueryClient();
   return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
 }
-
-const API_BASE = 'http://localhost';
 
 function jsonResponse(data: unknown, init: ResponseInit = {}) {
   return new Response(JSON.stringify(data), {
@@ -24,17 +39,20 @@ function jsonResponse(data: unknown, init: ResponseInit = {}) {
 
 beforeEach(() => {
   process.env.NEXT_PUBLIC_API_BASE = API_BASE;
+  pushMock.mockClear();
+  replaceMock.mockClear();
 });
 
 afterEach(() => {
   cleanup();
-  vi.restoreAllMocks();
+  global.fetch = originalFetch;
+  vi.clearAllMocks();
   delete process.env.NEXT_PUBLIC_API_BASE;
 });
 
-describe('ProjectsModule', () => {
-  it('renders projects list', async () => {
-    const fetchMock = vi.spyOn(global, 'fetch').mockImplementation((input: RequestInfo | URL) => {
+describe('ProjectsModule (Next UI)', () => {
+  it('renders project catalog with quick metrics and navigation links', async () => {
+    const fetchMock = vi.fn((input: RequestInfo | URL) => {
       const url = typeof input === 'string' ? input : input.toString();
       if (url.endsWith('/api/v1/areas')) {
         return Promise.resolve(
@@ -47,24 +65,40 @@ describe('ProjectsModule', () => {
       if (url.endsWith('/api/v1/projects')) {
         return Promise.resolve(
           jsonResponse([
-            { id: 10, name: 'Alpha', area_id: 2, description: null, slug: 'alpha' },
+            { id: 10, name: 'Alpha', area_id: 2, description: 'Run club relaunch', slug: 'alpha' },
           ]),
         );
       }
       return Promise.resolve(new Response(null, { status: 404 }));
     });
+    global.fetch = fetchMock as unknown as typeof fetch;
 
     renderWithClient(<ProjectsModule />);
 
+    await screen.findByText('Alpha');
+
     expect(fetchMock).toHaveBeenCalledWith(`${API_BASE}/api/v1/areas`, expect.anything());
-    expect(await screen.findByText('Alpha')).toBeInTheDocument();
-    expect(screen.queryByText('Area #2')).not.toBeInTheDocument();
-    expect(screen.getByText('Фитнес')).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith(`${API_BASE}/api/v1/projects`, expect.anything());
+
+    expect(await screen.findByText('Фитнес')).toBeInTheDocument();
+
+    const allButtons = await screen.findAllByRole('button');
+    const quickButton = allButtons.find((button) => button.textContent?.includes('Быстро'));
+    expect(quickButton).toBeDefined();
+
+    const totalCard = screen.getByText('Всего проектов').closest('section');
+    expect(totalCard).not.toBeNull();
+    if (totalCard) {
+      expect(within(totalCard).getByText('1')).toBeInTheDocument();
+    }
+
+    const openLink = screen.getByRole('link', { name: /Перейти к проекту/ });
+    expect(openLink).toHaveAttribute('href', '/projects/alpha');
   });
 
-  it('creates new project and refetches list', async () => {
+  it('creates project via quick action and triggers refetch', async () => {
     let projectsCall = 0;
-    const fetchMock = vi.spyOn(global, 'fetch').mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === 'string' ? input : input.toString();
       if (url.endsWith('/api/v1/areas')) {
         return Promise.resolve(
@@ -81,28 +115,35 @@ describe('ProjectsModule', () => {
         }
         return Promise.resolve(
           jsonResponse([
-            { id: 42, name: 'Новый проект', area_id: 2, description: null, slug: 'new-project' },
+            { id: 42, name: 'Новый проект', area_id: 1, description: null, slug: 'new-project' },
           ]),
         );
       }
       if (url.endsWith('/api/v1/projects') && init?.method === 'POST') {
         const body = init.body ? JSON.parse(init.body.toString()) : {};
-        expect(body).toMatchObject({ name: 'Новый проект', area_id: 2, slug: 'new-project' });
-        return Promise.resolve(jsonResponse({ id: 42, name: 'Новый проект', area_id: 2, description: null, slug: 'new-project' }, { status: 201 }));
+        expect(body).toMatchObject({ name: 'Новый проект', area_id: 1 });
+        return Promise.resolve(
+          jsonResponse({ id: 42, name: 'Новый проект', area_id: 1, description: null, slug: 'new-project' }, { status: 201 }),
+        );
       }
       return Promise.resolve(new Response(null, { status: 404 }));
     });
+    global.fetch = fetchMock as unknown as typeof fetch;
 
     renderWithClient(<ProjectsModule />);
 
-    const nameInput = await screen.findByLabelText('Название проекта');
-    fireEvent.change(nameInput, { target: { value: 'Новый проект' } });
-    const areaSelect = screen.getByLabelText('Область (Area)');
-    fireEvent.change(areaSelect, { target: { value: '2' } });
-    const slugInput = screen.getByLabelText('Слаг (опционально)');
-    fireEvent.change(slugInput, { target: { value: 'new-project' } });
+    const quickInput = await screen.findByLabelText('Название проекта');
+    fireEvent.change(quickInput, { target: { value: 'Новый проект' } });
 
-    fireEvent.submit(nameInput.closest('form')!);
+    const quickButton = (await screen.findAllByRole('button')).find((button) =>
+      button.textContent?.includes('Быстро'),
+    );
+    expect(quickButton).toBeDefined();
+    if (!quickButton) {
+      throw new Error('Quick create button not rendered');
+    }
+
+    fireEvent.click(quickButton);
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
@@ -112,8 +153,7 @@ describe('ProjectsModule', () => {
     });
 
     expect(await screen.findByText('Новый проект')).toBeInTheDocument();
-    await waitFor(() => {
-      expect(projectsCall).toBeGreaterThan(1);
-    });
+    await waitFor(() => expect(projectsCall).toBeGreaterThan(1));
+    expect((quickInput as HTMLInputElement).value).toBe('');
   });
 });

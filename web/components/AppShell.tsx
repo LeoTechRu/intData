@@ -18,6 +18,9 @@ interface AppShellProps {
   actions?: ReactNode;
   children: ReactNode;
   titleId?: string;
+  contentVariant?: 'card' | 'flat';
+  maxWidthClassName?: string;
+  mainClassName?: string;
 }
 
 interface NavStatus {
@@ -154,6 +157,9 @@ export default function AppShell({
   actions,
   children,
   titleId,
+  contentVariant = 'card',
+  maxWidthClassName,
+  mainClassName,
 }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -254,6 +260,10 @@ export default function AppShell({
 
   const navItems = useMemo(() => {
     const resolved = resolveNavigation();
+    const isAdmin = (viewer?.role || '').toLowerCase() === 'admin';
+    if (isAdmin && !resolved.some((item) => item.href === '/admin')) {
+      resolved.push({ href: '/admin', label: 'ЛК Админа', status: { kind: 'new' } });
+    }
     return resolved.map((item) => {
       const active = pathname
         ? !item.external && !item.disabled && (pathname === item.href || pathname.startsWith(`${item.href}/`))
@@ -263,7 +273,7 @@ export default function AppShell({
         active,
       };
     });
-  }, [pathname]);
+  }, [pathname, viewer?.role]);
 
   const handleStatusNavigate = (
     status: NavStatus | undefined,
@@ -286,10 +296,22 @@ export default function AppShell({
       : 'md:w-64 md:translate-x-0',
   );
 
+  const computedMaxWidth = maxWidthClassName ?? 'max-w-[1400px]';
+  const headerClasses = clsx(
+    'mx-auto grid w-full grid-cols-[auto,1fr,auto] items-center gap-4 px-4 py-4 md:px-6',
+    computedMaxWidth,
+  );
+  const mainClasses = clsx(
+    'relative z-10 flex w-full flex-col gap-6 px-4 py-6 md:px-8 md:py-10',
+    contentVariant === 'flat' && 'md:px-10 lg:px-12',
+    computedMaxWidth,
+    mainClassName,
+  );
+
   return (
     <div className="flex min-h-screen flex-col bg-surface" data-app-shell>
       <header className="sticky top-0 z-40 border-b border-subtle bg-[var(--surface-0)]/95 backdrop-blur">
-        <div className="mx-auto grid w-full max-w-6xl grid-cols-[auto,1fr,auto] items-center gap-4 px-4 py-4 md:px-6">
+        <div className={headerClasses}>
           <div className="flex items-center gap-2 md:gap-3">
             <button
               type="button"
@@ -452,10 +474,16 @@ export default function AppShell({
           />
         ) : null}
         <div className="flex min-h-full flex-1 justify-center bg-surface">
-          <main className="relative z-10 flex w-full max-w-6xl flex-col gap-6 px-4 py-6 md:px-8 md:py-10">
-            <div className="rounded-2xl border border-subtle bg-[var(--surface-0)] p-0 shadow-soft">
-              {children}
-            </div>
+          <main className={mainClasses}>
+            {contentVariant === 'card' ? (
+              <div className="rounded-2xl border border-subtle bg-[var(--surface-0)] p-0 shadow-soft">
+                {children}
+              </div>
+            ) : (
+              <div className="w-full" data-app-shell-surface>
+                {children}
+              </div>
+            )}
           </main>
         </div>
       </div>
