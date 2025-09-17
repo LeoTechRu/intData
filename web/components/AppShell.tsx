@@ -397,16 +397,20 @@ function UserSummary({
   if (!viewer) {
     return null;
   }
-  const initials = getInitials(viewer.display_name || viewer.username);
+  const displayLabel = viewer.display_name || viewer.username || 'Пользователь';
+  const initials = getInitials(displayLabel);
   const metadata = resolveRoleMetadata(viewer.role);
   const tooltipId = `role-tooltip-${viewer.user_id}`;
+  const profileSlug = viewer.profile_slug || viewer.username || '';
+  const profileHref = profileSlug ? `/users/${profileSlug}` : '/users';
+  const usernameLabel = viewer.username ? `@${viewer.username}` : '—';
   return (
     <div className="flex items-center gap-3">
       <Link
-        href={`/users/${viewer.profile_slug}`}
+        href={profileHref}
         prefetch={false}
         className="group/link inline-flex items-center gap-3 rounded-full border border-transparent px-2 py-1 transition-base hover:border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
-        aria-label={`Профиль пользователя ${viewer.display_name}`}
+        aria-label={`Профиль пользователя ${displayLabel}`}
       >
         <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-surface-soft text-sm font-semibold text-[var(--text-primary)] ring-1 ring-[var(--border-subtle)]">
           {viewer.avatar_url ? (
@@ -423,10 +427,8 @@ function UserSummary({
           )}
         </span>
         <span className="hidden sm:flex min-w-0 flex-col leading-tight">
-          <span className="truncate text-sm font-medium text-[var(--text-primary)]">
-            {viewer.display_name}
-          </span>
-          <span className="truncate text-xs text-muted">@{viewer.username}</span>
+          <span className="truncate text-sm font-medium text-[var(--text-primary)]">{displayLabel}</span>
+          <span className="truncate text-xs text-muted">{usernameLabel}</span>
         </span>
       </Link>
       <div className="relative group/role">

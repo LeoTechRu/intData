@@ -30,6 +30,21 @@ function textResponse(message: string, init: ResponseInit = {}) {
   });
 }
 
+const viewerSummary = {
+  user_id: 42,
+  username: 'tester',
+  role: 'single',
+  profile_slug: 'tester',
+  display_name: 'Test User',
+  avatar_url: null,
+  headline: 'QA Lead',
+};
+
+function isViewerUrl(input: RequestInfo | URL): boolean {
+  const url = typeof input === 'string' ? input : input.toString();
+  return url.includes('/profiles/users/@me');
+}
+
 beforeEach(() => {
   process.env.NEXT_PUBLIC_API_BASE = API_BASE;
 });
@@ -42,22 +57,32 @@ afterEach(() => {
 
 describe('UsersCatalog', () => {
   it('renders users', async () => {
-    const fetchMock = vi.spyOn(global, 'fetch').mockResolvedValue(
-      jsonResponse([
-        { slug: 'alice', display_name: 'Alice', headline: 'Designer', summary: 'UX lead' },
-        { slug: 'bob', display_name: 'Bob', headline: 'Engineer', summary: 'Backend dev' },
-      ]),
-    );
+    const fetchMock = vi.spyOn(global, 'fetch').mockImplementation((input: RequestInfo | URL) => {
+      if (isViewerUrl(input)) {
+        return Promise.resolve(jsonResponse(viewerSummary));
+      }
+      return Promise.resolve(
+        jsonResponse([
+          { slug: 'alice', display_name: 'Alice', headline: 'Designer', summary: 'UX lead' },
+          { slug: 'bob', display_name: 'Bob', headline: 'Engineer', summary: 'Backend dev' },
+        ]),
+      );
+    });
 
     renderWithClient(<UsersCatalog />);
 
-    expect(fetchMock).toHaveBeenCalledWith(`${API_BASE}/api/v1/profiles/users`, expect.anything());
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(`${API_BASE}/api/v1/profiles/users`, expect.anything()),
+    );
     expect(await screen.findByText('Alice')).toBeInTheDocument();
     expect(screen.getByText('Bob')).toBeInTheDocument();
   });
 
   it('submits search query', async () => {
     const fetchMock = vi.spyOn(global, 'fetch').mockImplementation((input: RequestInfo | URL) => {
+      if (isViewerUrl(input)) {
+        return Promise.resolve(jsonResponse(viewerSummary));
+      }
       const url = typeof input === 'string' ? input : input.toString();
       if (url.includes('search=designer')) {
         return Promise.resolve(jsonResponse([{ slug: 'alice', display_name: 'Alice', headline: 'Designer' }]));
@@ -82,14 +107,20 @@ describe('UsersCatalog', () => {
   });
 
   it('shows error state and retries fetch', async () => {
-    const fetchMock = vi
-      .spyOn(global, 'fetch')
-      .mockResolvedValueOnce(textResponse('Сервер недоступен', { status: 503 }))
-      .mockResolvedValueOnce(
-        jsonResponse([
-          { slug: 'carol', display_name: 'Carol', headline: 'PM' },
-        ]),
-      );
+    let catalogCalls = 0;
+    const fetchMock = vi.spyOn(global, 'fetch').mockImplementation((input: RequestInfo | URL) => {
+      if (isViewerUrl(input)) {
+        return Promise.resolve(jsonResponse(viewerSummary));
+      }
+      const url = typeof input === 'string' ? input : input.toString();
+      if (!url.includes('search')) {
+        catalogCalls += 1;
+        if (catalogCalls === 1) {
+          return Promise.resolve(textResponse('Сервер недоступен', { status: 503 }));
+        }
+      }
+      return Promise.resolve(jsonResponse([{ slug: 'carol', display_name: 'Carol', headline: 'PM' }]));
+    });
 
     renderWithClient(<UsersCatalog />);
 
@@ -99,7 +130,7 @@ describe('UsersCatalog', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Повторить' }));
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
     });
 
     expect(await screen.findByText('Carol')).toBeInTheDocument();
