@@ -332,10 +332,7 @@ export default function AppShell({
   );
 
   const computedMaxWidth = maxWidthClassName ?? 'max-w-[1400px]';
-  const headerClasses = clsx(
-    'mx-auto grid w-full grid-cols-[auto,1fr,auto] items-center gap-4 px-4 py-4 md:px-6',
-    computedMaxWidth,
-  );
+  const headerClasses = clsx('grid w-full grid-cols-[auto,1fr,auto] items-center gap-4 px-4 py-4 md:px-6');
   const mainClasses = clsx(
     'relative z-10 flex w-full flex-col gap-6 px-4 py-6 md:px-8 md:py-10',
     contentVariant === 'flat' && 'md:px-10 lg:px-12',
@@ -381,7 +378,7 @@ export default function AppShell({
               className="group inline-flex items-center gap-2 rounded-full border border-transparent px-2.5 py-1 transition-base hover:border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
               aria-label="Intelligent Data Pro — на главную"
             >
-              <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-[var(--accent-primary)] text-[var(--accent-on-primary)] shadow-soft">
+              <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl shadow-soft">
                 <Image
                   src="/static/img/brand/mark.svg"
                   alt="Логотип Intelligent Data Pro"
