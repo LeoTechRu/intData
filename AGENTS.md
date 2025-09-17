@@ -37,6 +37,7 @@
 - Используем компонентный подход, запросы к API через **React Query** или **RTK Query**; все пути согласованы с `/api/v1/*`.
 - Интерфейсы обязательны к адаптивности; не допускаются дубликаты `<h1>`, заголовок задаётся через `MODULE_TITLE`.
 - Стандарты: **ESLint**, **Prettier**, **Vitest/Jest**; перед PR выполняются `npm run build`, `npm run dev`, `npm run lint`, `npm run test`.
+- Агент codex-cli автоматически запускает `npm run build` после любых изменений, требующих пересборки Node.js (фронтенд в `web/app`, `web/components`, `web/lib`, стили, конфиги, npm-зависимости), и отражает запуск в отчёте.
 - Задачи по фронтенду согласуются с [docs/BACKLOG.md#e17-frontend-modernization](./docs/BACKLOG.md#e17-frontend-modernization) как единой SSoT.
 - ЦУП (`web/templates/start.html`) собирается на адаптивной сетке `repeat(auto-fit, minmax(320px, 1fr))`. Каждый виджет — `<section class="card" data-widget="…">` с обязательной `.card-title`, уникальным `data-widget` и классами `span-*` для расширения на 2/3 колонок. Минимальная высота карты задаётся `--dashboard-card-min-height`, порядок и видимость сохраняются в `user_settings.dashboard_layout`.
 - Админский сектор подключается через `<iframe data-admin-iframe>` с маршрута `/cup/admin-embed` и шаблона `web/templates/admin/embed.html`; любые изменения админки вносим там либо в `partials/admin_tools.html`, без прямых блоков в `start.html`.
