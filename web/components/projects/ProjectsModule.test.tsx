@@ -186,4 +186,79 @@ describe('ProjectsModule (Next UI)', () => {
       expect(within(cards[0]).getByText('Beta без слага')).toBeInTheDocument();
     });
   });
+
+  it('filters projects by missing description', async () => {
+    const fetchMock = vi.fn((input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      if (url.endsWith('/api/v1/areas')) {
+        return Promise.resolve(
+          jsonResponse([
+            { id: 1, name: 'Inbox', depth: 0, review_interval_days: 7, parent_id: null, slug: 'inbox', mp_path: 'inbox.' },
+          ]),
+        );
+      }
+      if (url.endsWith('/api/v1/projects')) {
+        return Promise.resolve(
+          jsonResponse([
+            { id: 21, name: 'Gamma', area_id: 1, description: 'Сбор требований', slug: 'gamma' },
+            { id: 22, name: 'Delta без описания', area_id: 1, description: '', slug: 'delta' },
+          ]),
+        );
+      }
+      return Promise.resolve(new Response(null, { status: 404 }));
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    renderWithClient(<ProjectsModule />);
+
+    await screen.findByText('Gamma');
+    expect(screen.getByText('Delta без описания')).toBeInTheDocument();
+
+    const toggle = await screen.findByTestId('projects-filter-without-description');
+    fireEvent.click(toggle);
+
+    await waitFor(() => {
+      const cards = screen.getAllByTestId('projects-card');
+      expect(cards).toHaveLength(1);
+      expect(within(cards[0]).getByText('Delta без описания')).toBeInTheDocument();
+    });
+  });
+
+  it('filters projects to quick area only', async () => {
+    const fetchMock = vi.fn((input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      if (url.endsWith('/api/v1/areas')) {
+        return Promise.resolve(
+          jsonResponse([
+            { id: 1, name: 'Inbox', depth: 0, review_interval_days: 7, parent_id: null, slug: 'inbox', mp_path: 'inbox.' },
+            { id: 2, name: 'Производство', depth: 1, review_interval_days: 7, parent_id: 1, slug: 'production', mp_path: 'inbox.production.' },
+          ]),
+        );
+      }
+      if (url.endsWith('/api/v1/projects')) {
+        return Promise.resolve(
+          jsonResponse([
+            { id: 31, name: 'Inbox проект', area_id: 1, description: null, slug: 'inbox-project' },
+            { id: 32, name: 'Производство проект', area_id: 2, description: null, slug: 'prod-project' },
+          ]),
+        );
+      }
+      return Promise.resolve(new Response(null, { status: 404 }));
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    renderWithClient(<ProjectsModule />);
+
+    await screen.findByText('Inbox проект');
+    expect(screen.getByText('Производство проект')).toBeInTheDocument();
+
+    const toggle = await screen.findByTestId('projects-filter-quick-area');
+    fireEvent.click(toggle);
+
+    await waitFor(() => {
+      const cards = screen.getAllByTestId('projects-card');
+      expect(cards).toHaveLength(1);
+      expect(within(cards[0]).getByText('Inbox проект')).toBeInTheDocument();
+    });
+  });
 });

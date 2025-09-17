@@ -3219,6 +3219,25 @@
         ]
       }
     },
+    "/api/v1/admin/overview": {
+      "get": {
+        "operationId": "admin_overview_api_v1_admin_overview_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Admin Overview",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/admin/restart": {
       "post": {
         "description": "Restart systemd unit for 'web' or 'bot' (requires sudoers setup).\n\nReturns JSON with result. The service user must have passwordless sudo for\nthe corresponding units, e.g. in /etc/sudoers.d/intData:\n    www-data ALL=NOPASSWD: /bin/systemctl restart intdata-web, /bin/systemctl restart intdata-bot",
@@ -4679,6 +4698,25 @@
         "summary": "Api Daily Undo",
         "tags": [
           "Dailies"
+        ]
+      }
+    },
+    "/api/v1/dashboard/overview": {
+      "get": {
+        "operationId": "dashboard_overview_api_v1_dashboard_overview_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Dashboard Overview",
+        "tags": [
+          "dashboard"
         ]
       }
     },

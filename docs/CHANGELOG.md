@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API `/api/v1/user/settings` to read and write settings.
 - Repair step to migrate legacy favorites into user_settings.
 - Возможность управлять избранными пунктами меню на странице `/settings`.
+- Редактор левого меню нового UI: drag-n-drop порядок и скрытие пунктов с персональными и глобальными пресетами (`GET/PUT /api/v1/navigation/sidebar*`).
 - Панель «Области жизни» на странице `/settings` с деревом PARA, быстрым созданием, переименованием и перемещением областей.
 - Простые SQL-миграции и раннер `core/db/migrate.py` с таблицами календаря и уведомлений.
 - Асинхронный бэкенд на aiogram + SQLAlchemy с подключением к PostgreSQL.

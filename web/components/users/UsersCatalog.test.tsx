@@ -45,6 +45,23 @@ function isViewerUrl(input: RequestInfo | URL): boolean {
   return url.includes('/profiles/users/@me');
 }
 
+function isNavigationUrl(input: RequestInfo | URL): boolean {
+  const url = typeof input === 'string' ? input : input.toString();
+  return url.includes('/navigation/sidebar');
+}
+
+const navResponse = {
+  v: 1,
+  items: [
+    { key: 'overview', label: 'Обзор', href: '/', hidden: false, position: 1 },
+  ],
+  layout: {
+    user: { v: 1, items: [{ key: 'overview', position: 1, hidden: false }] },
+    global: null,
+  },
+  can_edit_global: false,
+};
+
 beforeEach(() => {
   process.env.NEXT_PUBLIC_API_BASE = API_BASE;
 });
@@ -60,6 +77,9 @@ describe('UsersCatalog', () => {
     const fetchMock = vi.spyOn(global, 'fetch').mockImplementation((input: RequestInfo | URL) => {
       if (isViewerUrl(input)) {
         return Promise.resolve(jsonResponse(viewerSummary));
+      }
+      if (isNavigationUrl(input)) {
+        return Promise.resolve(jsonResponse(navResponse));
       }
       return Promise.resolve(
         jsonResponse([
@@ -82,6 +102,9 @@ describe('UsersCatalog', () => {
     const fetchMock = vi.spyOn(global, 'fetch').mockImplementation((input: RequestInfo | URL) => {
       if (isViewerUrl(input)) {
         return Promise.resolve(jsonResponse(viewerSummary));
+      }
+      if (isNavigationUrl(input)) {
+        return Promise.resolve(jsonResponse(navResponse));
       }
       const url = typeof input === 'string' ? input : input.toString();
       if (url.includes('search=designer')) {
@@ -112,6 +135,9 @@ describe('UsersCatalog', () => {
       if (isViewerUrl(input)) {
         return Promise.resolve(jsonResponse(viewerSummary));
       }
+      if (isNavigationUrl(input)) {
+        return Promise.resolve(jsonResponse(navResponse));
+      }
       const url = typeof input === 'string' ? input : input.toString();
       if (!url.includes('search')) {
         catalogCalls += 1;
@@ -130,7 +156,7 @@ describe('UsersCatalog', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Повторить' }));
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledTimes(3);
+      expect(fetchMock).toHaveBeenCalledTimes(5);
     });
 
     expect(await screen.findByText('Carol')).toBeInTheDocument();

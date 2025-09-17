@@ -95,3 +95,11 @@ class UserSettingsService:
         stmt = insert(UserSettings).values(user_id=user_id, key=key, value=value)
         await self.session.execute(stmt)
         return value
+
+    async def delete(self, user_id: int, key: str) -> None:
+        await self.session.execute(
+            sa.delete(UserSettings).where(
+                UserSettings.user_id == user_id,
+                UserSettings.key == key,
+            )
+        )

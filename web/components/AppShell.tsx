@@ -4,13 +4,20 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { apiFetch, ApiError } from '../lib/api';
+import { fetchSidebarNav, updateGlobalSidebarLayout, updateUserSidebarLayout } from '../lib/navigation';
 import { fetchPersonaBundle, getPersonaInfo, DEFAULT_PERSONA_BUNDLE, type PersonaBundle } from '../lib/persona';
-import type { ViewerProfileSummary } from '../lib/types';
+import type {
+  SidebarLayoutSettings,
+  SidebarNavItem,
+  SidebarNavPayload,
+  ViewerProfileSummary,
+} from '../lib/types';
 import { StatusIndicator, type StatusIndicatorKind } from './ui';
+import { SidebarEditor } from './navigation/SidebarEditor';
 
 interface AppShellProps {
   title: string;
@@ -23,40 +30,28 @@ interface AppShellProps {
   mainClassName?: string;
 }
 
-interface NavStatus {
-  kind: StatusIndicatorKind;
-  link?: string;
-}
-
-interface NavItem {
-  href: string;
-  label: string;
-  external?: boolean;
-  disabled?: boolean;
-  status?: NavStatus;
-}
-
-type NavBlueprint =
-  | { label: string; route: string; status?: NavStatus }
-  | { label: string; legacy: string; status?: NavStatus };
-
-const PAYWALL_ROUTE = '/pricing';
-
 const NAV_STATUS_TOOLTIPS: Record<StatusIndicatorKind, string> = {
   new: 'Новый раздел на современном интерфейсе',
   wip: 'Раздел в активной разработке — возможны изменения',
   locked: 'Раздел доступен по расширенному тарифу',
 };
 
-const NAV_BLUEPRINT: NavBlueprint[] = [
-  { label: 'Обзор', route: '/' },
-  { label: 'Входящие', route: '/inbox' },
-  { label: 'Области', route: '/areas', status: { kind: 'new' } },
-  { label: 'Проекты', route: '/projects', status: { kind: 'new' } },
-  { label: 'Команда', route: '/users', status: { kind: 'new' } },
-  { label: 'Ресурсы', route: '/resources', status: { kind: 'wip' } },
-  { label: 'Задачи', route: '/tasks', status: { kind: 'wip' } },
-  { label: 'Привычки', route: '/habits', status: { kind: 'locked', link: PAYWALL_ROUTE } },
+const STATIC_NAV_FALLBACK: SidebarNavItem[] = [
+  { key: 'overview', label: 'Обзор', href: '/', hidden: false, position: 1, status: { kind: 'new' } },
+  { key: 'inbox', label: 'Входящие', href: '/inbox', hidden: false, position: 2 },
+  { key: 'areas', label: 'Области', href: '/areas', hidden: false, position: 3, status: { kind: 'new' } },
+  { key: 'projects', label: 'Проекты', href: '/projects', hidden: false, position: 4, status: { kind: 'new' } },
+  { key: 'team', label: 'Команда', href: '/users', hidden: false, position: 5, status: { kind: 'new' } },
+  { key: 'resources', label: 'Ресурсы', href: '/resources', hidden: false, position: 6, status: { kind: 'wip' } },
+  { key: 'tasks', label: 'Задачи', href: '/tasks', hidden: false, position: 7, status: { kind: 'wip' } },
+  {
+    key: 'habits',
+    label: 'Привычки',
+    href: '/habits',
+    hidden: false,
+    position: 8,
+    status: { kind: 'locked', link: '/pricing' },
+  },
 ];
 
 function getInitials(name: string): string {
@@ -74,33 +69,6 @@ function getInitials(name: string): string {
     .padEnd(2, '•');
 }
 
-function resolveNavigation(): NavItem[] {
-  const legacyBase = process.env.NEXT_PUBLIC_LEGACY_APP_BASE ?? '';
-  return NAV_BLUEPRINT.map<NavItem>((item) => {
-    if ('route' in item) {
-      return {
-        href: item.route,
-        label: item.label,
-        status: item.status,
-      };
-    }
-    if (legacyBase) {
-      return {
-        href: `${legacyBase}${item.legacy}`,
-        label: item.label,
-        status: item.status,
-        external: true,
-      };
-    }
-    return {
-      href: '#',
-      label: item.label,
-      status: item.status,
-      disabled: true,
-    };
-  });
-}
-
 function getPreferredLocale(): string {
   if (typeof navigator !== 'undefined' && navigator.language) {
     const [language] = navigator.language.split('-');
@@ -114,6 +82,17 @@ function getPreferredLocale(): string {
     }
   }
   return 'ru';
+}
+
+function layoutFromItems(version: number, items: SidebarNavItem[]): SidebarLayoutSettings {
+  return {
+    v: version,
+    items: items.map((item, index) => ({
+      key: item.key,
+      position: index + 1,
+      hidden: item.hidden,
+    })),
+  };
 }
 
 function renderPersonaTooltip(md: string): React.ReactNode[] {
@@ -167,7 +146,9 @@ export default function AppShell({
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isNavEditorOpen, setIsNavEditorOpen] = useState(false);
   const headingId = titleId ?? 'app-shell-title';
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     setIsMobileNavOpen(false);
@@ -242,6 +223,14 @@ export default function AppShell({
 
   const personaBundle = personaQuery.data;
 
+  const navQuery = useQuery<SidebarNavPayload>({
+    queryKey: ['navigation', 'sidebar'],
+    staleTime: 120_000,
+    gcTime: 300_000,
+    retry: false,
+    queryFn: fetchSidebarNav,
+  });
+
   const toggleLabel = isDesktop
     ? isSidebarCollapsed
       ? 'Показать меню'
@@ -258,25 +247,25 @@ export default function AppShell({
     setIsMobileNavOpen((prev) => !prev);
   };
 
-  const navItems = useMemo(() => {
-    const resolved = resolveNavigation();
-    const isAdmin = (viewer?.role || '').toLowerCase() === 'admin';
-    if (isAdmin && !resolved.some((item) => item.href === '/admin')) {
-      resolved.push({ href: '/admin', label: 'ЛК Админа', status: { kind: 'new' } });
-    }
-    return resolved.map((item) => {
-      const active = pathname
-        ? !item.external && !item.disabled && (pathname === item.href || pathname.startsWith(`${item.href}/`))
-        : false;
-      return {
-        ...item,
-        active,
-      };
-    });
-  }, [pathname, viewer?.role]);
+  const navItems = navQuery.data?.items ?? STATIC_NAV_FALLBACK;
+  const visibleNavItems = useMemo(() => navItems.filter((item) => !item.hidden), [navItems]);
+  const navItemsWithActive = useMemo(
+    () =>
+      visibleNavItems.map((item) => {
+        const href = item.href;
+        const active = href && pathname ? pathname === href || pathname.startsWith(`${href}/`) : false;
+        return { item, active };
+      }),
+    [visibleNavItems, pathname],
+  );
+
+  const navVersion = navQuery.data?.v ?? 1;
+  const userLayout = navQuery.data?.layout?.user ?? layoutFromItems(navVersion, navItems);
+  const globalLayout = navQuery.data?.layout?.global ?? null;
+  const canEditGlobal = Boolean(navQuery.data?.can_edit_global);
 
   const handleStatusNavigate = (
-    status: NavStatus | undefined,
+    status: SidebarNavItem['status'] | undefined,
     event?: React.MouseEvent<HTMLSpanElement>,
   ) => {
     if (!status?.link) {
@@ -287,6 +276,51 @@ export default function AppShell({
     event?.stopPropagation();
     router.push(link);
   };
+
+  const saveUserLayoutMutation = useMutation({
+    mutationFn: (layout: SidebarLayoutSettings) => updateUserSidebarLayout({ layout }),
+    onSuccess: (payload: SidebarNavPayload) => {
+      queryClient.setQueryData(['navigation', 'sidebar'], payload);
+    },
+  });
+
+  const resetUserLayoutMutation = useMutation({
+    mutationFn: () => updateUserSidebarLayout({ reset: true }),
+    onSuccess: (payload: SidebarNavPayload) => {
+      queryClient.setQueryData(['navigation', 'sidebar'], payload);
+    },
+  });
+
+  const saveGlobalLayoutMutation = useMutation({
+    mutationFn: (layout: SidebarLayoutSettings) => updateGlobalSidebarLayout({ layout }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['navigation', 'sidebar'] });
+    },
+  });
+
+  const resetGlobalLayoutMutation = useMutation({
+    mutationFn: () => updateGlobalSidebarLayout({ reset: true }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['navigation', 'sidebar'] });
+    },
+  });
+
+  const handleSaveUserLayout = async (layout: SidebarLayoutSettings) => {
+    await saveUserLayoutMutation.mutateAsync(layout);
+  };
+  const handleResetUserLayout = async () => {
+    await resetUserLayoutMutation.mutateAsync();
+  };
+  const handleSaveGlobalLayout = async (layout: SidebarLayoutSettings) => {
+    await saveGlobalLayoutMutation.mutateAsync(layout);
+  };
+  const handleResetGlobalLayout = async () => {
+    await resetGlobalLayoutMutation.mutateAsync();
+  };
+
+  const userSaving = saveUserLayoutMutation.isPending || resetUserLayoutMutation.isPending;
+  const globalSaving = saveGlobalLayoutMutation.isPending || resetGlobalLayoutMutation.isPending;
+  const canOpenEditor = Boolean(navQuery.data);
 
   const sidebarClassName = clsx(
     'fixed inset-y-0 left-0 z-50 w-72 transform border-r border-subtle bg-[var(--surface-0)] px-4 py-6 transition-transform duration-200 ease-out md:static md:px-5 md:py-8',
@@ -386,85 +420,94 @@ export default function AppShell({
           aria-label="Главное меню"
           aria-hidden={isSidebarCollapsed && !isMobileNavOpen}
         >
-          <nav className="flex flex-col gap-1">
-            {navItems.map((item) => {
-              const key = item.label;
-              const baseClass =
-                'flex items-center justify-between rounded-lg px-4 py-2 text-sm font-medium transition-base';
-              const interactiveFocus =
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]';
-              const stateClass = item.disabled
-                ? 'cursor-not-allowed text-muted opacity-70'
-                : item.active
-                ? 'bg-[var(--accent-primary)] text-[var(--accent-on-primary)] shadow-soft'
-                : 'text-muted hover:bg-surface-soft hover:text-[var(--text-primary)]';
-              const className = `${baseClass} ${stateClass} ${item.disabled ? '' : interactiveFocus}`;
-              const status = item.status;
-              let statusNode: React.ReactNode = null;
-              if (status) {
-                const tooltip = NAV_STATUS_TOOLTIPS[status.kind];
-                if (status.link) {
-                  const link = status.link;
-                  statusNode = (
-                    <span
-                      className="ml-2 inline-flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
-                      role="link"
-                      tabIndex={0}
-                      onClick={(event) => handleStatusNavigate(status, event)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          router.push(link);
-                        }
-                      }}
-                    >
-                      <StatusIndicator kind={status.kind} tooltip={tooltip} />
+          <div className="flex h-full flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted">Навигация</span>
+              <button
+                type="button"
+                onClick={() => setIsNavEditorOpen(true)}
+                disabled={!canOpenEditor}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted transition-base hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:opacity-50"
+                aria-label="Настроить меню"
+              >
+                <svg aria-hidden className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M6 12h12M10 17h4" />
+                </svg>
+              </button>
+            </div>
+            <nav className="flex flex-col gap-1" aria-label="Основное меню">
+              {navItemsWithActive.map(({ item, active }) => {
+                const baseClass =
+                  'flex items-center justify-between rounded-lg px-4 py-2 text-sm font-medium transition-base';
+                const interactiveFocus =
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]';
+                const stateClass = item.disabled
+                  ? 'cursor-not-allowed text-muted opacity-70'
+                  : active
+                  ? 'bg-[var(--accent-primary)] text-[var(--accent-on-primary)] shadow-soft'
+                  : 'text-muted hover:bg-surface-soft hover:text-[var(--text-primary)]';
+                const className = `${baseClass} ${stateClass} ${item.disabled ? '' : interactiveFocus}`;
+                const status = item.status;
+                let statusNode: React.ReactNode = null;
+                if (status) {
+                  const tooltip = NAV_STATUS_TOOLTIPS[status.kind as StatusIndicatorKind] ?? '';
+                  if (status.link) {
+                    const link = status.link;
+                    statusNode = (
+                      <span
+                        className="ml-2 inline-flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+                        role="link"
+                        tabIndex={0}
+                        onClick={(event) => handleStatusNavigate(status, event)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            router.push(link);
+                          }
+                        }}
+                      >
+                        <StatusIndicator kind={status.kind as StatusIndicatorKind} tooltip={tooltip} />
+                      </span>
+                    );
+                  } else {
+                    statusNode = <StatusIndicator kind={status.kind as StatusIndicatorKind} tooltip={tooltip} />;
+                  }
+                }
+                const content = (
+                  <>
+                    <span className="truncate">{item.label}</span>
+                    {statusNode}
+                  </>
+                );
+                if (item.disabled || !item.href) {
+                  return (
+                    <span key={item.key} className={className} aria-disabled>
+                      {content}
                     </span>
                   );
-                } else {
-                  statusNode = <StatusIndicator kind={status.kind} tooltip={tooltip} />;
                 }
-              }
-              const content = (
-                <>
-                  <span className="truncate">{item.label}</span>
-                  {statusNode}
-                </>
-              );
-              if (item.disabled) {
+                if (item.external) {
+                  return (
+                    <a key={item.key} href={item.href} target="_blank" rel="noreferrer" className={className}>
+                      {content}
+                    </a>
+                  );
+                }
                 return (
-                  <span key={key} className={className} aria-disabled>
-                    {content}
-                  </span>
-                );
-              }
-              if (item.external) {
-                return (
-                  <a
-                    key={key}
+                  <Link
+                    key={item.key}
                     href={item.href}
-                    target="_blank"
-                    rel="noreferrer"
                     className={className}
+                    aria-current={active ? 'page' : undefined}
+                    prefetch={false}
                   >
                     {content}
-                  </a>
+                  </Link>
                 );
-              }
-              return (
-                <Link
-                  key={key}
-                  href={item.href}
-                  className={className}
-                  aria-current={item.active ? 'page' : undefined}
-                  prefetch={false}
-                >
-                  {content}
-                </Link>
-              );
-            })}
-          </nav>
+              })}
+            </nav>
+          </div>
         </aside>
         {isMobileNavOpen ? (
           <div
@@ -487,6 +530,21 @@ export default function AppShell({
           </main>
         </div>
       </div>
+      <SidebarEditor
+        open={isNavEditorOpen}
+        version={navVersion}
+        items={navItems}
+        userLayout={userLayout}
+        globalLayout={globalLayout}
+        canEditGlobal={canEditGlobal}
+        onClose={() => setIsNavEditorOpen(false)}
+        onSaveUser={handleSaveUserLayout}
+        onResetUser={handleResetUserLayout}
+        onSaveGlobal={canEditGlobal ? handleSaveGlobalLayout : undefined}
+        onResetGlobal={canEditGlobal ? handleResetGlobalLayout : undefined}
+        savingUser={userSaving}
+        savingGlobal={globalSaving}
+      />
     </div>
   );
 }

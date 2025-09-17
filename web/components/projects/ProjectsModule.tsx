@@ -41,7 +41,7 @@ interface FormState {
 }
 
 type ViewMode = 'grid' | 'table';
-type SortMode = 'recent' | 'name' | 'area';
+type SortMode = 'recent' | 'name' | 'area' | 'slug';
 
 interface FiltersState {
   areaId: string;
@@ -51,6 +51,7 @@ interface FiltersState {
   view: ViewMode;
   onlyWithoutSlug: boolean;
   onlyWithoutDescription: boolean;
+  onlyQuickArea: boolean;
 }
 
 function useAreas() {
@@ -132,6 +133,7 @@ export default function ProjectsModule() {
     view: 'grid',
     onlyWithoutSlug: false,
     onlyWithoutDescription: false,
+    onlyQuickArea: false,
   });
 
   const projectsQuery = useProjects({
@@ -204,6 +206,14 @@ export default function ProjectsModule() {
       if (filters.onlyWithoutDescription && (project.description ?? '').trim().length > 0) {
         return false;
       }
+      if (filters.onlyQuickArea) {
+        if (!quickArea) {
+          return false;
+        }
+        if (project.area_id !== quickArea.id) {
+          return false;
+        }
+      }
       if (!query) {
         return true;
       }
@@ -221,6 +231,21 @@ export default function ProjectsModule() {
       sorted.sort((a, b) => b.id - a.id);
     } else if (filters.sort === 'name') {
       sorted.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+    } else if (filters.sort === 'slug') {
+      sorted.sort((a, b) => {
+        const slugA = (a.slug ?? '').toLowerCase();
+        const slugB = (b.slug ?? '').toLowerCase();
+        if (slugA && slugB) {
+          return slugA.localeCompare(slugB, 'ru');
+        }
+        if (slugA) {
+          return -1;
+        }
+        if (slugB) {
+          return 1;
+        }
+        return a.name.localeCompare(b.name, 'ru');
+      });
     } else {
       sorted.sort((a, b) => {
         const areaA = areaMap.get(a.area_id)?.name ?? '';
@@ -233,7 +258,7 @@ export default function ProjectsModule() {
       });
     }
     return sorted;
-  }, [areaMap, filters.onlyWithoutDescription, filters.onlyWithoutSlug, filters.search, filters.sort, rawProjects]);
+  }, [areaMap, filters.onlyQuickArea, filters.onlyWithoutDescription, filters.onlyWithoutSlug, filters.search, filters.sort, quickArea, rawProjects]);
 
   const projectGroups = useMemo(() => {
     const groups = new Map<number, { area: Area | null; projects: Project[]; order: number }>();
@@ -454,6 +479,23 @@ export default function ProjectsModule() {
             />
             <span>Без слага</span>
           </label>
+          <label className="inline-flex items-center gap-2 text-xs text-muted">
+            <Checkbox
+              checked={filters.onlyWithoutDescription}
+              onChange={(event) => handleFilterChange({ onlyWithoutDescription: event.target.checked })}
+              data-testid="projects-filter-without-description"
+            />
+            <span>Без описания</span>
+          </label>
+          <label className={cn('inline-flex items-center gap-2 text-xs text-muted', !quickArea && 'opacity-60')}>
+            <Checkbox
+              checked={filters.onlyQuickArea}
+              onChange={(event) => handleFilterChange({ onlyQuickArea: event.target.checked })}
+              data-testid="projects-filter-quick-area"
+              disabled={!quickArea}
+            />
+            <span>Быстрые (Inbox)</span>
+          </label>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Select
@@ -465,6 +507,7 @@ export default function ProjectsModule() {
             <option value="recent">Недавно добавленные</option>
             <option value="name">Название A→Я</option>
             <option value="area">По областям</option>
+            <option value="slug">Слаг A→Я</option>
           </Select>
           <div className="flex items-center gap-1">
             <Button
