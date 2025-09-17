@@ -14,9 +14,11 @@ import type {
   SidebarLayoutSettings,
   SidebarNavItem,
   SidebarNavPayload,
+  TimeEntry,
   ViewerProfileSummary,
 } from '../lib/types';
-import { StatusIndicator, type StatusIndicatorKind } from './ui';
+import { formatClock, formatDateTime } from '../lib/time';
+import { Button, StatusIndicator, type StatusIndicatorKind } from './ui';
 import { SidebarEditor } from './navigation/SidebarEditor';
 
 interface AppShellProps {
@@ -52,6 +54,8 @@ const STATIC_NAV_FALLBACK: SidebarNavItem[] = [
     position: 8,
     status: { kind: 'locked', link: '/pricing' },
   },
+  { key: 'time', label: 'Время', href: '/time', hidden: false, position: 9, status: { kind: 'new' } },
+  { key: 'settings', label: 'Настройки', href: '/settings', hidden: false, position: 10, status: { kind: 'new' } },
 ];
 
 function getInitials(name: string): string {
@@ -128,6 +132,15 @@ function renderPersonaTooltip(md: string): React.ReactNode[] {
   }
 
   return result;
+}
+
+function getRunningDurationSeconds(entry: TimeEntry, now: number): number {
+  const start = new Date(entry.start_time).getTime();
+  const end = entry.end_time ? new Date(entry.end_time).getTime() : now;
+  if (Number.isNaN(start) || Number.isNaN(end)) {
+    return 0;
+  }
+  return Math.max(0, Math.floor((end - start) / 1000));
 }
 
 export default function AppShell({
@@ -511,6 +524,7 @@ export default function AppShell({
                 );
               })}
             </nav>
+            <MiniTimerWidget viewer={viewer} />
           </div>
         </aside>
         {isMobileNavOpen ? (
@@ -549,6 +563,144 @@ export default function AppShell({
         savingUser={userSaving}
         savingGlobal={globalSaving}
       />
+    </div>
+  );
+}
+
+function MiniTimerWidget({ viewer }: { viewer: ViewerProfileSummary | null }) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const id = window.setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const enabled = Boolean(viewer);
+
+  const runningQuery = useQuery<TimeEntry | null, ApiError>({
+    queryKey: ['time', 'running'],
+    enabled,
+    staleTime: 5_000,
+    gcTime: 60_000,
+    retry: false,
+    queryFn: () => apiFetch<TimeEntry | null>('/api/v1/time/running'),
+  });
+
+  const startMutation = useMutation({
+    mutationFn: () =>
+      apiFetch<TimeEntry>('/api/v1/time/start', {
+        method: 'POST',
+        body: JSON.stringify({ description: 'Быстрый таймер', task_id: null }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['time'] });
+    },
+  });
+
+  const stopMutation = useMutation({
+    mutationFn: (entryId: number) =>
+      apiFetch<TimeEntry>(`/api/v1/time/${entryId}/stop`, {
+        method: 'POST',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['time'] });
+    },
+  });
+
+  const handleStart = () => {
+    if (!viewer) {
+      router.push('/auth');
+      return;
+    }
+    startMutation.mutate();
+  };
+
+  const handleStop = (entryId: number) => {
+    stopMutation.mutate(entryId);
+  };
+
+  const running = runningQuery.data ?? null;
+  const timerSeconds = running ? getRunningDurationSeconds(running, now) : 0;
+  const isLoading = runningQuery.isFetching || startMutation.isPending || stopMutation.isPending;
+
+  return (
+    <div className="mt-6 rounded-2xl border border-subtle bg-[var(--surface-0)] p-4 shadow-soft">
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-wide text-muted">Быстрый таймер</div>
+          <div className="text-sm text-muted">Запускайте фокус прямо из меню</div>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => router.push('/time')}
+        >
+          К журналу
+        </Button>
+      </div>
+      {!viewer ? (
+        <div className="mt-3 text-sm text-muted">
+          Войдите, чтобы запускать таймеры и видеть прогресс.
+        </div>
+      ) : runningQuery.isError && runningQuery.error instanceof ApiError && runningQuery.error.status >= 500 ? (
+        <div className="mt-3 text-sm text-danger">Не удалось загрузить состояние таймера.</div>
+      ) : running ? (
+        <div className="mt-3 flex flex-col gap-2">
+          <div className="text-2xl font-semibold text-[var(--text-primary)]">
+            {formatClock(timerSeconds)}
+          </div>
+          <div className="text-xs text-muted">
+            Старт {formatDateTime(running.start_time)}
+            {running.description ? ` · ${running.description}` : ''}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={() => handleStop(running.id)}
+              disabled={isLoading}
+            >
+              Стоп
+            </Button>
+            {running.task_id ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push(`/tasks?task=${running.task_id}`)}
+              >
+                Задача #{running.task_id}
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      ) : (
+        <div className="mt-3 flex flex-col gap-2">
+          <div className="text-xs text-muted">Таймер не запущен</div>
+          <div className="flex items-center gap-2">
+            <Button type="button" size="sm" onClick={handleStart} disabled={isLoading}>
+              {startMutation.isPending ? 'Запускаем…' : 'Стартовать'}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => router.push('/time')}
+            >
+              Открыть /time
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
