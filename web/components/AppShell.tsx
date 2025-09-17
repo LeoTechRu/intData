@@ -3,12 +3,14 @@
 import clsx from 'clsx';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import React, { ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { apiFetch, ApiError } from '../lib/api';
+import { fetchPersonaBundle, getPersonaInfo, DEFAULT_PERSONA_BUNDLE, type PersonaBundle } from '../lib/persona';
 import type { ViewerProfileSummary } from '../lib/types';
+import { StatusIndicator, type StatusIndicatorKind } from './ui';
 
 interface AppShellProps {
   title: string;
@@ -18,70 +20,41 @@ interface AppShellProps {
   titleId?: string;
 }
 
+interface NavStatus {
+  kind: StatusIndicatorKind;
+  link?: string;
+}
+
 interface NavItem {
   href: string;
   label: string;
-  badge?: string;
   external?: boolean;
   disabled?: boolean;
+  status?: NavStatus;
 }
 
 type NavBlueprint =
-  | { label: string; route: string; badge?: string }
-  | { label: string; legacy: string; badge?: string };
+  | { label: string; route: string; status?: NavStatus }
+  | { label: string; legacy: string; status?: NavStatus };
+
+const PAYWALL_ROUTE = '/pricing';
+
+const NAV_STATUS_TOOLTIPS: Record<StatusIndicatorKind, string> = {
+  new: 'Новый раздел на современном интерфейсе',
+  wip: 'Раздел в активной разработке — возможны изменения',
+  locked: 'Раздел доступен по расширенному тарифу',
+};
 
 const NAV_BLUEPRINT: NavBlueprint[] = [
   { label: 'Обзор', route: '/' },
   { label: 'Входящие', route: '/inbox' },
-  { label: 'Области', route: '/areas', badge: 'новый UI' },
-  { label: 'Проекты', route: '/projects', badge: 'новый UI' },
-  { label: 'Команда', route: '/users', badge: 'новый UI' },
-  { label: 'Ресурсы', route: '/resources', badge: 'новый UI' },
-  { label: 'Задачи', route: '/tasks', badge: 'новый UI' },
-  { label: 'Привычки', route: '/habits', badge: 'новый UI' },
+  { label: 'Области', route: '/areas', status: { kind: 'new' } },
+  { label: 'Проекты', route: '/projects', status: { kind: 'new' } },
+  { label: 'Команда', route: '/users', status: { kind: 'new' } },
+  { label: 'Ресурсы', route: '/resources', status: { kind: 'wip' } },
+  { label: 'Задачи', route: '/tasks', status: { kind: 'wip' } },
+  { label: 'Привычки', route: '/habits', status: { kind: 'locked', link: PAYWALL_ROUTE } },
 ];
-
-const ROLE_METADATA: Record<
-  string,
-  { label: string; title: string; description: string }
-> = {
-  admin: {
-    label: 'Админ',
-    title: 'Администратор пространства',
-    description:
-      'Управляет настройками рабочей области, назначает роли и имеет полный доступ ко всем разделам.',
-  },
-  single: {
-    label: 'Single',
-    title: 'Индивидуальный режим',
-    description:
-      'Работаете с личными проектами и областями. Расширяйте права, чтобы подключать коллег.',
-  },
-  multiplayer: {
-    label: 'Team',
-    title: 'Командный режим',
-    description:
-      'Доступ к совместным проектам и ресурсам. Следите за ролями, чтобы управлять уровнем доступа.',
-  },
-  moderator: {
-    label: 'Модератор',
-    title: 'Модератор пространства',
-    description:
-      'Следит за соблюдением правил, модерирует группы и помогает участникам.',
-  },
-};
-
-function resolveRoleMetadata(role: string) {
-  const normalized = (role ?? '').toLowerCase();
-  return (
-    ROLE_METADATA[normalized] ?? {
-      label: normalized || 'роль',
-      title: normalized ? `Роль: ${normalized}` : 'Роль',
-      description:
-        'Роль определяет доступ к областям и проектам. Уточните у администратора детали доступа.',
-    }
-  );
-}
 
 function getInitials(name: string): string {
   const parts = name
@@ -105,28 +78,85 @@ function resolveNavigation(): NavItem[] {
       return {
         href: item.route,
         label: item.label,
-        badge: item.badge,
+        status: item.status,
       };
     }
     if (legacyBase) {
       return {
         href: `${legacyBase}${item.legacy}`,
         label: item.label,
-        badge: item.badge ?? 'legacy',
+        status: item.status,
         external: true,
       };
     }
     return {
       href: '#',
       label: item.label,
-      badge: item.badge ?? 'legacy',
+      status: item.status,
       disabled: true,
     };
   });
 }
 
-export default function AppShell({ title, subtitle, actions, children, titleId }: AppShellProps) {
+function getPreferredLocale(): string {
+  if (typeof navigator !== 'undefined' && navigator.language) {
+    const [language] = navigator.language.split('-');
+    return language || 'ru';
+  }
+  if (typeof document !== 'undefined') {
+    const docLang = document.documentElement.lang;
+    if (docLang) {
+      const [language] = docLang.split('-');
+      return language || 'ru';
+    }
+  }
+  return 'ru';
+}
+
+function renderPersonaTooltip(md: string): React.ReactNode[] {
+  const result: React.ReactNode[] = [];
+  const linkPattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = linkPattern.exec(md))) {
+    if (match.index > lastIndex) {
+      result.push(md.slice(lastIndex, match.index));
+    }
+    result.push(
+      <a
+        key={`${match[2]}-${match.index}`}
+        href={match[2]}
+        target="_blank"
+        rel="noreferrer noopener"
+        className="text-[var(--accent-primary)] underline decoration-dotted"
+      >
+        {match[1]}
+      </a>,
+    );
+    lastIndex = linkPattern.lastIndex;
+  }
+
+  if (lastIndex < md.length) {
+    result.push(md.slice(lastIndex));
+  }
+
+  if (result.length === 0) {
+    return [md];
+  }
+
+  return result;
+}
+
+export default function AppShell({
+  title,
+  subtitle,
+  actions,
+  children,
+  titleId,
+}: AppShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
@@ -195,6 +225,17 @@ export default function AppShell({ title, subtitle, actions, children, titleId }
   const viewer = viewerQuery.data ?? null;
   const viewerLoading = viewerQuery.isLoading && !viewer;
 
+  const personaQuery = useQuery<PersonaBundle>({
+    queryKey: ['persona-bundle'],
+    enabled: Boolean(viewer),
+    staleTime: 3_600_000,
+    gcTime: 3_600_000,
+    retry: false,
+    queryFn: () => fetchPersonaBundle(getPreferredLocale()),
+  });
+
+  const personaBundle = personaQuery.data;
+
   const toggleLabel = isDesktop
     ? isSidebarCollapsed
       ? 'Показать меню'
@@ -224,6 +265,19 @@ export default function AppShell({ title, subtitle, actions, children, titleId }
     });
   }, [pathname]);
 
+  const handleStatusNavigate = (
+    status: NavStatus | undefined,
+    event?: React.MouseEvent<HTMLSpanElement>,
+  ) => {
+    if (!status?.link) {
+      return;
+    }
+    const link = status.link;
+    event?.preventDefault();
+    event?.stopPropagation();
+    router.push(link);
+  };
+
   const sidebarClassName = clsx(
     'fixed inset-y-0 left-0 z-50 w-72 transform border-r border-subtle bg-[var(--surface-0)] px-4 py-6 transition-transform duration-200 ease-out md:static md:px-5 md:py-8',
     isMobileNavOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
@@ -235,61 +289,61 @@ export default function AppShell({ title, subtitle, actions, children, titleId }
   return (
     <div className="flex min-h-screen flex-col bg-surface" data-app-shell>
       <header className="sticky top-0 z-40 border-b border-subtle bg-[var(--surface-0)]/95 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-4 md:gap-4 md:px-6">
-          <button
-            type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-surface-soft text-muted transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] md:h-10 md:w-10"
-            aria-label={toggleLabel}
-            aria-pressed={isDesktop ? !isSidebarCollapsed : isMobileNavOpen}
-            onClick={handleToggleNav}
-          >
-            <span className="sr-only">Меню</span>
-            <svg
-              aria-hidden
-              className="h-5 w-5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.5}
+        <div className="mx-auto grid w-full max-w-6xl grid-cols-[auto,1fr,auto] items-center gap-4 px-4 py-4 md:px-6">
+          <div className="flex items-center gap-2 md:gap-3">
+            <button
+              type="button"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-surface-soft text-muted transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] md:h-10 md:w-10"
+              aria-label={toggleLabel}
+              aria-pressed={isDesktop ? !isSidebarCollapsed : isMobileNavOpen}
+              onClick={handleToggleNav}
             >
-              {isDesktop ? (
-                isSidebarCollapsed ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l6 7-6 7" />
+              <span className="sr-only">Меню</span>
+              <svg
+                aria-hidden
+                className="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                {!isDesktop && isMobileNavOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 5l-6 7 6 7" />
-                )
-              ) : isMobileNavOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M3 12h18M3 18h18" />
-              )}
-            </svg>
-          </button>
-          <Link
-            href="/"
-            prefetch={false}
-            className="group inline-flex items-center gap-2 rounded-full border border-transparent px-2.5 py-1 transition-base hover:border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
-            aria-label="Intelligent Data Pro — на главную"
-          >
-            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-[var(--accent-primary)] text-[var(--accent-on-primary)] shadow-soft">
-              <Image
-                src="/static/img/brand/mark.svg"
-                alt="Логотип Intelligent Data Pro"
-                width={28}
-                height={28}
-                className="h-7 w-7"
-                priority
-                unoptimized
-              />
-            </span>
-            <span className="hidden sm:flex flex-col leading-tight">
-              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-                Intelligent Data Pro
+                  <>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 12h18" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 18h18" />
+                  </>
+                )}
+              </svg>
+            </button>
+            <Link
+              href="/"
+              prefetch={false}
+              className="group inline-flex items-center gap-2 rounded-full border border-transparent px-2.5 py-1 transition-base hover:border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+              aria-label="Intelligent Data Pro — на главную"
+            >
+              <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-[var(--accent-primary)] text-[var(--accent-on-primary)] shadow-soft">
+                <Image
+                  src="/static/img/brand/mark.svg"
+                  alt="Логотип Intelligent Data Pro"
+                  width={28}
+                  height={28}
+                  className="h-7 w-7"
+                  priority
+                  unoptimized
+                />
               </span>
-              <span className="text-sm font-semibold text-[var(--text-primary)]">Control Hub</span>
-            </span>
-          </Link>
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="hidden sm:flex flex-col leading-tight">
+                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+                  Intelligent Data Pro
+                </span>
+                <span className="text-sm font-semibold text-[var(--text-primary)]">Control Hub</span>
+              </span>
+            </Link>
+          </div>
+          <div className="flex min-w-0 flex-col items-center gap-0.5 text-center">
             <h1
               id={headingId}
               className="truncate text-lg font-semibold leading-tight text-[var(--text-primary)] md:text-xl"
@@ -298,8 +352,10 @@ export default function AppShell({ title, subtitle, actions, children, titleId }
             </h1>
             {subtitle ? <p className="truncate text-sm text-muted">{subtitle}</p> : null}
           </div>
-          {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
-          <UserSummary viewer={viewer} isLoading={viewerLoading} />
+          <div className="flex items-center justify-end gap-3">
+            {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
+            <UserSummary viewer={viewer} isLoading={viewerLoading} personaBundle={personaBundle} />
+          </div>
         </div>
       </header>
       <div className="relative flex flex-1">
@@ -321,15 +377,38 @@ export default function AppShell({ title, subtitle, actions, children, titleId }
                 ? 'bg-[var(--accent-primary)] text-[var(--accent-on-primary)] shadow-soft'
                 : 'text-muted hover:bg-surface-soft hover:text-[var(--text-primary)]';
               const className = `${baseClass} ${stateClass} ${item.disabled ? '' : interactiveFocus}`;
-              const content = (
-                <span className="flex items-center gap-2">
-                  <span>{item.label}</span>
-                  {item.badge ? (
-                    <span className="rounded-full bg-[var(--accent-primary-soft)] px-2 py-0.5 text-[0.65rem] uppercase tracking-wide text-[var(--text-primary)]">
-                      {item.badge}
+              const status = item.status;
+              let statusNode: React.ReactNode = null;
+              if (status) {
+                const tooltip = NAV_STATUS_TOOLTIPS[status.kind];
+                if (status.link) {
+                  const link = status.link;
+                  statusNode = (
+                    <span
+                      className="ml-2 inline-flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+                      role="link"
+                      tabIndex={0}
+                      onClick={(event) => handleStatusNavigate(status, event)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          router.push(link);
+                        }
+                      }}
+                    >
+                      <StatusIndicator kind={status.kind} tooltip={tooltip} />
                     </span>
-                  ) : null}
-                </span>
+                  );
+                } else {
+                  statusNode = <StatusIndicator kind={status.kind} tooltip={tooltip} />;
+                }
+              }
+              const content = (
+                <>
+                  <span className="truncate">{item.label}</span>
+                  {statusNode}
+                </>
               );
               if (item.disabled) {
                 return (
@@ -387,9 +466,11 @@ export default function AppShell({ title, subtitle, actions, children, titleId }
 function UserSummary({
   viewer,
   isLoading,
+  personaBundle,
 }: {
   viewer: ViewerProfileSummary | null;
   isLoading: boolean;
+  personaBundle?: PersonaBundle;
 }) {
   if (isLoading && !viewer) {
     return <div className="h-10 w-10 animate-pulse rounded-full bg-surface-soft" aria-hidden />;
@@ -399,13 +480,41 @@ function UserSummary({
   }
   const displayLabel = viewer.display_name || viewer.username || 'Пользователь';
   const initials = getInitials(displayLabel);
-  const metadata = resolveRoleMetadata(viewer.role);
+  const persona = getPersonaInfo(personaBundle ?? DEFAULT_PERSONA_BUNDLE, viewer.role);
   const tooltipId = `role-tooltip-${viewer.user_id}`;
   const profileSlug = viewer.profile_slug || viewer.username || '';
   const profileHref = profileSlug ? `/users/${profileSlug}` : '/users';
   const usernameLabel = viewer.username ? `@${viewer.username}` : '—';
   return (
     <div className="flex items-center gap-3">
+      <div className="relative group/role">
+        <div
+          tabIndex={0}
+          role="button"
+          aria-haspopup="true"
+          aria-describedby={tooltipId}
+          aria-label={`Ваша роль: ${persona.label}`}
+          className="inline-flex items-center gap-1 rounded-full border border-subtle px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--accent-primary)] transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+        >
+          {persona.label}
+        </div>
+        <div
+          role="tooltip"
+          id={tooltipId}
+          className="pointer-events-none absolute left-0 top-full z-40 mt-2 w-max max-w-xs origin-top-left scale-95 rounded-xl border border-subtle bg-[var(--surface-0)] p-3 text-left text-xs text-[var(--text-primary)] opacity-0 shadow-soft transition-all duration-150 ease-out group-hover/role:scale-100 group-hover/role:opacity-100 group-focus-within/role:scale-100 group-focus-within/role:opacity-100"
+        >
+          <div className="text-sm font-semibold text-[var(--text-primary)]">{persona.label}</div>
+          {viewer.headline ? (
+            <p className="mt-1 text-xs text-[var(--text-primary)]">{viewer.headline}</p>
+          ) : null}
+          <p className="mt-1 leading-relaxed text-muted">{renderPersonaTooltip(persona.tooltipMd)}</p>
+          {persona.slogan ? (
+            <p className="mt-2 text-[0.65rem] font-semibold uppercase tracking-wide text-muted">
+              {persona.slogan}
+            </p>
+          ) : null}
+        </div>
+      </div>
       <Link
         href={profileHref}
         prefetch={false}
@@ -431,29 +540,6 @@ function UserSummary({
           <span className="truncate text-xs text-muted">{usernameLabel}</span>
         </span>
       </Link>
-      <div className="relative group/role">
-        <div
-          tabIndex={0}
-          role="button"
-          aria-haspopup="true"
-          aria-describedby={tooltipId}
-          aria-label={`Ваша роль: ${metadata.title}`}
-          className="inline-flex items-center gap-1 rounded-full border border-subtle px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--accent-primary)] transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
-        >
-          {metadata.label}
-        </div>
-        <div
-          role="tooltip"
-          id={tooltipId}
-          className="pointer-events-none absolute right-0 top-full z-40 mt-2 w-max max-w-xs origin-top-right scale-95 rounded-xl border border-subtle bg-[var(--surface-0)] p-3 text-left text-xs text-[var(--text-primary)] opacity-0 shadow-soft transition-all duration-150 ease-out group-hover/role:scale-100 group-hover/role:opacity-100 group-focus-within/role:scale-100 group-focus-within/role:opacity-100"
-        >
-          <div className="text-sm font-semibold text-[var(--text-primary)]">{metadata.title}</div>
-          {viewer.headline ? (
-            <p className="mt-1 text-xs text-[var(--text-primary)]">{viewer.headline}</p>
-          ) : null}
-          <p className="mt-1 leading-relaxed text-muted">{metadata.description}</p>
-        </div>
-      </div>
     </div>
   );
 }

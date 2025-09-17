@@ -1,7 +1,6 @@
 'use client';
 
 import clsx from 'clsx';
-import Link from 'next/link';
 import React from 'react';
 
 export type StatusIndicatorKind = 'new' | 'wip' | 'locked';
@@ -9,7 +8,6 @@ export type StatusIndicatorKind = 'new' | 'wip' | 'locked';
 export interface StatusIndicatorProps {
   kind: StatusIndicatorKind;
   tooltip?: string;
-  href?: string;
   size?: 'sm' | 'md';
   className?: string;
 }
@@ -26,7 +24,7 @@ const KIND_TITLES: Record<StatusIndicatorKind, string> = {
   locked: 'Доступ по тарифу — откройте страницу тарифов, чтобы прокачать доступ',
 };
 
-function renderIcon(kind: StatusIndicatorKind, size: number) {
+function renderIcon(kind: StatusIndicatorKind) {
   switch (kind) {
     case 'wip':
       return (
@@ -52,40 +50,24 @@ function renderIcon(kind: StatusIndicatorKind, size: number) {
   }
 }
 
-export function StatusIndicator({ kind, tooltip, href, size = 'sm', className }: StatusIndicatorProps) {
-  const dimension = size === 'sm' ? 18 : 22;
+export function StatusIndicator({ kind, tooltip, size = 'sm', className }: StatusIndicatorProps) {
   const label = tooltip ?? KIND_TITLES[kind];
-  const content = (
+  const dimension = size === 'sm' ? 18 : 22;
+
+  return (
     <span
       className={clsx(
-        'inline-flex items-center justify-center rounded-full border border-transparent p-1 transition-colors hover:border-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--surface-0)]',
+        'inline-flex items-center justify-center rounded-full border border-transparent p-1 transition-colors hover:border-current',
         KIND_STYLES[kind],
         className,
       )}
       title={label}
       aria-label={label}
       role="img"
-      tabIndex={-1}
     >
       <span className="block" style={{ width: dimension, height: dimension }}>
-        {renderIcon(kind, dimension)}
+        {renderIcon(kind)}
       </span>
     </span>
   );
-
-  if (href) {
-    return (
-      <Link
-        href={href}
-        prefetch={false}
-        className="inline-flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
-        aria-label={label}
-        title={label}
-      >
-        {content}
-      </Link>
-    );
-  }
-
-  return content;
 }

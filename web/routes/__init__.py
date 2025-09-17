@@ -31,6 +31,7 @@ from .api.user_favorites import router as user_favorites_api
 from .api.integrations_google import router as gcal_api
 from .api.habits_v1 import api as habits_v1_api
 from .api.diagnostics import router as diagnostics_api
+from .api.dashboard import router as dashboard_api
 
 api_router.include_router(tasks_api)
 api_router.include_router(calendar_api)
@@ -52,3 +53,4 @@ api_router.include_router(user_settings_api)
 api_router.include_router(habits_v1_api)
 api_router.include_router(diagnostics_api)
 api_router.include_router(profiles_api)
+api_router.include_router(dashboard_api)

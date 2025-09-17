@@ -1,25 +1,15 @@
 import pytest
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from fastapi.testclient import TestClient
-from pathlib import Path
 from datetime import timedelta
+from types import SimpleNamespace
 
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+from core.models import Alarm, CalendarEvent, Task, TaskStatus, TimeEntry, WebUser, TgUser, UserRole
 from core.utils import utcnow
-
-from core.models import (
-    WebUser,
-    TgUser,
-    UserRole,
-    Task,
-    TaskStatus,
-    CalendarItem,
-    Alarm,
-    CalendarEvent,
-    TimeEntry,
-)
-from web.routes import index
+from web.routes import api_router
 from web.dependencies import get_current_web_user
+from core.services import dashboard_service
 
 
 class FakeTaskService:
@@ -88,7 +78,18 @@ class FakeTgService:
         pass
 
     async def list_user_groups(self, telegram_id):
-        return []
+        return [
+            SimpleNamespace(
+                telegram_id=99,
+                owner_id=telegram_id,
+                title="Focus Crew",
+                participants_count=42,
+            )
+        ]
+
+    @property
+    def session(self):
+        return object()
 
 
 class FakeProjectService:
@@ -99,15 +100,41 @@ class FakeProjectService:
         pass
 
     async def list(self, owner_id):
-        return []
+        return [SimpleNamespace(id=1, owner_id=owner_id, name="Project X")]
+
+
+class FakeGroupModerationService:
+    def __init__(self, session):  # pragma: no cover - signature compatibility
+        self.session = session
+
+    async def groups_overview(self, group_ids=None, limit=5, since_days=14):
+        return [
+            {
+                "group": SimpleNamespace(title="Focus Crew", telegram_id=99),
+                "members_total": 42,
+                "active_members": 30,
+                "quiet_members": 10,
+                "unpaid_members": 5,
+                "last_activity": utcnow(),
+            }
+        ]
+
+
+class FakeHabitService:
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        pass
+
+    async def list_habits(self, owner_id=None):
+        return [SimpleNamespace(id=7, name="Meditation", progress={utcnow().date().isoformat(): True})]
 
 
 @pytest.fixture
 def client(monkeypatch):
     app = FastAPI()
-    static_dir = Path(__file__).resolve().parents[2] / "web" / "static"
-    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
-    app.include_router(index.router)
+    app.include_router(api_router, prefix="/api/v1")
 
     user = WebUser(id=1, username="alice", role=UserRole.single.name)
     user.telegram_accounts = [TgUser(id=1, telegram_id=1, role=UserRole.single.name)]
@@ -117,20 +144,26 @@ def client(monkeypatch):
 
     app.dependency_overrides[get_current_web_user] = override_user
 
-    monkeypatch.setattr(index, "TelegramUserService", FakeTgService)
-    monkeypatch.setattr(index, "ProjectService", FakeProjectService)
-    monkeypatch.setattr(index, "TaskService", FakeTaskService)
-    monkeypatch.setattr(index, "AlarmService", FakeAlarmService)
-    monkeypatch.setattr(index, "CalendarService", FakeCalendarService)
-    monkeypatch.setattr(index, "TimeService", FakeTimeService)
+    monkeypatch.setattr(dashboard_service, "TelegramUserService", FakeTgService)
+    monkeypatch.setattr(dashboard_service, "ProjectService", FakeProjectService)
+    monkeypatch.setattr(dashboard_service, "GroupModerationService", FakeGroupModerationService)
+    monkeypatch.setattr(dashboard_service, "TaskService", FakeTaskService)
+    monkeypatch.setattr(dashboard_service, "AlarmService", FakeAlarmService)
+    monkeypatch.setattr(dashboard_service, "CalendarService", FakeCalendarService)
+    monkeypatch.setattr(dashboard_service, "TimeService", FakeTimeService)
+    monkeypatch.setattr(dashboard_service, "HabitService", FakeHabitService)
 
     return TestClient(app)
 
 
 def test_dashboard_displays_real_data(client):
-    res = client.get("/")
+    res = client.get("/api/v1/dashboard/overview")
     assert res.status_code == 200
-    assert "Task A" in res.text
-    assert "Drink water" in res.text
-    assert "Team meeting" in res.text
-    assert "Выполнено целей" in res.text
+    payload = res.json()
+
+    assert payload["profile"]["username"] == "alice"
+    assert payload["metrics"]["goals"]["value"] == "1"
+    assert any(item["title"] == "Team meeting" for item in payload["collections"]["next_events"])
+    assert any(item["title"] == "Drink water" for item in payload["collections"]["reminders"])
+    assert any(item["title"] == "Task A" for item in payload["collections"]["upcoming_tasks"])
+    assert any(item["name"] == "Meditation" for item in payload["habits"])

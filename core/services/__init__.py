@@ -12,7 +12,7 @@ from .web_user_service import WebUserService
 from .favorite_service import FavoriteService
 from .habits import HabitsService, DailiesService, HabitsCronService, UserStatsService
 from .profile_service import ProfileService
-from .profile_service import ProfileService
+from .dashboard_service import build_dashboard_overview
 from .diagnostics_service import DiagnosticsService
 from .sync_gcal import (
     generate_auth_url,
@@ -40,6 +40,7 @@ __all__ = [
     "ProfileService",
     "ProfileService",
     "DiagnosticsService",
+    "build_dashboard_overview",
     "generate_auth_url",
     "exchange_code",
     "save_gcal_link",
