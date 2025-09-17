@@ -228,6 +228,8 @@ class ProfileService:
         )
         result = await self.session.execute(stmt)
         profile = result.scalars().first()
+        if not profile and entity_type == "user":
+            profile = await self._auto_create_user_profile_from_slug(slug)
         if not profile:
             raise ValueError("profile not found")
         if data.get("slug"):
@@ -567,6 +569,45 @@ class ProfileService:
             is_owner=owner_access,
             is_admin=admin_access,
         )
+
+    async def _auto_create_user_profile_from_slug(self, slug: str) -> EntityProfile | None:
+        """Auto-create user profile when accessed by slug for the first time."""
+
+        normalized = slug.strip().lower()
+        if not normalized:
+            return None
+
+        user_stmt = select(WebUser).where(func.lower(WebUser.username) == normalized).limit(1)
+        user_result = await self.session.execute(user_stmt)
+        user = user_result.scalar_one_or_none()
+        if not user:
+            return None
+
+        existing_stmt = await self._base_query("user")
+        existing_stmt = existing_stmt.where(EntityProfile.entity_id == user.id)
+        existing_result = await self.session.execute(existing_stmt)
+        profile = existing_result.scalars().first()
+        if profile:
+            await self.ensure_default_sections(profile)
+            return profile
+
+        defaults: dict[str, Any] = {
+            "display_name": user.full_name or user.username,
+            "avatar_url": user.avatar_url,
+            "profile_meta": {
+                "visibility": "private",
+                "profile_visibility": "private",
+            },
+        }
+        profile = await self.ensure_profile(
+            entity_type="user",
+            entity_id=user.id,
+            slug=user.username,
+            display_name=defaults["display_name"],
+            defaults=defaults,
+        )
+        await self.ensure_default_sections(profile)
+        return profile
 
     async def ensure_default_sections(self, profile: EntityProfile) -> None:
         if not profile.sections:

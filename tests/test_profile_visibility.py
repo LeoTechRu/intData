@@ -50,3 +50,39 @@ async def test_private_profiles_require_explicit_grant(session):
     assert [item.profile.slug for item in catalog] == ["owner"]
     access = await service.get_profile(entity_type="user", slug="owner", viewer=viewer)
     assert access.profile.display_name == "Owner Example"
+
+
+@pytest.mark.asyncio
+async def test_owner_profile_bootstrap(session):
+    owner = WebUser(
+        username="AlphaTeam",
+        password_hash="x",
+        role="single",
+        full_name="Alpha Team",
+    )
+    stranger = WebUser(username="viewer", password_hash="x", role="single")
+    session.add_all([owner, stranger])
+    await session.commit()
+
+    service = ProfileService(session)
+
+    owner_ref = await session.get(WebUser, owner.id)
+    access = await service.get_profile(
+        entity_type="user",
+        slug="AlphaTeam",
+        viewer=owner_ref,
+    )
+
+    assert access.is_owner is True
+    assert access.profile.slug == "alphateam"
+    assert access.profile.display_name == "Alpha Team"
+    assert access.profile.profile_meta.get("visibility") == "private"
+    assert len(access.sections) >= 1
+
+    stranger_ref = await session.get(WebUser, stranger.id)
+    with pytest.raises(PermissionError):
+        await service.get_profile(
+            entity_type="user",
+            slug=access.profile.slug,
+            viewer=stranger_ref,
+        )

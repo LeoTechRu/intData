@@ -64,6 +64,7 @@ export default function UsersCatalog() {
       title="Команда"
       description="Каталог пользователей Intelligent Data Pro"
       contentClassName="flex flex-col gap-6 p-6 md:p-8"
+      hideContentTitle
     >
       <form onSubmit={handleSearch} className="flex flex-col gap-4">
         <Toolbar justify="between">

@@ -2,7 +2,7 @@ import React, { type HTMLAttributes, type ReactNode } from 'react';
 import { cn } from '../../lib/cn';
 import { Card } from './Card';
 
-export interface EmptyStateProps extends HTMLAttributes<HTMLDivElement> {
+export interface EmptyStateProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   title: ReactNode;
   description?: ReactNode;
   action?: ReactNode;

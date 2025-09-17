@@ -75,6 +75,16 @@ class ProfileUpdate(BaseModel):
     slug: Optional[str] = None
 
 
+class CurrentUserProfile(BaseModel):
+    user_id: int
+    username: str
+    role: str
+    profile_slug: str
+    display_name: str
+    avatar_url: Optional[str] = None
+    headline: Optional[str] = None
+
+
 def _ensure_entity(entity: EntityKind) -> str:
     mapped = _TYPE_MAP.get(entity)
     if not mapped:
@@ -171,6 +181,30 @@ async def get_profile(
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     include_grants = access.is_owner or access.is_admin
     return _profile_to_response(access, include_grants=include_grants)
+
+
+@router.get("/users/@me", response_model=CurrentUserProfile)
+async def get_current_user_profile(
+    current_user: Optional[WebUser] = Depends(get_current_web_user),
+):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    async with ProfileService() as service:
+        access = await service.get_profile(
+            entity_type="user",
+            slug=current_user.username,
+            viewer=current_user,
+        )
+    profile = access.profile
+    return CurrentUserProfile(
+        user_id=current_user.id,
+        username=current_user.username,
+        role=current_user.role,
+        profile_slug=profile.slug,
+        display_name=profile.display_name,
+        avatar_url=profile.avatar_url or current_user.avatar_url,
+        headline=profile.headline,
+    )
 
 
 @router.put("/{entity}/{slug}", response_model=ProfileOut)
