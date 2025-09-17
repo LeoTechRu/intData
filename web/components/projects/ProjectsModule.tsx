@@ -50,6 +50,7 @@ interface FiltersState {
   sort: SortMode;
   view: ViewMode;
   onlyWithoutSlug: boolean;
+  onlyWithoutDescription: boolean;
 }
 
 function useAreas() {
@@ -130,6 +131,7 @@ export default function ProjectsModule() {
     sort: 'recent',
     view: 'grid',
     onlyWithoutSlug: false,
+    onlyWithoutDescription: false,
   });
 
   const projectsQuery = useProjects({
@@ -199,6 +201,9 @@ export default function ProjectsModule() {
       if (filters.onlyWithoutSlug && (project.slug ?? '').trim().length > 0) {
         return false;
       }
+      if (filters.onlyWithoutDescription && (project.description ?? '').trim().length > 0) {
+        return false;
+      }
       if (!query) {
         return true;
       }
@@ -228,7 +233,7 @@ export default function ProjectsModule() {
       });
     }
     return sorted;
-  }, [areaMap, filters.search, filters.sort, rawProjects]);
+  }, [areaMap, filters.onlyWithoutDescription, filters.onlyWithoutSlug, filters.search, filters.sort, rawProjects]);
 
   const projectGroups = useMemo(() => {
     const groups = new Map<number, { area: Area | null; projects: Project[]; order: number }>();
@@ -249,7 +254,10 @@ export default function ProjectsModule() {
   const uniqueAreasCount = rawProjects.reduce((acc, project) => acc.add(project.area_id), new Set<number>()).size;
   const sluggedCount = rawProjects.filter((project) => (project.slug ?? '').trim().length > 0).length;
   const missingSlugCount = rawProjects.length - sluggedCount;
+  const describedCount = rawProjects.filter((project) => (project.description ?? '').trim().length > 0).length;
+  const missingDescriptionCount = rawProjects.length - describedCount;
   const slugCoveragePercent = rawProjects.length > 0 ? Math.round((sluggedCount / rawProjects.length) * 100) : 0;
+  const descriptionCoveragePercent = rawProjects.length > 0 ? Math.round((describedCount / rawProjects.length) * 100) : 0;
 
   const isInitialLoading = projectsQuery.isLoading || areasQuery.isLoading;
   const isRefetching = projectsQuery.isFetching && !projectsQuery.isLoading;
@@ -506,12 +514,14 @@ export default function ProjectsModule() {
           </span>
         </Card>
         <Card padded surface="soft" className="flex flex-col gap-1" data-testid="projects-summary-slug">
-          <span className="text-xs uppercase tracking-wide text-muted">Покрытие слагами</span>
-          <span className="text-2xl font-semibold text-[var(--text-primary)]">{slugCoveragePercent}%</span>
+          <span className="text-xs uppercase tracking-wide text-muted">Покрытие слагами / описаниями</span>
+          <span className="text-2xl font-semibold text-[var(--text-primary)]">
+            {slugCoveragePercent}% / {descriptionCoveragePercent}%
+          </span>
           <span className="text-xs text-muted">
             {rawProjects.length === 0
               ? 'Добавьте проекты, чтобы настроить адреса и быстрый доступ.'
-              : `Без слага: ${formatNumber(missingSlugCount)} • Быстрых проектов в «${quickArea ? quickArea.name : 'область по умолчанию'}»: ${formatNumber(inboxProjectsCount)}`}
+              : `Без слага: ${formatNumber(missingSlugCount)} • Без описания: ${formatNumber(missingDescriptionCount)} • Быстрых проектов в «${quickArea ? quickArea.name : 'область по умолчанию'}»: ${formatNumber(inboxProjectsCount)}`}
           </span>
         </Card>
       </div>
@@ -563,6 +573,8 @@ export default function ProjectsModule() {
                 <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
                   {group.projects.map((project) => {
                     const area = areaMap.get(project.area_id) ?? group.area;
+                    const hasSlug = (project.slug ?? '').trim().length > 0;
+                    const hasDescription = (project.description ?? '').trim().length > 0;
                     return (
                       <Card key={project.id} as="article" className="flex flex-col gap-4 p-6" data-testid="projects-card">
                         <div className="flex items-start justify-between gap-3">
@@ -577,6 +589,14 @@ export default function ProjectsModule() {
                         <p className="text-sm leading-6 text-muted">
                           {project.description?.trim() ? project.description : 'Описание появится, когда команда его заполнит.'}
                         </p>
+                        <div className="flex flex-wrap items-center gap-2 text-[0.65rem]">
+                          <Badge tone={hasSlug ? 'accent' : 'warning'} size="sm" uppercase={false}>
+                            {hasSlug ? 'Слаг задан' : 'Нет слага'}
+                          </Badge>
+                          <Badge tone={hasDescription ? 'accent' : 'warning'} size="sm" uppercase={false}>
+                            {hasDescription ? 'Описание есть' : 'Нет описания'}
+                          </Badge>
+                        </div>
                         <div className="flex flex-wrap items-center gap-3 text-xs text-muted">
                           <span className="inline-flex items-center gap-2">
                             <span
