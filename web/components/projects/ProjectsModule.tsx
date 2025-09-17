@@ -6,6 +6,7 @@ import PageLayout from '../PageLayout';
 import { apiFetch, ApiError } from '../../lib/api';
 import type { Area, Project } from '../../lib/types';
 import { buildAreaOptions } from '../../lib/areas';
+import { Button, Card, Field, Input, Select, Textarea } from '../ui';
 
 const MODULE_TITLE = 'Проекты';
 const MODULE_DESCRIPTION = 'Управляйте проектами, привязывайте их к областям и отслеживайте структуру PARA.';
@@ -58,6 +59,7 @@ export default function ProjectsModule() {
   const projectsQuery = useProjects();
   const [form, setForm] = useState<FormState>({ name: '', areaId: '', slug: '', description: '' });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const loadError = (areasQuery.error ?? projectsQuery.error) as unknown;
   const loadErrorMessage = loadError
     ? loadError instanceof ApiError
@@ -114,140 +116,134 @@ export default function ProjectsModule() {
 
   return (
     <PageLayout title={MODULE_TITLE} description={MODULE_DESCRIPTION}>
-      <section className="flex flex-col gap-4">
-        <div className="rounded-2xl border border-subtle bg-surface-soft p-6">
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-            <div className="grid gap-4 md:grid-cols-2">
-              <label className="flex flex-col gap-1 text-sm text-muted" htmlFor="project-name">
-                Название проекта
-                <input
-                  id="project-name"
-                  name="name"
-                  type="text"
-                  value={form.name}
-                  onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-                  placeholder="Новый проект"
-                  className="rounded-xl border border-subtle bg-[var(--surface-0)] px-3 py-2 text-base text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
-                  required
-                />
-              </label>
-              <label className="flex flex-col gap-1 text-sm text-muted" htmlFor="project-area">
-                Область (Area)
-                <select
-                  id="project-area"
-                  name="area"
-                  value={form.areaId}
-                  onChange={(event) => setForm((prev) => ({ ...prev, areaId: event.target.value }))}
-                  className="rounded-xl border border-subtle bg-[var(--surface-0)] px-3 py-2 text-base text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
-                  required
-                  disabled={areasQuery.isLoading}
-                >
-                  <option value="">— выберите область —</option>
-                  {areaOptions.map((area) => (
-                    <option key={area.id} value={area.id} disabled={!area.isLeaf}>
-                      {area.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="flex flex-col gap-1 text-sm text-muted" htmlFor="project-slug">
-                Слаг (опционально)
-                <input
-                  id="project-slug"
-                  name="slug"
-                  type="text"
-                  value={form.slug}
-                  onChange={(event) => setForm((prev) => ({ ...prev, slug: event.target.value }))}
-                  placeholder="project-alpha"
-                  className="rounded-xl border border-subtle bg-[var(--surface-0)] px-3 py-2 text-base text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
-                />
-              </label>
-              <label className="flex flex-col gap-1 text-sm text-muted" htmlFor="project-description">
-                Описание (опционально)
-                <textarea
-                  id="project-description"
-                  name="description"
-                  value={form.description}
-                  onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
-                  rows={3}
-                  placeholder="Краткое описание для команды"
-                  className="min-h-[96px] rounded-xl border border-subtle bg-[var(--surface-0)] px-3 py-2 text-base text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
-                />
-              </label>
-            </div>
-            {errorMessage ? <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{errorMessage}</div> : null}
-            <div className="flex items-center justify-end gap-2">
-              <button
-                type="submit"
-                className="inline-flex items-center gap-2 rounded-xl bg-[var(--accent-primary)] px-4 py-2 text-sm font-medium text-[var(--accent-on-primary)] transition-base hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)] disabled:cursor-progress disabled:opacity-70"
-                disabled={createMutation.isPending}
+      <Card surface="soft">
+        <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Название проекта" required htmlFor="project-name">
+              <Input
+                id="project-name"
+                name="name"
+                value={form.name}
+                onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
+                placeholder="Новый проект"
+                required
+              />
+            </Field>
+            <Field label="Область (Area)" required htmlFor="project-area">
+              <Select
+                id="project-area"
+                name="area"
+                value={form.areaId}
+                onChange={(event) => setForm((prev) => ({ ...prev, areaId: event.target.value }))}
+                required
+                disabled={areasQuery.isLoading}
               >
-                {createMutation.isPending ? 'Сохраняем…' : 'Добавить проект'}
-              </button>
-            </div>
-          </form>
-          <p className="mt-3 text-xs text-muted">
-            Выбирайте листья дерева Areas: родительские узлы недоступны для привязки проектов.
-          </p>
-        </div>
-        {loadErrorMessage ? (
-          <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-            {loadErrorMessage}
+                <option value="">— выберите область —</option>
+                {areaOptions.map((area) => (
+                  <option key={area.id} value={area.id} disabled={!area.isLeaf}>
+                    {area.label}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Слаг (опционально)" htmlFor="project-slug">
+              <Input
+                id="project-slug"
+                name="slug"
+                value={form.slug}
+                onChange={(event) => setForm((prev) => ({ ...prev, slug: event.target.value }))}
+                placeholder="project-alpha"
+              />
+            </Field>
+            <Field label="Описание (опционально)" htmlFor="project-description">
+              <Textarea
+                id="project-description"
+                name="description"
+                value={form.description}
+                onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
+                rows={3}
+                placeholder="Краткое описание для команды"
+                className="min-h-[96px]"
+              />
+            </Field>
           </div>
-        ) : null}
-        <div className="rounded-2xl border border-subtle">
+          {errorMessage ? (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600" role="alert">
+              {errorMessage}
+            </div>
+          ) : null}
+          <div className="flex items-center justify-end gap-2">
+            <Button type="submit" disabled={createMutation.isPending}>
+              {createMutation.isPending ? 'Сохраняем…' : 'Добавить проект'}
+            </Button>
+          </div>
+        </form>
+        <p className="mt-3 text-xs text-muted">
+          Выбирайте листья дерева Areas: родительские узлы недоступны для привязки проектов.
+        </p>
+      </Card>
+
+      {loadErrorMessage ? (
+        <Card className="border-red-200/80 bg-red-50 text-sm text-red-700">
+          <strong className="font-semibold">{loadErrorMessage}</strong>
+          <span className="mt-1 text-xs text-red-600/80">Попробуйте обновить страницу или проверьте соединение с сервером.</span>
+        </Card>
+      ) : null}
+
+      <Card padded={false} className="overflow-hidden">
+        <div className="overflow-x-auto">
           <table className="w-full table-fixed border-collapse text-sm">
             <thead className="bg-surface-soft text-left text-xs uppercase tracking-wide text-muted">
               <tr>
-                <th className="px-4 py-3 font-medium">ID</th>
-                <th className="px-4 py-3 font-medium">Название</th>
-                <th className="px-4 py-3 font-medium">Area</th>
-                <th className="px-4 py-3 font-medium">Slug</th>
+                <th className="px-5 py-3 font-medium">ID</th>
+                <th className="px-5 py-3 font-medium">Название</th>
+                <th className="px-5 py-3 font-medium">Area</th>
+                <th className="px-5 py-3 font-medium">Slug</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 Array.from({ length: 3 }).map((_, index) => (
                   <tr key={`loading-${index}`} className="animate-pulse border-t border-subtle-soft">
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3">
                       <div className="h-3 w-12 rounded-full bg-surface-soft" />
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3">
                       <div className="h-3 w-32 rounded-full bg-surface-soft" />
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3">
                       <div className="h-3 w-24 rounded-full bg-surface-soft" />
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3">
                       <div className="h-3 w-20 rounded-full bg-surface-soft" />
                     </td>
                   </tr>
                 ))
-              ) : !hasProjects ? (
+              ) : hasProjects ? (
+                projectsQuery.data?.map((project) => {
+                  const area = areaMap.get(project.area_id);
+                  return (
+                    <tr key={project.id} className="border-t border-subtle">
+                      <td className="px-5 py-3 font-mono text-xs text-muted">#{project.id}</td>
+                      <td className="px-5 py-3 font-medium text-[var(--text-primary)]">{project.name}</td>
+                      <td className="px-5 py-3 text-sm text-[var(--text-primary)]">
+                        {area ? area.name : `Area #${project.area_id}`}
+                      </td>
+                      <td className="px-5 py-3 text-sm text-muted">{project.slug ?? '—'}</td>
+                    </tr>
+                  );
+                })
+              ) : (
                 <tr>
                   <td colSpan={4} className="px-6 py-8 text-center text-sm text-muted">
                     Пока нет проектов — добавьте первый, чтобы связать задачи и материалы.
                   </td>
                 </tr>
-              ) : (
-                projectsQuery.data?.map((project) => {
-                  const area = areaMap.get(project.area_id);
-                  return (
-                    <tr key={project.id} className="border-t border-subtle">
-                      <td className="px-4 py-3 font-mono text-xs text-muted">#{project.id}</td>
-                      <td className="px-4 py-3 font-medium text-[var(--text-primary)]">{project.name}</td>
-                      <td className="px-4 py-3 text-sm text-[var(--text-primary)]">
-                        {area ? area.name : `Area #${project.area_id}`}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-muted">{project.slug ?? '—'}</td>
-                    </tr>
-                  );
-                })
               )}
             </tbody>
           </table>
         </div>
-      </section>
+      </Card>
     </PageLayout>
   );
 }

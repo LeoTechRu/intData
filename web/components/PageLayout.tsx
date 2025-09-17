@@ -1,5 +1,7 @@
 import React, { type ReactNode } from 'react';
 import AppShell from './AppShell';
+import { cn } from '../lib/cn';
+import { Section } from './ui/Section';
 
 interface PageLayoutProps {
   title: string;
@@ -19,13 +21,25 @@ export default function PageLayout({
   children,
 }: PageLayoutProps) {
   return (
-    <AppShell title={title} subtitle={subtitle} description={description} actions={actions}>
-      <div className={contentClassName ?? 'flex flex-col gap-4 p-6 md:p-8'}>
-        <h1 className="text-xl font-semibold tracking-tight text-[var(--text-primary)]" data-testid="page-title">
-          {title}
-        </h1>
+    <AppShell title={title} subtitle={subtitle} actions={actions}>
+      <Section
+        className={cn('p-6 md:p-8', contentClassName)}
+        spacing="lg"
+        aria-labelledby="page-title"
+        data-testid="page-layout"
+      >
+        <header className="flex flex-col gap-2">
+          <h1
+            id="page-title"
+            className="text-xl font-semibold tracking-tight text-[var(--text-primary)]"
+            data-testid="page-title"
+          >
+            {title}
+          </h1>
+          {description ? <p className="text-sm text-muted">{description}</p> : null}
+        </header>
         {children}
-      </div>
+      </Section>
     </AppShell>
   );
 }

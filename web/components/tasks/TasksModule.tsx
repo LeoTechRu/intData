@@ -7,6 +7,7 @@ import { apiFetch, ApiError, buildQuery } from '../../lib/api';
 import type { Area, Project, Task, TaskStats } from '../../lib/types';
 import { buildAreaOptions } from '../../lib/areas';
 import { formatDateTime, formatMinutes } from '../../lib/time';
+import { Button, Card, Checkbox, Field, Input, Select, Textarea } from '../ui';
 
 const MODULE_TITLE = 'Задачи';
 const MODULE_DESCRIPTION = 'Создавайте задачи, отслеживайте прогресс и управляйте таймерами в едином интерфейсе.';
@@ -232,95 +233,72 @@ export default function TasksModule() {
 
   return (
     <PageLayout title={MODULE_TITLE} description={MODULE_DESCRIPTION}>
-      <section className="flex flex-col gap-6">
-        <form className="rounded-2xl border border-subtle bg-surface-soft p-6" onSubmit={handleFilterSubmit}>
-          <div className="card-title text-base font-semibold text-[var(--text-primary)]">Фильтр задач</div>
-          <div className="mt-4 grid gap-4 md:grid-cols-[2fr,1fr,auto]">
-            <label className="flex flex-col gap-1 text-sm text-muted" htmlFor="filter-area">
-              Область
-              <select
-                id="filter-area"
-                value={filterForm.areaId}
-                onChange={(event) => setFilterForm((prev) => ({ ...prev, areaId: event.target.value }))}
-                className="rounded-xl border border-subtle bg-[var(--surface-0)] px-3 py-2 text-base text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
-                disabled={areasQuery.isLoading}
-              >
-                <option value="">— без фильтра —</option>
-                {areaOptions.map((area) => (
-                  <option key={area.id} value={area.id}>
-                    {area.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex items-end gap-2 text-sm text-muted" htmlFor="filter-include-sub">
-              <input
-                id="filter-include-sub"
-                type="checkbox"
-                checked={filterForm.includeSub}
-                onChange={(event) => setFilterForm((prev) => ({ ...prev, includeSub: event.target.checked }))}
-                className="h-4 w-4 rounded border-subtle"
-                disabled={!filterForm.areaId}
-              />
-              Включать подкатегории
-            </label>
-            <div className="flex items-end">
-              <button
-                type="submit"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--accent-primary)] px-4 py-2 text-sm font-medium text-[var(--accent-on-primary)] transition-base hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
-              >
-                Показать
-              </button>
+      <form onSubmit={handleFilterSubmit} className="space-y-0">
+        <Card surface="soft" className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="text-base font-semibold text-[var(--text-primary)]">Фильтр задач</div>
+            <div className="flex items-center gap-3">
+              <Field label="Область" className="min-w-[220px]" required={false} htmlFor="filter-area">
+                <Select
+                  id="filter-area"
+                  value={filterForm.areaId}
+                  onChange={(event) => setFilterForm((prev) => ({ ...prev, areaId: event.target.value }))}
+                  disabled={areasQuery.isLoading}
+                >
+                  <option value="">— без фильтра —</option>
+                  {areaOptions.map((area) => (
+                    <option key={area.id} value={area.id}>
+                      {area.label}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <label className="flex items-center gap-2 text-sm text-muted">
+                <Checkbox
+                  id="filter-include-sub"
+                  checked={filterForm.includeSub}
+                  onChange={(event) => setFilterForm((prev) => ({ ...prev, includeSub: event.target.checked }))}
+                  disabled={!filterForm.areaId}
+                />
+                Включать подкатегории
+              </label>
             </div>
           </div>
-        </form>
+          <div className="flex justify-end">
+            <Button type="submit" size="sm">
+              Показать
+            </Button>
+          </div>
+        </Card>
+      </form>
 
-        <form className="rounded-2xl border border-subtle bg-surface-soft p-6" onSubmit={handleTaskSubmit}>
-          <div className="card-title text-base font-semibold text-[var(--text-primary)]">Новая задача</div>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <label className="flex flex-col gap-1 text-sm text-muted" htmlFor="task-title">
-              Название
-              <input
+      <form onSubmit={handleTaskSubmit} className="space-y-0">
+        <Card surface="soft" className="flex flex-col gap-6">
+          <div className="text-base font-semibold text-[var(--text-primary)]">Новая задача</div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Название" required htmlFor="task-title">
+              <Input
                 id="task-title"
-                type="text"
                 value={form.title}
                 onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
                 placeholder="Что нужно сделать?"
-                className="rounded-xl border border-subtle bg-[var(--surface-0)] px-3 py-2 text-base text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
                 required
               />
-            </label>
-            <label className="flex flex-col gap-1 text-sm text-muted" htmlFor="task-due">
-              Срок (опционально)
-              <input
+            </Field>
+            <Field label="Срок (опционально)" htmlFor="task-due">
+              <Input
                 id="task-due"
                 type="datetime-local"
                 value={form.dueDate}
                 onChange={(event) => setForm((prev) => ({ ...prev, dueDate: event.target.value }))}
-                className="rounded-xl border border-subtle bg-[var(--surface-0)] px-3 py-2 text-base text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
               />
-            </label>
-            <label className="flex flex-col gap-1 text-sm text-muted md:col-span-2" htmlFor="task-description">
-              Описание (опционально)
-              <textarea
-                id="task-description"
-                rows={3}
-                value={form.description}
-                onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
-                placeholder="Кратко опишите задачу"
-                className="min-h-[96px] rounded-xl border border-subtle bg-[var(--surface-0)] px-3 py-2 text-base text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm text-muted" htmlFor="task-area">
-              Область
-              <select
+            </Field>
+            <Field label="Область" required htmlFor="task-area">
+              <Select
                 id="task-area"
                 value={form.areaId}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  setForm((prev) => ({ ...prev, areaId: value, projectId: '' }));
-                }}
-                className="rounded-xl border border-subtle bg-[var(--surface-0)] px-3 py-2 text-base text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
+                onChange={(event) => setForm((prev) => ({ ...prev, areaId: event.target.value }))}
+                disabled={areasQuery.isLoading}
                 required
               >
                 <option value="">— выберите область —</option>
@@ -329,15 +307,13 @@ export default function TasksModule() {
                     {area.label}
                   </option>
                 ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-sm text-muted" htmlFor="task-project">
-              Проект (опционально)
-              <select
+              </Select>
+            </Field>
+            <Field label="Проект (опционально)" htmlFor="task-project">
+              <Select
                 id="task-project"
                 value={form.projectId}
                 onChange={(event) => setForm((prev) => ({ ...prev, projectId: event.target.value }))}
-                className="rounded-xl border border-subtle bg-[var(--surface-0)] px-3 py-2 text-base text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
                 disabled={!form.areaId || filteredProjects.length === 0}
               >
                 <option value="">— без проекта —</option>
@@ -346,101 +322,117 @@ export default function TasksModule() {
                     {project.name}
                   </option>
                 ))}
-              </select>
-            </label>
+              </Select>
+            </Field>
+            <Field label="Описание (опционально)" className="md:col-span-2" htmlFor="task-description">
+              <Textarea
+                id="task-description"
+                value={form.description}
+                onChange={(event) => setForm((prev) => ({ ...prev, description: event.target.value }))}
+                rows={3}
+                placeholder="Расскажите команде детали или ссылки"
+              />
+            </Field>
           </div>
-          {formError ? <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{formError}</div> : null}
-          <div className="mt-4 flex items-center justify-end">
-            <button
-              type="submit"
-              className="inline-flex items-center gap-2 rounded-xl bg-[var(--accent-primary)] px-4 py-2 text-sm font-medium text-[var(--accent-on-primary)] transition-base hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)] disabled:cursor-progress disabled:opacity-70"
-              disabled={createMutation.isPending}
-            >
+          {formError ? (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600" role="alert">
+              {formError}
+            </div>
+          ) : null}
+          <div className="flex justify-end">
+            <Button type="submit" disabled={createMutation.isPending}>
               {createMutation.isPending ? 'Сохраняем…' : 'Добавить задачу'}
-            </button>
+            </Button>
           </div>
-        </form>
+        </Card>
+      </form>
 
-        {actionError ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{actionError}</div>
-        ) : null}
-        {loadErrorMessage ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{loadErrorMessage}</div>
-        ) : null}
+      {actionError ? (
+        <Card className="border-red-200/80 bg-red-50 text-sm text-red-700" role="alert">
+          {actionError}
+        </Card>
+      ) : null}
+      {loadErrorMessage ? (
+        <Card className="border-red-200/80 bg-red-50 text-sm text-red-700" role="alert">
+          {loadErrorMessage}
+        </Card>
+      ) : null}
 
-        <section className="rounded-2xl border border-subtle bg-surface-soft p-6">
-          <div className="card-title text-base font-semibold text-[var(--text-primary)]">Статистика задач</div>
-          <div className="mt-4 grid gap-4 md:grid-cols-3">
-            <div className="rounded-xl border border-subtle bg-[var(--surface-0)] px-4 py-3 text-center">
-              <div className="text-xs font-medium uppercase tracking-wide text-muted">Выполнено</div>
-              <div className="mt-1 text-2xl font-semibold text-[var(--text-primary)]">
-                {typeof statsQuery.data?.done === 'number' ? statsQuery.data.done : '—'}
-              </div>
-            </div>
-            <div className="rounded-xl border border-subtle bg-[var(--surface-0)] px-4 py-3 text-center">
-              <div className="text-xs font-medium uppercase tracking-wide text-muted">Актуально</div>
-              <div className="mt-1 text-2xl font-semibold text-[var(--text-primary)]">
-                {typeof statsQuery.data?.active === 'number' ? statsQuery.data.active : '—'}
-              </div>
-            </div>
-            <div className="rounded-xl border border-subtle bg-[var(--surface-0)] px-4 py-3 text-center">
-              <div className="text-xs font-medium uppercase tracking-wide text-muted">Отказались</div>
-              <div className="mt-1 text-2xl font-semibold text-[var(--text-primary)]">
-                {typeof statsQuery.data?.dropped === 'number' ? statsQuery.data.dropped : '—'}
-              </div>
-            </div>
+      <Card surface="soft" className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-xl border border-subtle bg-[var(--surface-0)] px-4 py-3 text-center">
+          <div className="text-xs font-medium uppercase tracking-wide text-muted">Выполнено</div>
+          <div className="mt-1 text-2xl font-semibold text-[var(--text-primary)]">
+            {typeof statsQuery.data?.done === 'number' ? statsQuery.data.done : '—'}
           </div>
-        </section>
-
-        <div className="rounded-2xl border border-subtle">
-          <div className="flex items-center justify-between border-b border-subtle bg-surface-soft px-4 py-3">
-            <div className="text-sm font-semibold text-[var(--text-primary)]">Мои задачи</div>
-            <button
-              type="button"
-              onClick={refetchAll}
-              className="inline-flex items-center gap-2 rounded-lg border border-subtle bg-[var(--surface-0)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] transition-base hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)] disabled:cursor-progress disabled:opacity-70"
-              disabled={tasksQuery.isFetching}
-            >
-              Обновить
-            </button>
+        </div>
+        <div className="rounded-xl border border-subtle bg-[var(--surface-0)] px-4 py-3 text-center">
+          <div className="text-xs font-medium uppercase tracking-wide text-muted">Актуально</div>
+          <div className="mt-1 text-2xl font-semibold text-[var(--text-primary)]">
+            {typeof statsQuery.data?.active === 'number' ? statsQuery.data.active : '—'}
           </div>
-          <table className="w-full table-fixed border-collapse text-sm">
+        </div>
+        <div className="rounded-xl border border-subtle bg-[var(--surface-0)] px-4 py-3 text-center">
+          <div className="text-xs font-medium uppercase tracking-wide text-muted">Отказались</div>
+          <div className="mt-1 text-2xl font-semibold text-[var(--text-primary)]">
+            {typeof statsQuery.data?.dropped === 'number' ? statsQuery.data.dropped : '—'}
+          </div>
+        </div>
+      </Card>
+
+      <Card padded={false} className="overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-subtle bg-surface-soft px-5 py-4">
+          <div className="text-sm font-semibold text-[var(--text-primary)]">Мои задачи</div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={refetchAll}
+            disabled={tasksQuery.isFetching}
+          >
+            Обновить
+          </Button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full table-fixed border-collapse text-sm">
             <thead className="bg-surface-soft text-left text-xs uppercase tracking-wide text-muted">
               <tr>
-                <th className="px-4 py-3 font-medium">ID</th>
-                <th className="px-4 py-3 font-medium">Название</th>
-                <th className="px-4 py-3 font-medium">Статус</th>
-                <th className="px-4 py-3 font-medium">Контроль</th>
-                <th className="px-4 py-3 font-medium">Наблюдение</th>
-                <th className="px-4 py-3 font-medium">Срок</th>
-                <th className="px-4 py-3 font-medium">Время</th>
-                <th className="px-4 py-3 font-medium">Действия</th>
+                <th className="px-5 py-3 font-medium">ID</th>
+                <th className="px-5 py-3 font-medium">Название</th>
+                <th className="px-5 py-3 font-medium">Статус</th>
+                <th className="px-5 py-3 font-medium">Контроль</th>
+                <th className="px-5 py-3 font-medium">Наблюдение</th>
+                <th className="px-5 py-3 font-medium">Срок</th>
+                <th className="px-5 py-3 font-medium">Время</th>
+                <th className="px-5 py-3 font-medium">Действия</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 Array.from({ length: 3 }).map((_, index) => (
                   <tr key={`loading-${index}`} className="animate-pulse border-t border-subtle-soft">
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3">
                       <div className="h-3 w-10 rounded-full bg-surface-soft" />
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3">
                       <div className="h-3 w-40 rounded-full bg-surface-soft" />
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3">
                       <div className="h-3 w-20 rounded-full bg-surface-soft" />
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3">
                       <div className="h-3 w-28 rounded-full bg-surface-soft" />
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3">
                       <div className="h-3 w-14 rounded-full bg-surface-soft" />
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3">
                       <div className="h-3 w-24 rounded-full bg-surface-soft" />
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3">
                       <div className="h-3 w-32 rounded-full bg-surface-soft" />
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="h-3 w-20 rounded-full bg-surface-soft" />
                     </td>
                   </tr>
                 ))
@@ -462,44 +454,42 @@ export default function TasksModule() {
                   const nextControl = controlActive && task.control_next_at ? formatDateTime(task.control_next_at) : null;
                   return (
                     <tr key={task.id} className="border-t border-subtle">
-                      <td className="px-4 py-3 font-mono text-xs text-muted">#{task.id}</td>
-                      <td className="px-4 py-3 text-sm text-[var(--text-primary)]">
+                      <td className="px-5 py-3 font-mono text-xs text-muted">#{task.id}</td>
+                      <td className="px-5 py-3 text-sm text-[var(--text-primary)]">
                         <div className="font-medium">{task.title}</div>
                         {task.description ? <div className="text-xs text-muted">{task.description}</div> : null}
                       </td>
-                      <td className="px-4 py-3 text-sm capitalize text-[var(--text-primary)]">{task.status}</td>
-                      <td className="px-4 py-3 text-sm text-[var(--text-primary)]">
+                      <td className="px-5 py-3 text-sm capitalize text-[var(--text-primary)]">{task.status}</td>
+                      <td className="px-5 py-3 text-sm text-[var(--text-primary)]">
                         {controlLabel}
                         {nextControl ? <div className="text-xs text-muted">след.: {nextControl}</div> : null}
                       </td>
-                      <td className="px-4 py-3 text-sm text-[var(--text-primary)]">{task.is_watched ? 'Да' : '—'}</td>
-                      <td className="px-4 py-3 text-sm text-[var(--text-primary)]">{task.due_date ? formatDateTime(task.due_date) : '—'}</td>
-                      <td className="px-4 py-3 text-sm text-[var(--text-primary)]">{formatMinutes(task.tracked_minutes)}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-5 py-3 text-sm text-[var(--text-primary)]">{task.is_watched ? 'Да' : '—'}</td>
+                      <td className="px-5 py-3 text-sm text-[var(--text-primary)]">{task.due_date ? formatDateTime(task.due_date) : '—'}</td>
+                      <td className="px-5 py-3 text-sm text-[var(--text-primary)]">{formatMinutes(task.tracked_minutes)}</td>
+                      <td className="px-5 py-3">
                         <div className="flex flex-wrap gap-2">
-                          <button
+                          <Button
                             type="button"
+                            size="sm"
+                            variant={isRunning ? 'danger' : 'primary'}
                             onClick={() => (isRunning ? stopMutation.mutate(task.id) : startMutation.mutate(task.id))}
-                            className={`inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)] ${
-                              isRunning
-                                ? 'border border-red-200 bg-red-50 text-red-600 hover:bg-red-100'
-                                : 'border border-[var(--accent-primary)] bg-[var(--accent-primary)] text-[var(--accent-on-primary)] hover:opacity-90'
-                            } disabled:cursor-progress disabled:opacity-60`}
                             disabled={
                               (pendingAction?.taskId === task.id && pendingAction.type === 'stop' && isRunning) ||
                               (pendingAction?.taskId === task.id && pendingAction.type === 'start' && !isRunning)
                             }
                           >
                             {isRunning ? 'Стоп' : task.tracked_minutes > 0 ? 'Продолжить' : 'Старт'}
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
+                            size="sm"
+                            variant="secondary"
                             onClick={() => doneMutation.mutate(task.id)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-subtle bg-[var(--surface-0)] px-3 py-1.5 text-xs font-medium text-[var(--text-primary)] transition-base hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)] disabled:cursor-progress disabled:opacity-60"
                             disabled={pendingAction?.taskId === task.id && pendingAction.type === 'done'}
                           >
                             Готово
-                          </button>
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -509,7 +499,7 @@ export default function TasksModule() {
             </tbody>
           </table>
         </div>
-      </section>
+      </Card>
     </PageLayout>
   );
 }

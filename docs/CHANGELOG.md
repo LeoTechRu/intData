@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `/metrics`, `/healthz` and `/readyz` endpoints.
 - security headers, rate limiting and request body size guard.
 - UI kit skeleton with reusable components.
+- Shared Next.js UI primitives (Button, Card, Field, Input, Select, Textarea, Badge, Checkbox, Toolbar) powered by clsx/tailwind-merge для консистентного фронтенд-стайлинга.
 - Time summary endpoint `/api/v1/time/summary` for aggregating durations by day, project, area or user.
 - comprehensive test suite covering DB idempotency, PARA repair, OpenAPI snapshot parity and core habits/today/tasks/time flows.
 - Epic E17 "Frontend Modernization" в `docs/BACKLOG.md` (Next.js/Vite выбор, TS+Tailwind, перенос страниц, очистка legacy).
@@ -126,7 +127,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API авторизации унифицировано через `get_current_owner`; OpenAPI описывает новые ошибки.
 - Unified OpenAPI SSoT at `/api/openapi.json`; exporter produces `api/openapi.json`.
 - OpenAPI snapshot documents `tg_link_required` and `cooldown` errors.
-- Tailwind config updated for Next.js sources.
+- Tailwind config ограничен директориями Next.js (app/components/lib), подчистили legacy-шаблоны из сканирования и обновили дизайн-токены (success/warning/danger, border-strong).
+- Страницы `/tasks`, `/projects`, `/resources`, `/users` переведены на новый UI kit: унифицированные формы, карточки, тулбары и улучшенная доступность; React Query тесты обновлены под новый интерфейс.
 - Загрузка переменных окружения теперь производится из файла, указанного в `ENV_FILE` (по умолчанию `${PROJECT_DIR}/.env`).
 - Логируется путь загруженного `.env` и выводится предупреждение, если файл находится вне корня проекта.
 - Главный экран переименован в «ЦУП» с подсказкой «Центр Управления Полётами», поправлены пункты меню и тултипы.

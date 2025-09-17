@@ -5,6 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import PageLayout from '../PageLayout';
 import { apiFetch, ApiError } from '../../lib/api';
 import type { Resource } from '../../lib/types';
+import { Button, Card, Field, Input, Textarea, Toolbar } from '../ui';
 
 const MODULE_TITLE = 'Ресурсы';
 const MODULE_DESCRIPTION = 'Соберите ключевые документы, ссылки и материалы рядом с проектами PARA.';
@@ -90,126 +91,102 @@ export default function ResourcesModule() {
 
   return (
     <PageLayout title={MODULE_TITLE} description={MODULE_DESCRIPTION}>
-      <section className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-center gap-3">
-          <label htmlFor="resource-search" className="relative flex min-w-[220px] flex-1 items-center gap-2 rounded-xl border border-subtle bg-surface-soft px-3 py-2 text-sm">
-            <span className="text-muted" aria-hidden>
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5a6 6 0 015.2 8.94l3.43 3.43a1 1 0 01-1.42 1.42l-3.43-3.43A6 6 0 1111 5z" />
-              </svg>
-            </span>
-            <input
-              id="resource-search"
-              type="search"
-              inputMode="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Поиск ресурсов"
-              className="w-full bg-transparent text-base text-[var(--text-primary)] placeholder:text-muted focus-visible:outline-none"
+      <Toolbar>
+        <label className="flex flex-1 items-center gap-2" htmlFor="resource-search">
+          <span className="text-muted" aria-hidden>
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11 5a6 6 0 015.2 8.94l3.43 3.43a1 1 0 01-1.42 1.42l-3.43-3.43A6 6 0 1111 5z" />
+            </svg>
+          </span>
+          <Input
+            id="resource-search"
+            type="search"
+            inputMode="search"
+            placeholder="Поиск ресурсов"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="bg-transparent placeholder:text-muted"
+          />
+        </label>
+        <span className="text-sm text-muted">{resources.length} всего</span>
+      </Toolbar>
+
+      <Card surface="soft">
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">Новый ресурс</h2>
+        <form className="mt-4 grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
+          <Field label="Заголовок" required className="md:col-span-2" htmlFor="resource-title">
+            <Input
+              id="resource-title"
+              value={form.title}
+              onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
+              placeholder="Например, Руководство по запуску"
+              required
             />
-          </label>
-          <span className="hidden text-sm text-muted md:inline">{resources.length} всего</span>
-        </div>
-
-        <div className="rounded-2xl border border-subtle bg-surface-soft p-6">
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">Новый ресурс</h2>
-          <form className="mt-4 grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
-            <label className="flex flex-col gap-1 text-sm text-muted" htmlFor="resource-title">
-              Заголовок
-              <input
-                id="resource-title"
-                type="text"
-                value={form.title}
-                onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
-                placeholder="Например, Руководство по запуску"
-                className="rounded-xl border border-subtle bg-[var(--surface-0)] px-3 py-2 text-base text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
-                required
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-sm text-muted" htmlFor="resource-type">
-              Тип (опционально)
-              <input
-                id="resource-type"
-                type="text"
-                value={form.type}
-                onChange={(event) => setForm((prev) => ({ ...prev, type: event.target.value }))}
-                placeholder="Документ, Ссылка, Видео"
-                className="rounded-xl border border-subtle bg-[var(--surface-0)] px-3 py-2 text-base text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
-              />
-            </label>
-            <label className="md:col-span-2 flex flex-col gap-1 text-sm text-muted" htmlFor="resource-content">
-              Описание / примечание (опционально)
-              <textarea
-                id="resource-content"
-                rows={3}
-                value={form.content}
-                onChange={(event) => setForm((prev) => ({ ...prev, content: event.target.value }))}
-                placeholder="Ссылка, файлы или краткое описание содержимого"
-                className="min-h-[96px] rounded-xl border border-subtle bg-[var(--surface-0)] px-3 py-2 text-base text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
-              />
-            </label>
-            {errorMessage ? (
-              <div className="md:col-span-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{errorMessage}</div>
-            ) : null}
-            <div className="md:col-span-2 flex items-center justify-end">
-              <button
-                type="submit"
-                className="inline-flex items-center gap-2 rounded-xl bg-[var(--accent-primary)] px-4 py-2 text-sm font-medium text-[var(--accent-on-primary)] transition-base hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)] disabled:cursor-progress disabled:opacity-70"
-                disabled={createMutation.isPending}
-              >
-                {createMutation.isPending ? 'Сохраняем…' : 'Добавить ресурс'}
-              </button>
+          </Field>
+          <Field label="Тип (опционально)" htmlFor="resource-type">
+            <Input
+              id="resource-type"
+              value={form.type}
+              onChange={(event) => setForm((prev) => ({ ...prev, type: event.target.value }))}
+              placeholder="Документ, Ссылка, Видео"
+            />
+          </Field>
+          <Field
+            label="Описание / примечание (опционально)"
+            className="md:col-span-2"
+            htmlFor="resource-content"
+          >
+            <Textarea
+              id="resource-content"
+              rows={3}
+              value={form.content}
+              onChange={(event) => setForm((prev) => ({ ...prev, content: event.target.value }))}
+              placeholder="Ссылка, файлы или краткое описание содержимого"
+              className="min-h-[96px]"
+            />
+          </Field>
+          {errorMessage ? (
+            <div className="md:col-span-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600" role="alert">
+              {errorMessage}
             </div>
-          </form>
-        </div>
+          ) : null}
+          <div className="md:col-span-2 flex items-center justify-end">
+            <Button type="submit" disabled={createMutation.isPending}>
+              {createMutation.isPending ? 'Сохраняем…' : 'Добавить ресурс'}
+            </Button>
+          </div>
+        </form>
+      </Card>
 
-        {loadErrorMessage ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{loadErrorMessage}</div>
-        ) : null}
+      {loadErrorMessage ? (
+        <Card className="border-red-200/80 bg-red-50 text-sm text-red-700">
+          {loadErrorMessage}
+        </Card>
+      ) : null}
 
-        <div className="rounded-2xl border border-subtle">
-          <table className="w-full table-fixed border-collapse text-sm">
-            <thead className="bg-surface-soft text-left text-xs uppercase tracking-wide text-muted">
-              <tr>
-                <th className="px-4 py-3 font-medium">ID</th>
-                <th className="px-4 py-3 font-medium">Заголовок</th>
-                <th className="px-4 py-3 font-medium">Тип</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                Array.from({ length: 3 }).map((_, index) => (
-                  <tr key={`loading-${index}`} className="animate-pulse border-t border-subtle-soft">
-                    <td className="px-4 py-3">
-                      <div className="h-3 w-10 rounded-full bg-surface-soft" />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="h-3 w-40 rounded-full bg-surface-soft" />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="h-3 w-20 rounded-full bg-surface-soft" />
-                    </td>
-                  </tr>
-                ))
-              ) : showEmpty ? (
-                <tr>
-                  <td colSpan={3} className="px-6 py-8 text-center text-sm text-muted">
-                    {search.trim() ? 'Совпадений не найдено' : 'Пока нет ресурсов — добавьте первый, чтобы закрепить материалы проекта.'}
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((resource) => (
-                  <tr key={resource.id} className="border-t border-subtle">
-                    <td className="px-4 py-3 font-mono text-xs text-muted">#{resource.id}</td>
-                    <td className="px-4 py-3 font-medium text-[var(--text-primary)]">{resource.title}</td>
-                    <td className="px-4 py-3 text-sm text-[var(--text-primary)]">{resource.type ?? '—'}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {showEmpty ? (
+        <Card surface="soft" className="text-sm text-muted">
+          Ресурсы не найдены. Добавьте первый артефакт или измените условия поиска.
+        </Card>
+      ) : (
+        <div className="grid gap-3">
+          {filtered.map((resource) => (
+            <Card key={resource.id} className="flex flex-col gap-2">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-base font-semibold text-[var(--text-primary)]">{resource.title}</div>
+                  {resource.type ? <div className="text-xs uppercase tracking-wide text-muted">{resource.type}</div> : null}
+                </div>
+                <span className="text-xs font-mono text-muted">ID {resource.id}</span>
+              </div>
+              {resource.content ? <p className="text-sm text-muted">{resource.content}</p> : null}
+              <div className="text-xs text-muted">
+                Обновлено {new Date(resource.updated_at).toLocaleString('ru-RU')}
+              </div>
+            </Card>
+          ))}
         </div>
-      </section>
+      )}
     </PageLayout>
   );
 }

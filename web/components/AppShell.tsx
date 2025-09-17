@@ -1,5 +1,6 @@
 'use client';
 
+import clsx from 'clsx';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React, { ReactNode, useEffect, useMemo, useState } from 'react';
@@ -7,7 +8,6 @@ import React, { ReactNode, useEffect, useMemo, useState } from 'react';
 interface AppShellProps {
   title: string;
   subtitle?: string;
-  description?: string;
   actions?: ReactNode;
   children: ReactNode;
 }
@@ -62,13 +62,7 @@ function resolveNavigation(): NavItem[] {
   });
 }
 
-export default function AppShell({
-  title,
-  subtitle,
-  description,
-  actions,
-  children,
-}: AppShellProps) {
+export default function AppShell({ title, subtitle, actions, children }: AppShellProps) {
   const pathname = usePathname();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -146,6 +140,14 @@ export default function AppShell({
     });
   }, [pathname]);
 
+  const sidebarClassName = clsx(
+    'fixed inset-y-0 left-0 z-50 w-72 transform border-r border-subtle bg-[var(--surface-0)] px-4 py-6 transition-transform duration-200 ease-out md:static md:px-5 md:py-8',
+    isMobileNavOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
+    isSidebarCollapsed
+      ? 'md:-translate-x-full md:w-0 md:px-0 md:py-0 md:opacity-0 md:pointer-events-none'
+      : 'md:w-64 md:translate-x-0',
+  );
+
   return (
     <div className="flex min-h-screen flex-col bg-surface" data-app-shell>
       <header className="sticky top-0 z-40 border-b border-subtle bg-[var(--surface-0)] backdrop-blur">
@@ -189,13 +191,7 @@ export default function AppShell({
       </header>
       <div className="relative flex flex-1">
         <aside
-          className={`${'fixed inset-y-0 left-0 z-50 w-72 translate-x-0 transform border-r border-subtle bg-[var(--surface-0)] px-4 py-6 transition-transform duration-200 ease-out md:static md:px-5 md:py-8'} ${
-            isMobileNavOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-          } ${
-            isSidebarCollapsed
-              ? 'md:-translate-x-full md:w-0 md:px-0 md:py-0 md:opacity-0 md:pointer-events-none'
-              : 'md:w-64 md:translate-x-0'
-          }`}
+          className={sidebarClassName}
           aria-label="Главное меню"
           aria-hidden={isSidebarCollapsed && !isMobileNavOpen}
         >
@@ -265,7 +261,6 @@ export default function AppShell({
         ) : null}
         <div className="flex min-h-full flex-1 justify-center bg-surface">
           <main className="relative z-10 flex w-full max-w-6xl flex-col gap-6 px-4 py-6 md:px-8 md:py-10">
-            {description ? <p className="text-sm text-muted">{description}</p> : null}
             <div className="rounded-2xl border border-subtle bg-[var(--surface-0)] p-0 shadow-soft">
               {children}
             </div>
