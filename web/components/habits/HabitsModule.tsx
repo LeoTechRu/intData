@@ -33,6 +33,8 @@ interface Habit {
   created_at?: string | null;
 }
 
+type HabitTitleSource = Pick<Habit, 'title' | 'name'>;
+
 interface HabitCreatePayload {
   name: string;
   frequency: Frequency;
@@ -90,7 +92,7 @@ function computeProgressStats(progress: string[] | undefined) {
   return { percent, todayDone };
 }
 
-function resolveHabitTitle(h: Habit): string {
+function resolveHabitTitle(h: HabitTitleSource): string {
   return h.title ?? h.name ?? 'Без названия';
 }
 
@@ -392,7 +394,7 @@ export default function HabitsModule() {
 
   const handleDelete = (habitId: number) => {
     const habitTitle = resolveHabitTitle(
-      habitsQuery.data?.find((h) => h.id === habitId) ?? { id: habitId, title: 'Привычка' },
+      habitsQuery.data?.find((h) => h.id === habitId) ?? { title: 'Привычка' },
     );
     const confirmed = window.confirm(`Удалить привычку «${habitTitle}»?`);
     if (!confirmed) {

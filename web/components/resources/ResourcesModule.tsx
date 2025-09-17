@@ -181,7 +181,7 @@ export default function ResourcesModule() {
               </div>
               {resource.content ? <p className="text-sm text-muted">{resource.content}</p> : null}
               <div className="text-xs text-muted">
-                Обновлено {new Date(resource.updated_at).toLocaleString('ru-RU')}
+                Обновлено {resource.updated_at ? new Date(resource.updated_at).toLocaleString('ru-RU') : '—'}
               </div>
             </Card>
           ))}

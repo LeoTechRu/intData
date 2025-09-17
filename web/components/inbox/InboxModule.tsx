@@ -189,7 +189,7 @@ export default function InboxModule() {
     queryFn: () => apiFetch<Area[]>('/api/v1/areas'),
   });
 
-  const areas = areasQuery.data ?? [];
+  const areas = useMemo(() => areasQuery.data ?? [], [areasQuery.data]);
   const inboxArea = useMemo(() => findInboxArea(areas), [areas]);
   const inboxAreaName = inboxArea?.name ?? 'Входящие';
 
@@ -201,7 +201,7 @@ export default function InboxModule() {
     queryFn: () => apiFetch<InboxNote[]>('/api/v1/inbox/notes'),
   });
 
-  const notes = notesQuery.data ?? [];
+  const notes = useMemo(() => notesQuery.data ?? [], [notesQuery.data]);
 
   const tasksQuery = useQuery<Task[]>({
     queryKey: ['inbox', 'tasks', inboxArea?.id ?? 0],
@@ -218,11 +218,10 @@ export default function InboxModule() {
     },
   });
 
-  const rawTasks = tasksQuery.data ?? [];
-  const activeTasks = useMemo(
-    () => rawTasks.filter((task) => task.status !== 'done' && task.status !== 'archived'),
-    [rawTasks],
-  );
+  const activeTasks = useMemo(() => {
+    const tasks = tasksQuery.data ?? [];
+    return tasks.filter((task) => task.status !== 'done' && task.status !== 'archived');
+  }, [tasksQuery.data]);
 
   const projectsQuery = useQuery<Project[]>({
     queryKey: ['inbox', 'projects', inboxArea?.id ?? 0],
@@ -330,7 +329,7 @@ export default function InboxModule() {
       await assignNote({ noteId: current.id, target: 'project', containerId: projectId });
     }
     setAssignState((prev) => ({ ...prev }));
-  }, [assignNote, assignState.areaId, assignState.projectId, assignState.target, focusItems]);
+  }, [assignNote, assignState.areaId, assignState.projectId, assignState.target, focusIndex, focusItems]);
 
   const assignDisabled =
     isAssigning ||
