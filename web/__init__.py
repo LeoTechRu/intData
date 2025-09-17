@@ -33,6 +33,7 @@ from .routes import (
     time_entries,
     products,
     groups,
+    inbox,
     api_router,
 )
 from core.db import engine
@@ -330,6 +331,7 @@ app.include_router(products.ui_router, include_in_schema=False)
 app.include_router(calendar.ui_router, include_in_schema=False)
 app.include_router(time_entries.ui_router, include_in_schema=False)
 app.include_router(groups.ui_router, include_in_schema=False)
+app.include_router(inbox.ui_router, include_in_schema=False)
 app.include_router(auth.router, include_in_schema=False)
 app.include_router(admin_ui.router, include_in_schema=False)
 app.include_router(admin_ui.admin_ui_router, include_in_schema=False)

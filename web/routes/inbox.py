@@ -3,14 +3,18 @@ from __future__ import annotations
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 from core.models import Note, TgUser
 from core.services.note_service import NoteService
 from web.dependencies import get_current_tg_user
 
+from .index import render_next_page
+
 
 router = APIRouter(prefix="/inbox", tags=["inbox"])
+ui_router = APIRouter(prefix="/inbox", tags=["inbox"], include_in_schema=False)
 
 
 class InboxNote(BaseModel):
@@ -32,6 +36,13 @@ async def list_inbox_notes(current_user: TgUser | None = Depends(get_current_tg_
     return [InboxNote.from_model(n) for n in notes]
 
 
+@ui_router.get("", include_in_schema=False, response_class=HTMLResponse)
+@ui_router.get("/", include_in_schema=False, response_class=HTMLResponse)
+async def inbox_page() -> HTMLResponse:
+    """Serve the Next.js Inbox page."""
+
+    return render_next_page("inbox")
+
+
 # Alias for centralized API mounting
 api = router
-
