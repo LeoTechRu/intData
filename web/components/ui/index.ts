@@ -9,3 +9,4 @@ export * from './Select';
 export * from './Section';
 export * from './Textarea';
 export * from './Toolbar';
+export * from './StatusIndicator';
