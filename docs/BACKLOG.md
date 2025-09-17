@@ -39,7 +39,7 @@
 
 | Start (UTC) | Agent | Branch | Epic / Scope | Ключевые файлы | Статус |
 |-------------|-------|--------|--------------|----------------|--------|
-| 2025-09-17 21:30 | codex-cli | feature/E13/time-ui-codex | E13 / Time overview UI | web/app/time, web/components/time, web/routes/time_entries.py | в работе |
+| —           | —     | —      | —            | —              | свободно |
 
 
 ## Решения по архитектуре (ПРОЧНО)
