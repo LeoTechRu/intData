@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 from core.models import (
@@ -15,8 +16,11 @@ from core.models import (
 from core.services.para_service import ParaService
 from web.dependencies import get_current_tg_user
 
+from .index import render_next_page
+
 
 router = APIRouter(prefix="/projects", tags=["projects"])
+ui_router = APIRouter(prefix="/projects", tags=["projects"], include_in_schema=False)
 
 
 class ProjectCreate(BaseModel):
@@ -173,6 +177,14 @@ async def list_project_notifications(
             ProjectNotificationResponse.from_models(pn, ch) for pn, ch in res.all()
         ]
     return items
+
+
+@ui_router.get("", include_in_schema=False, response_class=HTMLResponse)
+@ui_router.get("/", include_in_schema=False, response_class=HTMLResponse)
+async def projects_page() -> HTMLResponse:
+    """Serve the Next.js Projects page."""
+
+    return render_next_page("projects")
 
 
 # Alias for centralized API mounting

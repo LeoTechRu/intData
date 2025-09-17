@@ -157,6 +157,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - reduced test flakiness via deterministic time handling and confirmed cooldown paths mapping to 429.
 - Страница `/inbox` запрашивает заметки у API через `NEXT_PUBLIC_API_BASE`.
 - FastAPI UI-маршрут `/inbox` снова зарегистрирован, поэтому страница открывается без ошибки 404 и отдаётся из Next.js.
+- FastAPI UI-маршрут `/areas` снова зарегистрирован, поэтому страница открывается без ошибки 404 и отдаётся из Next.js.
+- FastAPI UI-маршрут `/projects` снова зарегистрирован, поэтому страница открывается без ошибки 404 и отдаётся из Next.js.
 - Фронтенд использует `/api/v1` по умолчанию при отсутствии `window.API_BASE`.
 
 - Автоматическое создание таблицы `app_settings`, исключающей ошибки при её отсутствии.

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 from core.models import Area, TgUser
@@ -10,8 +11,11 @@ from core.services.para_service import ParaService
 from core.services.area_service import AreaService
 from web.dependencies import get_current_tg_user
 
+from .index import render_next_page
+
 
 router = APIRouter(prefix="/areas", tags=["areas"])
+ui_router = APIRouter(prefix="/areas", tags=["areas"], include_in_schema=False)
 
 
 class AreaCreate(BaseModel):
@@ -105,6 +109,14 @@ async def rename_area(area_id: int, payload: AreaRenamePayload, current_user: Tg
         area.slug = new_slug
         await svc.move_area(area_id, area.parent_id)
     return AreaResponse.from_model(area)
+
+
+@ui_router.get("", include_in_schema=False, response_class=HTMLResponse)
+@ui_router.get("/", include_in_schema=False, response_class=HTMLResponse)
+async def areas_page() -> HTMLResponse:
+    """Serve the Next.js Areas page."""
+
+    return render_next_page("areas")
 
 
 # Alias for centralized API mounting
