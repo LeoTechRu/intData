@@ -49,6 +49,7 @@ interface FiltersState {
   search: string;
   sort: SortMode;
   view: ViewMode;
+  onlyWithoutSlug: boolean;
 }
 
 function useAreas() {
@@ -128,6 +129,7 @@ export default function ProjectsModule() {
     search: '',
     sort: 'recent',
     view: 'grid',
+    onlyWithoutSlug: false,
   });
 
   const projectsQuery = useProjects({
@@ -194,6 +196,9 @@ export default function ProjectsModule() {
   const filteredProjects = useMemo(() => {
     const query = filters.search.trim().toLowerCase();
     const items = rawProjects.filter((project) => {
+      if (filters.onlyWithoutSlug && (project.slug ?? '').trim().length > 0) {
+        return false;
+      }
       if (!query) {
         return true;
       }
@@ -242,6 +247,9 @@ export default function ProjectsModule() {
 
   const inboxProjectsCount = quickArea ? rawProjects.filter((project) => project.area_id === quickArea.id).length : 0;
   const uniqueAreasCount = rawProjects.reduce((acc, project) => acc.add(project.area_id), new Set<number>()).size;
+  const sluggedCount = rawProjects.filter((project) => (project.slug ?? '').trim().length > 0).length;
+  const missingSlugCount = rawProjects.length - sluggedCount;
+  const slugCoveragePercent = rawProjects.length > 0 ? Math.round((sluggedCount / rawProjects.length) * 100) : 0;
 
   const isInitialLoading = projectsQuery.isLoading || areasQuery.isLoading;
   const isRefetching = projectsQuery.isFetching && !projectsQuery.isLoading;
@@ -430,6 +438,14 @@ export default function ProjectsModule() {
             />
             <span>Подобласти</span>
           </label>
+          <label className="inline-flex items-center gap-2 text-xs text-muted">
+            <Checkbox
+              checked={filters.onlyWithoutSlug}
+              onChange={(event) => handleFilterChange({ onlyWithoutSlug: event.target.checked })}
+              data-testid="projects-filter-without-slug"
+            />
+            <span>Без слага</span>
+          </label>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Select
@@ -489,15 +505,13 @@ export default function ProjectsModule() {
               : 'Создайте первую область, чтобы распределять проекты'}
           </span>
         </Card>
-        <Card padded surface="soft" className="flex flex-col gap-1">
-          <span className="text-xs uppercase tracking-wide text-muted">
-            {quickArea ? `В области «${quickArea.name}»` : 'Быстрая область'}
-          </span>
-          <span className="text-2xl font-semibold text-[var(--text-primary)]">{formatNumber(inboxProjectsCount)}</span>
+        <Card padded surface="soft" className="flex flex-col gap-1" data-testid="projects-summary-slug">
+          <span className="text-xs uppercase tracking-wide text-muted">Покрытие слагами</span>
+          <span className="text-2xl font-semibold text-[var(--text-primary)]">{slugCoveragePercent}%</span>
           <span className="text-xs text-muted">
-            {quickArea
-              ? 'Быстрые проекты помогут разгрузить Inbox — распределите позже'
-              : 'Выберите область по умолчанию для быстрых проектов'}
+            {rawProjects.length === 0
+              ? 'Добавьте проекты, чтобы настроить адреса и быстрый доступ.'
+              : `Без слага: ${formatNumber(missingSlugCount)} • Быстрых проектов в «${quickArea ? quickArea.name : 'область по умолчанию'}»: ${formatNumber(inboxProjectsCount)}`}
           </span>
         </Card>
       </div>
@@ -669,4 +683,3 @@ export default function ProjectsModule() {
     </PageLayout>
   );
 }
-

@@ -80,7 +80,8 @@ describe('ProjectsModule (Next UI)', () => {
     expect(fetchMock).toHaveBeenCalledWith(`${API_BASE}/api/v1/areas`, expect.anything());
     expect(fetchMock).toHaveBeenCalledWith(`${API_BASE}/api/v1/projects`, expect.anything());
 
-    expect(await screen.findByText('Фитнес')).toBeInTheDocument();
+    const areaCaptions = await screen.findAllByText('Фитнес');
+    expect(areaCaptions.length).toBeGreaterThan(0);
 
     const quickButton = await screen.findByTestId('projects-quick-create-button');
     expect(quickButton).toBeInTheDocument();
@@ -147,5 +148,42 @@ describe('ProjectsModule (Next UI)', () => {
     expect(await screen.findByText('Новый проект')).toBeInTheDocument();
     await waitFor(() => expect(projectsCall).toBeGreaterThan(1));
     expect((quickInput as HTMLInputElement).value).toBe('');
+  });
+
+  it('filters projects by missing slug', async () => {
+    const fetchMock = vi.fn((input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      if (url.endsWith('/api/v1/areas')) {
+        return Promise.resolve(
+          jsonResponse([
+            { id: 1, name: 'Inbox', depth: 0, review_interval_days: 7, parent_id: null, slug: 'inbox', mp_path: 'inbox.' },
+          ]),
+        );
+      }
+      if (url.endsWith('/api/v1/projects')) {
+        return Promise.resolve(
+          jsonResponse([
+            { id: 10, name: 'Alpha', area_id: 1, description: null, slug: 'alpha' },
+            { id: 11, name: 'Beta без слага', area_id: 1, description: null, slug: null },
+          ]),
+        );
+      }
+      return Promise.resolve(new Response(null, { status: 404 }));
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    renderWithClient(<ProjectsModule />);
+
+    await screen.findByText('Alpha');
+    expect(screen.getByText('Beta без слага')).toBeInTheDocument();
+
+    const toggle = await screen.findByTestId('projects-filter-without-slug');
+    fireEvent.click(toggle);
+
+    await waitFor(() => {
+      const cards = screen.getAllByTestId('projects-card');
+      expect(cards).toHaveLength(1);
+      expect(within(cards[0]).getByText('Beta без слага')).toBeInTheDocument();
+    });
   });
 });

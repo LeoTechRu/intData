@@ -1,4 +1,4 @@
-import ProjectsModule from '../../components/projects/ProjectsModule';
+import { ProjectsModule } from '../../components/projects';
 
 export default function ProjectsPage() {
   return <ProjectsModule />;
