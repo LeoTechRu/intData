@@ -3817,6 +3817,30 @@
         ]
       }
     },
+    "/api/v1/auth/options": {
+      "get": {
+        "description": "Expose public configuration for the auth landing page.",
+        "operationId": "api_auth_options_api_v1_auth_options_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Api Auth Options Api V1 Auth Options Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Api:Auth Options",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/v1/auth/tg-webapp/exchange": {
       "post": {
         "operationId": "api_auth_webapp_exchange_api_v1_auth_tg_webapp_exchange_post",

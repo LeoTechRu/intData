@@ -8,12 +8,29 @@ export function formatMinutes(totalMinutes: number): string {
   return `${rest} мин`;
 }
 
+const ISO_TZ_PATTERN = /([+-]\d{2}:\d{2}|Z)$/;
+const ISO_NO_TZ_PATTERN = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d+)?$/;
+
+export function parseDateToUtc(value?: string | null): Date | null {
+  if (!value) {
+    return null;
+  }
+  if (ISO_TZ_PATTERN.test(value)) {
+    return new Date(value);
+  }
+  if (ISO_NO_TZ_PATTERN.test(value)) {
+    const normalized = value.replace(' ', 'T');
+    return new Date(`${normalized}Z`);
+  }
+  return new Date(value);
+}
+
 export function formatDateTime(value?: string | null): string {
   if (!value) {
     return '—';
   }
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
+  const date = parseDateToUtc(value);
+  if (!date || Number.isNaN(date.getTime())) {
     return value;
   }
   return date.toLocaleString('ru-RU', {

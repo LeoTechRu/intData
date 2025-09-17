@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import Script from 'next/script';
 import { useMutation, useQuery } from '@tanstack/react-query';
 
@@ -108,6 +109,27 @@ const FAQ_ITEMS = [
   },
 ];
 
+const HOW_IT_WORKS = [
+  {
+    step: '1. Зарегистрируйтесь бесплатно',
+    detail: 'Создайте рабочую область в один шаг: логин + пароль или вход через Telegram. Базовый функционал доступен сразу.',
+  },
+  {
+    step: '2. Настройте PARA и интеграции',
+    detail: 'Импортируйте текущие проекты, подключите календарь и включите уведомления. Всё сохраняется в вашей области знаний.',
+  },
+  {
+    step: '3. Расширяйтесь до Pro при необходимости',
+    detail: 'Добавьте аналитику, геймификацию и дополнительные роли, когда команде понадобится больше возможностей.',
+  },
+];
+
+const SECURITY_POINTS = [
+  'Шифрование на уровне БД и резервное копирование с гео-избыточностью.',
+  'HTTP-only куки, аудит действий и контроль сессий из админ-панели.',
+  'Готовность к passkey/FIDO2 — закрытая бета для команд Pro в 2025 году.',
+];
+
 const COMPARISON = {
   free: [
     'Парадигма PARA и неограниченные заметки',
@@ -123,6 +145,33 @@ const COMPARISON = {
 
 function isAuthTab(value: string | null | undefined): value is AuthTab {
   return value === 'login' || value === 'signup' || value === 'restore';
+}
+
+function decodeBase64Record(value: string | null | undefined): Record<string, string> | null {
+  if (!value) {
+    return null;
+  }
+  try {
+    const normalized = value.replace(/-/g, '+').replace(/_/g, '/');
+    const padding = (4 - (normalized.length % 4)) % 4;
+    const padded = normalized.padEnd(normalized.length + padding, '=');
+    const decoded =
+      typeof atob === 'function'
+        ? atob(padded)
+        : typeof Buffer !== 'undefined'
+        ? Buffer.from(padded, 'base64').toString('utf-8')
+        : null;
+    if (!decoded) {
+      return null;
+    }
+    const parsed = JSON.parse(decoded);
+    if (parsed && typeof parsed === 'object') {
+      return parsed as Record<string, string>;
+    }
+  } catch (error) {
+    console.warn('AuthLanding: не удалось декодировать payload', error);
+  }
+  return null;
 }
 
 function TelegramLoginButton({
@@ -165,46 +214,64 @@ export default function AuthLanding({
   redirectHint,
   nextUrl,
 }: AuthLandingProps) {
-  const defaultTab: AuthTab = isAuthTab(initialTab) ? initialTab : 'login';
+  const searchParams = useSearchParams();
+
+  const queryValues = useMemo(() => decodeBase64Record(searchParams.get('values')), [searchParams]);
+  const queryErrors = useMemo(() => decodeBase64Record(searchParams.get('errors')), [searchParams]);
+
+  const tabSource = useMemo(() => initialTab ?? searchParams.get('tab'), [initialTab, searchParams]);
+  const flashSource = useMemo(() => initialFlash ?? searchParams.get('flash'), [initialFlash, searchParams]);
+  const redirectSource = useMemo(() => redirectHint ?? searchParams.get('redirect'), [redirectHint, searchParams]);
+  const nextSource = useMemo(() => nextUrl ?? searchParams.get('next'), [nextUrl, searchParams]);
+  const valuesSource = initialValues ?? queryValues ?? undefined;
+  const errorsSource = initialErrors ?? queryErrors ?? undefined;
+
+  const defaultTab: AuthTab = isAuthTab(tabSource) ? tabSource : 'login';
   const [activeTab, setActiveTab] = useState<AuthTab>(defaultTab);
-  const [flash, setFlash] = useState<string | null>(initialFlash ?? null);
-  const [errors, setErrors] = useState<Record<string, string>>(initialErrors ?? {});
-  const [loginValues, setLoginValues] = useState({
-    username: initialValues?.username ?? '',
+  const [flash, setFlash] = useState<string | null>(flashSource ?? null);
+  const [errors, setErrors] = useState<Record<string, string>>(errorsSource ?? {});
+  const [loginValues, setLoginValues] = useState(() => ({
+    username: valuesSource?.username ?? '',
     password: '',
-  });
-  const [magicEmail, setMagicEmail] = useState(initialValues?.email ?? initialValues?.username ?? '');
+  }));
+  const [magicEmail, setMagicEmail] = useState(() => valuesSource?.email ?? valuesSource?.username ?? '');
   const [configWarnings, setConfigWarnings] = useState<AuthConfigWarning[]>([]);
   const [magicSuccess, setMagicSuccess] = useState<string | null>(null);
   const formRef = useRef<HTMLDivElement | null>(null);
 
-  const nextValue = useMemo(() => nextUrl ?? redirectHint ?? '', [nextUrl, redirectHint]);
+  const nextValue = useMemo(() => nextSource ?? redirectSource ?? '', [nextSource, redirectSource]);
+
+  const hadInitialParams = useMemo(() => {
+    if (initialFlash || initialValues || initialErrors || redirectHint || initialTab) {
+      return true;
+    }
+    const watched: string[] = ['flash', 'values', 'errors', 'tab', 'redirect'];
+    return watched.some((key) => searchParams.has(key));
+  }, [initialFlash, initialValues, initialErrors, redirectHint, initialTab, searchParams]);
 
   useEffect(() => {
-    if (initialFlash || (initialErrors && Object.keys(initialErrors).length > 0) || redirectHint) {
-      if (typeof window === 'undefined') {
-        return;
-      }
-      const params = new URLSearchParams(window.location.search);
-      let mutated = false;
-      ['flash', 'values', 'errors', 'tab', 'redirect'].forEach((key) => {
-        if (params.has(key)) {
-          params.delete(key);
-          mutated = true;
-        }
-      });
-      if (mutated) {
-        const search = params.toString();
-        const nextHref = `${window.location.pathname}${search ? `?${search}` : ''}`;
-        window.history.replaceState({}, '', nextHref);
-      }
+    if (!hadInitialParams || typeof window === 'undefined') {
+      return;
     }
-  }, [initialFlash, initialErrors, redirectHint]);
+    const params = new URLSearchParams(window.location.search);
+    let mutated = false;
+    ['flash', 'values', 'errors', 'tab', 'redirect'].forEach((key) => {
+      if (params.has(key)) {
+        params.delete(key);
+        mutated = true;
+      }
+    });
+    if (mutated) {
+      const search = params.toString();
+      const nextHref = `${window.location.pathname}${search ? `?${search}` : ''}`;
+      window.history.replaceState({}, '', nextHref);
+    }
+  }, [hadInitialParams]);
 
   const { data: options } = useQuery<AuthOptionsPayload>({
     queryKey: ['auth-options'],
     queryFn: async () => apiFetch<AuthOptionsPayload>('/api/v1/auth/options', { skipAuth: true }),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60_000,
   });
 
   useEffect(() => {
@@ -222,8 +289,7 @@ export default function AuthLanding({
         body: payload,
       });
       try {
-        const data = (await response.json()) as AuthFeedbackResponse;
-        return data;
+        return (await response.json()) as AuthFeedbackResponse;
       } catch {
         throw new Error('Не удалось выполнить вход. Повторите попытку.');
       }
@@ -235,12 +301,11 @@ export default function AuthLanding({
         setFlash(data.flash ?? null);
         if (data.redirect) {
           window.location.assign(data.redirect);
-          return;
         }
-      } else {
-        setErrors(data.form_errors ?? {});
-        setFlash(data.flash ?? null);
+        return;
       }
+      setErrors(data.form_errors ?? {});
+      setFlash(data.flash ?? null);
     },
     onError: (error) => {
       setErrors({ username: error.message });
@@ -311,8 +376,7 @@ export default function AuthLanding({
     setFlash(null);
     setMagicSuccess(null);
     const formData = new FormData(event.currentTarget);
-    const timestamp = Math.floor(Date.now() / 1000);
-    formData.set('form_ts', String(timestamp));
+    formData.set('form_ts', String(Math.floor(Date.now() / 1000)));
     formData.set('hp_url', '');
     magicMutation.mutate(formData);
   };
@@ -354,7 +418,7 @@ export default function AuthLanding({
             ID
           </span>
           <div className="flex flex-col">
-            <span className="text-lg font-semibold tracking-tight">Intelligent Data Pro</span>
+            <span className="text-lg font-semibold tracking-tight">{options?.brand_name ?? 'Intelligent Data Pro'}</span>
             <span className="text-sm text-muted">Второй мозг для команд знаний</span>
           </div>
         </div>
@@ -455,6 +519,18 @@ export default function AuthLanding({
               </div>
             </div>
 
+            <div className="space-y-6 rounded-3xl bg-white/95 p-6 shadow-soft md:p-10">
+              <h2 className="text-2xl font-semibold text-[var(--text-primary)]">Как это работает</h2>
+              <div className="grid gap-4 md:grid-cols-3">
+                {HOW_IT_WORKS.map((item) => (
+                  <div key={item.step} className="flex h-full flex-col gap-3 rounded-2xl border border-subtle bg-white p-5 shadow-soft">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-[var(--accent-primary)]">{item.step}</span>
+                    <p className="text-sm text-[var(--text-primary)]">{item.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="grid gap-6 rounded-3xl bg-white/80 p-6 shadow-soft md:grid-cols-2 md:p-10">
               <div className="space-y-4">
                 <h2 className="text-2xl font-semibold text-[var(--text-primary)]">Free vs Pro</h2>
@@ -492,6 +568,23 @@ export default function AuthLanding({
                   </Link>
                 </div>
               </div>
+            </div>
+
+            <div className="grid gap-4 rounded-3xl border border-subtle bg-white/90 p-6 shadow-soft md:grid-cols-[minmax(0,0.35fr)_minmax(0,1fr)] md:p-10">
+              <div className="space-y-2">
+                <h2 className="text-2xl font-semibold text-[var(--text-primary)]">Безопасность и контроль</h2>
+                <p className="text-sm text-muted">
+                  Данные пользователей обрабатываются в соответствии с требованиями enterprise-клиентов. Pro-аккаунты получают дополнительные инструменты соответствия и журнал действий.
+                </p>
+              </div>
+              <ul className="space-y-2 text-sm text-[var(--text-primary)]">
+                {SECURITY_POINTS.map((point) => (
+                  <li key={point} className="flex gap-2">
+                    <span className="mt-1 text-[var(--accent-primary)]">▹</span>
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
 
             <div className="space-y-4 rounded-3xl bg-white/90 p-6 shadow-soft md:p-10">
@@ -662,6 +755,27 @@ export default function AuthLanding({
                 </Link>{' '}
                 и соглашение о данных. Регистрация автоматически создаёт персональную область и область «Входящие».
               </p>
+            </div>
+
+            <div className="space-y-3 rounded-2xl border border-dashed border-[var(--accent-primary)] bg-white p-5 text-sm text-[var(--text-primary)] shadow-soft">
+              <div className="text-xs font-semibold uppercase tracking-wide text-[var(--accent-primary)]">Обновитесь до Pro</div>
+              <p>
+                Нужна геймификация для команды, расширенные отчёты и SLA-поддержка? Получите персональную демо-сессию и<br />14-дневный доступ к Pro-возможностям.
+              </p>
+              <div className="flex flex-col gap-2">
+                <Link
+                  href="/pricing"
+                  className="inline-flex h-10 items-center justify-center rounded-xl bg-[var(--accent-primary)] px-4 text-xs font-semibold text-[var(--accent-on-primary)] shadow-soft transition-base hover:opacity-90"
+                >
+                  Смотреть тарифы Pro
+                </Link>
+                <a
+                  href="mailto:hello@intdata.pro?subject=Демо%20Pro%20Intelligent%20Data%20Pro"
+                  className="text-xs font-semibold text-[var(--accent-primary)] underline decoration-dotted"
+                >
+                  Запросить демо и расчёт ROI
+                </a>
+              </div>
             </div>
 
             {configWarnings.length > 0 ? (

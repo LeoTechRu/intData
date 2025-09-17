@@ -27,6 +27,7 @@ from .api.admin import router as admin_api
 from .api.admin_settings import router as admin_settings_api
 from .api.app_settings import router as app_settings_api
 from .api.auth_webapp import router as auth_webapp_api
+from .api.auth_options import router as auth_options_api
 from .api.user_favorites import router as user_favorites_api
 from .api.integrations_google import router as gcal_api
 from .api.habits_v1 import api as habits_v1_api
@@ -47,6 +48,7 @@ api_router.include_router(admin_api)
 api_router.include_router(admin_settings_api)
 api_router.include_router(app_settings_api)
 api_router.include_router(auth_webapp_api)
+api_router.include_router(auth_options_api)
 api_router.include_router(user_favorites_api)
 api_router.include_router(gcal_api)
 api_router.include_router(user_settings_api)

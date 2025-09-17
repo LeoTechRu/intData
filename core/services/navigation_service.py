@@ -85,11 +85,31 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         permissions=("app.projects.manage",),
     ),
     NavBlueprintItem(
+        key="notes",
+        label="Заметки",
+        route="/notes",
+        status=NavStatus("new"),
+        permissions=("app.tasks.manage",),
+    ),
+    NavBlueprintItem(
         key="tasks",
         label="Задачи",
         route="/tasks",
         status=NavStatus("wip"),
         permissions=("app.tasks.manage",),
+    ),
+    NavBlueprintItem(
+        key="time",
+        label="Время",
+        route="/time",
+        status=NavStatus("new"),
+        permissions=("app.tasks.manage",),
+    ),
+    NavBlueprintItem(
+        key="settings",
+        label="Настройки",
+        route="/settings",
+        status=NavStatus("new"),
     ),
     NavBlueprintItem(
         key="habits",

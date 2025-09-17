@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import PageLayout from '../PageLayout';
 import AreasManager from './AreasManager';
 

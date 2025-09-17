@@ -17,7 +17,7 @@ import type {
   TimeEntry,
   ViewerProfileSummary,
 } from '../lib/types';
-import { formatClock, formatDateTime } from '../lib/time';
+import { formatClock, formatDateTime, parseDateToUtc } from '../lib/time';
 import { Button, StatusIndicator, type StatusIndicatorKind } from './ui';
 import { SidebarEditor } from './navigation/SidebarEditor';
 
@@ -45,17 +45,18 @@ const STATIC_NAV_FALLBACK: SidebarNavItem[] = [
   { key: 'projects', label: 'Проекты', href: '/projects', hidden: false, position: 4, status: { kind: 'new' } },
   { key: 'team', label: 'Команда', href: '/users', hidden: false, position: 5, status: { kind: 'new' } },
   { key: 'resources', label: 'Ресурсы', href: '/resources', hidden: false, position: 6, status: { kind: 'wip' } },
-  { key: 'tasks', label: 'Задачи', href: '/tasks', hidden: false, position: 7, status: { kind: 'wip' } },
+  { key: 'notes', label: 'Заметки', href: '/notes', hidden: false, position: 7, status: { kind: 'new' } },
+  { key: 'tasks', label: 'Задачи', href: '/tasks', hidden: false, position: 8, status: { kind: 'wip' } },
   {
     key: 'habits',
     label: 'Привычки',
     href: '/habits',
     hidden: false,
-    position: 8,
+    position: 9,
     status: { kind: 'locked', link: '/pricing' },
   },
-  { key: 'time', label: 'Время', href: '/time', hidden: false, position: 9, status: { kind: 'new' } },
-  { key: 'settings', label: 'Настройки', href: '/settings', hidden: false, position: 10, status: { kind: 'new' } },
+  { key: 'time', label: 'Время', href: '/time', hidden: false, position: 10, status: { kind: 'new' } },
+  { key: 'settings', label: 'Настройки', href: '/settings', hidden: false, position: 11, status: { kind: 'new' } },
 ];
 
 function getInitials(name: string): string {
@@ -135,8 +136,10 @@ function renderPersonaTooltip(md: string): React.ReactNode[] {
 }
 
 function getRunningDurationSeconds(entry: TimeEntry, now: number): number {
-  const start = new Date(entry.start_time).getTime();
-  const end = entry.end_time ? new Date(entry.end_time).getTime() : now;
+  const startDate = parseDateToUtc(entry.start_time);
+  const endDate = entry.end_time ? parseDateToUtc(entry.end_time) : null;
+  const start = startDate ? startDate.getTime() : NaN;
+  const end = endDate ? endDate.getTime() : now;
   if (Number.isNaN(start) || Number.isNaN(end)) {
     return 0;
   }

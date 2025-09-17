@@ -6,10 +6,11 @@ import json
 import os
 import time
 from typing import Dict
-from urllib.parse import urlparse
+from base64 import urlsafe_b64encode
+from urllib.parse import urlencode, urlparse
 
 import httpx
-from fastapi import APIRouter, Form, HTTPException, Request, status
+from fastapi import APIRouter, Form, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse, RedirectResponse
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from sqlalchemy import select
@@ -21,7 +22,7 @@ from core.services.web_user_service import WebUserService
 from web.config import S
 from web.security.authlog import log_event
 from web.security.cookies import set_auth_cookies
-from web.template_env import templates
+from .index import render_next_page
 
 router = APIRouter(tags=["auth"])
 
@@ -47,13 +48,6 @@ async def verify_recaptcha_token(token: str | None) -> bool:
             return data.get("success", False)
     except Exception:  # pragma: no cover - network failure
         return False
-
-
-def base_context() -> Dict[str, object]:
-    return {
-        "page_title": "Авторизация",
-        "now_ts": int(time.time()),
-    }
 
 
 def _config_diagnostics(request: Request) -> list[dict]:
@@ -102,36 +96,103 @@ def _config_diagnostics(request: Request) -> list[dict]:
     return issues
 
 
-def render_auth(
+def wants_json(request: Request) -> bool:
+    accept = (request.headers.get("accept") or "").lower()
+    if "application/json" in accept:
+        return True
+    if request.headers.get("x-requested-with", "").lower() == "xmlhttprequest":
+        return True
+    if request.headers.get("hx-request"):
+        return True
+    return False
+
+
+def _encode_payload(payload: dict[str, object | None]) -> str:
+    data = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+    return urlsafe_b64encode(data.encode("utf-8")).decode("ascii").rstrip("=")
+
+
+def _normalize_next(value: str | None) -> str | None:
+    if not value:
+        return None
+    value = value.strip()
+    if not value:
+        return None
+    if value.startswith("//"):
+        return None
+    if value.startswith("http://") or value.startswith("https://"):
+        return None
+    if not value.startswith("/"):
+        return None
+    return value
+
+
+def auth_feedback(
     request: Request,
-    active: str = "login",
-    form_values: dict | None = None,
-    form_errors: dict | None = None,
+    *,
+    active: str,
+    ok: bool = False,
     flash: str | None = None,
+    form_values: dict[str, object] | None = None,
+    form_errors: dict[str, object] | None = None,
     status_code: int | None = None,
-    config_warnings: list[dict] | None = None,
+    redirect_to: str | None = None,
+) -> JSONResponse | RedirectResponse:
+    payload = {
+        "ok": ok,
+        "active": active,
+        "flash": flash,
+        "form_values": form_values or {},
+        "form_errors": form_errors or {},
+        "redirect": redirect_to,
+        "config_warnings": _config_diagnostics(request),
+    }
+    code = status_code or (200 if ok else 400)
+    if wants_json(request):
+        return JSONResponse(payload, status_code=code)
+
+    query: dict[str, str] = {"tab": active}
+    if flash:
+        query["flash"] = flash
+    if redirect_to:
+        query["redirect"] = redirect_to
+    if form_values:
+        query["values"] = _encode_payload(form_values)
+    if form_errors:
+        query["errors"] = _encode_payload(form_errors)
+    encoded = urlencode(query)
+    target = f"/auth?{encoded}" if encoded else "/auth"
+    return RedirectResponse(target, status_code=status.HTTP_303_SEE_OTHER)
+
+
+def get_auth_public_options(request: Request) -> dict[str, object]:
+    tg_username = S.TG_BOT_USERNAME or "IntDataBot"
+    return {
+        "brand_name": S.BRAND_NAME or "Intelligent Data Pro",
+        "tagline": "Ваш цифровой второй мозг для профессионального мышления и продуктивной работы",
+        "tg_login_enabled": bool(S.TG_LOGIN_ENABLED),
+        "tg_bot_username": tg_username,
+        "tg_bot_login_url": f"https://t.me/{tg_username.lstrip('@')}" if S.TG_LOGIN_ENABLED else None,
+        "recaptcha_site_key": S.RECAPTCHA_SITE_KEY or None,
+        "magic_link_enabled": True,
+        "config_warnings": _config_diagnostics(request),
+    }
+
+
+def login_user(
+    request: Request,
+    user: WebUser,
+    *,
+    next_url: str | None = None,
+    prefer_json: bool = False,
+    telegram_id: int | None = None,
 ):
-    tg_bot_username = S.TG_BOT_USERNAME or "IntDataBot"
-    return templates.TemplateResponse(
-        request,
-        "auth.html",
-        {
-            "now_ts": int(time.time()),
-            "active_tab": active,
-            "form_values": form_values or {},
-            "form_errors_json": json.dumps(form_errors or {}, ensure_ascii=False),
-            "flash": flash,
-            "config_warnings": config_warnings or _config_diagnostics(request),
-            "tg_bot_username": tg_bot_username,
-        },
-        status_code=status_code or 200,
-    )
-
-
-def login_user(request: Request, user: WebUser) -> RedirectResponse:
-    """Set cookies for authenticated user and redirect home."""
-    response = RedirectResponse("/", status_code=status.HTTP_303_SEE_OTHER)
-    set_auth_cookies(response, web_user_id=user.id)
+    target = _normalize_next(next_url) or _normalize_next(request.query_params.get("next")) or "/"
+    if prefer_json:
+        response: Response = JSONResponse({"ok": True, "redirect": target})
+    else:
+        response = RedirectResponse(target, status_code=status.HTTP_303_SEE_OTHER)
+    set_auth_cookies(response, web_user_id=user.id, telegram_id=telegram_id)
     return response
 
 
@@ -283,7 +344,7 @@ def verify_telegram_login(data: Dict[str, str]) -> bool:
 
 @router.get("/auth")
 async def auth_get(request: Request):
-    return render_auth(request, active=request.query_params.get("tab", "login"))
+    return render_next_page("auth")
 
 
 @router.get("/login", include_in_schema=False)
@@ -325,15 +386,19 @@ async def login(
     username: str = Form(...),
     password: str = Form(...),
     g_recaptcha_response: str | None = Form(None, alias="g-recaptcha-response"),
+    next_url: str | None = Form(None, alias="next"),
 ):
+    prefer_json = wants_json(request)
     if not await verify_recaptcha_token(g_recaptcha_response):
-        return render_auth(
+        return auth_feedback(
             request,
             active="login",
             form_values={"username": username},
-            flash="reCAPTCHA validation failed",
+            flash="Проверка reCAPTCHA не пройдена",
             status_code=400,
         )
+
+    user: WebUser | None = None
     try:
         async with WebUserService() as service:
             user = await service.authenticate(username, password)
@@ -362,7 +427,7 @@ async def login(
                         log_event(request, "login_fail", None, {"username": username})
                     except Exception:
                         pass
-                    return render_auth(
+                    return auth_feedback(
                         request,
                         active="login",
                         form_values={"username": username},
@@ -373,52 +438,73 @@ async def login(
                         flash="Неверный логин или пароль",
                         status_code=400,
                     )
-                # register new user
                 try:
-                    new_user = await service.register(
-                        username=username, password=password
-                    )
+                    new_user = await service.register(username=username, password=password)
                 except ValueError:
-                    return render_auth(
+                    return auth_feedback(
                         request,
                         active="login",
                         form_values={"username": username},
                         flash="Не удалось создать пользователя",
                         status_code=400,
                     )
-                telegram_id = request.cookies.get("telegram_id")
-                if telegram_id:
+
+                telegram_cookie = request.cookies.get("telegram_id")
+                tg_id_int: int | None = None
+                if telegram_cookie:
+                    try:
+                        tg_id_int = int(telegram_cookie)
+                    except ValueError:
+                        tg_id_int = None
+                if tg_id_int is not None:
                     async with TelegramUserService() as tsvc:
-                        tg_user = await tsvc.get_user_by_telegram_id(int(telegram_id))
-                    await service.link_telegram(new_user.id, tg_user.id)
+                        tg_user = await tsvc.get_user_by_telegram_id(tg_id_int)
+                    if tg_user:
+                        await service.link_telegram(new_user.id, tg_user.id)
+                    else:
+                        tg_id_int = None
                 try:
                     log_event(request, "register_ok", new_user)
                 except Exception:
                     pass
-                response = RedirectResponse(
-                    f"/users/{new_user.username}?edit=1",
-                    status_code=status.HTTP_303_SEE_OTHER,
+
+                redirect_target = _normalize_next(next_url) or f"/users/{new_user.username}?edit=1"
+                return login_user(
+                    request,
+                    new_user,
+                    next_url=redirect_target,
+                    prefer_json=prefer_json,
+                    telegram_id=tg_id_int,
                 )
-                if telegram_id:
-                    set_auth_cookies(
-                        response, web_user_id=new_user.id, telegram_id=telegram_id
-                    )
-                else:
-                    set_auth_cookies(response, web_user_id=new_user.id)
-                return response
     except Exception as exc:  # pragma: no cover - defensive
-        return render_auth(
+        logger.exception("login: unexpected error")
+        return auth_feedback(
             request,
             active="login",
             form_values={"username": username},
-            form_errors={"username": "Technical error", "password": str(exc)},
-            flash=f"Technical error: {exc}",
+            form_errors={
+                "username": "Техническая ошибка",
+                "password": "Техническая ошибка",
+            },
+            flash="Техническая ошибка. Попробуйте ещё раз позже.",
             status_code=500,
         )
+
+    assert user is not None
     if user.role == "ban":
-        response = RedirectResponse(
-            "/ban", status_code=status.HTTP_307_TEMPORARY_REDIRECT
-        )
+        if prefer_json:
+            response = JSONResponse(
+                {
+                    "ok": False,
+                    "redirect": "/ban",
+                    "flash": "Доступ к аккаунту заблокирован",
+                },
+                status_code=status.HTTP_403_FORBIDDEN,
+            )
+        else:
+            response = RedirectResponse(
+                "/ban", status_code=status.HTTP_307_TEMPORARY_REDIRECT
+            )
         response.delete_cookie("web_user_id", path="/")
         response.delete_cookie("telegram_id", path="/")
         return response
@@ -426,7 +512,12 @@ async def login(
         log_event(request, "login_ok", user)
     except Exception:
         pass
-    return login_user(request, user)
+    return login_user(
+        request,
+        user,
+        next_url=next_url,
+        prefer_json=prefer_json,
+    )
 
 
 @router.api_route("/auth/logout", methods=["GET", "POST"])
@@ -493,13 +584,23 @@ async def magic_request(
     """Request a magic login link via email with basic anti-bot checks."""
     # Honeypot field filled or submission too fast => treat as spam
     if hp_url:
-        return render_auth(request, active="restore", form_values={"email": email})
+        return auth_feedback(
+            request,
+            active="restore",
+            form_values={"email": email},
+            status_code=200,
+        )
     try:
         ts = int(form_ts)
     except ValueError:
         ts = 0
     if ts and time.time() - ts < 3:  # submitted too quickly after form render
-        return render_auth(request, active="restore", form_values={"email": email})
+        return auth_feedback(
+            request,
+            active="restore",
+            form_values={"email": email},
+            status_code=200,
+        )
 
     token = serializer.dumps({"email": email, "kind": "magic"})
     magic_url = (
@@ -509,11 +610,13 @@ async def magic_request(
         await send_magic_email(email, magic_url)  # если есть почтовик
     except Exception:
         print("MAGIC:", magic_url)
-    return render_auth(
+    return auth_feedback(
         request,
         active="restore",
+        ok=True,
         form_values={"email": email},
         flash="Если email существует — отправили ссылку для входа.",
+        status_code=200,
     )
 
 
@@ -525,8 +628,11 @@ async def magic_consume(request: Request, token: str):
             raise BadSignature("kind")
         email = data["email"]
     except (BadSignature, SignatureExpired):
-        return render_auth(
-            request, active="login", flash="Ссылка недействительна или устарела."
+        return auth_feedback(
+            request,
+            active="login",
+            flash="Ссылка недействительна или устарела.",
+            status_code=400,
         )
 
     # Найти/создать пользователя по email и залогинить
@@ -537,4 +643,8 @@ async def magic_consume(request: Request, token: str):
         log_event(request, "magic_ok", user, {"email": email})
     except Exception:
         pass
-    return login_user(request, user)
+    return login_user(
+        request,
+        user,
+        prefer_json=wants_json(request),
+    )
