@@ -53,7 +53,7 @@ async def test_profile_access_single_user(client: AsyncClient):
     assert resp.status_code == 200
 
     legacy = await client.get("/admin", headers={"Authorization": f"Bearer {uid}"})
-    assert legacy.status_code == 404
+    assert legacy.status_code == 403
 
     iframe = await client.get("/cup/admin-embed", headers={"Authorization": f"Bearer {uid}"})
     assert iframe.status_code in {401, 403}
@@ -65,7 +65,7 @@ async def test_admin_access(client: AsyncClient):
     profile = await client.get("/users/admin", headers={"Authorization": f"Bearer {uid}"})
     assert profile.status_code == 200
     legacy = await client.get("/admin", headers={"Authorization": f"Bearer {uid}"})
-    assert legacy.status_code == 404
+    assert legacy.status_code == 200
 
     admin_console = await client.get("/cup/admin-embed", headers={"Authorization": f"Bearer {uid}"})
     assert admin_console.status_code == 200

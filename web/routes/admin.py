@@ -1,6 +1,7 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
+from fastapi.responses import HTMLResponse
 
 from core.models import WebUser
 from core.services.web_user_service import WebUserService
@@ -8,7 +9,6 @@ from core.services.telegram_user_service import TelegramUserService
 from core.services.group_moderation_service import GroupModerationService
 from core.services.access_control import AccessControlService
 from ..dependencies import role_required
-from ..template_env import templates
 from .index import render_next_page
 
 router = APIRouter(prefix="/cup", tags=["cup"], include_in_schema=False)
@@ -46,23 +46,15 @@ async def load_admin_console_data() -> dict[str, Any]:
     }
 
 
-@router.get("/admin-embed", name="cup:admin-embed")
+@router.get("/admin-embed", name="cup:admin-embed", response_class=HTMLResponse)
 async def admin_embed(
-    request: Request,
     current_user: WebUser = Depends(role_required("admin")),
 ):
-    """Serve the admin console markup for iframe embedding inside the dashboard."""
-    admin_data = await load_admin_console_data()
-    context = {
-        **admin_data,
-        "user": current_user,
-        "role_name": current_user.role,
-        "is_admin": True,
-        "auth_page": True,
-        "page_title": "Админский сектор",
-        "admin_heading_description": "Полный набор сервисов для управления платформой.",
-    }
-    return templates.TemplateResponse(request, "admin/embed.html", context)
+    """Serve the admin console embed via Next.js."""
+
+    # При обращении к странице выполняем ту же проверку прав,
+    # что и для API-хендлеров — данные загружаются клиентом.
+    return render_next_page("cup/admin-embed")
 
 
 @admin_ui_router.get("", name="admin:dashboard")

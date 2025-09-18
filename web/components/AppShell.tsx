@@ -68,8 +68,8 @@ const STATIC_NAV_FALLBACK: SidebarNavItem[] = [
     status: { kind: 'locked', link: '/tariffs' },
   },
   { key: 'team', label: 'Команда', href: '/users', hidden: false, position: 11, status: { kind: 'new' } },
-  { key: 'products', label: 'Продукты', href: '/products', hidden: false, position: 12, status: { kind: 'wip' } },
-  { key: 'groups', label: 'Группы', href: '/groups', hidden: true, position: 14, status: { kind: 'wip' } },
+  { key: 'products', label: 'Продукты', href: '/products', hidden: false, position: 12, status: { kind: 'new' } },
+  { key: 'groups', label: 'Группы', href: '/groups', hidden: false, position: 14, status: { kind: 'new' } },
   { key: 'admin', label: 'ЛК Админа', href: '/admin', hidden: true, position: 15, status: { kind: 'new' } },
   { key: 'settings', label: 'Настройки', href: '/settings', hidden: false, position: 16, status: { kind: 'new' } },
 ];
