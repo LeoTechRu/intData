@@ -371,9 +371,6 @@ class TimeService:
             "CREATE UNIQUE INDEX IF NOT EXISTS ux_time_active_one_per_user ON time_entries(owner_id) WHERE end_time IS NULL AND last_started_at IS NOT NULL",
         ]
         await self.session.rollback()
-        bind = self.session.get_bind()
-        if bind is None:
-            return
-        async with bind.begin() as conn:
-            for stmt in statements:
-                await conn.execute(text(stmt))
+        for stmt in statements:
+            await self.session.execute(text(stmt))
+        await self.session.commit()
