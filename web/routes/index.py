@@ -7,7 +7,7 @@ import os
 import subprocess
 
 from fastapi import APIRouter, Request, Depends, status, HTTPException
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse, Response
 
 from web.dependencies import get_current_web_user
 from ..template_env import templates
@@ -26,17 +26,23 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/bot", include_in_schema=False)
-async def bot_landing(request: Request):
-    page_title = (
-        "@intDataBot — Telegram бот проекта "
-        f"{templates.env.globals['BRAND_NAME']}"
-    )
-    return templates.TemplateResponse(
-        request,
-        "bot_landing.html",
-        {"page_title": page_title},
-    )
+@router.get("/bot", include_in_schema=False, response_class=HTMLResponse)
+@router.get("/bot/", include_in_schema=False, response_class=HTMLResponse)
+async def bot_landing() -> HTMLResponse:
+    return render_next_page("bot")
+
+
+@router.get("/docs", include_in_schema=False, response_class=HTMLResponse)
+@router.get("/docs/", include_in_schema=False, response_class=HTMLResponse)
+async def docs_landing() -> HTMLResponse:
+    return render_next_page("docs")
+
+
+@router.head("/docs", include_in_schema=False)
+@router.head("/docs/", include_in_schema=False)
+async def docs_landing_head() -> Response:
+    html_response = render_next_page("docs")
+    return Response(status_code=200, headers=dict(html_response.headers))
 
 
 @router.get("/ban", include_in_schema=False)
