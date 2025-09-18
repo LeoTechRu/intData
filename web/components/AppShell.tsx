@@ -18,7 +18,7 @@ import type {
   ViewerProfileSummary,
 } from '../lib/types';
 import { formatClock, formatDateTime, parseDateToUtc } from '../lib/time';
-import { Button, StatusIndicator, type StatusIndicatorKind } from './ui';
+import { Button, Card, StatusIndicator, type StatusIndicatorKind } from './ui';
 import { SidebarEditor } from './navigation/SidebarEditor';
 
 interface AppShellProps {
@@ -40,23 +40,28 @@ const NAV_STATUS_TOOLTIPS: Record<StatusIndicatorKind, string> = {
 
 const STATIC_NAV_FALLBACK: SidebarNavItem[] = [
   { key: 'overview', label: 'Обзор', href: '/', hidden: false, position: 1, status: { kind: 'new' } },
-  { key: 'inbox', label: 'Входящие', href: '/inbox', hidden: false, position: 2 },
-  { key: 'areas', label: 'Области', href: '/areas', hidden: false, position: 3, status: { kind: 'new' } },
-  { key: 'projects', label: 'Проекты', href: '/projects', hidden: false, position: 4, status: { kind: 'new' } },
-  { key: 'team', label: 'Команда', href: '/users', hidden: false, position: 5, status: { kind: 'new' } },
-  { key: 'resources', label: 'Ресурсы', href: '/resources', hidden: false, position: 6, status: { kind: 'wip' } },
-  { key: 'notes', label: 'Заметки', href: '/notes', hidden: false, position: 7, status: { kind: 'new' } },
-  { key: 'tasks', label: 'Задачи', href: '/tasks', hidden: false, position: 8, status: { kind: 'wip' } },
+  { key: 'calendar', label: 'Календарь', href: '/calendar', hidden: false, position: 2, status: { kind: 'new' } },
+  { key: 'inbox', label: 'Входящие', href: '/inbox', hidden: false, position: 3 },
+  { key: 'tasks', label: 'Задачи', href: '/tasks', hidden: false, position: 4, status: { kind: 'wip' } },
+  { key: 'time', label: 'Время', href: '/time', hidden: false, position: 5, status: { kind: 'new' } },
+  { key: 'notes', label: 'Заметки', href: '/notes', hidden: false, position: 6, status: { kind: 'new' } },
+  { key: 'areas', label: 'Области', href: '/areas', hidden: false, position: 7, status: { kind: 'new' } },
+  { key: 'projects', label: 'Проекты', href: '/projects', hidden: false, position: 8, status: { kind: 'new' } },
+  { key: 'resources', label: 'Ресурсы', href: '/resources', hidden: false, position: 9, status: { kind: 'wip' } },
   {
     key: 'habits',
     label: 'Привычки',
     href: '/habits',
     hidden: false,
-    position: 9,
+    position: 10,
     status: { kind: 'locked', link: '/pricing' },
   },
-  { key: 'time', label: 'Время', href: '/time', hidden: false, position: 10, status: { kind: 'new' } },
-  { key: 'settings', label: 'Настройки', href: '/settings', hidden: false, position: 11, status: { kind: 'new' } },
+  { key: 'team', label: 'Команда', href: '/users', hidden: false, position: 11, status: { kind: 'new' } },
+  { key: 'products', label: 'Продукты', href: '/products', hidden: false, position: 12, status: { kind: 'wip' } },
+  { key: 'pricing', label: 'Тарифы', href: '/pricing', hidden: false, position: 13, status: { kind: 'new' } },
+  { key: 'groups', label: 'Группы', href: '/groups', hidden: true, position: 14, status: { kind: 'wip' } },
+  { key: 'admin', label: 'ЛК Админа', href: '/admin', hidden: true, position: 15, status: { kind: 'new' } },
+  { key: 'settings', label: 'Настройки', href: '/settings', hidden: false, position: 16, status: { kind: 'new' } },
 ];
 
 function getInitials(name: string): string {
@@ -648,9 +653,27 @@ function MiniTimerWidget({ viewer }: { viewer: ViewerProfileSummary | null }) {
     },
   });
 
+  const activeEntry = runningQuery.data && !runningQuery.data.end_time ? runningQuery.data : null;
+  const isRunning = Boolean(activeEntry?.is_running);
+  const isPaused = Boolean(activeEntry?.is_paused && !activeEntry?.is_running);
+  const elapsedSeconds = activeEntry ? getTimerElapsedSeconds(activeEntry, now) : 0;
+  const isLoading =
+    runningQuery.isFetching ||
+    startMutation.isPending ||
+    pauseMutation.isPending ||
+    resumeMutation.isPending ||
+    stopMutation.isPending;
+
+  const ensureAuth = () => {
+    if (viewer) {
+      return true;
+    }
+    router.push('/auth');
+    return false;
+  };
+
   const handleStart = () => {
-    if (!viewer) {
-      router.push('/auth');
+    if (!ensureAuth()) {
       return;
     }
     startMutation.mutate();
@@ -668,142 +691,214 @@ function MiniTimerWidget({ viewer }: { viewer: ViewerProfileSummary | null }) {
     stopMutation.mutate(entry.id);
   };
 
-  const runningRaw = runningQuery.data ?? null;
-  const hasActive = runningRaw && !runningRaw.end_time ? runningRaw : null;
-  const isRunning = Boolean(hasActive?.is_running);
-  const isPaused = Boolean(hasActive?.is_paused && !hasActive?.is_running);
-  const elapsedSeconds = hasActive ? getTimerElapsedSeconds(hasActive, now) : 0;
-  const isLoading =
-    runningQuery.isFetching ||
-    startMutation.isPending ||
-    pauseMutation.isPending ||
-    resumeMutation.isPending ||
-    stopMutation.isPending;
+  const stateTone = isRunning ? 'running' : isPaused ? 'paused' : 'idle';
+
+  const gradientClass = clsx(
+    'absolute inset-0 pointer-events-none transition-opacity duration-300',
+    stateTone === 'running'
+      ? 'bg-gradient-to-br from-emerald-500/18 via-emerald-500/10 to-transparent'
+      : stateTone === 'paused'
+      ? 'bg-gradient-to-br from-amber-500/18 via-amber-500/10 to-transparent'
+      : 'bg-gradient-to-br from-[var(--accent-primary)]/14 via-[var(--accent-primary)]/6 to-transparent',
+  );
+
+  const cardClass = 'group relative mt-6 cursor-pointer transition-shadow duration-200 hover:shadow-xl';
+
+  const stateLabel = isRunning ? 'Фокус идёт' : isPaused ? 'Пауза' : 'Готов к запуску';
+  const metaLabel = (() => {
+    if (isRunning) {
+      return `Старт: ${formatDateTime(activeEntry?.start_time ?? '')}`;
+    }
+    if (isPaused) {
+      return `Пауза: ${formatDateTime(activeEntry?.paused_at ?? activeEntry?.start_time ?? '')}`;
+    }
+    return 'Запустите сессию одним кликом';
+  })();
+  const description = activeEntry?.description?.trim();
+
+  const primaryLabel = !viewer
+    ? 'Войти'
+    : isRunning
+      ? 'Пауза'
+      : isPaused
+      ? 'Продолжить'
+      : 'Старт';
+
+  const primaryIcon = isLoading ? <LoaderIcon /> : isRunning ? <PauseIcon /> : <PlayIcon />;
+
+  const primaryButtonClass = clsx(
+    'inline-flex h-16 w-16 items-center justify-center rounded-full text-white shadow-lg transition-transform duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]',
+    isRunning
+      ? 'bg-emerald-500 hover:bg-emerald-400 focus-visible:ring-emerald-500'
+      : isPaused
+      ? 'bg-amber-500 hover:bg-amber-400 focus-visible:ring-amber-500'
+      : 'bg-[var(--accent-primary)] hover:opacity-90 focus-visible:ring-[var(--accent-primary)]',
+    isLoading && 'opacity-70',
+  );
+
+  const badgeClass = clsx(
+    'inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide',
+    stateTone === 'running'
+      ? 'bg-emerald-500/15 text-emerald-600'
+      : stateTone === 'paused'
+      ? 'bg-amber-500/15 text-amber-600'
+      : 'bg-slate-200 text-slate-600 dark:bg-slate-200/10 dark:text-slate-200',
+  );
+
+  const openDetails = () => router.push('/time');
+
+  const onContainerClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    if (target.closest('button') || target.closest('a')) {
+      return;
+    }
+    openDetails();
+  };
+
+  const onContainerKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.defaultPrevented) {
+      return;
+    }
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openDetails();
+    }
+  };
+
+  const primaryAction = () => {
+    if (!viewer) {
+      router.push('/auth');
+      return;
+    }
+    if (activeEntry) {
+      if (isRunning) {
+        handlePause(activeEntry);
+      } else if (isPaused) {
+        handleResume(activeEntry);
+      }
+    } else {
+      handleStart();
+    }
+  };
+
+  const liveMessage = isRunning
+    ? `Таймер запущен, прошло ${formatClock(elapsedSeconds)}.`
+    : isPaused
+    ? 'Таймер на паузе.'
+    : 'Таймер готов к запуску.';
 
   return (
-    <div className="mt-6 rounded-2xl border border-subtle bg-[var(--surface-0)] p-4 shadow-soft">
-      <div className="flex items-center justify-between gap-2">
-        <div className="text-xs font-semibold uppercase tracking-wide text-muted">Таймер</div>
-        <Button
+    <Card
+      as="section"
+      data-widget="quick-timer"
+      className={cardClass}
+      tabIndex={0}
+      aria-label="Быстрый таймер"
+      onClick={onContainerClick}
+      onKeyDown={onContainerKeyDown}
+    >
+      <div className={gradientClass} aria-hidden />
+      <div className="relative flex items-start gap-4">
+        <button
           type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push('/time')}
+          className={primaryButtonClass}
+          onClick={(event) => {
+            event.stopPropagation();
+            primaryAction();
+          }}
+          disabled={isLoading}
+          title={primaryLabel}
+          aria-label={primaryLabel}
         >
-          К журналу
-        </Button>
+          {primaryIcon}
+        </button>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted">Таймер</span>
+            <span className={badgeClass}>{stateLabel}</span>
+          </div>
+          <div className="mt-2 font-mono text-3xl font-semibold tracking-tight text-[var(--text-primary)]">
+            {formatClock(elapsedSeconds)}
+          </div>
+          <p className="mt-1 text-sm text-muted">{metaLabel}</p>
+          {description ? (
+            <p className="mt-1 text-sm text-[var(--text-secondary)] line-clamp-2">{description}</p>
+          ) : null}
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            {viewer && activeEntry ? (
+              <>
+                {isRunning ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handlePause(activeEntry);
+                    }}
+                    disabled={isLoading}
+                  >
+                    Пауза
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleResume(activeEntry);
+                    }}
+                    disabled={isLoading}
+                  >
+                    Продолжить
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleStop(activeEntry);
+                  }}
+                  disabled={isLoading}
+                >
+                  Завершить
+                </Button>
+                {activeEntry.task_id ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      router.push(`/tasks?task=${activeEntry.task_id}`);
+                    }}
+                  >
+                    Задача #{activeEntry.task_id}
+                  </Button>
+                ) : null}
+              </>
+            ) : null}
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={(event) => {
+                event.stopPropagation();
+                openDetails();
+              }}
+            >
+              К журналу
+            </Button>
+          </div>
+        </div>
       </div>
-      {!viewer ? (
-        <div className="mt-3 flex items-center justify-center">
-          <Button
-            type="button"
-            size="icon"
-            variant="ghost"
-            title="Войти, чтобы управлять таймером"
-            onClick={() => router.push('/auth')}
-          >
-            <LockIcon />
-          </Button>
-        </div>
-      ) : runningQuery.isError && runningQuery.error instanceof ApiError && runningQuery.error.status >= 500 ? (
-        <div className="mt-3 text-sm text-danger">Не удалось загрузить состояние таймера.</div>
-      ) : hasActive && isRunning ? (
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <div
-            className="text-3xl font-semibold text-[var(--text-primary)]"
-            title={`${formatDateTime(hasActive.start_time)}${hasActive.description ? ` · ${hasActive.description}` : ''}`}
-          >
-            {formatClock(elapsedSeconds)}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              size="icon"
-              variant="subtle"
-              onClick={() => handlePause(hasActive)}
-              disabled={isLoading}
-              title="Пауза"
-            >
-              <PauseIcon />
-            </Button>
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              onClick={() => handleStop(hasActive)}
-              disabled={isLoading}
-              title="Остановить и завершить"
-            >
-              <StopIcon />
-            </Button>
-            {hasActive.task_id ? (
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                onClick={() => router.push(`/tasks?task=${hasActive.task_id}`)}
-                title={`Перейти к задаче #${hasActive.task_id}`}
-              >
-                <TaskIcon />
-              </Button>
-            ) : null}
-          </div>
-        </div>
-      ) : hasActive && isPaused ? (
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <div
-            className="text-3xl font-semibold text-[var(--text-primary)]"
-            title={`${formatDateTime(hasActive.start_time)}${hasActive.description ? ` · ${hasActive.description}` : ''}`}
-          >
-            {formatClock(elapsedSeconds)}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              size="icon"
-              onClick={() => handleResume(hasActive)}
-              disabled={isLoading}
-              title="Возобновить"
-            >
-              {resumeMutation.isPending ? <LoaderIcon /> : <PlayIcon />}
-            </Button>
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              onClick={() => handleStop(hasActive)}
-              disabled={isLoading}
-              title="Завершить"
-            >
-              <StopIcon />
-            </Button>
-            {hasActive.task_id ? (
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                onClick={() => router.push(`/tasks?task=${hasActive.task_id}`)}
-                title={`Перейти к задаче #${hasActive.task_id}`}
-              >
-                <TaskIcon />
-              </Button>
-            ) : null}
-          </div>
-        </div>
-      ) : (
-        <div className="mt-3 flex items-center justify-center">
-          <Button
-            type="button"
-            size="icon"
-            onClick={handleStart}
-            disabled={isLoading}
-            title="Запустить таймер"
-          >
-            {startMutation.isPending ? <LoaderIcon /> : <PlayIcon />}
-          </Button>
-        </div>
-      )}
-    </div>
+      <span className="sr-only" aria-live="polite">
+        {liveMessage}
+      </span>
+    </Card>
   );
 }
 
@@ -837,16 +932,6 @@ function TaskIcon() {
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6}>
       <path d="M9 11l2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
       <rect x="4" y="4" width="16" height="16" rx="3" />
-    </svg>
-  );
-}
-
-function LockIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6}>
-      <rect x="5" y="10" width="14" height="10" rx="2" />
-      <path d="M8 10V7a4 4 0 1 1 8 0v3" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="12" cy="15" r="1.5" fill="currentColor" />
     </svg>
   );
 }

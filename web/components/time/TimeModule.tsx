@@ -1,11 +1,12 @@
 'use client';
 
+import clsx from 'clsx';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
 import PageLayout from '../PageLayout';
-import { Button, Card, EmptyState, Field, Input, Select, Section, Toolbar } from '../ui';
+import { Button, Card, EmptyState, Field, Input, Select, Section } from '../ui';
 import { apiFetch, ApiError, buildQuery } from '../../lib/api';
 import type {
   Area,
@@ -349,16 +350,17 @@ export default function TimeModule(): JSX.Element {
     <PageLayout title={MODULE_TITLE} description={MODULE_DESCRIPTION}>
       <section className="flex flex-col gap-6">
         <div className="cards-grid">
-          <Card data-widget="time-active">
-            <Section className="gap-4">
-              <div className="flex items-center justify-between gap-4">
+          <Card data-widget="time-active" className="relative overflow-hidden">
+            <Section className="gap-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <h3 className="text-lg font-semibold">Текущий фокус</h3>
                   <p className="text-sm text-muted">
-                    Управляйте таймером в реальном времени и фиксируйте контекст.
+                    Минимум кликов и крупные элементы управления по рекомендациям Toggl Track и Clockify делают трекинг
+                    непрерывным.
                   </p>
                 </div>
-                <Select value={rangeDays} onChange={handleRangeChange} className="w-40">
+                <Select value={rangeDays} onChange={handleRangeChange} className="w-full sm:w-48">
                   {RANGE_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
@@ -366,83 +368,128 @@ export default function TimeModule(): JSX.Element {
                   ))}
                 </Select>
               </div>
+
               {activeEntry ? (
-                <div className="flex flex-col gap-3 rounded-xl border border-dashed border-[var(--accent-primary)] bg-[var(--surface-soft)] p-4">
-                  <div className="text-sm text-muted">
-                    {isTimerRunning
-                      ? `Идёт с ${formatDateTime(activeEntry.start_time)}`
-                      : `На паузе с ${formatDateTime(activeEntry.paused_at ?? activeEntry.start_time)}`}
-                  </div>
-                  <div className="text-3xl font-semibold tracking-tight">
-                    {formatClock(activeEntrySeconds)}
-                  </div>
-                  <div className="text-sm text-muted">
-                    {activeEntry.description || 'Без описания'}
-                    {activeEntry.task_id ? ` · задача #${activeEntry.task_id}` : ''}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {isTimerRunning ? (
-                      <Button onClick={handlePause} disabled={pauseMutation.isPending} variant="primary">
-                        Пауза
-                      </Button>
-                    ) : (
-                      <Button onClick={handleResume} disabled={resumeEntryMutation.isPending} variant="primary">
-                        Возобновить
-                      </Button>
-                    )}
-                    <Button onClick={handleStop} disabled={stopMutation.isPending} variant="ghost">
-                      Завершить
-                    </Button>
-                    {activeEntry.task_id ? (
-                      <Button
-                        onClick={() => router.push(`/tasks?task=${activeEntry.task_id}`)}
-                        variant="ghost"
+                <div className="relative overflow-hidden rounded-2xl border border-dashed border-[var(--accent-primary)] bg-gradient-to-br from-[color-mix(in srgb, var(--accent-primary) 18%, transparent)] via-[color-mix(in srgb, var(--accent-primary) 8%, transparent)] to-transparent p-6">
+                  <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-1 items-start gap-5">
+                      <button
+                        type="button"
+                        className={clsx(
+                          'inline-flex h-20 w-20 items-center justify-center rounded-full text-white shadow-lg transition-transform duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]',
+                          isTimerRunning
+                            ? 'bg-emerald-500 hover:bg-emerald-400 focus-visible:ring-emerald-500'
+                            : 'bg-amber-500 hover:bg-amber-400 focus-visible:ring-amber-500',
+                          (pauseMutation.isPending || resumeEntryMutation.isPending) && 'opacity-70',
+                        )}
+                        onClick={isTimerRunning ? handlePause : handleResume}
+                        disabled={pauseMutation.isPending || resumeEntryMutation.isPending}
+                        title={isTimerRunning ? 'Пауза' : 'Продолжить'}
+                        aria-label={isTimerRunning ? 'Пауза' : 'Продолжить'}
                       >
-                        Открыть задачу
+                        {pauseMutation.isPending || resumeEntryMutation.isPending ? <LoaderIcon /> : isTimerRunning ? <PauseIcon /> : <PlayIcon />}
+                      </button>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold uppercase tracking-wide text-muted">Таймер</span>
+                          <span
+                            className={clsx(
+                              'inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide',
+                              isTimerRunning
+                                ? 'bg-emerald-500/15 text-emerald-700'
+                                : 'bg-amber-500/15 text-amber-700',
+                            )}
+                          >
+                            {isTimerRunning ? 'Время идёт' : 'Пауза'}
+                          </span>
+                        </div>
+                        <div className="mt-2 font-mono text-4xl font-semibold tracking-tight text-[var(--text-primary)] lg:text-5xl">
+                          {formatClock(activeEntrySeconds)}
+                        </div>
+                        <p className="mt-1 text-sm text-muted">
+                          {isTimerRunning
+                            ? `Старт: ${formatDateTime(activeEntry.start_time)}`
+                            : `Пауза: ${formatDateTime(activeEntry.paused_at ?? activeEntry.start_time)}`}
+                        </p>
+                        {activeEntry.description ? (
+                          <p className="mt-1 text-sm text-[var(--text-secondary)] line-clamp-2">
+                            {activeEntry.description}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                      <Button onClick={handleStop} disabled={stopMutation.isPending} variant="ghost">
+                        Завершить сессию
                       </Button>
-                    ) : null}
+                      {activeEntry.task_id ? (
+                        <Button
+                          onClick={() => router.push(`/tasks?task=${activeEntry.task_id}`)}
+                          variant="ghost"
+                        >
+                          Задача #{activeEntry.task_id}
+                        </Button>
+                      ) : null}
+                      <Button onClick={() => router.push('/time')} variant="ghost">
+                        Журнал
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ) : (
-                <form onSubmit={handleStart} className="flex flex-col gap-3">
-                  <Field label="Что фиксируем">
-                    <Input
-                      name="description"
-                      placeholder="Например, обзор квартального отчёта"
-                      value={timerForm.description}
-                      onChange={(event) => setTimerForm((prev) => ({ ...prev, description: event.target.value }))}
-                    />
-                  </Field>
-                  <Field label="ID задачи (необязательно)">
-                    <Input
-                      name="task_id"
-                      type="number"
-                      min={1}
-                      placeholder="123"
-                      value={timerForm.taskId}
-                      onChange={(event) => setTimerForm((prev) => ({ ...prev, taskId: event.target.value }))}
-                    />
-                  </Field>
-                  {formError ? <p className="text-sm text-danger">{formError}</p> : null}
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button type="submit" disabled={startMutation.isPending} variant="primary">
-                      Стартовать таймер
-                    </Button>
-                    <Toolbar>
+                <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+                  <form onSubmit={handleStart} className="flex flex-col gap-4 rounded-2xl border border-subtle bg-[var(--surface-0)] p-6 shadow-soft">
+                    <Field label="Что фиксируем">
+                      <Input
+                        name="description"
+                        placeholder="Например, созвон с клиентом"
+                        value={timerForm.description}
+                        onChange={(event) => setTimerForm((prev) => ({ ...prev, description: event.target.value }))}
+                      />
+                    </Field>
+                    <Field label="ID задачи (необязательно)">
+                      <Input
+                        name="task_id"
+                        type="number"
+                        min={1}
+                        placeholder="123"
+                        value={timerForm.taskId}
+                        onChange={(event) => setTimerForm((prev) => ({ ...prev, taskId: event.target.value }))}
+                      />
+                    </Field>
+                    {formError ? <p className="text-sm text-danger">{formError}</p> : null}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button type="submit" disabled={startMutation.isPending} variant="primary">
+                        Запустить таймер
+                      </Button>
+                      <Button type="button" variant="ghost" onClick={() => router.push('/time')}>
+                        Открыть журнал
+                      </Button>
+                    </div>
+                  </form>
+                  <div className="flex flex-col gap-3 rounded-2xl border border-dashed border-subtle bg-surface-soft p-6 shadow-soft">
+                    <div>
+                      <h4 className="text-sm font-semibold text-[var(--text-primary)]">Быстрый старт</h4>
+                      <p className="mt-1 text-xs text-muted">
+                        Предустановленные сценарии — популярный паттерн профессиональных тайм-трекеров. Один тап, и
+                        таймер уже считает фокус.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
                       {QUICK_PRESETS.map((preset) => (
                         <Button
                           key={preset.label}
                           type="button"
                           size="sm"
-                          variant="ghost"
+                          variant="secondary"
                           onClick={() => handleQuickStart(preset.description)}
                         >
                           {preset.label}
                         </Button>
                       ))}
-                    </Toolbar>
+                    </div>
                   </div>
-                </form>
+                </div>
               )}
             </Section>
           </Card>
@@ -649,5 +696,30 @@ export default function TimeModule(): JSX.Element {
         </Card>
       </section>
     </PageLayout>
+  );
+}
+
+function PlayIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.6}>
+      <path d="M7 5.5v13l11-6.5-11-6.5z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function PauseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.6}>
+      <rect x="7" y="5" width="3.6" height="14" rx="1.2" fill="currentColor" />
+      <rect x="13.5" y="5" width="3.6" height="14" rx="1.2" fill="currentColor" />
+    </svg>
+  );
+}
+
+function LoaderIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6 animate-spin" fill="none" stroke="currentColor" strokeWidth={1.6}>
+      <path d="M12 3a9 9 0 1 0 9 9" strokeLinecap="round" />
+    </svg>
   );
 }
