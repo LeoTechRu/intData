@@ -9,7 +9,7 @@ from collections import defaultdict
 
 from sqlalchemy import select, or_, text
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.exc import ProgrammingError, DBAPIError
 
 from core import db
 from core.models import TimeEntry, Task, TaskStatus
@@ -355,8 +355,9 @@ class TimeService:
     async def _execute_with_retry(self, statement):
         try:
             return await self.session.execute(statement)
-        except ProgrammingError as exc:
-            if "active_seconds" in str(exc).lower():
+        except (ProgrammingError, DBAPIError) as exc:
+            message = str(exc).lower()
+            if "active_seconds" in message or "current transaction is aborted" in message:
                 await self._ensure_time_columns()
                 return await self.session.execute(statement)
             raise
@@ -369,5 +370,10 @@ class TimeService:
             "DROP INDEX IF EXISTS ux_time_active_one_per_user",
             "CREATE UNIQUE INDEX IF NOT EXISTS ux_time_active_one_per_user ON time_entries(owner_id) WHERE end_time IS NULL AND last_started_at IS NOT NULL",
         ]
-        for stmt in statements:
-            await self.session.execute(text(stmt))
+        await self.session.rollback()
+        bind = self.session.get_bind()
+        if bind is None:
+            return
+        async with bind.begin() as conn:
+            for stmt in statements:
+                await conn.execute(text(stmt))
