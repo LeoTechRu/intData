@@ -71,7 +71,12 @@ class TimeService:
     def _accumulate_active(entry: TimeEntry, now: datetime) -> None:
         if entry.last_started_at is None:
             return
-        delta = now - entry.last_started_at
+        start = entry.last_started_at
+        if now.tzinfo is None and getattr(start, "tzinfo", None) is not None:
+            now = now.replace(tzinfo=start.tzinfo)
+        elif start.tzinfo is None and getattr(now, "tzinfo", None) is not None:
+            start = start.replace(tzinfo=now.tzinfo)
+        delta = now - start
         seconds = int(delta.total_seconds())
         if seconds > 0:
             entry.active_seconds = (entry.active_seconds or 0) + seconds
