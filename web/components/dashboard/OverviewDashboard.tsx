@@ -271,6 +271,30 @@ export default function OverviewDashboard() {
 
   const [layoutState, setLayoutState] = useState<LayoutState>(() => normalizeLayout());
   const [isEditing, setIsEditing] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return;
+    }
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
+    const handleChange = (event: MediaQueryListEvent) => {
+      setIsDesktop(event.matches);
+    };
+    setIsDesktop(mediaQuery.matches);
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    }
+    mediaQuery.addListener(handleChange);
+    return () => mediaQuery.removeListener(handleChange);
+  }, []);
+
+  useEffect(() => {
+    if (!isDesktop && isEditing) {
+      setIsEditing(false);
+    }
+  }, [isDesktop, isEditing]);
   const [quickNoteTick, setQuickNoteTick] = useState(0);
 
   useEffect(() => {
@@ -367,25 +391,27 @@ export default function OverviewDashboard() {
 
   return (
     <div className="flex flex-col gap-6 pb-16">
-      <header className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-subtle bg-[var(--surface-0)] px-6 py-5 shadow-soft">
-        <div className="max-w-3xl space-y-2">
-          <h2 className="text-2xl font-semibold text-[var(--text-primary)]">Настройка дашборда</h2>
-          <p className="text-sm text-muted">{CUSTOMIZE_HINT}</p>
-          {saving ? <p className="text-xs text-[var(--accent-primary)]">Сохраняем раскладку…</p> : null}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={() => setIsEditing((prev) => !prev)}>
-            {isEditing ? 'Завершить настройку' : 'Настроить дашборд'}
-          </Button>
-          {isEditing ? (
-            <Button variant="ghost" onClick={handleResetLayout} disabled={saving}>
-              Сбросить по умолчанию
+      {isDesktop ? (
+        <header className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-subtle bg-[var(--surface-0)] px-6 py-5 shadow-soft">
+          <div className="max-w-3xl space-y-2">
+            <h2 className="text-2xl font-semibold text-[var(--text-primary)]">Настройка дашборда</h2>
+            <p className="text-sm text-muted">{CUSTOMIZE_HINT}</p>
+            {saving ? <p className="text-xs text-[var(--accent-primary)]">Сохраняем раскладку…</p> : null}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={() => setIsEditing((prev) => !prev)}>
+              {isEditing ? 'Завершить настройку' : 'Настроить дашборд'}
             </Button>
-          ) : null}
-        </div>
-      </header>
+            {isEditing ? (
+              <Button variant="ghost" onClick={handleResetLayout} disabled={saving}>
+                Сбросить по умолчанию
+              </Button>
+            ) : null}
+          </div>
+        </header>
+      ) : null}
 
-      {isEditing ? (
+      {isDesktop && isEditing ? (
         <HiddenWidgetsPalette
           hidden={hiddenWidgets}
           onShow={handleShowWidget}

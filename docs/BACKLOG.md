@@ -40,6 +40,7 @@
 
 | Start (UTC) | Agent | Branch | Epic / Scope | Ключевые файлы | Статус |
 |-------------|-------|--------|--------------|----------------|--------|
+| 2025-09-18 22:34 | codex | feature/E17/mobile-responsive-ui-codex | E17 / мобильная адаптация AppShell и обзора | web/components/AppShell.tsx, web/components/layout/PublicHeader.tsx, web/components/dashboard/OverviewDashboard.tsx | завершено 2025-09-18 22:44 |
 | 2025-09-18 21:41 | codex | feature/E17/public-header-codex | E17 / унификация публичных лендингов | web/app/(auth|tariffs|bot|docs)/*, web/components/*, docs/BACKLOG.md | завершено 2025-09-18 22:01 |
 | 2025-09-18 20:37 | codex | feature/E17/legacy-migration-codex | E17 / миграция легаси-страниц на новый UI | web/app/*, web/templates/*, web/components/*, docs/* | завершено 2025-09-18 21:03 |
 | 2025-09-18 19:30 | codex | feature/E17/groups-products-ui-codex | E17 / тарифы, кнопки поддержки | web/components/marketing, web/components/AppShell.tsx, docs/* | завершено 2025-09-18 19:46 |
@@ -509,6 +510,7 @@ Reference: см. архивный отчёт `docs/archive/report_frontend_moder
 - [x] P1•S — Добавить компонент `TermHint` с тултипами для непонятных терминов (slug, Telegram ID, CRM) и использовать его на страницах Next.js.
 - [x] P1•S — Обновить лендинг `/tariffs`: сделать ссылку на сообщество кликабельной, убрать прямые контакты техподдержки и разработчика из текста.
 - [x] P1•S — Добавить в AppShell условные кнопки «Техподдержка» и «Связь с разработчиком» в зависимости от тарифа пользователя.
+- [x] P1•S — Обеспечить адаптивность AppShell и обзора (`/`): перестроить шапку под мобильную сетку, скрывать второстепенные элементы (роль) на узких экранах и отключать редактор дашборда на мобайле.
 - [x] P0•S — Вынести админский сектор в страницу «ЛК Админа» нового UI, доступную только роли `admin`, с полным набором действий.
 - [x] P0•S — Маркетинговый лендинг `/tariffs`: планы Solo/Team/Pro/Enterprise, переключатель биллинга, сравнительная таблица, ROI-кейсы и FAQ; основные CTA ведут в `CONTACT_URL`.
 - [x] P0•S — FastAPI-роут `/tariffs` и раздел `web/components/marketing/TariffsLanding.tsx` выступают единой SSoT по тарифам, запрещено удалять страницу при дальнейшей миграции.
