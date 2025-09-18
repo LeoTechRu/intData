@@ -72,8 +72,9 @@ describe('SettingsModule', () => {
 
     renderWithClient(<SettingsModule />);
 
-    expect(await screen.findByText('Виджеты дашборда')).toBeInTheDocument();
-    expect(screen.getByText('Избранное меню')).toBeInTheDocument();
+    expect(await screen.findByText('Региональные настройки')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Посмотреть обновления тарифов' })).toBeInTheDocument();
+    expect(await screen.findByText('Тема интерфейса')).toBeInTheDocument();
     expect(await screen.findByText('Области жизни (PARA)')).toBeInTheDocument();
     expect(await screen.findByTestId('area-node-1')).toBeInTheDocument();
 

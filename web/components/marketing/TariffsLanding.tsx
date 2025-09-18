@@ -25,7 +25,7 @@ interface Plan {
   savingsNote?: string;
   highlight?: boolean;
   badge?: string;
-  benefits: string[];
+  benefits: ReactNode[];
   outcomes: string[];
   cta: { label: string; href: string; external?: boolean };
   secondaryCta?: { label: string; href: string; external?: boolean };
@@ -96,8 +96,20 @@ function AnchorButton({ href, children, variant = 'primary', size = 'md', fullWi
 }
 
 const COMMUNITY_URL = 'https://t.me/intDataHELP';
-const SUPPORT_URL = 'https://t.me/HELPintData';
 const CONTACT_URL = 'https://t.me/leotechru';
+
+function renderCommunityLink(label: ReactNode = 'сообществе Intelligent Data Pro'): ReactNode {
+  return (
+    <a
+      href={COMMUNITY_URL}
+      target="_blank"
+      rel="noreferrer noopener"
+      className="text-[var(--accent-primary)] underline decoration-dotted"
+    >
+      {label}
+    </a>
+  );
+}
 
 const BILLING_CYCLES: Record<BillingCycle, { label: string; description: string; savings?: string }> = {
   monthly: {
@@ -128,7 +140,9 @@ const PLANS: Plan[] = [
       'Все PARA-модули: задачи, календарь, заметки, привычки, тайм-трекер.',
       'Интеграции Google Calendar и Telegram-бота для быстрого захвата.',
       'Личные графы знаний и бэклинки без ограничения по объёму.',
-      `Доступ к открытому сообществу в Telegram: ${COMMUNITY_URL} — поддержка от практиков и команды продукта.`,
+      <>
+        Доступ к открытому {renderCommunityLink('сообществу Intelligent Data Pro')} — поддержка от практиков и команды продукта.
+      </>,
     ],
     outcomes: [
       'Соберите личную ОС продуктивности без затрат.',
@@ -154,7 +168,9 @@ const PLANS: Plan[] = [
       'Общие Areas и Projects, ролевые права и делегирование задач.',
       'Командный календарь с напоминаниями, синхронизированный с Google Calendar.',
       'Уведомления и диджесты в Telegram, единая лента событий.',
-      `Поддержка команды: открытое сообщество ${COMMUNITY_URL} плюс индивидуальная техподдержка в ${SUPPORT_URL}.`,
+      <>
+        Поддержка команды: открытое {renderCommunityLink('сообщество')} плюс индивидуальная техподдержка для платных тарифов.
+      </>,
     ],
     outcomes: [
       'Выровняйте повестку и дедлайны внутри команды.',
@@ -178,7 +194,9 @@ const PLANS: Plan[] = [
       'Встроенная CRM: контакты, воронки, кастомные поля и отчёты по доходности.',
       'Расширенная аналитика времени и загрузки команды, экспорт данных.',
       'Лицензия на коммерческое использование и встроенные автоматизации.',
-      `Приоритетный саппорт: сообщество ${COMMUNITY_URL}, выделенный канал ${SUPPORT_URL} и прямой контакт с разработчиком ${CONTACT_URL}.`,
+      <>
+        Приоритетный саппорт: {renderCommunityLink('сообщество')} + выделенный канал техподдержки и прямой контакт с разработчиком для Pro.
+      </>,
     ],
     outcomes: [
       'Закройте воронку продаж и производство в одной системе.',
@@ -201,7 +219,9 @@ const PLANS: Plan[] = [
       'Индивидуальный брендинг, роли, согласования и доступы для нескольких юрлиц.',
       'Развёртывание в частном контуре, интеграции с 1С, ERP, CRM и BI-витринами.',
       'Выделенная поддержка 7×365, SLA 4 часа, выделенный менеджер успеха.',
-      `Эскалация без посредников: community ${COMMUNITY_URL}, выделенный канал ${SUPPORT_URL} и прямой контакт разработчика ${CONTACT_URL}.`,
+      <>
+        Эскалация без посредников: {renderCommunityLink('сообщество')} вместе с выделенной техподдержкой и прямым контактом с разработчиком для Enterprise.
+      </>,
     ],
     outcomes: [
       'Запустите корпоративную ОС продуктивности под вашим брендом.',
@@ -285,10 +305,10 @@ const FEATURE_MATRIX: FeatureRow[] = [
     id: 'support',
     title: 'Поддержка и онбординг',
     values: {
-      solo: `Сообщество ${COMMUNITY_URL} и база знаний`,
-      team: `Групповой онбординг + канал ${SUPPORT_URL}`,
-      pro: `Customer Success, ${SUPPORT_URL}, ${CONTACT_URL}`,
-      enterprise: `24/7, SLA 4 часа, выделенная команда и прямой контакт ${CONTACT_URL}`,
+      solo: 'Сообщество Intelligent Data Pro и база знаний',
+      team: 'Групповой онбординг + выделенный канал техподдержки',
+      pro: 'Customer Success, приоритетная поддержка и прямой контакт с разработчиком',
+      enterprise: '24/7, SLA 4 часа, выделенная команда и прямой контакт с разработчиком',
     },
   },
 ];
@@ -296,8 +316,12 @@ const FEATURE_MATRIX: FeatureRow[] = [
 const FAQ_ITEMS = [
   {
     question: 'Какая поддержка доступна в тарифах?',
-    answer:
-      `Во всех планах действует открытое сообщество ${COMMUNITY_URL}. Для Team, Pro и Enterprise подключаем индивидуальный канал ${SUPPORT_URL}, а Pro и Enterprise могут эскалировать вопросы напрямую разработчику по ${CONTACT_URL}.`,
+    answer: (
+      <>
+        Во всех планах действует открытое {renderCommunityLink('сообщество')}. Для Team, Pro и Enterprise подключаем
+        индивидуальный канал техподдержки, а Pro и Enterprise могут эскалировать вопросы напрямую разработчику.
+      </>
+    ),
   },
   {
     question: 'Можно ли начать бесплатно и потом перейти на командный тариф?',
@@ -345,7 +369,11 @@ const TRUST_SIGNALS = [
   {
     id: 'communities',
     title: '6 500+ активных workspace',
-    description: `Команды используют Intelligent Data Pro для продуктивности и обучения, общаясь в свободном сообществе ${COMMUNITY_URL}.`,
+    description: (
+      <>
+        Команды используют Intelligent Data Pro для продуктивности и обучения, общаясь в свободном {renderCommunityLink('сообществе')}.
+      </>
+    ),
   },
 ];
 
@@ -354,22 +382,29 @@ const SUPPORT_LEVELS = [
     id: 'community',
     title: 'Общее сообщество',
     plans: 'Solo, Team, Pro, Enterprise',
-    description: `Бесплатный чат ${COMMUNITY_URL} помогает внедрять PARA, делиться best practices и получать быстрый фидбек от команды продукта.`,
-    href: COMMUNITY_URL,
+    description: (
+      <>
+        Бесплатный чат {renderCommunityLink('Intelligent Data Pro')} помогает внедрять PARA, делиться best practices и получать
+        быстрый фидбек от команды продукта.
+      </>
+    ),
+    cta: { label: 'Открыть чат', href: COMMUNITY_URL },
   },
   {
     id: 'dedicated',
     title: 'Индивидуальная поддержка',
     plans: 'Team, Pro, Enterprise',
-    description: `Клиенты оплачиваемых планов получают отдельный канал ${SUPPORT_URL}: решаем инциденты, консультируем по архитектуре и миграциям.`,
-    href: SUPPORT_URL,
+    description:
+      'Клиенты платных планов получают выделенный канал техподдержки: отвечаем на инциденты, консультируем по архитектуре и миграциям.',
+    ctaNote: 'Контакт выдаётся после активации тарифа.',
   },
   {
     id: 'developer',
     title: 'Эскалации напрямую разработчику',
     plans: 'Pro, Enterprise',
-    description: `Премиальные клиенты могут обращаться напрямую к разработчику продукта по ${CONTACT_URL} — без слоёв поддержки.`,
-    href: CONTACT_URL,
+    description:
+      'Премиальные клиенты обращаются напрямую к разработчику продукта без промежуточных уровней поддержки.',
+    ctaNote: 'Доступ открывается команде Success после онбординга.',
   },
 ];
 
@@ -467,7 +502,8 @@ export function TariffsLanding() {
                 Соберите единое пространство для задач, календарей, заметок, привычек и CRM. Выбирайте тариф, который вырастет вместе с вашим бизнесом.
               </p>
               <p className="text-sm text-muted">
-                Сообщество {COMMUNITY_URL} доступно бесплатно; для платных тарифов работает выделенная техподдержка {SUPPORT_URL}, а Pro и Enterprise эскалируют напрямую к разработчику {CONTACT_URL}.
+                Сообщество {renderCommunityLink('Intelligent Data Pro')} доступно бесплатно; для платных тарифов работает
+                выделенная техподдержка, а Pro и Enterprise могут эскалировать вопросы напрямую разработчику.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-4">
@@ -572,8 +608,8 @@ export function TariffsLanding() {
                   ) : null}
                 </div>
                 <ul className="space-y-3 text-sm text-[var(--text-primary)]/85">
-                  {plan.benefits.map((benefit) => (
-                    <li key={benefit} className="flex items-start gap-2">
+                  {plan.benefits.map((benefit, index) => (
+                    <li key={`${plan.id}-benefit-${index}`} className="flex items-start gap-2">
                       <span className="mt-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[color-mix(in srgb, var(--accent-primary) 15%, transparent)] text-[var(--accent-primary)]">
                         <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -657,19 +693,23 @@ export function TariffsLanding() {
               <h2 className="text-lg font-semibold text-[var(--text-primary)]">{item.title}</h2>
               <Badge tone="accent" size="sm">{item.plans}</Badge>
             </div>
-            <p className="text-sm text-muted">{item.description}</p>
-            <a
-              href={item.href}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent-primary)]"
-            >
-              Открыть канал
-              <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
-              </svg>
-            </a>
+            <div className="text-sm text-muted">{item.description}</div>
+            {item.cta ? (
+              <a
+                href={item.cta.href}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent-primary)]"
+              >
+                {item.cta.label}
+                <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
+                </svg>
+              </a>
+            ) : item.ctaNote ? (
+              <span className="text-xs text-muted">{item.ctaNote}</span>
+            ) : null}
           </Card>
         ))}
       </section>

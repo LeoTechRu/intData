@@ -45,6 +45,10 @@ const NAV_STATUS_TOOLTIPS: Record<StatusIndicatorKind, string> = {
   locked: 'Раздел доступен по расширенному тарифу',
 };
 
+const COMMUNITY_CHANNEL_URL = 'https://t.me/intDataHELP';
+const SUPPORT_CHANNEL_URL = 'https://t.me/HELPintData';
+const DEVELOPER_CONTACT_URL = 'https://t.me/leotechru';
+
 const STATIC_NAV_FALLBACK: SidebarNavItem[] = [
   { key: 'overview', label: 'Обзор', href: '/', hidden: false, position: 1, status: { kind: 'new' } },
   { key: 'calendar', label: 'Календарь', href: '/calendar', hidden: false, position: 2, status: { kind: 'new' } },
@@ -282,6 +286,11 @@ export default function AppShell({
       }),
     [visibleNavItems, pathname],
   );
+
+  const viewerRole = viewer?.role?.toLowerCase() ?? null;
+  const hasPaidSupport = Boolean(viewer) && viewerRole !== 'single' && viewerRole !== 'suspended';
+  const hasDeveloperContact =
+    Boolean(viewer) && (viewerRole === 'moderator' || viewerRole === 'admin' || viewerRole === 'superuser');
 
   const defaultTimezone = useMemo(() => {
     if (typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function') {
@@ -566,6 +575,51 @@ export default function AppShell({
                 );
               })}
             </nav>
+            {viewer ? (
+              <div className="space-y-2 rounded-2xl border border-subtle bg-surface-soft p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted">Поддержка</p>
+                <a
+                  href={COMMUNITY_CHANNEL_URL}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--accent-primary)] hover:bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+                >
+                  Сообщество
+                  <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
+                  </svg>
+                </a>
+                {hasPaidSupport ? (
+                  <a
+                    href={SUPPORT_CHANNEL_URL}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--accent-primary)] hover:bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+                  >
+                    Техподдержка
+                    <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
+                    </svg>
+                  </a>
+                ) : null}
+                {hasDeveloperContact ? (
+                  <a
+                    href={DEVELOPER_CONTACT_URL}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--accent-primary)] hover:bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+                  >
+                    Связь с разработчиком
+                    <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
+                    </svg>
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
             <MiniTimerWidget viewer={viewer} />
           </div>
         </aside>
