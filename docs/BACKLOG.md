@@ -40,6 +40,7 @@
 
 | Start (UTC) | Agent | Branch | Epic / Scope | Ключевые файлы | Статус |
 |-------------|-------|--------|--------------|----------------|--------|
+| 2025-09-18 21:41 | codex | feature/E17/public-header-codex | E17 / унификация публичных лендингов | web/app/(auth|tariffs|bot|docs)/*, web/components/*, docs/BACKLOG.md | завершено 2025-09-18 22:01 |
 | 2025-09-18 20:37 | codex | feature/E17/legacy-migration-codex | E17 / миграция легаси-страниц на новый UI | web/app/*, web/templates/*, web/components/*, docs/* | завершено 2025-09-18 21:03 |
 | 2025-09-18 19:30 | codex | feature/E17/groups-products-ui-codex | E17 / тарифы, кнопки поддержки | web/components/marketing, web/components/AppShell.tsx, docs/* | завершено 2025-09-18 19:46 |
 | 2025-09-18 18:44 | codex | feature/E17/groups-products-ui-codex | E17 / модернизация groups & products, тултипы терминов | web/app/groups, web/app/products, web/components, docs/* | завершено 2025-09-18 19:18 |

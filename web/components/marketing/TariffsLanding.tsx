@@ -8,7 +8,7 @@ import { cn } from '../../lib/cn';
 
 type BillingCycle = 'monthly' | 'yearly';
 
-type PlanMode = 'single' | 'multiplayer' | 'enterprise';
+type PlanMode = 'solo' | 'team' | 'pro' | 'enterprise';
 
 type FeatureValue = boolean | string;
 
@@ -132,7 +132,7 @@ const PLANS: Plan[] = [
     shortName: 'Solo',
     subtitle: 'Личный контроль задач, заметок, календаря и привычек в одном интерфейсе.',
     audience: 'Создатели, консультанты, специалисты, которым нужен «второй мозг».',
-    mode: 'single',
+    mode: 'solo',
     monthlyPrice: 0,
     yearlyPrice: 0,
     yearlyEquivalentMonthly: 0,
@@ -148,7 +148,7 @@ const PLANS: Plan[] = [
       'Соберите личную ОС продуктивности без затрат.',
       'Синхронизируйте рабочий и личный календари в одном окне.',
     ],
-    cta: { label: 'Начать бесплатно', href: CONTACT_URL, external: true },
+    cta: { label: 'Начать бесплатно', href: '/auth' },
     secondaryCta: { label: 'Смотреть возможности', href: '#compare' },
   },
   {
@@ -157,7 +157,7 @@ const PLANS: Plan[] = [
     shortName: 'Team',
     subtitle: 'Совместные проекты, делегирование задач и общий календарь для команды до 25 человек.',
     audience: 'Кросс-функциональные команды, студии, стартапы на ранней стадии.',
-    mode: 'multiplayer',
+    mode: 'team',
     monthlyPrice: 299,
     yearlyPrice: 2990,
     yearlyEquivalentMonthly: 249,
@@ -185,7 +185,7 @@ const PLANS: Plan[] = [
     shortName: 'Pro',
     subtitle: 'CRM-процессы, аналитика и коммерческая лицензия для экспертов и агентств.',
     audience: 'Консалтинговые команды, коучи, студии, работающие с клиентами.',
-    mode: 'multiplayer',
+    mode: 'pro',
     monthlyPrice: 1000,
     yearlyPrice: 10000,
     yearlyEquivalentMonthly: 833,
@@ -507,9 +507,11 @@ export function TariffsLanding() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-4">
+              <AnchorButton href="/auth" size="lg">Начать бесплатно</AnchorButton>
               {recommendedPlan ? (
                 <AnchorButton
                   href={recommendedPlan.cta.href}
+                  variant="secondary"
                   size="lg"
                   external={recommendedPlan.cta.external}
                 >
@@ -596,8 +598,8 @@ export function TariffsLanding() {
                     </div>
                     <p className="text-sm text-muted">{plan.subtitle}</p>
                   </div>
-                  <Badge tone={plan.mode === 'single' ? 'neutral' : plan.mode === 'enterprise' ? 'warning' : 'accent'} size="sm">
-                    {plan.mode === 'single' ? 'Single' : plan.mode === 'enterprise' ? 'Enterprise' : 'Multiplayer'}
+                  <Badge tone={plan.mode === 'solo' ? 'neutral' : plan.mode === 'enterprise' ? 'warning' : 'accent'} size="sm">
+                    {plan.shortName}
                   </Badge>
                 </div>
                 <div className="space-y-1">

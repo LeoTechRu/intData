@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import AuthLanding from '../../components/auth/AuthLanding';
+import AuthLanding from '../../../components/auth/AuthLanding';
 
 export const metadata: Metadata = {
   title: 'Intelligent Data Pro — вход и регистрация',

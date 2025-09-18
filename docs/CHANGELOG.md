@@ -250,9 +250,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Усилены инварианты PARA на уровне БД: `projects.area_id` теперь `NOT NULL`; добавлены индексы на `project_id/area_id` для основных таблиц.
+- Унифицированы публичные страницы `/auth`, `/tariffs`, `/bot`, `/docs`: общий PublicLayout с единым хедером/футером, CTA «Начать бесплатно» и согласованные ссылки.
 
 ### Fixed
 - Исправлена TZ-логика на дашборде: устранены сравнения «naive vs aware», все вычисления нормализованы в UTC.
+
 
 ## [0.1.0] - YYYY-MM-DD
 ### Added

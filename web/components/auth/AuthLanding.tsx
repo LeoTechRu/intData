@@ -412,37 +412,7 @@ export default function AuthLanding({
       {options?.recaptcha_site_key ? (
         <Script src="https://www.google.com/recaptcha/api.js?hl=ru" async defer strategy="afterInteractive" />
       ) : null}
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6 md:px-10">
-        <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--accent-primary)] text-lg font-semibold text-[var(--accent-on-primary)] shadow-soft">
-            ID
-          </span>
-          <div className="flex flex-col">
-            <span className="text-lg font-semibold tracking-tight">{options?.brand_name ?? 'Intelligent Data Pro'}</span>
-            <span className="text-sm text-muted">Второй мозг для команд знаний</span>
-          </div>
-        </div>
-        <nav className="hidden items-center gap-6 text-sm font-medium text-muted md:flex">
-          <Link href="/tariffs" className="transition-base hover:text-[var(--accent-primary)]" prefetch={false}>
-            Тарифы
-          </Link>
-          <Link href="/docs" className="transition-base hover:text-[var(--accent-primary)]">
-            Документация
-          </Link>
-          <Link href="https://intdata.pro/bot" className="transition-base hover:text-[var(--accent-primary)]" target="_blank" rel="noreferrer">
-            @intDataBot
-          </Link>
-        </nav>
-        <button
-          type="button"
-          onClick={() => switchTab('login')}
-          className="hidden h-10 items-center rounded-full border border-subtle px-5 text-sm font-semibold text-[var(--text-primary)] shadow-sm transition-base hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)] md:flex"
-        >
-          Войти
-        </button>
-      </header>
-
-      <main className="px-6 pb-16 pt-4 md:px-10 lg:px-16">
+      <div className="pb-16">
         <section className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] lg:items-start">
           <div className="flex flex-col gap-8">
             <div className="flex flex-col gap-6 rounded-3xl bg-white/80 p-6 shadow-soft backdrop-blur md:p-10">
@@ -792,7 +762,7 @@ export default function AuthLanding({
             ) : null}
           </aside>
         </section>
-      </main>
+      </div>
     </div>
   );
 }

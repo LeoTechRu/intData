@@ -174,6 +174,11 @@ const planMapping: PlanMapping[] = [
 
 const resourceLinks: ResourceLink[] = [
   { label: 'OpenAPI спецификация Intelligent Data Pro', href: '/api/openapi.json' },
+  {
+    label: 'Postman коллекция API v1',
+    href: 'https://intdata.pro/static/postman/intdata_v1.postman_collection.json',
+    external: true,
+  },
   { label: 'Сообщество в Telegram', href: COMMUNITY_URL, external: true },
   { label: 'Канал индивидуальной поддержки', href: SUPPORT_URL, external: true },
   { label: 'Прямой контакт с разработчиком', href: DEVELOPER_URL, external: true },
@@ -202,18 +207,18 @@ export default function DocsLanding() {
             </p>
             <div className="flex flex-col gap-4 sm:flex-row">
               <Link
-                href="/tariffs"
+                href="/auth"
                 prefetch={false}
                 className="inline-flex h-12 items-center justify-center rounded-full bg-[var(--accent-primary)] px-7 text-base font-semibold text-[var(--accent-on-primary)] shadow-md transition-base hover:opacity-90"
               >
-                Смотреть тарифы
+                Начать бесплатно
               </Link>
               <Link
-                href="/auth"
+                href="/tariffs"
                 prefetch={false}
                 className="inline-flex h-12 items-center justify-center rounded-full border border-subtle px-7 text-base font-semibold text-[var(--text-primary)] shadow-sm transition-base hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)]"
               >
-                Начать бесплатно
+                Смотреть тарифы
               </Link>
             </div>
           </div>

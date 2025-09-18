@@ -177,21 +177,21 @@ export default function BotLanding() {
               сообщество {COMMUNITY_URL} и выделенная поддержка для клиентов.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/auth"
+                prefetch={false}
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[var(--accent-primary)] px-6 text-sm font-semibold text-[var(--accent-on-primary)] shadow-soft transition-base hover:opacity-90"
+              >
+                Начать бесплатно
+              </Link>
               <a
                 href={TELEGRAM_URL}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[var(--accent-primary)] px-6 text-sm font-semibold text-[var(--accent-on-primary)] shadow-soft transition-base hover:opacity-90"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-subtle px-6 text-sm font-semibold text-[var(--text-primary)] shadow-sm transition-base hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)]"
               >
                 Открыть @intDataBot
               </a>
-              <Link
-                href="/tariffs"
-                prefetch={false}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-subtle px-6 text-sm font-semibold text-[var(--text-primary)] shadow-sm transition-base hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)]"
-              >
-                Узнать про тарифы
-              </Link>
             </div>
           </div>
           <div className="grid gap-4 rounded-3xl border border-white/70 bg-white/70 p-6 text-left shadow-soft backdrop-blur">
