@@ -395,7 +395,11 @@ export default function AppShell({
   );
 
   const computedMaxWidth = maxWidthClassName ?? 'max-w-[1400px]';
-  const headerClasses = clsx('grid w-full grid-cols-[auto,1fr,auto] items-center gap-4 px-4 py-4 md:px-6');
+  const headerClasses = clsx(
+    'grid w-full grid-cols-[auto,1fr] grid-rows-[auto,auto] items-center gap-x-3 gap-y-3 px-4 py-4',
+    'sm:gap-x-4',
+    'md:grid-cols-[auto,1fr,auto] md:grid-rows-1 md:gap-x-4 md:px-6',
+  );
   const mainClasses = clsx(
     'relative z-10 flex w-full flex-col gap-6 px-4 py-6 md:px-8 md:py-10',
     contentVariant === 'flat' && 'md:px-10 lg:px-12',
@@ -408,7 +412,7 @@ export default function AppShell({
       <div className="flex min-h-screen flex-col bg-surface" data-app-shell>
         <header className="sticky top-0 z-40 border-b border-subtle bg-[var(--surface-0)]/95 backdrop-blur">
           <div className={headerClasses}>
-          <div className="flex items-center gap-2 md:gap-3">
+            <div className="col-span-1 order-1 flex items-center gap-2 md:order-1 md:gap-3">
             <button
               type="button"
               className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-surface-soft text-muted transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] md:h-10 md:w-10"
@@ -461,7 +465,7 @@ export default function AppShell({
               </span>
             </Link>
           </div>
-          <div className="flex min-w-0 flex-col items-center gap-0.5 text-center">
+          <div className="col-span-2 order-3 flex min-w-0 flex-col items-center gap-0.5 text-center md:order-2 md:col-span-1">
             <h1
               id={headingId}
               className="truncate text-lg font-semibold leading-tight text-[var(--text-primary)] md:text-xl"
@@ -476,8 +480,8 @@ export default function AppShell({
               </p>
             ) : null}
           </div>
-          <div className="flex items-center justify-end gap-3">
-            {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
+          <div className="col-span-1 order-2 flex min-w-0 items-center justify-end gap-3 md:order-3 md:flex-nowrap md:justify-self-end">
+            {actions ? <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-right md:flex-nowrap">{actions}</div> : null}
             <UserSummary viewer={viewer} isLoading={viewerLoading} personaBundle={personaBundle} />
           </div>
         </div>
@@ -1025,8 +1029,8 @@ function UserSummary({
   const profileHref = profileSlug ? `/users/${profileSlug}` : '/users';
   const usernameLabel = viewer.username ? `@${viewer.username}` : '—';
   return (
-    <div className="flex items-center gap-3">
-      <div className="relative group/role">
+    <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+      <div className="relative hidden lg:block group/role">
         <div
           tabIndex={0}
           role="button"
@@ -1057,8 +1061,8 @@ function UserSummary({
       <Link
         href={profileHref}
         prefetch={false}
-        className="group/link inline-flex items-center gap-3 rounded-full border border-transparent px-2 py-1 transition-base hover:border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
-        aria-label={`Профиль пользователя ${displayLabel}`}
+        className="group/link inline-flex items-center gap-2 sm:gap-3 rounded-full border border-transparent px-2 py-1 transition-base hover:border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+        aria-label={`Профиль пользователя ${displayLabel}. Роль: ${persona.label}`}
       >
         <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-surface-soft text-sm font-semibold text-[var(--text-primary)] ring-1 ring-[var(--border-subtle)]">
           {viewer.avatar_url ? (
@@ -1078,6 +1082,7 @@ function UserSummary({
           <span className="truncate text-sm font-medium text-[var(--text-primary)]">{displayLabel}</span>
           <span className="truncate text-xs text-muted">{usernameLabel}</span>
         </span>
+        <span className="sr-only">{`Роль: ${persona.label}`}</span>
       </Link>
     </div>
   );
