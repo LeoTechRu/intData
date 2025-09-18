@@ -7,8 +7,9 @@ from typing import List, Optional
 from collections import defaultdict
 
 
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, text
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import ProgrammingError
 
 from core import db
 from core.models import TimeEntry, Task, TaskStatus
@@ -63,7 +64,7 @@ class TimeService:
         )
         if exclude is not None:
             stmt = stmt.where(TimeEntry.id != exclude)
-        res = await self.session.execute(stmt)
+        res = await self._execute_with_retry(stmt)
         return res.scalars().first()
 
     @staticmethod
@@ -168,7 +169,14 @@ class TimeService:
         # optional: set task status in_progress when starting timer
         if linked_task and linked_task.status != TaskStatus.done:
             linked_task.status = TaskStatus.in_progress
-        await self.session.flush()
+        try:
+            await self.session.flush()
+        except ProgrammingError as exc:
+            if "active_seconds" in str(exc).lower():
+                await self._ensure_time_columns()
+                await self.session.flush()
+            else:
+                raise
         return entry
 
     async def resume_task(self, owner_id: int, task_id: int, description: str | None = None) -> TimeEntry:
@@ -248,13 +256,13 @@ class TimeService:
         stmt = select(TimeEntry)
         if owner_id is not None:
             stmt = stmt.where(TimeEntry.owner_id == owner_id)
-        result = await self.session.execute(stmt)
+        result = await self._execute_with_retry(stmt)
         return result.scalars().all()
 
     async def list_entries_by_task(self, task_id: int) -> List[TimeEntry]:
         """Return time entries linked to the given task."""
         stmt = select(TimeEntry).where(TimeEntry.task_id == task_id)
-        res = await self.session.execute(stmt)
+        res = await self._execute_with_retry(stmt)
         return res.scalars().all()
 
     async def assign_task(self, entry_id: int, task_id: int, *, owner_id: int) -> TimeEntry:
@@ -281,7 +289,7 @@ class TimeService:
         )
         if task_id is not None:
             stmt = stmt.where(TimeEntry.task_id == task_id)
-        res = await self.session.execute(stmt)
+        res = await self._execute_with_retry(stmt)
         return res.scalars().first()
 
 
@@ -316,7 +324,7 @@ class TimeService:
         stmt = select(TimeEntry)
         if owner_id is not None:
             stmt = stmt.where(TimeEntry.owner_id == owner_id)
-        res = await self.session.execute(stmt)
+        res = await self._execute_with_retry(stmt)
         entries = res.scalars().all()
         totals: dict[str, int] = defaultdict(int)
         for e in entries:
@@ -343,3 +351,23 @@ class TimeService:
             else:
                 result.append({"owner_id": int(key), "total_seconds": total})
         return result
+
+    async def _execute_with_retry(self, statement):
+        try:
+            return await self.session.execute(statement)
+        except ProgrammingError as exc:
+            if "active_seconds" in str(exc).lower():
+                await self._ensure_time_columns()
+                return await self.session.execute(statement)
+            raise
+
+    async def _ensure_time_columns(self) -> None:
+        statements = [
+            "ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS active_seconds INTEGER NOT NULL DEFAULT 0",
+            "ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS last_started_at TIMESTAMPTZ",
+            "ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS paused_at TIMESTAMPTZ",
+            "DROP INDEX IF EXISTS ux_time_active_one_per_user",
+            "CREATE UNIQUE INDEX IF NOT EXISTS ux_time_active_one_per_user ON time_entries(owner_id) WHERE end_time IS NULL AND last_started_at IS NOT NULL",
+        ]
+        for stmt in statements:
+            await self.session.execute(text(stmt))

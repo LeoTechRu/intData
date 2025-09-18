@@ -704,15 +704,17 @@ function MiniTimerWidget({ viewer }: { viewer: ViewerProfileSummary | null }) {
 
   const cardClass = 'group relative mt-6 cursor-pointer transition-shadow duration-200 hover:shadow-xl';
 
-  const stateLabel = isRunning ? 'Фокус идёт' : isPaused ? 'Пауза' : 'Готов к запуску';
-  const metaLabel = (() => {
+  const tooltip = (() => {
+    if (!viewer) {
+      return 'Авторизуйтесь, чтобы вести учёт времени';
+    }
     if (isRunning) {
-      return `Старт: ${formatDateTime(activeEntry?.start_time ?? '')}`;
+      return `Таймер запущен с ${formatDateTime(activeEntry?.start_time ?? '')}`;
     }
     if (isPaused) {
-      return `Пауза: ${formatDateTime(activeEntry?.paused_at ?? activeEntry?.start_time ?? '')}`;
+      return `Таймер на паузе с ${formatDateTime(activeEntry?.paused_at ?? activeEntry?.start_time ?? '')}`;
     }
-    return 'Запустите сессию одним кликом';
+    return 'Нажмите, чтобы запустить быструю сессию';
   })();
   const description = activeEntry?.description?.trim();
 
@@ -796,6 +798,7 @@ function MiniTimerWidget({ viewer }: { viewer: ViewerProfileSummary | null }) {
       aria-label="Быстрый таймер"
       onClick={onContainerClick}
       onKeyDown={onContainerKeyDown}
+      title={tooltip}
     >
       <div className={gradientClass} aria-hidden />
       <div className="relative flex items-start gap-4">
@@ -815,12 +818,11 @@ function MiniTimerWidget({ viewer }: { viewer: ViewerProfileSummary | null }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold uppercase tracking-wide text-muted">Таймер</span>
-            <span className={badgeClass}>{stateLabel}</span>
+            {activeEntry ? <span className={badgeClass}>{isRunning ? 'Время идёт' : 'Пауза'}</span> : null}
           </div>
           <div className="mt-2 font-mono text-3xl font-semibold tracking-tight text-[var(--text-primary)]">
             {formatClock(elapsedSeconds)}
           </div>
-          <p className="mt-1 text-sm text-muted">{metaLabel}</p>
           {description ? (
             <p className="mt-1 text-sm text-[var(--text-secondary)] line-clamp-2">{description}</p>
           ) : null}
