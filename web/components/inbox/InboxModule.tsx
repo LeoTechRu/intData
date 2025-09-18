@@ -4,23 +4,12 @@ import Link from 'next/link';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch, ApiError, buildQuery } from '../../lib/api';
-import type { Area, Project, Task, Resource } from '../../lib/types';
+import type { Area, Project, Task, Resource, CalendarItem } from '../../lib/types';
 
 interface InboxNote {
   id: number;
   title?: string | null;
   content: string;
-}
-
-interface CalendarItem {
-  id: number;
-  title: string;
-  start_at: string;
-  end_at?: string | null;
-  tzid?: string | null;
-  description?: string | null;
-  project_id?: number | null;
-  area_id?: number | null;
 }
 
 type AssignTarget = 'area' | 'project';

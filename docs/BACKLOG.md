@@ -488,7 +488,7 @@ Reference: см. архивный отчёт `docs/archive/report_frontend_moder
   - [x] `/habits` перенесена на Next.js; шаблон `templates/habits.html` и `static/js/habits_v1.js` удалены.
   - [x] `/auth` обслуживается на Next.js; шаблон `templates/auth.html` и `static/js/auth_extra.js` удалены.
   - [x] `/notes` работает на Next.js; удалены `templates/notes.html`, `static/js/notes.js`, `static/css/notes.css`.
-  - [ ] Очистить оставшиеся legacy-ассеты (calendar) и обновить пути Tailwind.
+  - [x] Очистить оставшиеся legacy-ассеты (calendar) и обновить пути Tailwind.
 - [x] P1•M — Перенести страницу `/time` на Next.js: активный таймер, аналитика, удаление legacy-шаблонов.
 - [x] P2•M — Внедрить AppShell-лейаут Next.js с дизайн-токенами, адаптивной навигацией и современными UI паттернами для перенесённых страниц.
 - [x] P2•S — Страница `/habits` работает на Next.js, использует React Query и HUD с XP/Gold/KP.

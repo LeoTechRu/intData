@@ -51,6 +51,30 @@ export interface Resource {
   updated_at?: string | null;
 }
 
+export interface CalendarEvent {
+  id: number;
+  title: string;
+  start_at: string;
+  end_at?: string | null;
+  description?: string | null;
+}
+
+export interface CalendarItem {
+  id: number;
+  title: string;
+  start_at: string;
+  end_at?: string | null;
+  tzid?: string | null;
+  description?: string | null;
+  project_id?: number | null;
+  area_id?: number | null;
+}
+
+export interface CalendarAlarm {
+  id: number;
+  trigger_at: string;
+}
+
 export interface ProfileSection {
   id: string;
   title?: string | null;

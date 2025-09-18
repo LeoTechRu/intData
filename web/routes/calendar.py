@@ -5,7 +5,7 @@ from typing import List, Optional
 import hashlib
 import os
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Response
 from pydantic import BaseModel, model_validator
 
 from core.models import CalendarEvent, TgUser, WebUser, CalendarItem
@@ -13,7 +13,7 @@ from core.services.calendar_service import CalendarService
 from core.services.para_repository import CalendarItemRepository
 from core.services.telegram_user_service import TelegramUserService
 from web.dependencies import get_current_tg_user, get_current_web_user
-from ..template_env import templates
+from .index import render_next_page
 
 
 router = APIRouter(prefix="/calendar", tags=["calendar"])
@@ -379,18 +379,12 @@ async def feed_ui(
 
 @ui_router.get("")
 async def calendar_page(
-    request: Request,
     current_user: WebUser | None = Depends(get_current_web_user),
 ):
-    """Render simple UI for calendar events with role-aware header."""
+    """Serve the modern Next.js calendar page."""
 
-    context = {
-        "current_user": current_user,
-        "current_role_name": getattr(current_user, "role", ""),
-        "is_admin": getattr(current_user, "role", "") == "admin",
-        "page_title": "Календарь",
-    }
-    return templates.TemplateResponse(request, "calendar.html", context)
+    _ = current_user  # роль проверяется внутри приложения
+    return render_next_page("calendar")
 
 
 # Alias for centralized API mounting
