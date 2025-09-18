@@ -80,9 +80,9 @@ export default function ProfileView({ entity, slug, backHref, backLabel }: Profi
               )}
             </div>
             <div className="flex flex-1 flex-col gap-1">
-              <h1 className="text-2xl font-semibold text-[var(--text-primary)] md:text-3xl">
+              <p className="text-2xl font-semibold text-[var(--text-primary)] md:text-3xl">
                 {isLoading ? 'Загрузка…' : displayName}
-              </h1>
+              </p>
               {query.data?.headline ? (
                 <p className="text-sm text-muted">{query.data.headline}</p>
               ) : null}

@@ -21,12 +21,13 @@ export default function PageLayout({
   actions,
   contentClassName,
   headingLevel = 2,
-  hideContentTitle = false,
+  hideContentTitle = true,
   children,
 }: PageLayoutProps) {
   const shellHeadingId = 'app-shell-title';
   const contentHeadingId = 'page-section-title';
-  const labelledBy = hideContentTitle ? shellHeadingId : contentHeadingId;
+  const showContentTitle = !hideContentTitle;
+  const labelledBy = showContentTitle ? contentHeadingId : shellHeadingId;
   const HeadingTag = headingLevel === 1 ? 'h1' : 'h2';
   return (
     <AppShell title={title} subtitle={subtitle} actions={actions} titleId={shellHeadingId}>
@@ -36,19 +37,18 @@ export default function PageLayout({
         aria-labelledby={labelledBy}
         data-testid="page-layout"
       >
-        <header
-          className={cn('flex flex-col gap-2', hideContentTitle && 'sr-only')}
-          aria-hidden={hideContentTitle}
-        >
-          <HeadingTag
-            id={contentHeadingId}
-            className="text-xl font-semibold tracking-tight text-[var(--text-primary)]"
-            data-testid="page-title"
-          >
-            {title}
-          </HeadingTag>
-          {description ? <p className="text-sm text-muted">{description}</p> : null}
-        </header>
+        {showContentTitle ? (
+          <header className="flex flex-col gap-2">
+            <HeadingTag
+              id={contentHeadingId}
+              className="text-xl font-semibold tracking-tight text-[var(--text-primary)]"
+              data-testid="page-title"
+            >
+              {title}
+            </HeadingTag>
+            {description ? <p className="text-sm text-muted">{description}</p> : null}
+          </header>
+        ) : null}
         {children}
       </Section>
     </AppShell>

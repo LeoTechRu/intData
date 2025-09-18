@@ -44,6 +44,8 @@ import { Button, Card, Textarea } from '../ui';
 const MODULE_TITLE = 'Обзор workspace';
 const MODULE_DESCRIPTION =
   'Мониторьте ключевые показатели, события и команды в едином адаптивном интерфейсе. В любой момент подстройте сетку под свои задачи и сохраните вид.';
+const CUSTOMIZE_HINT =
+  'Перетаскивайте карточки и скрывайте лишнее — настройки автоматически применяются для вашего профиля.';
 
 const WIDGET_ORDER: WidgetId[] = [
   'profile_card',
@@ -367,8 +369,8 @@ export default function OverviewDashboard() {
     <div className="flex flex-col gap-6 pb-16">
       <header className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-subtle bg-[var(--surface-0)] px-6 py-5 shadow-soft">
         <div className="max-w-3xl space-y-2">
-          <h1 className="text-2xl font-semibold text-[var(--text-primary)]">{MODULE_TITLE}</h1>
-          <p className="text-sm text-muted">{MODULE_DESCRIPTION}</p>
+          <h2 className="text-2xl font-semibold text-[var(--text-primary)]">Настройка дашборда</h2>
+          <p className="text-sm text-muted">{CUSTOMIZE_HINT}</p>
           {saving ? <p className="text-xs text-[var(--accent-primary)]">Сохраняем раскладку…</p> : null}
         </div>
         <div className="flex flex-wrap gap-2">
