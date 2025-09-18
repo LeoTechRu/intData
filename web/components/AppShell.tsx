@@ -724,7 +724,7 @@ function MiniTimerWidget({ viewer }: { viewer: ViewerProfileSummary | null }) {
       ? 'Пауза'
       : isPaused
       ? 'Продолжить'
-      : 'Старт';
+      : 'Запустить';
 
   const primaryIcon = isLoading ? <LoaderIcon /> : isRunning ? <PauseIcon /> : <PlayIcon />;
 
@@ -736,15 +736,6 @@ function MiniTimerWidget({ viewer }: { viewer: ViewerProfileSummary | null }) {
       ? 'bg-amber-500 hover:bg-amber-400 focus-visible:ring-amber-500'
       : 'bg-[var(--accent-primary)] hover:opacity-90 focus-visible:ring-[var(--accent-primary)]',
     isLoading && 'opacity-70',
-  );
-
-  const badgeClass = clsx(
-    'inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide',
-    stateTone === 'running'
-      ? 'bg-emerald-500/15 text-emerald-600'
-      : stateTone === 'paused'
-      ? 'bg-amber-500/15 text-amber-600'
-      : 'bg-slate-200 text-slate-600 dark:bg-slate-200/10 dark:text-slate-200',
   );
 
   const openDetails = () => router.push('/time');
@@ -818,82 +809,68 @@ function MiniTimerWidget({ viewer }: { viewer: ViewerProfileSummary | null }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold uppercase tracking-wide text-muted">Таймер</span>
-            {activeEntry ? <span className={badgeClass}>{isRunning ? 'Время идёт' : 'Пауза'}</span> : null}
+            {activeEntry ? (
+              <span className="relative inline-flex h-2.5 w-2.5">
+                <span
+                  aria-hidden
+                  className={clsx(
+                    'absolute inset-0 rounded-full transition-colors duration-200',
+                    isRunning ? 'bg-emerald-500' : 'bg-amber-500',
+                  )}
+                />
+                <span className="sr-only">{isRunning ? 'Таймер активен' : 'Таймер на паузе'}</span>
+              </span>
+            ) : null}
           </div>
           <div className="mt-2 font-mono text-3xl font-semibold tracking-tight text-[var(--text-primary)]">
             {formatClock(elapsedSeconds)}
           </div>
+          <p className="mt-1 text-xs text-muted">
+            {activeEntry
+              ? isRunning
+                ? `Запущен ${formatDateTime(activeEntry.start_time)}`
+                : `Пауза с ${formatDateTime(activeEntry.paused_at ?? activeEntry.start_time)}`
+              : 'Таймер готов к запуску'}
+          </p>
           {description ? (
-            <p className="mt-1 text-sm text-[var(--text-secondary)] line-clamp-2">{description}</p>
+            <p className="mt-2 text-sm text-[var(--text-secondary)] line-clamp-2">{description}</p>
           ) : null}
-          <div className="mt-4 flex flex-wrap items-center gap-2">
+          <div className="mt-3 flex flex-wrap items-center gap-1.5">
             {viewer && activeEntry ? (
               <>
-                {isRunning ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handlePause(activeEntry);
-                    }}
-                    disabled={isLoading}
-                  >
-                    Пауза
-                  </Button>
-                ) : (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleResume(activeEntry);
-                    }}
-                    disabled={isLoading}
-                  >
-                    Продолжить
-                  </Button>
-                )}
                 <Button
                   type="button"
-                  size="sm"
+                  size="icon"
                   variant="ghost"
+                  className="text-red-600 hover:bg-red-500/10 focus-visible:ring-red-500 dark:text-red-400"
                   onClick={(event) => {
                     event.stopPropagation();
                     handleStop(activeEntry);
                   }}
-                  disabled={isLoading}
+                  disabled={isLoading || stopMutation.isPending}
+                  aria-label="Завершить сессию"
+                  title="Завершить сессию"
                 >
-                  Завершить
+                  {stopMutation.isPending ? <LoaderIcon /> : <StopIcon />}
                 </Button>
                 {activeEntry.task_id ? (
                   <Button
                     type="button"
-                    size="sm"
+                    size="icon"
                     variant="ghost"
                     onClick={(event) => {
                       event.stopPropagation();
                       router.push(`/tasks?task=${activeEntry.task_id}`);
                     }}
+                    disabled={isLoading}
+                    aria-label={`Открыть задачу #${activeEntry.task_id}`}
+                    title={`Открыть задачу #${activeEntry.task_id}`}
                   >
-                    Задача #{activeEntry.task_id}
+                    <TaskIcon />
                   </Button>
                 ) : null}
               </>
             ) : null}
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              onClick={(event) => {
-                event.stopPropagation();
-                openDetails();
-              }}
-            >
-              К журналу
-            </Button>
           </div>
         </div>
       </div>
