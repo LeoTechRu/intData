@@ -149,6 +149,16 @@ app = FastAPI(
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
+NEXT_STATIC_DIR = Path(__file__).resolve().parent / ".next" / "static"
+if NEXT_STATIC_DIR.exists():
+    app.mount("/_next/static", StaticFiles(directory=str(NEXT_STATIC_DIR)), name="next-static")
+else:
+    logger.warning("Next.js static assets directory not found: %s", NEXT_STATIC_DIR)
+
+NEXT_DATA_DIR = Path(__file__).resolve().parent / ".next" / "data"
+if NEXT_DATA_DIR.exists():
+    app.mount("/_next/data", StaticFiles(directory=str(NEXT_DATA_DIR)), name="next-data")
+
 # Observability & security middlewares
 app.add_middleware(LoggingMiddleware)
 
