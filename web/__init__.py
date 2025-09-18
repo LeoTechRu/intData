@@ -319,6 +319,10 @@ async def auth_middleware(request: Request, call_next):
     if path == "/":
         return await call_next(request)
 
+    # Public marketing pages (Next.js static content)
+    if path.startswith("/pricing") or path.startswith("/tariffs") or path.startswith("/bot"):
+        return await call_next(request)
+
     # Authenticated users can access other routes directly
     if web_user_id or telegram_id:
         return await call_next(request)
