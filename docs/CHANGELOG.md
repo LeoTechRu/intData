@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Документационный конвейер (`docs/idea.md`, `docs/vision.md`, `docs/conventions.md`, `docs/tasklist.md`, `docs/workflow.md`) и гайд `docs/guides/codex-cli-multisession.md` для согласованной работы нескольких сессий codex-cli.
-- Публичный лендинг `/docs` с описанием методологий PARA/Zettelkasten, ссылками на исследования и CTA к тарифам.
+- Публичный лендинг `/docs` с описанием PARA, Zettelkasten, геймификации привычек, ссылками на исследования и CTA к тарифам.
 - API эндпоинты `/api/v1/time/{entry_id}/pause` и `/api/v1/time/{entry_id}/resume`, позволяющие ставить таймер на паузу и возобновлять без создания новых записей.
 - Next.js-дэшборд «Обзор» (`/`) с drag-and-drop виджетами, настройками видимости и данными из нового API `/api/v1/dashboard/overview`.
 - Роль-гейтед страница «ЛК Админа» (`/admin`) на Next.js, использующая `/api/v1/admin/overview` и существующие администртивные эндпоинты; legacy-встраивание `/cup/admin-embed` сохранено.
