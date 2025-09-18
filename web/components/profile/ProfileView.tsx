@@ -9,7 +9,7 @@ import { apiFetch, ApiError } from '../../lib/api';
 import type { Profile } from '../../lib/types';
 
 interface ProfileViewProps {
-  entity: 'areas' | 'projects' | 'resources' | 'users';
+  entity: 'areas' | 'projects' | 'resources' | 'users' | 'groups' | 'products';
   slug: string;
   backHref?: string;
   backLabel?: string;

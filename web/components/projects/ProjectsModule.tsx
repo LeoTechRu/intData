@@ -17,6 +17,7 @@ import {
   EmptyState,
   Field,
   Input,
+  TermHint,
   Select,
   Textarea,
   Toolbar,
@@ -25,6 +26,8 @@ import {
 const MODULE_TITLE = 'Проекты';
 const MODULE_DESCRIPTION =
   'Каталог всех доступных проектов: фильтруйте по областям, ищите по названию и создавайте новые инициативы в один клик.';
+const SLUG_HINT =
+  'Слаг — короткий читабельный идентификатор проекта в URL (например, project-phoenix). Он заменяет числовой ID и помогает делиться ссылками без дополнительных пояснений.';
 
 type CreatePayload = {
   name: string;
@@ -398,7 +401,14 @@ export default function ProjectsModule() {
               ))}
             </Select>
           </Field>
-          <Field label="Слаг (опционально)">
+          <Field
+            label={
+              <>
+                <TermHint label="Слаг" description={SLUG_HINT} />
+                <span className="text-xs text-muted">(опционально)</span>
+              </>
+            }
+          >
             <Input
               name="slug"
               value={form.slug}
@@ -477,7 +487,15 @@ export default function ProjectsModule() {
               onChange={(event) => handleFilterChange({ onlyWithoutSlug: event.target.checked })}
               data-testid="projects-filter-without-slug"
             />
-            <span>Без слага</span>
+            <span className="flex items-center gap-1">
+              Без
+              <TermHint
+                label={<span className="underline decoration-dotted underline-offset-4">слага</span>}
+                description={SLUG_HINT}
+                icon={false}
+                className="text-xs text-muted"
+              />
+            </span>
           </label>
           <label className="inline-flex items-center gap-2 text-xs text-muted">
             <Checkbox
@@ -649,7 +667,16 @@ export default function ProjectsModule() {
                             />
                             <span>{area ? area.name : `Area #${project.area_id}`}</span>
                           </span>
-                          <span>Слаг: {project.slug ?? '—'}</span>
+                          <span className="flex items-center gap-1">
+                            <TermHint
+                              label={<span className="underline decoration-dotted underline-offset-4">Слаг</span>}
+                              description={SLUG_HINT}
+                              icon={false}
+                              className="text-xs text-muted"
+                            />
+                            <span className="text-xs text-muted">:</span>
+                            <span>{project.slug ?? '—'}</span>
+                          </span>
                         </div>
                         <div className="flex items-center justify-between pt-2">
                           <Link
@@ -680,7 +707,14 @@ export default function ProjectsModule() {
                   <tr>
                     <th className="px-5 py-3 font-medium">Проект</th>
                     <th className="px-5 py-3 font-medium">Область</th>
-                    <th className="px-5 py-3 font-medium">Слаг</th>
+                    <th className="px-5 py-3 font-medium">
+                      <TermHint
+                        label={<span className="underline decoration-dotted underline-offset-4">Слаг</span>}
+                        description={SLUG_HINT}
+                        icon={false}
+                        className="text-xs font-medium uppercase tracking-wide text-muted"
+                      />
+                    </th>
                     <th className="px-5 py-3 font-medium">ID</th>
                     <th className="px-5 py-3 font-medium">Действие</th>
                   </tr>

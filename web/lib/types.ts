@@ -94,6 +94,16 @@ export interface Profile {
   is_owner?: boolean;
 }
 
+export interface ProfileListItem {
+  slug: string;
+  display_name: string;
+  headline?: string | null;
+  summary?: string | null;
+  avatar_url?: string | null;
+  cover_url?: string | null;
+  sections: ProfileSection[];
+}
+
 export interface ViewerProfileSummary {
   user_id: number;
   username: string;
@@ -198,6 +208,96 @@ export interface DashboardLayoutSettings {
   layouts?: Record<string, unknown>;
   columns?: number;
   gutter?: number;
+}
+
+export type CrmProductStatus = 'pending' | 'trial' | 'paid' | 'refunded' | 'gift';
+
+export interface GroupInfo {
+  telegram_id: number;
+  title: string;
+  description?: string | null;
+  participants_count: number;
+}
+
+export interface GroupActivity {
+  messages: number;
+  reactions: number;
+  last_activity?: string | null;
+}
+
+export interface GroupMemberProduct {
+  product_id: number;
+  product_slug: string;
+  product_title: string;
+  status: CrmProductStatus;
+  source?: string | null;
+  acquired_at?: string | null;
+  notes?: string | null;
+}
+
+export interface GroupMember {
+  telegram_id: number;
+  username?: string | null;
+  display_name: string;
+  is_owner: boolean;
+  is_moderator: boolean;
+  crm_notes?: string | null;
+  crm_tags: string[];
+  trial_expires_at?: string | null;
+  products: GroupMemberProduct[];
+  activity: GroupActivity;
+}
+
+export interface GroupProductSummary {
+  id: number;
+  slug: string;
+  title: string;
+  active: boolean;
+  buyers: number;
+  total_members: number;
+}
+
+export interface GroupLeaderboardEntry {
+  user_id: number;
+  display_name: string;
+  messages: number;
+  reactions: number;
+  last_activity?: string | null;
+}
+
+export interface GroupRemovalLogEntry {
+  id: number;
+  user_id: number;
+  display_name: string;
+  product_id?: number | null;
+  product_slug?: string | null;
+  product_title?: string | null;
+  result: string;
+  reason?: string | null;
+  created_at: string;
+}
+
+export interface GroupDetail {
+  group: GroupInfo;
+  members: GroupMember[];
+  products: GroupProductSummary[];
+  leaderboard: GroupLeaderboardEntry[];
+  removal_history: GroupRemovalLogEntry[];
+}
+
+export interface GroupPruneMember {
+  user_id: number;
+  display_name: string;
+}
+
+export interface GroupPruneResponse {
+  dry_run: boolean;
+  product_id: number;
+  product_slug: string;
+  removed?: GroupPruneMember[];
+  failed?: (GroupPruneMember & { error: string })[];
+  candidates?: GroupPruneMember[];
+  total_candidates: number;
 }
 
 export interface DashboardWidgetDefinition {

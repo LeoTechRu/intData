@@ -6,7 +6,7 @@ import { Section } from './ui/Section';
 interface PageLayoutProps {
   title: string;
   subtitle?: string;
-  description?: string;
+  description?: ReactNode;
   actions?: ReactNode;
   contentClassName?: string;
   headingLevel?: 1 | 2;

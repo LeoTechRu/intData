@@ -1,36 +1,21 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    Path,
-    Query,
-    Request,
-    status,
-)
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from pydantic import BaseModel, Field
 
 from core.db import bot
 from core.models import Group, Product, ProductStatus, TgUser, WebUser
 from core.services.crm_service import CRMService
 from core.services.group_moderation_service import GroupModerationService
-from core.services.profile_service import ProfileService, ProfileAccess
 from core.services.telegram_user_service import TelegramUserService
 from core.utils import utcnow
 from core.services.access_control import AccessControlService
-from web.dependencies import (
-    get_current_web_user,
-    role_required,
-    get_effective_permissions,
-)
-from ..template_env import templates
+from web.dependencies import role_required
 
 router = APIRouter(prefix="/groups", tags=["groups"])
-ui_router = APIRouter(prefix="/groups", tags=["groups"], include_in_schema=False)
 
 
 def _format_display_name(user: TgUser | None) -> str:
@@ -548,116 +533,6 @@ async def prune_group_members(
             failed=failed,
             total_candidates=len(candidates_links),
         )
-
-
-@ui_router.get("")
-async def groups_overview(
-    request: Request,
-    current_user: WebUser | None = Depends(get_current_web_user),
-):
-    groups: List[Group] = []
-    effective = await get_effective_permissions(
-        request, current_user=current_user
-    )
-    if current_user and current_user.telegram_accounts:
-        tg_user = current_user.telegram_accounts[0]
-        async with TelegramUserService() as service:
-            groups = await service.list_user_groups(tg_user.telegram_id)
-    context = {
-        "current_user": current_user,
-        "current_role_name": getattr(current_user, "role", ""),
-        "is_admin": bool(effective and effective.has_role("admin")),
-        "page_title": "Телеграм‑группы",
-        "groups": groups,
-        "MODULE_TITLE": "Телеграм‑группы",
-    }
-    return templates.TemplateResponse(request, "groups/index.html", context)
-
-
-@ui_router.get("/manage/{group_id}")
-async def group_detail_page(
-    request: Request,
-    group_id: int,
-    current_user: WebUser = Depends(role_required("moderator")),
-):
-    async with TelegramUserService() as service:
-        _, group = await _ensure_group_access(
-            group_id=group_id, current_user=current_user, service=service
-        )
-        crm = CRMService(service.session)
-        moderation = GroupModerationService(service.session, crm=crm)
-        detail = await _collect_group_detail(
-            group=group,
-            crm=crm,
-            moderation=moderation,
-            service=service,
-            days=30,
-        )
-    context = {
-        "current_user": current_user,
-        "current_role_name": current_user.role,
-        "is_admin": True,
-        "page_title": f"Группа: {detail.group.title}",
-        "group_detail": detail,
-        "MODULE_TITLE": f"Группа: {detail.group.title}",
-        "MODULE_TITLE_TOOLTIP": "CRM по участникам и продажам",
-    }
-    return templates.TemplateResponse(request, "groups/detail.html", context)
-
-
-def _build_profile_context(access: ProfileAccess) -> dict[str, Any]:
-    profile = access.profile
-    return {
-        "slug": profile.slug,
-        "display_name": profile.display_name,
-        "headline": profile.headline,
-        "summary": profile.summary,
-        "avatar_url": profile.avatar_url,
-        "cover_url": profile.cover_url,
-        "meta": profile.profile_meta or {},
-        "tags": list(profile.tags or []),
-        "sections": access.sections,
-        "grants": [
-            {
-                "audience_type": grant.audience_type,
-                "subject_id": grant.subject_id,
-                "sections": list(grant.sections or []),
-                "expires_at": grant.expires_at,
-            }
-            for grant in profile.grants
-        ],
-        "can_edit": access.is_owner or access.is_admin,
-        "is_owner": access.is_owner,
-    }
-
-
-@ui_router.get("/{slug}")
-async def group_profile_page(
-    slug: str,
-    request: Request,
-    current_user: WebUser | None = Depends(get_current_web_user),
-):
-    async with ProfileService() as service:
-        try:
-            access = await service.get_profile(
-                entity_type="group",
-                slug=slug,
-                viewer=current_user,
-            )
-        except ValueError:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-        except PermissionError:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
-    profile_ctx = _build_profile_context(access)
-    context = {
-        "current_user": current_user,
-        "profile": profile_ctx,
-        "entity": "groups",
-        "catalog_path": "/groups",
-        "MODULE_TITLE": f"Группа: {profile_ctx['display_name']}",
-        "page_title": f"Группа: {profile_ctx['display_name']}",
-    }
-    return templates.TemplateResponse(request, "profiles/detail.html", context)
 
 
 api = router

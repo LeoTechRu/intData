@@ -10,3 +10,4 @@ export * from './Section';
 export * from './Textarea';
 export * from './Toolbar';
 export * from './StatusIndicator';
+export * from './TermHint';
