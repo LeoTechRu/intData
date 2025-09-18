@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from core import db
-from core.models import Note, ContainerType, Link, LinkType, Area, ContainerType, Link, LinkType
+from core.models import Area, ContainerType, Link, LinkType, Note
 
 
 class NoteService:
@@ -66,6 +66,35 @@ class NoteService:
         self.session.add(note)
         await self.session.flush()
         return note
+
+    async def _ensure_inbox(self, owner_id: int) -> Area:
+        stmt = select(Area).where(
+            Area.owner_id == owner_id,
+            or_(Area.slug == "inbox", Area.name.ilike("входящие")),
+        )
+        res = await self.session.execute(stmt)
+        inbox = res.scalars().first()
+        if inbox is None:
+            inbox = Area(owner_id=owner_id, name="Входящие", title="Входящие")
+            inbox.slug = "inbox"
+            inbox.mp_path = "inbox."
+            inbox.depth = 0
+            self.session.add(inbox)
+            await self.session.flush()
+        return inbox
+
+    async def list_inbox(self, owner_id: int) -> List[Note]:
+        inbox = await self._ensure_inbox(owner_id)
+        stmt = (
+            select(Note)
+            .options(selectinload(Note.area), selectinload(Note.project))
+            .where(Note.owner_id == owner_id)
+            .where(Note.area_id == inbox.id)
+            .where(Note.archived_at.is_(None))
+            .order_by(Note.pinned.desc(), Note.order_index)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
 
     async def list_notes(
         self,
