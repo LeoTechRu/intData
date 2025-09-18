@@ -95,6 +95,8 @@ function AnchorButton({ href, children, variant = 'primary', size = 'md', fullWi
   );
 }
 
+const COMMUNITY_URL = 'https://t.me/intDataHELP';
+const SUPPORT_URL = 'https://t.me/HELPintData';
 const CONTACT_URL = 'https://t.me/leotechru';
 
 const BILLING_CYCLES: Record<BillingCycle, { label: string; description: string; savings?: string }> = {
@@ -126,6 +128,7 @@ const PLANS: Plan[] = [
       'Все PARA-модули: задачи, календарь, заметки, привычки, тайм-трекер.',
       'Интеграции Google Calendar и Telegram-бота для быстрого захвата.',
       'Личные графы знаний и бэклинки без ограничения по объёму.',
+      `Доступ к открытому сообществу в Telegram: ${COMMUNITY_URL} — поддержка от практиков и команды продукта.`,
     ],
     outcomes: [
       'Соберите личную ОС продуктивности без затрат.',
@@ -151,6 +154,7 @@ const PLANS: Plan[] = [
       'Общие Areas и Projects, ролевые права и делегирование задач.',
       'Командный календарь с напоминаниями, синхронизированный с Google Calendar.',
       'Уведомления и диджесты в Telegram, единая лента событий.',
+      `Поддержка команды: открытое сообщество ${COMMUNITY_URL} плюс индивидуальная техподдержка в ${SUPPORT_URL}.`,
     ],
     outcomes: [
       'Выровняйте повестку и дедлайны внутри команды.',
@@ -174,6 +178,7 @@ const PLANS: Plan[] = [
       'Встроенная CRM: контакты, воронки, кастомные поля и отчёты по доходности.',
       'Расширенная аналитика времени и загрузки команды, экспорт данных.',
       'Лицензия на коммерческое использование и встроенные автоматизации.',
+      `Приоритетный саппорт: сообщество ${COMMUNITY_URL}, выделенный канал ${SUPPORT_URL} и прямой контакт с разработчиком ${CONTACT_URL}.`,
     ],
     outcomes: [
       'Закройте воронку продаж и производство в одной системе.',
@@ -196,6 +201,7 @@ const PLANS: Plan[] = [
       'Индивидуальный брендинг, роли, согласования и доступы для нескольких юрлиц.',
       'Развёртывание в частном контуре, интеграции с 1С, ERP, CRM и BI-витринами.',
       'Выделенная поддержка 7×365, SLA 4 часа, выделенный менеджер успеха.',
+      `Эскалация без посредников: community ${COMMUNITY_URL}, выделенный канал ${SUPPORT_URL} и прямой контакт разработчика ${CONTACT_URL}.`,
     ],
     outcomes: [
       'Запустите корпоративную ОС продуктивности под вашим брендом.',
@@ -279,15 +285,20 @@ const FEATURE_MATRIX: FeatureRow[] = [
     id: 'support',
     title: 'Поддержка и онбординг',
     values: {
-      solo: 'Сообщество и база знаний',
-      team: 'Групповой онбординг, приоритетная почта',
-      pro: 'Выделенный Customer Success',
-      enterprise: '24/7, SLA 4 часа, выделенная команда',
+      solo: `Сообщество ${COMMUNITY_URL} и база знаний`,
+      team: `Групповой онбординг + канал ${SUPPORT_URL}`,
+      pro: `Customer Success, ${SUPPORT_URL}, ${CONTACT_URL}`,
+      enterprise: `24/7, SLA 4 часа, выделенная команда и прямой контакт ${CONTACT_URL}`,
     },
   },
 ];
 
 const FAQ_ITEMS = [
+  {
+    question: 'Какая поддержка доступна в тарифах?',
+    answer:
+      `Во всех планах действует открытое сообщество ${COMMUNITY_URL}. Для Team, Pro и Enterprise подключаем индивидуальный канал ${SUPPORT_URL}, а Pro и Enterprise могут эскалировать вопросы напрямую разработчику по ${CONTACT_URL}.`,
+  },
   {
     question: 'Можно ли начать бесплатно и потом перейти на командный тариф?',
     answer:
@@ -334,7 +345,31 @@ const TRUST_SIGNALS = [
   {
     id: 'communities',
     title: '6 500+ активных workspace',
-    description: 'Команды используют Intelligent Data Pro для продуктивности, обучения и сервисных бизнесов.',
+    description: `Команды используют Intelligent Data Pro для продуктивности и обучения, общаясь в свободном сообществе ${COMMUNITY_URL}.`,
+  },
+];
+
+const SUPPORT_LEVELS = [
+  {
+    id: 'community',
+    title: 'Общее сообщество',
+    plans: 'Solo, Team, Pro, Enterprise',
+    description: `Бесплатный чат ${COMMUNITY_URL} помогает внедрять PARA, делиться best practices и получать быстрый фидбек от команды продукта.`,
+    href: COMMUNITY_URL,
+  },
+  {
+    id: 'dedicated',
+    title: 'Индивидуальная поддержка',
+    plans: 'Team, Pro, Enterprise',
+    description: `Клиенты оплачиваемых планов получают отдельный канал ${SUPPORT_URL}: решаем инциденты, консультируем по архитектуре и миграциям.`,
+    href: SUPPORT_URL,
+  },
+  {
+    id: 'developer',
+    title: 'Эскалации напрямую разработчику',
+    plans: 'Pro, Enterprise',
+    description: `Премиальные клиенты могут обращаться напрямую к разработчику продукта по ${CONTACT_URL} — без слоёв поддержки.`,
+    href: CONTACT_URL,
   },
 ];
 
@@ -430,6 +465,9 @@ export function TariffsLanding() {
               </p>
               <p className="text-lg text-[var(--text-primary)]/80">
                 Соберите единое пространство для задач, календарей, заметок, привычек и CRM. Выбирайте тариф, который вырастет вместе с вашим бизнесом.
+              </p>
+              <p className="text-sm text-muted">
+                Сообщество {COMMUNITY_URL} доступно бесплатно; для платных тарифов работает выделенная техподдержка {SUPPORT_URL}, а Pro и Enterprise эскалируют напрямую к разработчику {CONTACT_URL}.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-4">
@@ -607,6 +645,33 @@ export function TariffsLanding() {
             </ul>
           </Card>
         </aside>
+      </section>
+
+      <section
+        id="support"
+        className="grid gap-6 rounded-3xl border border-subtle bg-[var(--surface-0)] p-6 md:grid-cols-3 md:p-8"
+      >
+        {SUPPORT_LEVELS.map((item) => (
+          <Card key={item.id} className="flex flex-col gap-3 bg-surface-soft p-6">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">{item.title}</h2>
+              <Badge tone="accent" size="sm">{item.plans}</Badge>
+            </div>
+            <p className="text-sm text-muted">{item.description}</p>
+            <a
+              href={item.href}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent-primary)]"
+            >
+              Открыть канал
+              <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
+              </svg>
+            </a>
+          </Card>
+        ))}
       </section>
 
       <section id="compare" className="rounded-3xl border border-subtle bg-[var(--surface-0)] p-6 md:p-8">

@@ -28,6 +28,9 @@ interface Step {
 }
 
 const TELEGRAM_URL = 'https://t.me/intDataBot';
+const COMMUNITY_URL = 'https://t.me/intDataHELP';
+const SUPPORT_URL = 'https://t.me/HELPintData';
+const DEVELOPER_URL = 'https://t.me/leotechru';
 
 const HERO_METRICS: Metric[] = [
   {
@@ -83,6 +86,12 @@ const FEATURE_ROWS: Feature[] = [
     description:
       'Данные проходят через единое ядро Intelligent Data Pro и хранятся в PostgreSQL с аудитом.',
     icon: '🛡️',
+  },
+  {
+    title: 'Комьюнити и поддержка',
+    description:
+      `Поддержка доступна 24/7: открытое сообщество ${COMMUNITY_URL}, выделенный канал ${SUPPORT_URL} для платных тарифов и прямой контакт с разработчиком ${DEVELOPER_URL} для Pro/Enterprise.`,
+    icon: '🤝',
   },
 ];
 
@@ -164,7 +173,8 @@ export default function BotLanding() {
             </h1>
             <p className="text-lg text-muted md:text-xl">
               Записывайте идеи, запускайте процессы и держите контроль над дедлайнами прямо из Telegram.
-              @intDataBot синхронизирован с веб-интерфейсом и поддерживает все PARA-инварианты.
+              @intDataBot синхронизирован с веб-интерфейсом и поддерживает все PARA-инварианты. Возникают вопросы — есть
+              сообщество {COMMUNITY_URL} и выделенная поддержка для клиентов.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
               <a
@@ -317,4 +327,3 @@ export default function BotLanding() {
     </div>
   );
 }
-

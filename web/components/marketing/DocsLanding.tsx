@@ -37,6 +37,10 @@ interface ResourceLink {
   external?: boolean;
 }
 
+const COMMUNITY_URL = 'https://t.me/intDataHELP';
+const SUPPORT_URL = 'https://t.me/HELPintData';
+const DEVELOPER_URL = 'https://t.me/leotechru';
+
 const heroStats: HeroStat[] = [
   {
     label: 'Время на поиск информации',
@@ -169,6 +173,9 @@ const planMapping: PlanMapping[] = [
 
 const resourceLinks: ResourceLink[] = [
   { label: 'OpenAPI спецификация Intelligent Data Pro', href: '/api/openapi.json' },
+  { label: 'Сообщество в Telegram', href: COMMUNITY_URL, external: true },
+  { label: 'Канал индивидуальной поддержки', href: SUPPORT_URL, external: true },
+  { label: 'Прямой контакт с разработчиком', href: DEVELOPER_URL, external: true },
   { label: 'Гайд по тарифам', href: 'https://intdata.pro/tariffs', external: true },
   { label: 'Forte Labs — PARA Method', href: 'https://fortelabs.com/blog/para/', external: true },
   { label: 'Atlassian — Zettelkasten', href: 'https://www.atlassian.com/blog/productivity/zettelkasten-method', external: true },
@@ -190,7 +197,8 @@ export default function DocsLanding() {
             </h1>
             <p className="max-w-2xl text-lg text-muted">
               PARA, Zettelkasten и геймифицированные привычки — в одной операционной системе продуктивности. Страница
-              открыта без авторизации, делитесь с командой и клиентами.
+              открыта без авторизации: делитесь с командой, подключайтесь к сообществу {COMMUNITY_URL} и узнавайте о новых
+              возможностях первыми.
             </p>
             <div className="flex flex-col gap-4 sm:flex-row">
               <Link
@@ -373,4 +381,3 @@ export default function DocsLanding() {
     </div>
   );
 }
-
