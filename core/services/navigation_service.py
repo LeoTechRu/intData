@@ -16,7 +16,7 @@ from core.services.user_settings_service import UserSettingsService
 NAV_VERSION = 1
 GLOBAL_LAYOUT_KEY = "ui.nav.sidebar.layout"
 GLOBAL_PREFIX = "ui.nav.sidebar."
-PAYWALL_ROUTE = "/pricing"
+PAYWALL_ROUTE = "/tariffs"
 
 
 @dataclass(frozen=True)
@@ -110,12 +110,6 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         label="Продукты",
         route="/products",
         status=NavStatus("wip"),
-    ),
-    NavBlueprintItem(
-        key="pricing",
-        label="Тарифы",
-        route="/pricing",
-        status=NavStatus("new"),
     ),
     NavBlueprintItem(
         key="habits",

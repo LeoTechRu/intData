@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React, { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -11,10 +12,6 @@ import { Section } from '../ui/Section';
 import { Select } from '../ui/Select';
 import AreasManager from '../areas/AreasManager';
 import type {
-  DashboardLayoutSettings,
-  DashboardWidgetDefinition,
-  FavoriteOption,
-  FavoritesSettings,
   ThemeMode,
   ThemePreferences,
   ThemePreset,
@@ -24,8 +21,6 @@ import type {
 } from '../../lib/types';
 import {
   fetchUserSettingsBundle,
-  updateDashboardLayout,
-  updateFavorites,
   updateThemePreferences,
   fetchGlobalTheme,
   updateGlobalThemeEntries,
@@ -49,25 +44,7 @@ import {
   themeFromUserSettings,
 } from '../../lib/theme';
 
-const DASHBOARD_WIDGETS: DashboardWidgetDefinition[] = [
-  { key: 'profile_card', label: 'Карточка профиля' },
-  { key: 'today', label: 'Сегодня' },
-  { key: 'quick_note', label: 'Быстрая заметка' },
-  { key: 'focus_week', label: 'Фокус за неделю' },
-  { key: 'goals', label: 'Достижения' },
-  { key: 'focused_hours', label: 'Сфокусированные часы' },
-  { key: 'health', label: 'Здоровье' },
-  { key: 'activity', label: 'Активность по дням' },
-  { key: 'energy', label: 'Сон / энергия' },
-  { key: 'leader_groups', label: 'Руководите группами' },
-  { key: 'member_groups', label: 'Состоите в группах' },
-  { key: 'owned_projects', label: 'Ваши проекты' },
-  { key: 'member_projects', label: 'Участвуете в проектах' },
-  { key: 'upcoming_tasks', label: 'Предстоящие задачи' },
-  { key: 'reminders', label: 'Напоминания' },
-  { key: 'next_events', label: 'Ближайшие события' },
-  { key: 'habits', label: 'Привычки' },
-];
+
 
 const THEME_PRESETS: ThemePreset[] = [
   {
@@ -443,10 +420,6 @@ export default function SettingsModule() {
     enabled: isAdmin,
   });
 
-  const [widgetSelection, setWidgetSelection] = useState<Set<string>>(new Set());
-  const [favoritesSelection, setFavoritesSelection] = useState<Set<string>>(new Set());
-  const [dashboardStatus, setDashboardStatus] = useState<SaveState>('idle');
-  const [favoritesStatus, setFavoritesStatus] = useState<SaveState>('idle');
   const [userThemeDraft, setUserThemeDraft] = useState<ThemeDraftState>({});
   const [userThemeStatus, setUserThemeStatus] = useState<SaveState>('idle');
   const [globalThemeDraft, setGlobalThemeDraft] = useState<ThemeDraftState>({});
@@ -463,9 +436,6 @@ export default function SettingsModule() {
   const [timezoneValue, setTimezoneValue] = useState<string>(defaultBrowserTimezone);
   const [timezoneStatus, setTimezoneStatus] = useState<SaveState>('idle');
 
-  const dashboardLayout = userSettingsQuery.data?.dashboard_layout ?? null;
-  const favoriteOptions = userSettingsQuery.data?.favorite_options ?? [];
-  const favoriteSettings = userSettingsQuery.data?.favorites ?? null;
   const timezoneSetting = userSettingsQuery.data?.timezone?.name ?? null;
   const timezoneVersion = userSettingsQuery.data?.timezone?.v ?? 1;
 
@@ -492,24 +462,6 @@ export default function SettingsModule() {
   }, []);
 
   useEffect(() => {
-    if (dashboardLayout?.widgets && dashboardLayout.widgets.length > 0) {
-      setWidgetSelection(new Set(dashboardLayout.widgets));
-    } else {
-      setWidgetSelection(new Set(DASHBOARD_WIDGETS.map((widget) => widget.key)));
-    }
-  }, [dashboardLayout?.widgets]);
-
-  useEffect(() => {
-    if (!favoriteOptions.length) {
-      return;
-    }
-    const selected = favoriteSettings?.items?.length
-      ? new Set(favoriteSettings.items.map((item) => item.path))
-      : new Set(favoriteOptions.map((option) => option.path));
-    setFavoritesSelection(selected);
-  }, [favoriteOptions, favoriteSettings?.items]);
-
-  useEffect(() => {
     const userTheme = themeFromUserSettings(userSettingsQuery.data?.theme_preferences ?? {});
     setUserThemeDraft(userTheme);
     if (Object.keys(userTheme).length) {
@@ -532,34 +484,6 @@ export default function SettingsModule() {
       clearThemeLayer('global');
     }
   }, [globalThemeQuery.data?.entries, isAdmin]);
-
-  const widgetMutation = useMutation({
-    mutationFn: (layout: DashboardLayoutSettings) => updateDashboardLayout(layout),
-    onMutate: () => setDashboardStatus('saving'),
-    onSuccess: () => {
-      setDashboardStatus('saved');
-      setTimeout(() => setDashboardStatus('idle'), 2000);
-    },
-    onError: (error: unknown) => {
-      console.error('Failed to update dashboard layout', error);
-      setDashboardStatus('error');
-      setTimeout(() => setDashboardStatus('idle'), 3000);
-    },
-  });
-
-  const favoritesMutation = useMutation({
-    mutationFn: (value: FavoritesSettings) => updateFavorites(value),
-    onMutate: () => setFavoritesStatus('saving'),
-    onSuccess: () => {
-      setFavoritesStatus('saved');
-      setTimeout(() => setFavoritesStatus('idle'), 2000);
-    },
-    onError: (error: unknown) => {
-      console.error('Failed to update favorites', error);
-      setFavoritesStatus('error');
-      setTimeout(() => setFavoritesStatus('idle'), 3000);
-    },
-  });
 
   const timezoneMutation = useMutation({
     mutationFn: (name: string) => updateTimezoneSetting({ v: timezoneVersion > 0 ? timezoneVersion : 1, name }),
@@ -612,67 +536,6 @@ export default function SettingsModule() {
       setTimeout(() => setTelegramStatus('idle'), 3000);
     },
   });
-
-  const handleWidgetToggle = (key: string) => {
-    setWidgetSelection((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
-      } else {
-        next.add(key);
-      }
-      return next;
-    });
-  };
-
-  const handleWidgetsSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const base = dashboardLayout ?? { v: 1 };
-    const next: DashboardLayoutSettings = {
-      ...base,
-      widgets: Array.from(widgetSelection),
-      hidden: [],
-    };
-    widgetMutation.mutate(next);
-  };
-
-  const handleWidgetsReset = () => {
-    setWidgetSelection(new Set(DASHBOARD_WIDGETS.map((widget) => widget.key)));
-    setDashboardStatus('idle');
-  };
-
-  const handleFavoritesToggle = (path: string) => {
-    setFavoritesSelection((prev) => {
-      const next = new Set(prev);
-      if (next.has(path)) {
-        next.delete(path);
-      } else {
-        next.add(path);
-      }
-      return next;
-    });
-  };
-
-  const handleFavoritesSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const items = favoriteOptions
-      .filter((option) => favoritesSelection.has(option.path))
-      .map((option, index) => ({
-        path: option.path,
-        label: option.label,
-        position: index + 1,
-      }));
-    const payload: FavoritesSettings = {
-      v: favoriteSettings?.v ?? 1,
-      items,
-    };
-    favoritesMutation.mutate(payload);
-  };
-
-  const handleFavoritesReset = () => {
-    setFavoritesSelection(new Set(favoriteOptions.map((option) => option.path)));
-    setFavoritesStatus('idle');
-  };
 
   const handleTimezoneSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -756,117 +619,80 @@ export default function SettingsModule() {
 
   const isLoading = userSettingsQuery.isLoading || (isAdmin && adminSettingsQuery.isLoading);
 
-  const renderFavoriteOption = (option: FavoriteOption) => (
-    <label key={option.path} className="flex items-center gap-3 text-sm text-[var(--text-primary)]">
-      <Checkbox
-        checked={favoritesSelection.has(option.path)}
-        onChange={() => handleFavoritesToggle(option.path)}
-      />
-      <span>{option.label}</span>
-    </label>
-  );
-
   return (
     <div className="flex flex-col gap-12">
       {isLoading ? <span className="text-sm text-muted">Загружаем настройки…</span> : null}
 
+      <Card
+        className="relative overflow-hidden !border-transparent bg-gradient-to-r from-[color-mix(in srgb, var(--accent-primary) 24%, #ffffff 76%)] to-[color-mix(in srgb, var(--accent-primary) 56%, #1d1b5b 44%)] text-[var(--accent-on-primary)] shadow-lg"
+        padded
+      >
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="max-w-2xl space-y-2">
+            <span className="inline-flex items-center gap-2 rounded-full bg-[color-mix(in srgb, var(--accent-primary) 16%, #ffffff 84%)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--accent-primary)]">
+              Больше возможностей
+            </span>
+            <h2 className="text-2xl font-semibold leading-snug">Раскройте Pro и Enterprise-тарифы для своей команды</h2>
+            <p className="text-sm text-[color-mix(in srgb, #ffffff 78%, var(--accent-on-primary) 22%)]">
+              Подключите Habitica-экономику, расширенную аналитику и выделенную поддержку. Переход занимает один клик — текущие данные остаются с вами.
+            </p>
+          </div>
+          <div className="flex flex-col items-start gap-3 md:items-end">
+            <Link
+              href="/tariffs"
+              prefetch={false}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[var(--accent-on-primary)] px-5 text-sm font-semibold text-[var(--accent-primary)] shadow-soft transition-base hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-on-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+            >
+              Посмотреть тарифы
+            </Link>
+            <span className="text-xs text-[color-mix(in srgb, #ffffff 75%, var(--accent-on-primary) 25%)]">
+              Solo остаётся бесплатным навсегда
+            </span>
+          </div>
+        </div>
+        <div className="pointer-events-none absolute -left-16 top-8 h-40 w-40 rounded-full bg-[color-mix(in srgb, #ffffff 30%, transparent)] blur-3xl" aria-hidden="true" />
+      </Card>
+
       <Section spacing="lg" className="gap-6">
         <header className="flex flex-col gap-2">
-          <h2 className="text-2xl font-semibold text-[var(--text-primary)]">Персонализация</h2>
-          <p className="text-sm text-muted">
-            Настройте дашборд и избранные разделы — изменения сохраняются в вашем профиле.
-          </p>
+          <h2 className="text-2xl font-semibold text-[var(--text-primary)]">Региональные настройки</h2>
+          <p className="text-sm text-muted">Часовой пояс влияет на тайм-трекинг, уведомления и расписание.</p>
         </header>
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card as="section" className="flex flex-col gap-5">
-            <div className="flex flex-col gap-1">
-              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Виджеты дашборда</h3>
-              <p className="text-sm text-muted">
-                Отметьте карточки, которые должны отображаться на странице «Обзор».
-              </p>
-            </div>
-            <form className="flex flex-col gap-4" onSubmit={handleWidgetsSubmit}>
-              <div className="grid gap-3">
-                {DASHBOARD_WIDGETS.map((widget) => (
-                  <label key={widget.key} className="flex items-center gap-3 text-sm text-[var(--text-primary)]">
-                    <Checkbox
-                      checked={widgetSelection.has(widget.key)}
-                      onChange={() => handleWidgetToggle(widget.key)}
-                    />
-                    <span>{widget.label}</span>
-                  </label>
-                ))}
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <Button type="submit" disabled={widgetMutation.isPending}>
-                  {widgetMutation.isPending ? 'Сохраняем…' : 'Сохранить'}
-                </Button>
-                <Button type="button" variant="ghost" onClick={handleWidgetsReset} disabled={widgetMutation.isPending}>
-                  Сбросить
-                </Button>
-                <StatusMessage status={dashboardStatus} success="Настройки сохранены" />
-              </div>
-            </form>
-          </Card>
-
-          <Card as="section" className="flex flex-col gap-5">
-            <div className="flex flex-col gap-1">
-              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Избранное меню</h3>
-              <p className="text-sm text-muted">Соберите быстрый доступ к разделам профиля.</p>
-            </div>
-            <form className="flex flex-col gap-4" onSubmit={handleFavoritesSubmit}>
-              <div className="grid gap-3">
-                {favoriteOptions.length ? favoriteOptions.map(renderFavoriteOption) : (
-                  <p className="text-sm text-muted">Доступные разделы не найдены.</p>
-                )}
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <Button type="submit" disabled={favoritesMutation.isPending}>
-                  {favoritesMutation.isPending ? 'Сохраняем…' : 'Сохранить'}
-                </Button>
-                <Button type="button" variant="ghost" onClick={handleFavoritesReset} disabled={favoritesMutation.isPending}>
-                  Сбросить
-                </Button>
-                <StatusMessage status={favoritesStatus} success="Избранное обновлено" />
-              </div>
-            </form>
-          </Card>
-
-          <Card as="section" className="flex flex-col gap-5 lg:col-span-2">
-            <div className="flex flex-col gap-1">
-              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Часовой пояс</h3>
-              <p className="text-sm text-muted">Определяет отображение времени и даты во всех виджетах.</p>
-            </div>
-            <form className="flex flex-col gap-4" onSubmit={handleTimezoneSubmit}>
-              <Select
-                value={timezoneValue}
-                onChange={(event) => setTimezoneValue(event.target.value)}
+        <Card as="section" className="flex flex-col gap-5">
+          <div className="flex flex-col gap-1">
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">Часовой пояс</h3>
+            <p className="text-sm text-muted">Определяет отображение времени и даты во всех модулях.</p>
+          </div>
+          <form className="flex flex-col gap-4" onSubmit={handleTimezoneSubmit}>
+            <Select
+              value={timezoneValue}
+              onChange={(event) => setTimezoneValue(event.target.value)}
+              disabled={timezoneMutation.isPending}
+            >
+              {timezoneOptions.map((zone) => (
+                <option key={zone} value={zone}>
+                  {zone}
+                </option>
+              ))}
+            </Select>
+            <div className="flex flex-wrap items-center gap-3">
+              <Button type="submit" disabled={timezoneMutation.isPending}>
+                {timezoneMutation.isPending ? 'Сохраняем…' : 'Сохранить'}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setTimezoneValue(defaultBrowserTimezone)}
                 disabled={timezoneMutation.isPending}
               >
-                {timezoneOptions.map((zone) => (
-                  <option key={zone} value={zone}>
-                    {zone}
-                  </option>
-                ))}
-              </Select>
-              <div className="flex flex-wrap items-center gap-3">
-                <Button type="submit" disabled={timezoneMutation.isPending}>
-                  {timezoneMutation.isPending ? 'Сохраняем…' : 'Сохранить'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setTimezoneValue(defaultBrowserTimezone)}
-                  disabled={timezoneMutation.isPending}
-                >
-                  Автоопределение
-                </Button>
-                <StatusMessage status={timezoneStatus} success="Часовой пояс обновлён" />
-              </div>
-            </form>
-          </Card>
-        </div>
+                Автоопределение
+              </Button>
+              <StatusMessage status={timezoneStatus} success="Часовой пояс обновлён" />
+            </div>
+          </form>
+        </Card>
       </Section>
+
 
       <Section spacing="lg" className="gap-6" id="areas">
         <header className="flex flex-col gap-2">
