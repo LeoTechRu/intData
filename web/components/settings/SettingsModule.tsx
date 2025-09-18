@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import React, { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -769,6 +770,36 @@ export default function SettingsModule() {
   return (
     <div className="flex flex-col gap-12">
       {isLoading ? <span className="text-sm text-muted">Загружаем настройки…</span> : null}
+
+      <Card
+        className="relative overflow-hidden !border-transparent bg-gradient-to-r from-[color-mix(in srgb, var(--accent-primary) 24%, #ffffff 76%)] to-[color-mix(in srgb, var(--accent-primary) 56%, #1d1b5b 44%)] text-[var(--accent-on-primary)] shadow-lg"
+        padded
+      >
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="max-w-2xl space-y-2">
+            <span className="inline-flex items-center gap-2 rounded-full bg-[color-mix(in srgb, var(--accent-primary) 16%, #ffffff 84%)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--accent-primary)]">
+              Больше возможностей
+            </span>
+            <h2 className="text-2xl font-semibold leading-snug">Раскройте Pro и Enterprise-тарифы для своей команды</h2>
+            <p className="text-sm text-[color-mix(in srgb, #ffffff 78%, var(--accent-on-primary) 22%)]">
+              Подключите Habitica-экономику, расширенную аналитику и выделенную поддержку. Переход занимает один клик — текущие данные остаются с вами.
+            </p>
+          </div>
+          <div className="flex flex-col items-start gap-3 md:items-end">
+            <Link
+              href="/tariffs"
+              prefetch={false}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[var(--accent-on-primary)] px-5 text-sm font-semibold text-[var(--accent-primary)] shadow-soft transition-base hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-on-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+            >
+              Посмотреть тарифы
+            </Link>
+            <span className="text-xs text-[color-mix(in srgb, #ffffff 75%, var(--accent-on-primary) 25%)]">
+              Solo остаётся бесплатным навсегда
+            </span>
+          </div>
+        </div>
+        <div className="pointer-events-none absolute -left-16 top-8 h-40 w-40 rounded-full bg-[color-mix(in srgb, #ffffff 30%, transparent)] blur-3xl" aria-hidden="true" />
+      </Card>
 
       <Section spacing="lg" className="gap-6">
         <header className="flex flex-col gap-2">

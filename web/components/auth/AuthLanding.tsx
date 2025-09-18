@@ -423,7 +423,7 @@ export default function AuthLanding({
           </div>
         </div>
         <nav className="hidden items-center gap-6 text-sm font-medium text-muted md:flex">
-          <Link href="/pricing" className="transition-base hover:text-[var(--accent-primary)]">
+          <Link href="/tariffs" className="transition-base hover:text-[var(--accent-primary)]" prefetch={false}>
             Тарифы
           </Link>
           <Link href="/docs" className="transition-base hover:text-[var(--accent-primary)]">

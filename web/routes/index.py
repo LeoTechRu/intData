@@ -141,12 +141,6 @@ async def next_static(asset_path: str) -> FileResponse:
     return FileResponse(target)
 
 
-@router.get("/tariffs", include_in_schema=False, response_class=HTMLResponse)
-@router.get("/tariffs/", include_in_schema=False, response_class=HTMLResponse)
-async def tariffs_page() -> HTMLResponse:
-    return render_next_page("tariffs")
-
-
 @router.get("/users", include_in_schema=False, response_class=HTMLResponse)
 @router.get("/users/", include_in_schema=False, response_class=HTMLResponse)
 async def users_directory_page() -> HTMLResponse:
