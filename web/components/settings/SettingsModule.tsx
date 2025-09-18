@@ -572,7 +572,7 @@ export default function SettingsModule() {
     if (adminBranding) {
       setBrandingForm(adminBranding);
     }
-  }, [adminBranding?.BRAND_NAME, adminBranding?.PUBLIC_URL, adminBranding?.BOT_LANDING_URL]);
+  }, [adminBranding]);
 
   useEffect(() => {
     if (adminTelegram) {
@@ -582,7 +582,7 @@ export default function SettingsModule() {
         TG_BOT_TOKEN: null,
       });
     }
-  }, [adminTelegram?.TG_BOT_USERNAME, adminTelegram?.TG_LOGIN_ENABLED]);
+  }, [adminTelegram]);
 
   const handleBrandingSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

@@ -1,240 +1,376 @@
 import Link from 'next/link';
-
-import { Badge } from '../ui/Badge';
 import { Card } from '../ui/Card';
+import { Badge } from '../ui/Badge';
 
-interface GuideSection {
-  title: string;
+interface HeroStat {
+  label: string;
+  value: string;
   description: string;
-  bullets: string[];
+  referenceLabel: string;
+  referenceHref: string;
 }
 
-interface Resource {
+interface MethodologyBlock {
+  id: string;
+  pill: string;
   title: string;
-  summary: string;
+  description: string;
+  references: { label: string; href: string }[];
+  persona: string;
+}
+
+interface UiPrinciple {
+  title: string;
+  description: string;
+  reference: { label: string; href: string };
+}
+
+interface PlanMapping {
+  plan: string;
+  description: string;
+  features: string[];
+}
+
+interface ResourceLink {
+  label: string;
   href: string;
   external?: boolean;
 }
 
-interface FaqItem {
-  question: string;
-  answer: string;
-}
+const heroStats: HeroStat[] = [
+  {
+    label: 'Время на поиск информации',
+    value: '−19 %',
+    description:
+      'McKinsey показывает, что почти пятая часть рабочего дня уходит на поиски документов. PARA и структурированный портал сокращают эти потери.',
+    referenceLabel: 'McKinsey workplace study',
+    referenceHref: 'https://www.cnbc.com/2012/08/01/workers-spend-onefourth-of-workday-reading-responding-to-email-survey.html',
+  },
+  {
+    label: 'Экономия времени с ИИ',
+    value: '−25 %',
+    description:
+      'Полевой эксперимент с генеративным ИИ снизил время на email на четверть. Интеграция AI-помощников в PARA-папки ускоряет документооборот.',
+    referenceLabel: 'Shifting Work Patterns with Generative AI',
+    referenceHref: 'https://arxiv.org/abs/2504.11436',
+  },
+  {
+    label: 'Удержание после геймификации',
+    value: '+75 %',
+    description:
+      'Долгосрочные привычки формируются при поддержке геймификации: участники образовательного челленджа сохраняли активность на 75 % выше через 12 недель.',
+    referenceLabel: 'Digital interventions & habit formation',
+    referenceHref: 'https://arxiv.org/abs/2310.10850',
+  },
+];
 
-const GUIDE_SECTIONS: GuideSection[] = [
+const methodologyBlocks: MethodologyBlock[] = [
   {
-    title: 'Запуск за 30 минут',
-    description: 'От создания рабочей области до настройки Telegram-бота и импорта существующих данных.',
-    bullets: [
-      'Шаблоны Areas и Projects по PARA, чек-лист подключения команды.',
-      'Пошаговое описание init_app_once, переменных окружения и проксирования webhookов.',
-      'Скрипты проверки окружения и контроль доступности PostgreSQL/Redis перед стартом.',
+    id: 'para',
+    pill: 'PARA как операционная система знаний',
+    title: 'Projects, Areas, Resources, Archives — четыре контейнера, которые исключают хаос',
+    description:
+      'PARA от Tiago Forte организует данные по степени действия: всё, что требует результата, попадает в Projects, а Areas обеспечивают неизменную ответственность. В Intelligent Data Pro мы делаем `area_id` обязательным полем и наследуем проектный контекст в задачах и заметках — это устраняет «ничейные» элементы и ускоряет поиск.',
+    references: [
+      { label: 'Forte Labs — The PARA Method', href: 'https://fortelabs.com/blog/para/' },
+      { label: 'Forte Labs Help Center', href: 'https://help.fortelabs.com/hc/en-us/articles/18183648465293' },
+    ],
+    persona:
+      'Методисты, тимлиды и операционные директора, которым нужна единая карта знаний без дублирования между командами.',
+  },
+  {
+    id: 'zettelkasten',
+    pill: 'Zettelkasten в заметках',
+    title: 'Атомарные заметки + граф связей = база знаний команды',
+    description:
+      'Zettelkasten Никласа Лумана опирается на атомарные карточки и обязательные связи. В нашем модуле «Заметки» это реализовано через бэклинки, граф и wikilinks, что позволяет превращать личные карточки в коллективную базу знаний и ускоряет онбординг.',
+    references: [
+      { label: 'Atlassian: Zettelkasten Guide', href: 'https://www.atlassian.com/blog/productivity/zettelkasten-method' },
+      { label: 'Zettelkasten.de — Introduction', href: 'https://zettelkasten.de/introduction' },
+    ],
+    persona: 'Аналитики, исследователи и продуктовые команды, которые строят «второй мозг» и делятся выводами через граф знаний.',
+  },
+  {
+    id: 'productivity-science',
+    pill: 'Научные эффекты продуктивности',
+    title: 'Измеримые метрики: меньше поиска, больше сфокусированной работы',
+    description:
+      'McKinsey фиксирует, что без систематизации уходит до 9.3 часов в неделю на поиск данных. Исследования показывают, что наибольший эффект даёт совмещение PARA и игровых механик — мы внедрили это в Intelligent Data Pro.',
+    references: [
+      { label: 'McKinsey — The social economy', href: 'https://www.mckinsey.com/industries/technology-media-and-telecommunications/our-insights/the-social-economy' },
+      { label: 'Habitica research summary', href: 'https://www.researchgate.net/publication/352125889_Gamification_and_habit_formation' },
+    ],
+    persona: 'Операционные менеджеры и лиды направлений, которым нужны измеримые метрики вовлечённости и продуктивности.',
+  },
+];
+
+const uiPrinciples: UiPrinciple[] = [
+  {
+    title: 'Адаптивность и скорость',
+    description:
+      'Документация работает стабильно на экранах от мобильных до ультрашироких, а интерактив подгружается лениво, чтобы не мешать чтению.',
+    reference: {
+      label: 'Google UX Playbook',
+      href: 'https://services.google.com/fh/files/misc/ux_playbook_for_responsive_design.pdf',
+    },
+  },
+  {
+    title: 'Интерактивные демонстрации',
+    description:
+      'Пример API-запросов, snippets и превью схем развёртываются прямо на странице, без переключения контекстов.',
+    reference: {
+      label: 'Stripe Dev Docs',
+      href: 'https://stripe.com/docs/development',
+    },
+  },
+  {
+    title: 'Доступность по WCAG 2.2',
+    description:
+      'Скорость <3 секунд, переменные шрифты и соответствие WCAG 2.2 стали стандартом документации в 2025 году.',
+    reference: {
+      label: 'Codepaper — Responsive Design 2025',
+      href: 'https://codepaper.com/blog/responsive-web-design-best-practices-for-2025/',
+    },
+  },
+];
+
+const planMapping: PlanMapping[] = [
+  {
+    plan: 'Solo / Второй мозг',
+    description:
+      'Бесплатный тариф включает PARA-контейнеры, заметки с Zettelkasten-графом и модуль «Сегодня» для личного GTD.',
+    features: [
+      'Обязательные Areas/Projects во всех сущностях ускоряют поиск и отчётность.',
+      'Zettelkasten-связи, бэклинки и wiki-нотации доступны без ограничений.',
+      'HUD привычек и личный тайм-трекер с геймификацией уровня Habitica.',
     ],
   },
   {
-    title: 'Рабочий день «Сегодня»',
-    description: 'Как связаны Calendar, Tasks, Habits и таймеры в общем рабочем фокусе.',
-    bullets: [
-      'Схемы данных с обязательными area_id/project_id и примеры наследования.',
-      'Алгоритм cron для ежедневок и экономика XP/Gold/KP.',
-      'Интеграция виджетов дашборда и настройка drag-n-drop через user_settings.',
+    plan: 'Team / Команда',
+    description:
+      'Совместная работа и Subjective Overrides: делегирование задач, общие графы знаний и дайджесты по PARA.',
+    features: [
+      'Совместные Areas/Projects с наследованием доступов и кастомных ролей.',
+      'Командные Zettelkasten-правила, ревью и контроль версий заметок.',
+      'Еженедельные дайджесты в Telegram + аналитика нагрузки по Areas.',
     ],
   },
   {
-    title: 'Технические гайды',
-    description: 'Рекомендации по деплою, безопасности и расширению API.',
-    bullets: [
-      'Профили systemd для intdata-web и intdata-bot, health-check и логи.',
-      'Политики CSP, настройка HTTPS и рекомендации по экспорту OpenAPI.',
-      'Расширение core/services без нарушения runtime-инвариантов.',
+    plan: 'Pro / Enterprise',
+    description:
+      'CRM, white-label и SLA. Методологии интегрируются с ERP/BI, а привычки попадают в KPI-дэшборды.',
+    features: [
+      'Экспорт PARA и графа знаний в BI-слои и внешние аналитические витрины.',
+      'Геймификация настроек KPI с кастомными наградами и ролями.',
+      'Поддержка закрытых контуров, SSO и расширенного аудита событий.',
     ],
   },
 ];
 
-const API_RESOURCES: Resource[] = [
-  {
-    title: 'REST API v1',
-    summary: 'Документация по /api/v1/* — структура запросов, фильтры и примеры ответов.',
-    href: '/api/openapi.json',
-  },
-  {
-    title: 'Webhooks и Integrations',
-    summary: 'Сценарии приёма webhooks, обработка OAuth и правила idempotency ключей.',
-    href: '#integrations',
-  },
-  {
-    title: 'Песочница Postman',
-    summary: 'Коллекция Postman с готовыми сценариями для команды, календаря и привычек.',
-    href: 'https://intdata.pro/static/postman/intdata_v1.postman_collection.json',
-    external: true,
-  },
-];
-
-const SUPPORT_RESOURCES: Resource[] = [
-  {
-    title: 'База знаний',
-    summary: 'Статьи для пользователей: основы PARA, роли участников и best practices.',
-    href: '#knowledge-base',
-  },
-  {
-    title: 'Чек-лист внедрения',
-    summary: 'PDF чек-лист миграции вашего отдела в Intelligent Data Pro.',
-    href: 'https://intdata.pro/static/docs/idp-onboarding-checklist.pdf',
-    external: true,
-  },
-  {
-    title: 'Поддержка команды',
-    summary: 'Отдельный канал для вопросов: SLA 4 часа в рабочих планах Enterprise.',
-    href: 'mailto:hello@intdata.pro?subject=Вопрос%20по%20документации',
-    external: true,
-  },
-];
-
-const FAQ_ITEMS: FaqItem[] = [
-  {
-    question: 'Документация доступна без авторизации?',
-    answer: 'Да, лендинг и ключевые руководства открыты для просмотра. Для частных страниц загрузите токен из админки.',
-  },
-  {
-    question: 'Как синхронизировать изменения?',
-    answer: 'Новые версии выгружаются вместе с релизом: подписывайтесь на docs/CHANGELOG.md или RSS-канал обновлений.',
-  },
-  {
-    question: 'Можно ли развернуть офлайн?',
-    answer: 'Да, инструкция для self-hosting и минимальных зависимостей входит в раздел «Технические гайды».',
-  },
+const resourceLinks: ResourceLink[] = [
+  { label: 'OpenAPI спецификация Intelligent Data Pro', href: '/api/openapi.json' },
+  { label: 'Гайд по тарифам', href: 'https://intdata.pro/tariffs', external: true },
+  { label: 'Forte Labs — PARA Method', href: 'https://fortelabs.com/blog/para/', external: true },
+  { label: 'Atlassian — Zettelkasten', href: 'https://www.atlassian.com/blog/productivity/zettelkasten-method', external: true },
+  { label: 'Generative AI для рабочих процессов', href: 'https://arxiv.org/abs/2504.11436', external: true },
 ];
 
 export default function DocsLanding() {
+  const currentYear = new Date().getFullYear();
   return (
-    <div className="flex flex-col gap-24">
-      <section className="grid gap-10 rounded-3xl bg-gradient-to-br from-[#ecf4ff] via-[#f5f3ff] to-[#fff7ed] p-10 shadow-soft">
-        <div className="flex flex-col gap-6 text-center md:text-left">
-          <Badge tone="accent" size="md" className="self-center md:self-start">
-            Документация • Гайды • API
-          </Badge>
-          <h1 className="text-4xl font-semibold tracking-tight text-[var(--text-primary)] md:text-5xl">
-            Документация Intelligent Data Pro: от онбординга до API
-          </h1>
-          <p className="text-lg text-muted md:text-xl">
-            Собрали лучшие практики, схемы данных и интеграции, чтобы ваша команда запустилась быстро и
-            поддерживала PARA-инварианты без ручной рутины.
-          </p>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Link
-              href="/api/openapi.json"
-              prefetch={false}
-              className="inline-flex h-12 items-center justify-center rounded-xl bg-[var(--accent-primary)] px-6 text-sm font-semibold text-[var(--accent-on-primary)] shadow-soft transition-base hover:opacity-90"
-            >
-              Открыть OpenAPI
-            </Link>
-            <Link
-              href="https://intdata.pro/static/docs/idp-onboarding-checklist.pdf"
-              className="inline-flex h-12 items-center justify-center rounded-xl border border-subtle px-6 text-sm font-semibold text-[var(--text-primary)] shadow-sm transition-base hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)]"
-              prefetch={false}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Скачать чек-лист внедрения
-            </Link>
+    <div className="flex flex-col gap-24" data-page="docs-landing">
+      <section className="rounded-3xl border border-white/40 bg-white/80 px-6 py-16 shadow-xl backdrop-blur md:px-12">
+        <div className="grid items-center gap-16 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="flex flex-col gap-6">
+            <Badge className="w-fit bg-[var(--accent-primary)] text-[var(--accent-on-primary)] shadow-lg">
+              Методологии + Документация
+            </Badge>
+            <h1 className="text-4xl font-bold tracking-tight text-[var(--text-primary)] md:text-5xl lg:text-6xl">
+              Документация Intelligent Data Pro
+            </h1>
+            <p className="max-w-2xl text-lg text-muted">
+              PARA, Zettelkasten и геймифицированные привычки — в одной операционной системе продуктивности. Страница
+              открыта без авторизации, делитесь с командой и клиентами.
+            </p>
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <Link
+                href="/tariffs"
+                prefetch={false}
+                className="inline-flex h-12 items-center justify-center rounded-full bg-[var(--accent-primary)] px-7 text-base font-semibold text-[var(--accent-on-primary)] shadow-md transition-base hover:opacity-90"
+              >
+                Смотреть тарифы
+              </Link>
+              <Link
+                href="/auth"
+                prefetch={false}
+                className="inline-flex h-12 items-center justify-center rounded-full border border-subtle px-7 text-base font-semibold text-[var(--text-primary)] shadow-sm transition-base hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)]"
+              >
+                Начать бесплатно
+              </Link>
+            </div>
           </div>
+          <Card
+            padded={false}
+            className="grid h-full gap-6 rounded-3xl border-none bg-gradient-to-br from-[#eef2ff] via-[#fdf2f8] to-[#fff7ed] p-8 shadow-inner"
+          >
+            {heroStats.map((stat) => (
+              <article key={stat.label} className="flex flex-col gap-1">
+                <span className="text-sm font-medium uppercase tracking-wide text-muted">{stat.label}</span>
+                <span className="text-3xl font-semibold text-[var(--text-primary)]">{stat.value}</span>
+                <p className="text-sm text-muted">{stat.description}</p>
+                <a
+                  href={stat.referenceHref}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="text-sm font-semibold text-[var(--accent-primary)] underline decoration-dotted decoration-1 underline-offset-4"
+                >
+                  {stat.referenceLabel}
+                </a>
+              </article>
+            ))}
+          </Card>
         </div>
       </section>
 
-      <section className="grid gap-6">
-        <header className="space-y-2">
-          <h2 className="text-2xl font-semibold text-[var(--text-primary)]">Структура руководств</h2>
-          <p className="text-base text-muted">
-            Каждый раздел содержит пошаговые инструкции, чек-листы и ссылки на сопутствующие файлы в репозитории.
-          </p>
-        </header>
-        <div className="grid gap-6 md:grid-cols-3">
-          {GUIDE_SECTIONS.map((section) => (
-            <Card key={section.title} className="flex flex-col gap-4 bg-white/80 p-6 shadow-soft backdrop-blur">
-              <div className="space-y-1">
-                <h3 className="text-xl font-semibold text-[var(--text-primary)]">{section.title}</h3>
-                <p className="text-sm text-muted">{section.description}</p>
+      <section className="grid gap-10 lg:grid-cols-[0.6fr_1.4fr]" id="methodologies">
+        <aside className="sticky top-24 hidden h-full flex-col gap-4 self-start rounded-3xl border border-white/40 bg-white/70 p-8 text-sm font-medium text-muted backdrop-blur lg:flex">
+          <span className="text-xs uppercase tracking-[0.2em] text-[var(--accent-primary)]">Навигация</span>
+          <a className="transition-base hover:text-[var(--accent-primary)]" href="#methodologies">
+            Методологии и исследования
+          </a>
+          <a className="transition-base hover:text-[var(--accent-primary)]" href="#ui">
+            Практики UI 2025
+          </a>
+          <a className="transition-base hover:text-[var(--accent-primary)]" href="#plans">
+            Реализация по тарифам
+          </a>
+          <a className="transition-base hover:text-[var(--accent-primary)]" href="#resources">
+            Исходники и ссылки
+          </a>
+        </aside>
+        <div className="flex flex-col gap-10">
+          {methodologyBlocks.map((block) => (
+            <Card key={block.id} className="flex flex-col gap-6 border-white/60 bg-white/90 shadow-lg" data-section={block.id}>
+              <div className="flex flex-col gap-3">
+                <span className="inline-flex w-fit items-center rounded-full bg-surface-soft px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--accent-primary)]">
+                  {block.pill}
+                </span>
+                <h2 className="text-2xl font-semibold text-[var(--text-primary)]">{block.title}</h2>
+                <p className="text-base leading-relaxed text-muted">{block.description}</p>
               </div>
-              <ul className="flex flex-col gap-2 text-sm text-muted">
-                {section.bullets.map((bullet) => (
-                  <li key={bullet} className="leading-relaxed">{bullet}</li>
+              <ul className="grid gap-3 text-sm text-muted">
+                {block.references.map((ref) => (
+                  <li key={ref.href} className="flex items-start gap-3">
+                    <span className="mt-1 inline-flex h-2 w-2 shrink-0 rounded-full bg-[var(--accent-primary)]" aria-hidden />
+                    <a
+                      href={ref.href}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="font-semibold text-[var(--accent-primary)] underline decoration-dotted decoration-1 underline-offset-4"
+                    >
+                      {ref.label}
+                    </a>
+                  </li>
                 ))}
               </ul>
+              <p className="text-sm text-muted">{block.persona}</p>
             </Card>
           ))}
         </div>
       </section>
 
-      <section id="integrations" className="grid gap-6">
-        <header className="space-y-2">
-          <h2 className="text-2xl font-semibold text-[var(--text-primary)]">API и интеграции</h2>
-          <p className="text-base text-muted">
-            Обновляем OpenAPI вместе с релизами и публикуем коллекции для быстрого тестирования.
+      <section id="ui" className="flex flex-col gap-6 rounded-3xl border border-white/40 bg-white/80 p-10 shadow-xl backdrop-blur">
+        <div className="flex flex-col gap-3">
+          <h2 className="text-3xl font-semibold text-[var(--text-primary)]">UI-практики документации 2025</h2>
+          <p className="max-w-3xl text-base text-muted">
+            Мы консолидировали лучшие практики: адаптивная сетка, sticky-навигация, интерактивные демо и доступность. Так
+            ваша документация повышает доверие и снижает нагрузку на поддержку.
           </p>
-        </header>
+        </div>
         <div className="grid gap-6 md:grid-cols-3">
-          {API_RESOURCES.map((resource) => (
-            <Card key={resource.title} className="flex flex-col gap-3 bg-white/80 p-6 shadow-soft backdrop-blur">
-              <div className="space-y-1">
-                <h3 className="text-lg font-semibold text-[var(--text-primary)]">{resource.title}</h3>
-                <p className="text-sm text-muted">{resource.summary}</p>
-              </div>
-              <Link
-                href={resource.href}
-                prefetch={false}
-                className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-[var(--accent-primary)] hover:underline"
-                target={resource.external ? '_blank' : undefined}
-                rel={resource.external ? 'noreferrer' : undefined}
+          {uiPrinciples.map((principle) => (
+            <Card key={principle.title} className="flex flex-col gap-4 border-white/60 bg-white/90">
+              <h3 className="text-xl font-semibold text-[var(--text-primary)]">{principle.title}</h3>
+              <p className="text-sm text-muted">{principle.description}</p>
+              <a
+                href={principle.reference.href}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="text-sm font-semibold text-[var(--accent-primary)] underline decoration-dotted decoration-1 underline-offset-4"
               >
-                Открыть
+                {principle.reference.label}
+              </a>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <section id="plans" className="flex flex-col gap-8">
+        <div className="flex flex-col gap-3">
+          <h2 className="text-3xl font-semibold text-[var(--text-primary)]">Методологии в тарифах</h2>
+          <p className="max-w-3xl text-base text-muted">
+            PARA и Zettelkasten входят во все тарифы. Командные планы добавляют совместный контроль, а Pro/Enterprise
+            масштабируют методологии на CRM и закрытые контуры.
+          </p>
+        </div>
+        <div className="grid gap-6 lg:grid-cols-3">
+          {planMapping.map((plan) => (
+            <Card key={plan.plan} className="flex flex-col gap-4 border-white/60 bg-white/90" data-plan={plan.plan}>
+              <div className="flex flex-col gap-2">
+                <h3 className="text-xl font-semibold text-[var(--text-primary)]">{plan.plan}</h3>
+                <p className="text-sm leading-relaxed text-muted">{plan.description}</p>
+              </div>
+              <ul className="flex flex-col gap-2 text-sm text-muted">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-3">
+                    <span className="mt-1 inline-flex h-2 w-2 shrink-0 rounded-full bg-[var(--accent-primary)]" aria-hidden />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/tariffs"
+                prefetch={false}
+                className="mt-auto inline-flex h-11 items-center justify-center rounded-full bg-[var(--accent-primary)] px-6 text-sm font-semibold text-[var(--accent-on-primary)] transition-base hover:opacity-90"
+              >
+                Перейти к тарифам
               </Link>
             </Card>
           ))}
         </div>
       </section>
 
-      <section id="knowledge-base" className="grid gap-6">
-        <header className="space-y-2">
-          <h2 className="text-2xl font-semibold text-[var(--text-primary)]">Ресурсы поддержки</h2>
-          <p className="text-base text-muted">
-            Материалы для обучения команды и коммуникации с поддержкой Intelligent Data Pro.
+      <section id="resources" className="flex flex-col gap-6 rounded-3xl border border-white/40 bg-white/70 p-10 shadow-lg backdrop-blur">
+        <div className="flex flex-col gap-3">
+          <h2 className="text-3xl font-semibold text-[var(--text-primary)]">Исходники и полезные материалы</h2>
+          <p className="max-w-2xl text-base text-muted">
+            Собрали официальные ресурсы и исследования, которые помогут внедрить методологии и аргументировать проект.
           </p>
-        </header>
-        <div className="grid gap-6 md:grid-cols-3">
-          {SUPPORT_RESOURCES.map((resource) => (
-            <Card key={resource.title} className="flex flex-col gap-3 bg-white/80 p-6 shadow-soft backdrop-blur">
-              <div className="space-y-1">
-                <h3 className="text-lg font-semibold text-[var(--text-primary)]">{resource.title}</h3>
-                <p className="text-sm text-muted">{resource.summary}</p>
-              </div>
-              <Link
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {resourceLinks.map((resource) => (
+            <Card key={resource.href} className="flex flex-col gap-3 border-white/60 bg-white/90 p-6">
+              <a
                 href={resource.href}
-                prefetch={false}
-                className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-[var(--accent-primary)] hover:underline"
+                className="text-base font-semibold text-[var(--accent-primary)] underline decoration-dotted decoration-1 underline-offset-4"
                 target={resource.external ? '_blank' : undefined}
-                rel={resource.external ? 'noreferrer' : undefined}
+                rel={resource.external ? 'noreferrer noopener' : undefined}
               >
-                Подробнее
-              </Link>
+                {resource.label}
+              </a>
+              <p className="text-sm text-muted">
+                {resource.external
+                  ? 'Внешний источник с доказательствами и примерами из индустрии.'
+                  : 'Актуальная спецификация и артефакты продукта внутри Intelligent Data Pro.'}
+              </p>
             </Card>
           ))}
         </div>
-      </section>
-
-      <section className="grid gap-6">
-        <header className="space-y-2">
-          <h2 className="text-2xl font-semibold text-[var(--text-primary)]">FAQ</h2>
-          <p className="text-base text-muted">Ответы на частые вопросы продуктовых команд и интеграторов.</p>
-        </header>
-        <div className="grid gap-4">
-          {FAQ_ITEMS.map((item) => (
-            <Card key={item.question} className="flex flex-col gap-2 bg-white/80 p-6 shadow-soft backdrop-blur">
-              <h3 className="text-lg font-semibold text-[var(--text-primary)]">{item.question}</h3>
-              <p className="text-sm text-muted leading-relaxed">{item.answer}</p>
-            </Card>
-          ))}
-        </div>
+        <footer className="text-xs text-muted">
+          © {currentYear} Intelligent Data Pro. Все методологии доступны в рамках соглашений и SLA выбранного тарифа.
+        </footer>
       </section>
     </div>
   );
 }
+

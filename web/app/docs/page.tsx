@@ -4,9 +4,9 @@ import type { Metadata } from 'next';
 import DocsLanding from '../../components/marketing/DocsLanding';
 
 export const metadata: Metadata = {
-  title: 'Документация Intelligent Data Pro — гайды, API и поддержка',
+  title: 'Документация Intelligent Data Pro — PARA, Zettelkasten, геймификация',
   description:
-    'Публичная документация Intelligent Data Pro: онбординг, технические гайды, OpenAPI и материалы для внедрения PARA.',
+    'Публичный портал методологий Intelligent Data Pro: объясняем PARA и Zettelkasten, делимся исследованиями по продуктивности и показываем, как методологии встроены в тарифы.',
 };
 
 export const dynamic = 'force-static';
@@ -23,7 +23,7 @@ export default function DocsPage() {
           </span>
           <span className="flex flex-col">
             <span className="text-lg font-semibold tracking-tight">Intelligent Data Pro</span>
-            <span className="text-sm text-muted">Документация и внедрение</span>
+            <span className="text-sm text-muted">Документация и методологии</span>
           </span>
         </Link>
         <nav className="hidden items-center gap-6 text-sm font-medium text-muted md:flex">
@@ -47,12 +47,12 @@ export default function DocsPage() {
           prefetch={false}
           className="hidden h-10 items-center rounded-full border border-subtle px-5 text-sm font-semibold text-[var(--text-primary)] shadow-sm transition-base hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)] md:flex"
         >
-          Войти
+          Начать бесплатно
         </Link>
       </header>
 
       <main className="px-6 pb-20 pt-6 md:px-10 lg:px-16">
-        <div className="mx-auto flex max-w-6xl flex-col gap-16">
+        <div className="mx-auto flex max-w-6xl flex-col gap-20">
           <DocsLanding />
         </div>
       </main>
@@ -79,3 +79,4 @@ export default function DocsPage() {
     </div>
   );
 }
+
