@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from collections import defaultdict
 
@@ -13,7 +13,7 @@ from sqlalchemy.exc import ProgrammingError, DBAPIError
 
 from core import db
 from core.models import TimeEntry, Task, TaskStatus
-from core.utils import utcnow
+from core.utils import utcnow, utcnow_aware
 
 
 class TimeService:
@@ -72,10 +72,10 @@ class TimeService:
         if entry.last_started_at is None:
             return
         start = entry.last_started_at
-        if now.tzinfo is None and getattr(start, "tzinfo", None) is not None:
+        if start.tzinfo is None:
+            start = start.replace(tzinfo=timezone.utc)
+        if now.tzinfo is None:
             now = now.replace(tzinfo=start.tzinfo)
-        elif start.tzinfo is None and getattr(now, "tzinfo", None) is not None:
-            start = start.replace(tzinfo=now.tzinfo)
         delta = now - start
         seconds = int(delta.total_seconds())
         if seconds > 0:
@@ -154,7 +154,7 @@ class TimeService:
                 if not await AreaService(self.session).is_leaf(area_id):
                     raise ValueError("Area must be a leaf")
 
-        now = utcnow()
+        now = utcnow_aware()
         entry = TimeEntry(
             owner_id=owner_id,
             description=description,
@@ -208,7 +208,7 @@ class TimeService:
         if entry.last_started_at is None:
             # already paused, return as-is
             return entry
-        now = utcnow()
+        now = utcnow_aware()
         self._accumulate_active(entry, now)
         entry.paused_at = now
         await self.session.flush()
@@ -229,7 +229,7 @@ class TimeService:
             raise ValueError(
                 f"Timer #{active.id} is already running for owner {owner_id}."
             )
-        entry.last_started_at = utcnow()
+        entry.last_started_at = utcnow_aware()
         entry.paused_at = None
         await self.session.flush()
         return entry
@@ -244,7 +244,7 @@ class TimeService:
             raise PermissionError("Entry not found or belongs to different owner")
         if entry.end_time is not None:
             return entry
-        now = utcnow()
+        now = utcnow_aware()
         if entry.last_started_at is not None:
             self._accumulate_active(entry, now)
         entry.end_time = now

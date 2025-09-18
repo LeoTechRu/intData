@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import os
 from typing import Dict, Optional
 from urllib.parse import urlparse
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
@@ -13,7 +15,8 @@ from .settings import FAVORITE_PAGES
 
 router = APIRouter(prefix="/user/settings", tags=["user-settings"])
 
-DEFAULT_KEYS = ["dashboard_layout", "favorites"]
+DEFAULT_KEYS = ["dashboard_layout", "favorites", "timezone"]
+DEFAULT_TIMEZONE = os.getenv("DEFAULT_TIMEZONE", "Europe/Moscow")
 
 
 def _allowed_favorite_pages(effective) -> list[dict]:
@@ -99,6 +102,42 @@ def _sanitize_favorites(value: Dict | None, effective) -> dict:
     return {"v": version, "items": sanitized}
 
 
+def _normalize_timezone(value: Dict | None) -> dict:
+    version = 1
+    if isinstance(value, dict):
+        maybe_version = value.get("v")
+        if isinstance(maybe_version, int) and maybe_version > 0:
+            version = maybe_version
+        maybe_name = value.get("name")
+        if isinstance(maybe_name, str):
+            candidate = maybe_name.strip()
+            if candidate:
+                try:
+                    ZoneInfo(candidate)
+                except ZoneInfoNotFoundError:
+                    pass
+                else:
+                    return {"v": version, "name": candidate}
+    return {"v": version, "name": DEFAULT_TIMEZONE}
+
+
+def _validate_timezone_payload(value: Dict) -> dict:
+    if not isinstance(value, dict):
+        raise HTTPException(status_code=400, detail="value must be object")
+    maybe_name = value.get("name")
+    if not isinstance(maybe_name, str) or not maybe_name.strip():
+        raise HTTPException(status_code=400, detail="name must be non-empty string")
+    candidate = maybe_name.strip()
+    try:
+        ZoneInfo(candidate)
+    except ZoneInfoNotFoundError as exc:  # pragma: no cover - depends on tz database
+        raise HTTPException(status_code=400, detail="unknown timezone") from exc
+    version = value.get("v")
+    if not isinstance(version, int) or version <= 0:
+        version = 1
+    return {"v": version, "name": candidate}
+
+
 DEFAULT_DASHBOARD_LAYOUT = {
     "v": 1,
     "columns": 12,
@@ -145,6 +184,11 @@ async def list_settings(
                     val = _default_favorites(effective)
                 elif key == "dashboard_layout":
                     val = DEFAULT_DASHBOARD_LAYOUT
+            if key == "timezone":
+                sanitized_tz = _normalize_timezone(val)
+                if val != sanitized_tz:
+                    await svc.upsert(current_user.id, key, sanitized_tz)
+                val = sanitized_tz
             elif key == "favorites":
                 sanitized = _sanitize_favorites(val, effective)
                 if sanitized != val:
@@ -178,6 +222,12 @@ async def get_setting(
                 value = sanitized
     elif key == "dashboard_layout" and value is None:
         value = DEFAULT_DASHBOARD_LAYOUT
+    elif key == "timezone":
+        sanitized_tz = _normalize_timezone(value)
+        if value != sanitized_tz:
+            async with UserSettingsService() as svc:
+                await svc.upsert(current_user.id, key, sanitized_tz)
+        value = sanitized_tz
     return {"key": key, "value": value}
 
 
@@ -205,12 +255,17 @@ async def put_setting(
     elif key == "dashboard_layout":
         if not isinstance(payload.value.get("layouts"), dict):
             raise HTTPException(status_code=400, detail="layouts must be dict")
+    elif key == "timezone":
+        # validation happens via _validate_timezone_payload later
+        pass
     effective = await get_effective_permissions(
         request, current_user=current_user
     )
     value_to_store = payload.value
     if key == "favorites":
         value_to_store = _sanitize_favorites(payload.value, effective)
+    elif key == "timezone":
+        value_to_store = _validate_timezone_payload(payload.value)
     async with UserSettingsService() as svc:
         value = await svc.upsert(current_user.id, key, value_to_store)
     return {"ok": True, "key": key, "value": value}

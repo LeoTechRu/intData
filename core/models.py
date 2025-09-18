@@ -1,11 +1,11 @@
 """Database models used by the application."""
 from enum import IntEnum, Enum as PyEnum
-from datetime import date
+from datetime import date, datetime, timezone
 import uuid
 
 from .db import bcrypt
 
-from .utils import utcnow
+from .utils import utcnow, utcnow_aware
 
 import sqlalchemy as sa
 from sqlalchemy import (
@@ -691,26 +691,32 @@ class TimeEntry(Base):
         if self.end_time:
             if self.last_started_at:
                 try:
-                    total += int((self.end_time - self.last_started_at).total_seconds())
+                    total += int((self.end_time - self._normalize_tz(self.last_started_at)).total_seconds())
                 except Exception:
                     pass
             elif total == 0 and self.start_time:
                 try:
-                    total = int((self.end_time - self.start_time).total_seconds())
+                    total = int((self.end_time - self._normalize_tz(self.start_time)).total_seconds())
                 except Exception:
                     return None
             return max(total, 0)
         if self.last_started_at:
             try:
-                total += int((utcnow() - self.last_started_at).total_seconds())
+                total += int((utcnow_aware() - self._normalize_tz(self.last_started_at)).total_seconds())
             except Exception:
                 return total
         elif total == 0 and self.start_time:
             try:
-                total = int((utcnow() - self.start_time).total_seconds())
+                total = int((utcnow_aware() - self._normalize_tz(self.start_time)).total_seconds())
             except Exception:
                 return total
         return max(total, 0)
+
+    @staticmethod
+    def _normalize_tz(moment: datetime) -> datetime:
+        if moment.tzinfo is None:
+            return moment.replace(tzinfo=timezone.utc)
+        return moment
 
     @property
     def is_running(self) -> bool:

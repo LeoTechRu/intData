@@ -156,7 +156,7 @@ describe('UsersCatalog', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Повторить' }));
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledTimes(6);
+      expect(fetchMock).toHaveBeenCalledTimes(7);
     });
 
     expect(await screen.findByText('Carol')).toBeInTheDocument();

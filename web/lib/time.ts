@@ -25,7 +25,7 @@ export function parseDateToUtc(value?: string | null): Date | null {
   return new Date(value);
 }
 
-export function formatDateTime(value?: string | null): string {
+export function formatDateTime(value?: string | null, timeZone?: string): string {
   if (!value) {
     return '—';
   }
@@ -36,6 +36,7 @@ export function formatDateTime(value?: string | null): string {
   return date.toLocaleString('ru-RU', {
     dateStyle: 'short',
     timeStyle: 'short',
+    timeZone: timeZone || undefined,
   });
 }
 
@@ -48,4 +49,18 @@ export function formatClock(totalSeconds: number): string {
     return `${hours}:${minutes.toString().padStart(2, '0')}:${rest.toString().padStart(2, '0')}`;
   }
   return `${minutes}:${rest.toString().padStart(2, '0')}`;
+}
+
+export function normalizeTimerDescription(description?: string | null): string | null {
+  if (!description) {
+    return null;
+  }
+  const trimmed = description.trim();
+  if (!trimmed) {
+    return null;
+  }
+  if (trimmed.toLowerCase() === 'быстрый таймер') {
+    return null;
+  }
+  return trimmed;
 }

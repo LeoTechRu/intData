@@ -16,7 +16,8 @@ import type {
   TimeSummaryDay,
   TimeSummaryProject,
 } from '../../lib/types';
-import { formatClock, formatDateTime, formatMinutes } from '../../lib/time';
+import { formatClock, formatDateTime, formatMinutes, normalizeTimerDescription, parseDateToUtc } from '../../lib/time';
+import { useTimezone } from '../../lib/timezone';
 
 const MODULE_TITLE = 'Учёт времени';
 const MODULE_DESCRIPTION =
@@ -41,17 +42,26 @@ interface TimerFormState {
 
 function getDurationSeconds(entry: TimeEntry, now: number): number {
   let total = entry.active_seconds ?? entry.elapsed_seconds ?? 0;
-  if (entry.is_running && entry.last_started_at) {
-    const last = new Date(entry.last_started_at).getTime();
-    if (!Number.isNaN(last)) {
-      total += Math.max(0, Math.round((now - last) / 1000));
+
+  const toMillis = (value?: string | null): number | null => {
+    const parsed = parseDateToUtc(value);
+    if (!parsed) {
+      return null;
     }
-  } else if (entry.end_time && total === 0) {
-    const start = new Date(entry.start_time).getTime();
-    const end = new Date(entry.end_time).getTime();
-    if (!Number.isNaN(start) && !Number.isNaN(end)) {
-      total = Math.max(0, Math.round((end - start) / 1000));
-    }
+    const timestamp = parsed.getTime();
+    return Number.isNaN(timestamp) ? null : timestamp;
+  };
+
+  const lastSegmentStart = toMillis(entry.last_started_at);
+  const startTime = toMillis(entry.start_time);
+  const endTime = toMillis(entry.end_time);
+
+  if (entry.is_running && lastSegmentStart != null) {
+    total += Math.max(0, Math.round((now - lastSegmentStart) / 1000));
+  } else if (!entry.is_running && entry.last_started_at && lastSegmentStart != null && total === 0) {
+    total = Math.max(0, Math.round((now - lastSegmentStart) / 1000));
+  } else if (endTime != null && startTime != null && total === 0) {
+    total = Math.max(0, Math.round((endTime - startTime) / 1000));
   }
   return total;
 }
@@ -72,6 +82,7 @@ export default function TimeModule(): JSX.Element {
   const [timerForm, setTimerForm] = useState<TimerFormState>({ description: '', taskId: '' });
   const [formError, setFormError] = useState<string | null>(null);
   const [nowTick, setNowTick] = useState<number>(() => Date.now());
+  const timezone = useTimezone();
 
   useEffect(() => {
     const id = window.setInterval(() => {
@@ -250,6 +261,7 @@ export default function TimeModule(): JSX.Element {
   const isTimerRunning = Boolean(activeEntry?.is_running);
   const isTimerPaused = Boolean(activeEntry?.is_paused && !activeEntry?.is_running);
   const activeEntrySeconds = activeEntry ? getDurationSeconds(activeEntry, nowTick) : 0;
+  const activeEntryDescription = normalizeTimerDescription(activeEntry?.description);
 
   const startMutation = useMutation({
     mutationFn: (payload: { description: string | null; task_id: number | null }) =>
@@ -373,66 +385,76 @@ export default function TimeModule(): JSX.Element {
                 <div className="relative overflow-hidden rounded-2xl border border-dashed border-[var(--accent-primary)] bg-gradient-to-br from-[color-mix(in srgb, var(--accent-primary) 18%, transparent)] via-[color-mix(in srgb, var(--accent-primary) 8%, transparent)] to-transparent p-6">
                   <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex flex-1 items-start gap-5">
-                      <button
-                        type="button"
-                        className={clsx(
-                          'inline-flex h-20 w-20 items-center justify-center rounded-full text-white shadow-lg transition-transform duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]',
-                          isTimerRunning
-                            ? 'bg-emerald-500 hover:bg-emerald-400 focus-visible:ring-emerald-500'
-                            : 'bg-amber-500 hover:bg-amber-400 focus-visible:ring-amber-500',
-                          (pauseMutation.isPending || resumeEntryMutation.isPending) && 'opacity-70',
-                        )}
-                        onClick={isTimerRunning ? handlePause : handleResume}
-                        disabled={pauseMutation.isPending || resumeEntryMutation.isPending}
-                        title={isTimerRunning ? 'Пауза' : 'Продолжить'}
-                        aria-label={isTimerRunning ? 'Пауза' : 'Продолжить'}
-                      >
-                        {pauseMutation.isPending || resumeEntryMutation.isPending ? <LoaderIcon /> : isTimerRunning ? <PauseIcon /> : <PlayIcon />}
-                      </button>
+                      <div className="flex flex-col items-center gap-3">
+                        <button
+                          type="button"
+                          className={clsx(
+                            'inline-flex h-20 w-20 items-center justify-center rounded-full text-white shadow-lg transition-transform duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]',
+                            isTimerRunning
+                              ? 'bg-emerald-500 hover:bg-emerald-400 focus-visible:ring-emerald-500'
+                              : 'bg-amber-500 hover:bg-amber-400 focus-visible:ring-amber-500',
+                            (pauseMutation.isPending || resumeEntryMutation.isPending) && 'opacity-70',
+                          )}
+                          onClick={isTimerRunning ? handlePause : handleResume}
+                          disabled={pauseMutation.isPending || resumeEntryMutation.isPending}
+                          title={isTimerRunning ? 'Пауза' : 'Продолжить'}
+                          aria-label={isTimerRunning ? 'Пауза' : 'Продолжить'}
+                        >
+                          {pauseMutation.isPending || resumeEntryMutation.isPending ? <LoaderIcon /> : isTimerRunning ? <PauseIcon /> : <PlayIcon />}
+                        </button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            onClick={handleStop}
+                            disabled={stopMutation.isPending}
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-600 hover:bg-red-500/10 focus-visible:ring-red-500 dark:text-red-400"
+                            aria-label="Завершить сессию"
+                            title="Завершить сессию"
+                          >
+                            {stopMutation.isPending ? <LoaderIcon /> : <StopIcon />}
+                          </Button>
+                          {activeEntry.task_id ? (
+                            <Button
+                              onClick={() => router.push(`/tasks?task=${activeEntry.task_id}`)}
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Открыть задачу #${activeEntry.task_id}`}
+                              title={`Открыть задачу #${activeEntry.task_id}`}
+                            >
+                              <TaskIcon />
+                            </Button>
+                          ) : null}
+                        </div>
+                      </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-semibold uppercase tracking-wide text-muted">Таймер</span>
-                          <span
-                            className={clsx(
-                              'inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide',
-                              isTimerRunning
-                                ? 'bg-emerald-500/15 text-emerald-700'
-                                : 'bg-amber-500/15 text-amber-700',
-                            )}
-                          >
-                            {isTimerRunning ? 'Время идёт' : 'Пауза'}
+                          <span className="relative inline-flex h-2.5 w-2.5">
+                            <span
+                              aria-hidden
+                              className={clsx(
+                                'absolute inset-0 rounded-full transition-colors duration-200',
+                                isTimerRunning ? 'bg-emerald-500' : 'bg-amber-500',
+                              )}
+                            />
+                            <span className="sr-only">{isTimerRunning ? 'Таймер активен' : 'Таймер на паузе'}</span>
                           </span>
                         </div>
                         <div className="mt-2 font-mono text-4xl font-semibold tracking-tight text-[var(--text-primary)] lg:text-5xl">
                           {formatClock(activeEntrySeconds)}
                         </div>
-                        <p className="mt-1 text-sm text-muted">
+                        <p className="mt-1 text-xs text-muted">
                           {isTimerRunning
-                            ? `Старт: ${formatDateTime(activeEntry.start_time)}`
-                            : `Пауза: ${formatDateTime(activeEntry.paused_at ?? activeEntry.start_time)}`}
+                            ? `Запущен ${formatDateTime(activeEntry.start_time, timezone)}`
+                            : `Пауза с ${formatDateTime(activeEntry.paused_at ?? activeEntry.start_time, timezone)}`}
                         </p>
-                        {activeEntry.description ? (
-                          <p className="mt-1 text-sm text-[var(--text-secondary)] line-clamp-2">
-                            {activeEntry.description}
+                        {activeEntryDescription ? (
+                          <p className="mt-2 text-sm text-[var(--text-secondary)] line-clamp-2">
+                            {activeEntryDescription}
                           </p>
                         ) : null}
                       </div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-                      <Button onClick={handleStop} disabled={stopMutation.isPending} variant="ghost">
-                        Завершить сессию
-                      </Button>
-                      {activeEntry.task_id ? (
-                        <Button
-                          onClick={() => router.push(`/tasks?task=${activeEntry.task_id}`)}
-                          variant="ghost"
-                        >
-                          Задача #{activeEntry.task_id}
-                        </Button>
-                      ) : null}
-                      <Button onClick={() => router.push('/time')} variant="ghost">
-                        Журнал
-                      </Button>
                     </div>
                   </div>
                 </div>
@@ -630,12 +652,14 @@ export default function TimeModule(): JSX.Element {
                 {timeline.map(({ entry, seconds }) => (
                   <div key={entry.id} className="flex flex-col gap-1 p-4">
                     <div className="flex flex-wrap items-center justify-between gap-2 text-sm font-medium">
-                      <span>{entry.description || 'Без описания'}</span>
+                      <span>{normalizeTimerDescription(entry.description) ?? 'Без описания'}</span>
                       <span className="text-muted">{formatMinutes(seconds / 60)}</span>
                     </div>
                     <div className="text-xs text-muted">
-                      {formatDateTime(entry.start_time)}
-                      {entry.end_time ? ` · завершено ${formatDateTime(entry.end_time)}` : ' · в процессе'}
+                      {formatDateTime(entry.start_time, timezone)}
+                      {entry.end_time
+                        ? ` · завершено ${formatDateTime(entry.end_time, timezone)}`
+                        : ' · в процессе'}
                       {entry.task_id ? ` · задача #${entry.task_id}` : ''}
                     </div>
                   </div>
@@ -712,6 +736,23 @@ function PauseIcon() {
     <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.6}>
       <rect x="7" y="5" width="3.6" height="14" rx="1.2" fill="currentColor" />
       <rect x="13.5" y="5" width="3.6" height="14" rx="1.2" fill="currentColor" />
+    </svg>
+  );
+}
+
+function StopIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.6}>
+      <rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor" />
+    </svg>
+  );
+}
+
+function TaskIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.6}>
+      <path d="M9 11l2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="4" y="4" width="16" height="16" rx="3" />
     </svg>
   );
 }

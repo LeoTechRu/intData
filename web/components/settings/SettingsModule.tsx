@@ -34,7 +34,9 @@ import {
   updateAdminBranding,
   updateAdminTelegram,
   restartService,
+  updateTimezoneSetting,
 } from '../../lib/settings';
+import type { UserSettingsBundle } from '../../lib/settings';
 import {
   DEFAULT_THEME,
   clearThemeLayer,
@@ -418,6 +420,7 @@ function StatusMessage({ status, success }: { status: SaveState; success: string
 }
 
 export default function SettingsModule() {
+  const queryClient = useQueryClient();
   const viewerRole = useViewerRole();
   const isAdmin = viewerRole?.toLowerCase() === 'admin';
 
@@ -451,10 +454,42 @@ export default function SettingsModule() {
   const [brandingStatus, setBrandingStatus] = useState<SaveState>('idle');
   const [telegramStatus, setTelegramStatus] = useState<SaveState>('idle');
   const [restartStatus, setRestartStatus] = useState<string | null>(null);
+  const defaultBrowserTimezone = useMemo(() => {
+    if (typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function') {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    }
+    return 'UTC';
+  }, []);
+  const [timezoneValue, setTimezoneValue] = useState<string>(defaultBrowserTimezone);
+  const [timezoneStatus, setTimezoneStatus] = useState<SaveState>('idle');
 
   const dashboardLayout = userSettingsQuery.data?.dashboard_layout ?? null;
   const favoriteOptions = userSettingsQuery.data?.favorite_options ?? [];
   const favoriteSettings = userSettingsQuery.data?.favorites ?? null;
+  const timezoneSetting = userSettingsQuery.data?.timezone?.name ?? null;
+  const timezoneVersion = userSettingsQuery.data?.timezone?.v ?? 1;
+
+  useEffect(() => {
+    if (timezoneSetting && timezoneSetting !== timezoneValue) {
+      setTimezoneValue(timezoneSetting);
+      return;
+    }
+    if (!timezoneSetting && userSettingsQuery.isSuccess && timezoneValue !== defaultBrowserTimezone) {
+      setTimezoneValue(defaultBrowserTimezone);
+    }
+  }, [timezoneSetting, userSettingsQuery.isSuccess, defaultBrowserTimezone, timezoneValue]);
+
+  const timezoneOptions = useMemo<string[]>(() => {
+    const intlAny = Intl as unknown as { supportedValuesOf?: (input: string) => string[] };
+    if (typeof Intl !== 'undefined' && typeof intlAny.supportedValuesOf === 'function') {
+      try {
+        return intlAny.supportedValuesOf('timeZone') || [];
+      } catch (error) {
+        console.warn('supportedValuesOf timeZone not available', error);
+      }
+    }
+    return ['Europe/Moscow', 'Europe/Kaliningrad', 'Europe/Samara', 'Asia/Almaty', 'UTC'];
+  }, []);
 
   useEffect(() => {
     if (dashboardLayout?.widgets && dashboardLayout.widgets.length > 0) {
@@ -523,6 +558,29 @@ export default function SettingsModule() {
       console.error('Failed to update favorites', error);
       setFavoritesStatus('error');
       setTimeout(() => setFavoritesStatus('idle'), 3000);
+    },
+  });
+
+  const timezoneMutation = useMutation({
+    mutationFn: (name: string) => updateTimezoneSetting({ v: timezoneVersion > 0 ? timezoneVersion : 1, name }),
+    onMutate: () => setTimezoneStatus('saving'),
+    onSuccess: (_, name) => {
+      setTimezoneStatus('saved');
+      queryClient.setQueryData<UserSettingsBundle | undefined>(['settings', 'bundle'], (prev) => {
+        if (!prev) {
+          return prev;
+        }
+        return {
+          ...prev,
+          timezone: { v: timezoneVersion > 0 ? timezoneVersion : 1, name },
+        };
+      });
+      setTimeout(() => setTimezoneStatus('idle'), 2000);
+    },
+    onError: (error: unknown) => {
+      console.error('Failed to update timezone', error);
+      setTimezoneStatus('error');
+      setTimeout(() => setTimezoneStatus('idle'), 3000);
     },
   });
 
@@ -614,6 +672,14 @@ export default function SettingsModule() {
   const handleFavoritesReset = () => {
     setFavoritesSelection(new Set(favoriteOptions.map((option) => option.path)));
     setFavoritesStatus('idle');
+  };
+
+  const handleTimezoneSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!timezoneValue) {
+      return;
+    }
+    timezoneMutation.mutate(timezoneValue);
   };
 
   const handleUserThemeSubmit = async (theme: ThemePreferences | Record<string, never>, reset: boolean) => {
@@ -762,6 +828,40 @@ export default function SettingsModule() {
                   Сбросить
                 </Button>
                 <StatusMessage status={favoritesStatus} success="Избранное обновлено" />
+              </div>
+            </form>
+          </Card>
+
+          <Card as="section" className="flex flex-col gap-5 lg:col-span-2">
+            <div className="flex flex-col gap-1">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Часовой пояс</h3>
+              <p className="text-sm text-muted">Определяет отображение времени и даты во всех виджетах.</p>
+            </div>
+            <form className="flex flex-col gap-4" onSubmit={handleTimezoneSubmit}>
+              <Select
+                value={timezoneValue}
+                onChange={(event) => setTimezoneValue(event.target.value)}
+                disabled={timezoneMutation.isPending}
+              >
+                {timezoneOptions.map((zone) => (
+                  <option key={zone} value={zone}>
+                    {zone}
+                  </option>
+                ))}
+              </Select>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button type="submit" disabled={timezoneMutation.isPending}>
+                  {timezoneMutation.isPending ? 'Сохраняем…' : 'Сохранить'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setTimezoneValue(defaultBrowserTimezone)}
+                  disabled={timezoneMutation.isPending}
+                >
+                  Автоопределение
+                </Button>
+                <StatusMessage status={timezoneStatus} success="Часовой пояс обновлён" />
               </div>
             </form>
           </Card>

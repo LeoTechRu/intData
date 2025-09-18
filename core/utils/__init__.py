@@ -1,4 +1,4 @@
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 
 
 def utcnow() -> datetime:
@@ -6,5 +6,9 @@ def utcnow() -> datetime:
     return datetime.now(UTC).replace(tzinfo=None)
 
 
-__all__ = ["utcnow"]
+def utcnow_aware() -> datetime:
+    """Return current timezone-aware UTC datetime."""
+    return datetime.now(UTC)
 
+
+__all__ = ["utcnow", "utcnow_aware"]
