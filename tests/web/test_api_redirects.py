@@ -1,5 +1,6 @@
 import subprocess
 import json
+from pathlib import Path
 
 import pytest
 import pytest_asyncio
@@ -40,10 +41,25 @@ async def test_old_path_redirects(client: AsyncClient):
 
 
 def test_no_old_api_hardcodes():
-    res = subprocess.run(
-        ['rg', '-n', '-P', '/api/(?!v1)', 'web/static/js'],
-        capture_output=True,
-        text=True,
-    )
+    targets = [
+        Path('web/app'),
+        Path('web/components'),
+        Path('web/lib'),
+        Path('web/static'),
+    ]
+    existing_targets = [str(path) for path in targets if path.exists()]
+    assert existing_targets, 'Static analysis targets are missing'
+    command = [
+        'rg',
+        '-n',
+        '-P',
+        '/api/(?!v1)',
+        '-g',
+        '*.js',
+        '-g',
+        '*.ts',
+        '-g',
+        '*.tsx',
+    ] + existing_targets
+    res = subprocess.run(command, capture_output=True, text=True)
     assert res.returncode == 1, f'Old API paths found: {res.stdout}'
-

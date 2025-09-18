@@ -127,6 +127,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Избранное в меню профиля автоматически очищается от устаревших ссылок (`https://intdata.pro/admin`) и использует относительные пути, включая якорь `/settings#areas`.
 - Сброс глобальной темы через `/settings` очищает значения `theme.global.*` и возвращает дефолтную палитру без ручного редактирования БД.
 - Админский сектор теперь рендерится маршрутом `/cup/admin-embed` и подключается в ЦУП через iframe.
+- Страницы `/products`, `/groups`, `/ban` и `/cup/admin-embed` обслуживаются через Next.js: FastAPI использует `render_next_page`, каталог продуктов доступен без авторизации, а разделы «Продукты» и «Группы» видимы в AppShell по умолчанию.
 - Административные настройки объединены на `/settings`: бренд, Telegram-интеграции и глобальная тема доступны только администраторам.
 - Команда `/group` теперь выполняет инвентаризацию Telegram-группы и сразу выводит отчёт `/group audit`; бот индексирует участников при добавлении в чат (E5b).
 - Переработан модуль авторизации: битовые права, гибкие пресеты ролей, назначение прав по scope (global/area/project) и аудит операций доступа; обновлены веб-зависимости `role_required`/`permission_required` и настройки избранного.
@@ -217,6 +218,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unified owner scoping via `get_current_owner`.
 
 ### Removed
+- Удалены финальные Jinja-шаблоны (`web/templates/*`) и легаси-статические ассеты (`web/static/js`, `web/static/css`, `web/static/ts`, `web/static/ui`).
 - Legacy-шаблон главной страницы `web/templates/start.html` и привязанные статические элементы после переноса дашборда на Next.js.
 - Legacy-шаблон `web/templates/habits.html` и скрипт `web/static/js/habits_v1.js` после миграции на Next.js.
 - Legacy-шаблон авторизации `web/templates/auth.html` и скрипт `web/static/js/auth_extra.js` удалены после переноса /auth на Next.js.

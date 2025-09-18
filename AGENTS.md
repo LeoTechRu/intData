@@ -59,7 +59,7 @@
 - Агент codex-cli автоматически запускает `npm run build` после любых изменений, требующих пересборки Node.js (фронтенд в `web/app`, `web/components`, `web/lib`, стили, конфиги, npm-зависимости), фиксируя запуск в отчёте; если выполнить сборку нельзя, агент обязан явно описать причину.
 - Задачи по фронтенду согласуются с [docs/BACKLOG.md#e17-frontend-modernization](./docs/BACKLOG.md#e17-frontend-modernization) как единой SSoT.
 - Обзор (`web/app/page.tsx`, `web/components/dashboard/OverviewDashboard.tsx`) работает на Next.js с адаптивной сеткой `repeat(auto-fit, minmax(320px, 1fr))`. Каждый виджет имеет `data-widget` для идентификации; порядок и видимость хранятся в `user_settings.dashboard_layout`.
-- ЛК админа доступен по `/admin` (Next.js, `web/app/admin/page.tsx`, `web/components/admin`). Для legacy-встраивания остаётся `/cup/admin-embed` c шаблоном `web/templates/admin/embed.html`.
+- ЛК админа доступен по `/admin` (Next.js, `web/app/admin/page.tsx`, `web/components/admin`). Встраиваемая версия `/cup/admin-embed` рендерится той же Next.js страницей (`web/app/cup/admin-embed/page.tsx`) без использования Jinja.
 
 ## Инициализация БД (без Alembic)
 - Источник правды по схеме: идемпотентные DDL в **`core/db/ddl/*.sql`** (только `CREATE/ALTER/INDEX IF NOT EXISTS`).
@@ -142,9 +142,10 @@
 - Run locally: `pytest -q`. Fix failing tests before merging.
 
 ## UI Cards
-- Используем `.c-card` и `.cards-grid`; иконки — через спрайт `partials/icons.svg`.
-- Кнопки-иконки оформляем классом `.ui-iconbtn` и атрибутом `data-tooltip`.
-- Удаление подтверждаем через `confirmDialog` из `/static/js/ui/confirm.js`.
+- Используем React-компоненты из `web/components/ui` (`Card`, `Badge`, `Button`, `Toolbar`) и Tailwind-токены (`var(--surface-*)`, `shadow-soft`) вместо старых классов `.c-card`/`.cards-grid`.
+- Для иконок используем SVG-символы и React-компоненты внутри Next.js (emoji, `svg` или `Image`); прямые инклуды `partials/icons.svg` больше не используются.
+- Кнопки-иконки строим на `Button`/`IconButton` (варианты `ghost`/`secondary`) с `data-tooltip` для подсказок.
+- Удаление подтверждаем через стандартные UI-диалоги (пока допускается `window.confirm`, но планируем вынести в общий компонент `ConfirmDialog`).
 - Заметки обязаны иметь `area_id`; `project_id` опционален, по умолчанию используется Inbox.
 - Цвет карточек заметок наследуется от `areas.color`; поле `notes.color` не используется при записи.
 

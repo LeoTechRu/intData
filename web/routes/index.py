@@ -10,7 +10,6 @@ from fastapi import APIRouter, Request, Depends, status, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse, Response
 
 from web.dependencies import get_current_web_user
-from ..template_env import templates
 from ..security.csp import augment_csp, extract_inline_script_hashes
 
 NEXT_build_ROOT = Path(__file__).resolve().parents[1] / ".next"
@@ -45,11 +44,11 @@ async def docs_landing_head() -> Response:
     return Response(status_code=200, headers=dict(html_response.headers))
 
 
-@router.get("/ban", include_in_schema=False)
-async def ban_page(request: Request):
-    from fastapi.responses import HTMLResponse  # noqa: F401
-    # отрендерим бан-страницу как шаблон без шапки
-    return templates.TemplateResponse(request, "ban.html", {})
+@router.get("/ban", include_in_schema=False, response_class=HTMLResponse)
+async def ban_page() -> HTMLResponse:
+    """Serve the Next.js ban page."""
+
+    return render_next_page("ban")
 
 
 @router.get("/", include_in_schema=False)

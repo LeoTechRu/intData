@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 from core.db import bot
@@ -15,7 +16,10 @@ from core.utils import utcnow
 from core.services.access_control import AccessControlService
 from web.dependencies import role_required
 
+from .index import render_next_page
+
 router = APIRouter(prefix="/groups", tags=["groups"])
+ui_router = APIRouter(prefix="/groups", tags=["groups"], include_in_schema=False)
 
 
 def _format_display_name(user: TgUser | None) -> str:
@@ -533,6 +537,30 @@ async def prune_group_members(
             failed=failed,
             total_candidates=len(candidates_links),
         )
+
+
+@ui_router.get("", include_in_schema=False, response_class=HTMLResponse)
+@ui_router.get("/", include_in_schema=False, response_class=HTMLResponse)
+async def groups_overview_page() -> HTMLResponse:
+    """Serve the Next.js groups overview page."""
+
+    return render_next_page("groups")
+
+
+@ui_router.get("/manage/{group_id}", include_in_schema=False, response_class=HTMLResponse)
+@ui_router.get("/manage/{group_id}/", include_in_schema=False, response_class=HTMLResponse)
+async def groups_manage_page(group_id: int = Path(..., gt=0)) -> HTMLResponse:  # noqa: B008 - path param validation
+    """Serve the Next.js group management page."""
+
+    return render_next_page("groups")
+
+
+@ui_router.get("/{slug}", include_in_schema=False, response_class=HTMLResponse)
+@ui_router.get("/{slug}/", include_in_schema=False, response_class=HTMLResponse)
+async def groups_profile_page(slug: str) -> HTMLResponse:  # noqa: ARG001 - handled client-side
+    """Serve the Next.js group profile page."""
+
+    return render_next_page("groups")
 
 
 api = router

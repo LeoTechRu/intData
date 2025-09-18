@@ -109,7 +109,7 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         key="products",
         label="Продукты",
         route="/products",
-        status=NavStatus("wip"),
+        status=NavStatus("new"),
     ),
     NavBlueprintItem(
         key="habits",
@@ -129,7 +129,7 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         key="groups",
         label="Группы",
         route="/groups",
-        status=NavStatus("wip"),
+        status=NavStatus("new"),
         roles=("admin",),
     ),
     NavBlueprintItem(

@@ -40,6 +40,7 @@
 
 | Start (UTC) | Agent | Branch | Epic / Scope | Ключевые файлы | Статус |
 |-------------|-------|--------|--------------|----------------|--------|
+| 2025-09-18 20:37 | codex | feature/E17/legacy-migration-codex | E17 / миграция легаси-страниц на новый UI | web/app/*, web/templates/*, web/components/*, docs/* | завершено 2025-09-18 21:03 |
 | 2025-09-18 19:30 | codex | feature/E17/groups-products-ui-codex | E17 / тарифы, кнопки поддержки | web/components/marketing, web/components/AppShell.tsx, docs/* | завершено 2025-09-18 19:46 |
 | 2025-09-18 18:44 | codex | feature/E17/groups-products-ui-codex | E17 / модернизация groups & products, тултипы терминов | web/app/groups, web/app/products, web/components, docs/* | завершено 2025-09-18 19:18 |
 | 2025-09-18 17:45 | codex | feature/E17/profile-widget-codex | E17 / виджет профиля, меню тарифов | web/app, web/components, docs/* | завершено 2025-09-18 17:58 |
@@ -495,6 +496,7 @@ Reference: см. архивный отчёт `docs/archive/report_frontend_moder
   - [x] `/auth` обслуживается на Next.js; шаблон `templates/auth.html` и `static/js/auth_extra.js` удалены.
   - [x] `/notes` работает на Next.js; удалены `templates/notes.html`, `static/js/notes.js`, `static/css/notes.css`.
   - [x] Очистить оставшиеся legacy-ассеты (calendar) и обновить пути Tailwind.
+  - [x] Завершить уборку Jinja-шаблонов (`ban`, `admin/embed`) и legacy-скриптов (`web/static/js|css|ts|ui`), перенести `/ban` и `/cup/admin-embed` на Next.js страницы.
 - [x] P1•M — Перенести страницу `/time` на Next.js: активный таймер, аналитика, удаление legacy-шаблонов.
 - [x] P2•M — Внедрить AppShell-лейаут Next.js с дизайн-токенами, адаптивной навигацией и современными UI паттернами для перенесённых страниц.
 - [x] P2•S — Страница `/habits` работает на Next.js, использует React Query и HUD с XP/Gold/KP.
@@ -512,7 +514,7 @@ Reference: см. архивный отчёт `docs/archive/report_frontend_moder
 - [x] P0•S — `/pricing` перенаправляет на `/tariffs`; пункт «Тарифы» убран из AppShell, CTA для апгрейда доступен на странице `/settings`.
 - [x] P0•S — Публичный лендинг `/bot` на Next.js с CTA на @intDataBot, сценариями автоматизации и ссылками на тарифы/документацию.
 - [x] P0•S — FastAPI-роут `/bot` отдаёт статическую Next.js страницу и остаётся в списке публичных маршрутов без редиректа на `/auth`.
-- [ ] P1•S — Завершить аудит оставшихся legacy-шаблонов и зафиксировать план миграции после переноса ЦУП/админки.
+- [x] P1•S — Завершить аудит оставшихся legacy-шаблонов и зафиксировать план миграции после переноса ЦУП/админки.
 - [x] P1•M — Левая панель нового UI поддерживает drag-n-drop редактор меню: порядок и видимость пунктов сохраняются в `user_settings.nav_sidebar` и глобальном пресете.
 
 **User Stories**

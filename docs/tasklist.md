@@ -20,6 +20,7 @@
 - [x] TL-2025-09-18-bot — Восстановить публичный лендинг `/bot` на Next.js (agent: codex, ветка `feature/E17/bot-landing-codex`).
 - [x] TL-2025-09-18-groups — Перенести `/groups`, `/groups/manage/{id}` и `/products` на Next.js, добавить тултипы `TermHint`, удалить legacy-шаблоны и `ui_router` (agent: codex, ветка `feature/E17/groups-products-ui-codex`).
 - [x] TL-2025-09-18-support — Обновить лендинг `/tariffs` (кликабельное сообщество, упоминания поддержки) и добавить условные кнопки поддержки в AppShell (agent: codex, ветка `feature/E17/groups-products-ui-codex`).
+- [x] TL-2025-09-18-legacy-final — Завершить перенос legacy-страниц: включить `/products` и `/groups` в AppShell, перевести `/ban` и `/cup/admin-embed` на Next.js, удалить Jinja-шаблоны и статические JS/CSS (agent: codex, ветка `feature/E17/legacy-migration-codex`).
 
 ## E18: CRM Knowledge Hub
 - [ ] TL-2025-09-18-crm-blueprint — Подготовить архитектурный план CRM (PARA × Zettelkasten), описать автоматизации и данные в `docs/vision.md` (owner: TBD, epic E18).
