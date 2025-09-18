@@ -3,15 +3,15 @@ from __future__ import annotations
 from datetime import datetime
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-from core.models import ContainerType, Note, TgUser, WebUser
+from core.models import ContainerType, Note, TgUser
 from core.services.note_service import NoteService
 from core.services.para_service import ParaService
 from web.dependencies import get_current_tg_user, get_current_web_user
-
-from ..template_env import templates
+from .index import render_next_page
 
 router = APIRouter(prefix="/notes", tags=["notes"])
 ui_router = APIRouter(prefix="/notes", tags=["notes"], include_in_schema=False)
@@ -302,24 +302,13 @@ async def reorder_notes(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@ui_router.get("")
+@ui_router.get("", include_in_schema=False, response_class=HTMLResponse)
+@ui_router.get("/", include_in_schema=False, response_class=HTMLResponse)
 async def notes_page(
-    request: Request,
-    current_user: WebUser | None = Depends(get_current_web_user),
-    tg_user: TgUser | None = Depends(get_current_tg_user),
+    current_user: TgUser | None = Depends(get_current_tg_user),  # noqa: ARG001 - retained for auth side-effects
+    _web_user = Depends(get_current_web_user),  # noqa: ARG001 - ensures cookie refresh
 ):
-    notes = []
-    if tg_user:
-        async with NoteService() as svc:
-            notes = await svc.list_notes(owner_id=tg_user.telegram_id)
-    context = {
-        "current_user": current_user,
-        "current_role_name": getattr(current_user, "role", ""),
-        "is_admin": getattr(current_user, "role", "") == "admin",
-        "page_title": "Заметки",
-        "notes": notes,
-    }
-    return templates.TemplateResponse(request, "notes.html", context)
+    return render_next_page("notes")
 
 
 # Alias for centralized API mounting

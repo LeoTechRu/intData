@@ -17,6 +17,32 @@ export interface Project {
   slug?: string | null;
 }
 
+export interface NoteAreaSummary {
+  id: number;
+  name: string;
+  slug?: string | null;
+  color?: string | null;
+}
+
+export interface NoteProjectSummary {
+  id: number;
+  name: string;
+}
+
+export interface Note {
+  id: number;
+  title?: string | null;
+  content: string;
+  pinned: boolean;
+  archived_at?: string | null;
+  order_index: number;
+  area_id: number;
+  project_id?: number | null;
+  color: string;
+  area: NoteAreaSummary;
+  project?: NoteProjectSummary | null;
+}
+
 export interface Resource {
   id: number;
   title: string;

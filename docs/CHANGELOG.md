@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Next.js-дэшборд «Обзор» (`/`) с drag-and-drop виджетами, настройками видимости и данными из нового API `/api/v1/dashboard/overview`.
 - Роль-гейтед страница «ЛК Админа» (`/admin`) на Next.js, использующая `/api/v1/admin/overview` и существующие администртивные эндпоинты; legacy-встраивание `/cup/admin-embed` сохранено.
 - Next.js-страница `/auth` с лендингом продукта, Telegram SSO, reCAPTCHA и магическими ссылками (вместо Jinja-шаблонов).
+- Next.js-страница `/notes` с карточками, фильтрами, drag-n-drop сортировкой и модальным редактированием.
 - API `/api/v1/auth/options` публикует конфигурацию и диагностику для страницы авторизации.
 - API `/api/v1/admin/overview` и обновлённые React-компоненты для управления web/TG-пользователями, группами, брендингом и рестартами сервисов.
 - Страница `/habits` на Next.js: HUD с XP/Gold/KP, фильтр по областям и управление привычками через React Query.
@@ -199,6 +200,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Legacy-шаблон главной страницы `web/templates/start.html` и привязанные статические элементы после переноса дашборда на Next.js.
 - Legacy-шаблон `web/templates/habits.html` и скрипт `web/static/js/habits_v1.js` после миграции на Next.js.
 - Legacy-шаблон авторизации `web/templates/auth.html` и скрипт `web/static/js/auth_extra.js` удалены после переноса /auth на Next.js.
+- Страница заметок переведена на Next.js; удалены `web/templates/notes.html`, `web/static/js/notes.js`, `web/static/css/notes.css`.
 - Удалён устаревший каталог `NexusCore/`; весь функционал перенесён в `intdata/`.
 - Удалён HTML-маршрут `/admin`; админские инструменты доступны только из ЦУПа.
 - Удалён устаревший API напоминаний и связанные сервисы.
