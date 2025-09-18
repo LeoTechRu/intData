@@ -311,6 +311,12 @@ export interface TimeEntry {
   start_time: string;
   end_time?: string | null;
   description?: string | null;
+  active_seconds: number;
+  last_started_at?: string | null;
+  paused_at?: string | null;
+  is_running: boolean;
+  is_paused: boolean;
+  elapsed_seconds: number;
 }
 
 export interface TimeSummaryDay {

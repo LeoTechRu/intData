@@ -135,15 +135,26 @@ function renderPersonaTooltip(md: string): React.ReactNode[] {
   return result;
 }
 
-function getRunningDurationSeconds(entry: TimeEntry, now: number): number {
-  const startDate = parseDateToUtc(entry.start_time);
-  const endDate = entry.end_time ? parseDateToUtc(entry.end_time) : null;
-  const start = startDate ? startDate.getTime() : NaN;
-  const end = endDate ? endDate.getTime() : now;
-  if (Number.isNaN(start) || Number.isNaN(end)) {
-    return 0;
+function getTimerElapsedSeconds(entry: TimeEntry, now: number): number {
+  let total = entry.active_seconds ?? 0;
+  if (entry.is_running && entry.last_started_at) {
+    const lastStart = parseDateToUtc(entry.last_started_at)?.getTime() ?? NaN;
+    if (!Number.isNaN(lastStart)) {
+      total += Math.max(0, Math.floor((now - lastStart) / 1000));
+    }
+  } else if (entry.end_time && total === 0) {
+    const start = parseDateToUtc(entry.start_time)?.getTime() ?? NaN;
+    const end = parseDateToUtc(entry.end_time)?.getTime() ?? NaN;
+    if (!Number.isNaN(start) && !Number.isNaN(end)) {
+      total = Math.max(0, Math.floor((end - start) / 1000));
+    }
+  } else if (!entry.end_time && !entry.is_running && total === 0) {
+    const start = parseDateToUtc(entry.start_time)?.getTime() ?? NaN;
+    if (!Number.isNaN(start)) {
+      total = Math.max(0, Math.floor((now - start) / 1000));
+    }
   }
-  return Math.max(0, Math.floor((end - start) / 1000));
+  return total;
 }
 
 export default function AppShell({
@@ -607,6 +618,26 @@ function MiniTimerWidget({ viewer }: { viewer: ViewerProfileSummary | null }) {
     },
   });
 
+  const pauseMutation = useMutation({
+    mutationFn: (entryId: number) =>
+      apiFetch<TimeEntry>(`/api/v1/time/${entryId}/pause`, {
+        method: 'POST',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['time'] });
+    },
+  });
+
+  const resumeMutation = useMutation({
+    mutationFn: (entryId: number) =>
+      apiFetch<TimeEntry>(`/api/v1/time/${entryId}/resume`, {
+        method: 'POST',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['time'] });
+    },
+  });
+
   const stopMutation = useMutation({
     mutationFn: (entryId: number) =>
       apiFetch<TimeEntry>(`/api/v1/time/${entryId}/stop`, {
@@ -625,21 +656,34 @@ function MiniTimerWidget({ viewer }: { viewer: ViewerProfileSummary | null }) {
     startMutation.mutate();
   };
 
-  const handleStop = (entryId: number) => {
-    stopMutation.mutate(entryId);
+  const handlePause = (entry: TimeEntry) => {
+    pauseMutation.mutate(entry.id);
   };
 
-  const running = runningQuery.data ?? null;
-  const timerSeconds = running ? getRunningDurationSeconds(running, now) : 0;
-  const isLoading = runningQuery.isFetching || startMutation.isPending || stopMutation.isPending;
+  const handleResume = (entry: TimeEntry) => {
+    resumeMutation.mutate(entry.id);
+  };
+
+  const handleStop = (entry: TimeEntry) => {
+    stopMutation.mutate(entry.id);
+  };
+
+  const runningRaw = runningQuery.data ?? null;
+  const hasActive = runningRaw && !runningRaw.end_time ? runningRaw : null;
+  const isRunning = Boolean(hasActive?.is_running);
+  const isPaused = Boolean(hasActive?.is_paused && !hasActive?.is_running);
+  const elapsedSeconds = hasActive ? getTimerElapsedSeconds(hasActive, now) : 0;
+  const isLoading =
+    runningQuery.isFetching ||
+    startMutation.isPending ||
+    pauseMutation.isPending ||
+    resumeMutation.isPending ||
+    stopMutation.isPending;
 
   return (
     <div className="mt-6 rounded-2xl border border-subtle bg-[var(--surface-0)] p-4 shadow-soft">
       <div className="flex items-center justify-between gap-2">
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-muted">Быстрый таймер</div>
-          <div className="text-sm text-muted">Запускайте фокус прямо из меню</div>
-        </div>
+        <div className="text-xs font-semibold uppercase tracking-wide text-muted">Таймер</div>
         <Button
           type="button"
           variant="ghost"
@@ -650,61 +694,168 @@ function MiniTimerWidget({ viewer }: { viewer: ViewerProfileSummary | null }) {
         </Button>
       </div>
       {!viewer ? (
-        <div className="mt-3 text-sm text-muted">
-          Войдите, чтобы запускать таймеры и видеть прогресс.
+        <div className="mt-3 flex items-center justify-center">
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            title="Войти, чтобы управлять таймером"
+            onClick={() => router.push('/auth')}
+          >
+            <LockIcon />
+          </Button>
         </div>
       ) : runningQuery.isError && runningQuery.error instanceof ApiError && runningQuery.error.status >= 500 ? (
         <div className="mt-3 text-sm text-danger">Не удалось загрузить состояние таймера.</div>
-      ) : running ? (
-        <div className="mt-3 flex flex-col gap-2">
-          <div className="text-2xl font-semibold text-[var(--text-primary)]">
-            {formatClock(timerSeconds)}
-          </div>
-          <div className="text-xs text-muted">
-            Старт {formatDateTime(running.start_time)}
-            {running.description ? ` · ${running.description}` : ''}
+      ) : hasActive && isRunning ? (
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <div
+            className="text-3xl font-semibold text-[var(--text-primary)]"
+            title={`${formatDateTime(hasActive.start_time)}${hasActive.description ? ` · ${hasActive.description}` : ''}`}
+          >
+            {formatClock(elapsedSeconds)}
           </div>
           <div className="flex items-center gap-2">
             <Button
               type="button"
-              variant="primary"
-              size="sm"
-              onClick={() => handleStop(running.id)}
+              size="icon"
+              variant="subtle"
+              onClick={() => handlePause(hasActive)}
               disabled={isLoading}
+              title="Пауза"
             >
-              Стоп
+              <PauseIcon />
             </Button>
-            {running.task_id ? (
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              onClick={() => handleStop(hasActive)}
+              disabled={isLoading}
+              title="Остановить и завершить"
+            >
+              <StopIcon />
+            </Button>
+            {hasActive.task_id ? (
               <Button
                 type="button"
+                size="icon"
                 variant="ghost"
-                size="sm"
-                onClick={() => router.push(`/tasks?task=${running.task_id}`)}
+                onClick={() => router.push(`/tasks?task=${hasActive.task_id}`)}
+                title={`Перейти к задаче #${hasActive.task_id}`}
               >
-                Задача #{running.task_id}
+                <TaskIcon />
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      ) : hasActive && isPaused ? (
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <div
+            className="text-3xl font-semibold text-[var(--text-primary)]"
+            title={`${formatDateTime(hasActive.start_time)}${hasActive.description ? ` · ${hasActive.description}` : ''}`}
+          >
+            {formatClock(elapsedSeconds)}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              size="icon"
+              onClick={() => handleResume(hasActive)}
+              disabled={isLoading}
+              title="Возобновить"
+            >
+              {resumeMutation.isPending ? <LoaderIcon /> : <PlayIcon />}
+            </Button>
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              onClick={() => handleStop(hasActive)}
+              disabled={isLoading}
+              title="Завершить"
+            >
+              <StopIcon />
+            </Button>
+            {hasActive.task_id ? (
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={() => router.push(`/tasks?task=${hasActive.task_id}`)}
+                title={`Перейти к задаче #${hasActive.task_id}`}
+              >
+                <TaskIcon />
               </Button>
             ) : null}
           </div>
         </div>
       ) : (
-        <div className="mt-3 flex flex-col gap-2">
-          <div className="text-xs text-muted">Таймер не запущен</div>
-          <div className="flex items-center gap-2">
-            <Button type="button" size="sm" onClick={handleStart} disabled={isLoading}>
-              {startMutation.isPending ? 'Запускаем…' : 'Стартовать'}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              onClick={() => router.push('/time')}
-            >
-              Открыть /time
-            </Button>
-          </div>
+        <div className="mt-3 flex items-center justify-center">
+          <Button
+            type="button"
+            size="icon"
+            onClick={handleStart}
+            disabled={isLoading}
+            title="Запустить таймер"
+          >
+            {startMutation.isPending ? <LoaderIcon /> : <PlayIcon />}
+          </Button>
         </div>
       )}
     </div>
+  );
+}
+
+function PlayIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6}>
+      <path d="M7 5.5v13l11-6.5-11-6.5z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function PauseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6}>
+      <rect x="7" y="5" width="3.5" height="14" rx="1.2" fill="currentColor" />
+      <rect x="13.5" y="5" width="3.5" height="14" rx="1.2" fill="currentColor" />
+    </svg>
+  );
+}
+
+function StopIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6}>
+      <rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor" />
+    </svg>
+  );
+}
+
+function TaskIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6}>
+      <path d="M9 11l2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="4" y="4" width="16" height="16" rx="3" />
+    </svg>
+  );
+}
+
+function LockIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6}>
+      <rect x="5" y="10" width="14" height="10" rx="2" />
+      <path d="M8 10V7a4 4 0 1 1 8 0v3" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="15" r="1.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+function LoaderIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5 animate-spin" fill="none" stroke="currentColor" strokeWidth={1.6}>
+      <path d="M12 3a9 9 0 1 0 9 9" strokeLinecap="round" />
+    </svg>
   );
 }
 

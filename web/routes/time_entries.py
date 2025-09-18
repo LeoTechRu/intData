@@ -32,15 +32,30 @@ class TimeEntryResponse(BaseModel):
     start_time: str
     end_time: Optional[str]
     description: Optional[str]
+    active_seconds: int
+    last_started_at: Optional[str]
+    paused_at: Optional[str]
+    is_running: bool
+    is_paused: bool
+    elapsed_seconds: int
 
     @classmethod
     def from_model(cls, entry: TimeEntry) -> "TimeEntryResponse":
+        last_started_at = entry.last_started_at.isoformat() if entry.last_started_at else None
+        paused_at = entry.paused_at.isoformat() if entry.paused_at else None
+        end_time = entry.end_time.isoformat() if entry.end_time else None
         return cls(
             id=entry.id,
             task_id=entry.task_id,
             start_time=entry.start_time.isoformat(),
-            end_time=entry.end_time.isoformat() if entry.end_time else None,
+            end_time=end_time,
             description=entry.description,
+            active_seconds=entry.active_seconds or 0,
+            last_started_at=last_started_at,
+            paused_at=paused_at,
+            is_running=entry.is_running,
+            is_paused=entry.is_paused,
+            elapsed_seconds=entry.duration_seconds or 0,
         )
 
 
@@ -81,6 +96,34 @@ async def start_timer(
     return TimeEntryResponse.from_model(entry)
 
 
+@router.post("/{entry_id}/pause", response_model=TimeEntryResponse, name="api:time_pause")
+async def pause_timer(entry_id: int, current_user: TgUser | None = Depends(get_current_tg_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    async with TimeService() as service:
+        try:
+            entry = await service.pause_timer(entry_id, owner_id=current_user.telegram_id)
+        except PermissionError:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        except ValueError as error:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error))
+    return TimeEntryResponse.from_model(entry)
+
+
+@router.post("/{entry_id}/resume", response_model=TimeEntryResponse, name="api:time_resume_entry")
+async def resume_entry(entry_id: int, current_user: TgUser | None = Depends(get_current_tg_user)):
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    async with TimeService() as service:
+        try:
+            entry = await service.resume_entry(entry_id, owner_id=current_user.telegram_id)
+        except PermissionError:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        except ValueError as error:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error))
+    return TimeEntryResponse.from_model(entry)
+
+
 @router.post("/{entry_id}/stop", response_model=TimeEntryResponse, name="api:time_stop")
 async def stop_timer(
     entry_id: int,
@@ -91,8 +134,9 @@ async def stop_timer(
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     async with TimeService() as service:
-        entry = await service.stop_timer(entry_id)
-        if entry is None or entry.owner_id != current_user.telegram_id:
+        try:
+            entry = await service.stop_timer(entry_id, owner_id=current_user.telegram_id)
+        except PermissionError:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return TimeEntryResponse.from_model(entry)
 

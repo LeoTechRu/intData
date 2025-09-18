@@ -338,6 +338,7 @@
 - [ ] напоминания к задаче через `/calendar/items/{id}/alarms`.
 - [ ] флажок календаря `include_tasks/only_scheduled` работает.
 - [x] `/time/summary` даёт срезы по `project/area/day/user`.
+- [x] Таймер поддерживает паузу/возобновление без создания новой записи; API предоставляет `/api/v1/time/{id}/pause|resume`.
 - [ ] не более одного активного таймера на пользователя.
 
 #### E13a: Telegram Task Manager (бот)

@@ -675,6 +675,9 @@ class TimeEntry(Base):
     activity_type = Column(Enum(ActivityType), default=ActivityType.work)
     billable = Column(Boolean, default=True)
     source = Column(Enum(TimeSource), default=TimeSource.timer)
+    active_seconds = Column(Integer, nullable=False, default=0)
+    last_started_at = Column(DateTime(timezone=True))
+    paused_at = Column(DateTime(timezone=True))
     created_at = Column(DateTime(timezone=True), default=utcnow)
     updated_at = Column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
@@ -684,13 +687,38 @@ class TimeEntry(Base):
     @property
     def duration_seconds(self) -> int | None:
         """Return duration in seconds if entry is finished, else None."""
-        if not self.start_time or not self.end_time:
-            return None
-        try:
-            delta = self.end_time - self.start_time
-            return int(delta.total_seconds())
-        except Exception:
-            return None
+        total = self.active_seconds or 0
+        if self.end_time:
+            if self.last_started_at:
+                try:
+                    total += int((self.end_time - self.last_started_at).total_seconds())
+                except Exception:
+                    pass
+            elif total == 0 and self.start_time:
+                try:
+                    total = int((self.end_time - self.start_time).total_seconds())
+                except Exception:
+                    return None
+            return max(total, 0)
+        if self.last_started_at:
+            try:
+                total += int((utcnow() - self.last_started_at).total_seconds())
+            except Exception:
+                return total
+        elif total == 0 and self.start_time:
+            try:
+                total = int((utcnow() - self.start_time).total_seconds())
+            except Exception:
+                return total
+        return max(total, 0)
+
+    @property
+    def is_running(self) -> bool:
+        return self.end_time is None and self.last_started_at is not None
+
+    @property
+    def is_paused(self) -> bool:
+        return self.end_time is None and self.last_started_at is None and self.paused_at is not None
 
 
 # ---------------------------------------------------------------------------

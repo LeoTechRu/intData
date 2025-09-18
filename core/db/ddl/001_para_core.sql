@@ -42,9 +42,13 @@ CREATE INDEX IF NOT EXISTS ix_resources_human   ON resources(human_user_id);
 ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS task_id     INTEGER;
 ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS project_id  INTEGER;
 ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS area_id     INTEGER;
+ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS active_seconds INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS last_started_at TIMESTAMPTZ;
+ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS paused_at TIMESTAMPTZ;
 -- один активный таймер на пользователя (entry без end_time считается активным)
+DROP INDEX IF EXISTS ux_time_active_one_per_user;
 CREATE UNIQUE INDEX IF NOT EXISTS ux_time_active_one_per_user
-  ON time_entries(owner_id) WHERE end_time IS NULL;
+  ON time_entries(owner_id) WHERE end_time IS NULL AND last_started_at IS NOT NULL;
 
 -- para_overrides (субъективные привязки для viewer’а)
 CREATE TABLE IF NOT EXISTS para_overrides(

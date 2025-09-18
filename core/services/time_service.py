@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import List, Optional
 from collections import defaultdict
 
@@ -50,6 +51,31 @@ class TimeService:
             await self.session.flush()
         return inbox
 
+    async def _find_active_entry(
+        self, owner_id: int, *, exclude: int | None = None
+    ) -> TimeEntry | None:
+        stmt = (
+            select(TimeEntry)
+            .where(TimeEntry.owner_id == owner_id)
+            .where(TimeEntry.end_time.is_(None))
+            .where(TimeEntry.last_started_at.isnot(None))
+            .order_by(TimeEntry.start_time.desc())
+        )
+        if exclude is not None:
+            stmt = stmt.where(TimeEntry.id != exclude)
+        res = await self.session.execute(stmt)
+        return res.scalars().first()
+
+    @staticmethod
+    def _accumulate_active(entry: TimeEntry, now: datetime) -> None:
+        if entry.last_started_at is None:
+            return
+        delta = now - entry.last_started_at
+        seconds = int(delta.total_seconds())
+        if seconds > 0:
+            entry.active_seconds = (entry.active_seconds or 0) + seconds
+        entry.last_started_at = None
+
     async def start_timer(
         self,
         owner_id: int,
@@ -68,16 +94,8 @@ class TimeService:
         - If ``exclusive`` is True, refuses to start when another timer
           without ``end_time`` exists for the owner.
         """
-
         if exclusive:
-            stmt = (
-                select(TimeEntry)
-                .where(TimeEntry.owner_id == owner_id)
-                .where(TimeEntry.end_time.is_(None))
-                .order_by(TimeEntry.start_time.desc())
-            )
-            res = await self.session.execute(stmt)
-            running = res.scalars().first()
+            running = await self._find_active_entry(owner_id)
             if running:
                 raise ValueError(
                     f"Another timer #{running.id} is already running for owner {owner_id}."
@@ -130,7 +148,15 @@ class TimeService:
                 if not await AreaService(self.session).is_leaf(area_id):
                     raise ValueError("Area must be a leaf")
 
-        entry = TimeEntry(owner_id=owner_id, description=description, task_id=task_id)
+        now = utcnow()
+        entry = TimeEntry(
+            owner_id=owner_id,
+            description=description,
+            task_id=task_id,
+            start_time=now,
+            last_started_at=now,
+            active_seconds=0,
+        )
         # Inherit PARA lineage
         if linked_task is not None:
             entry.project_id = getattr(linked_task, "project_id", None)
@@ -158,13 +184,59 @@ class TimeService:
             create_task_if_missing=False,
         )
 
-    async def stop_timer(self, entry_id: int) -> TimeEntry | None:
-        """Stop timer by setting end time to now."""
+    async def pause_timer(self, entry_id: int, *, owner_id: int) -> TimeEntry:
+        """Put a running timer on pause while keeping accumulated duration."""
+
+        entry = await self.session.get(TimeEntry, entry_id)
+        if not entry or entry.owner_id != owner_id:
+            raise PermissionError("Entry not found or belongs to different owner")
+        if entry.end_time is not None:
+            raise ValueError("Timer already finished")
+        if entry.last_started_at is None:
+            # already paused, return as-is
+            return entry
+        now = utcnow()
+        self._accumulate_active(entry, now)
+        entry.paused_at = now
+        await self.session.flush()
+        return entry
+
+    async def resume_entry(self, entry_id: int, *, owner_id: int) -> TimeEntry:
+        """Resume a paused timer, ensuring no other active timers exist."""
+
+        entry = await self.session.get(TimeEntry, entry_id)
+        if not entry or entry.owner_id != owner_id:
+            raise PermissionError("Entry not found or belongs to different owner")
+        if entry.end_time is not None:
+            raise ValueError("Timer already finished")
+        if entry.last_started_at is not None:
+            return entry
+        active = await self._find_active_entry(owner_id, exclude=entry.id)
+        if active:
+            raise ValueError(
+                f"Timer #{active.id} is already running for owner {owner_id}."
+            )
+        entry.last_started_at = utcnow()
+        entry.paused_at = None
+        await self.session.flush()
+        return entry
+
+    async def stop_timer(self, entry_id: int, *, owner_id: int | None = None) -> TimeEntry | None:
+        """Stop timer by setting end time and closing the active segment."""
 
         entry = await self.session.get(TimeEntry, entry_id)
         if entry is None:
             return None
-        entry.end_time = utcnow()
+        if owner_id is not None and entry.owner_id != owner_id:
+            raise PermissionError("Entry not found or belongs to different owner")
+        if entry.end_time is not None:
+            return entry
+        now = utcnow()
+        if entry.last_started_at is not None:
+            self._accumulate_active(entry, now)
+        entry.end_time = now
+        entry.last_started_at = None
+        entry.paused_at = None
         await self.session.flush()
         return entry
 

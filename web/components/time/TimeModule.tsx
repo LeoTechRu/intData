@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 
 import PageLayout from '../PageLayout';
 import { Button, Card, EmptyState, Field, Input, Select, Section, Toolbar } from '../ui';
@@ -38,12 +39,20 @@ interface TimerFormState {
 }
 
 function getDurationSeconds(entry: TimeEntry, now: number): number {
-  const start = new Date(entry.start_time).getTime();
-  const end = entry.end_time ? new Date(entry.end_time).getTime() : now;
-  if (Number.isNaN(start) || Number.isNaN(end)) {
-    return 0;
+  let total = entry.active_seconds ?? entry.elapsed_seconds ?? 0;
+  if (entry.is_running && entry.last_started_at) {
+    const last = new Date(entry.last_started_at).getTime();
+    if (!Number.isNaN(last)) {
+      total += Math.max(0, Math.round((now - last) / 1000));
+    }
+  } else if (entry.end_time && total === 0) {
+    const start = new Date(entry.start_time).getTime();
+    const end = new Date(entry.end_time).getTime();
+    if (!Number.isNaN(start) && !Number.isNaN(end)) {
+      total = Math.max(0, Math.round((end - start) / 1000));
+    }
   }
-  return Math.max(0, Math.round((end - start) / 1000));
+  return total;
 }
 
 function formatDayLabel(dayIso: string): string {
@@ -57,6 +66,7 @@ function formatDayLabel(dayIso: string): string {
 
 export default function TimeModule(): JSX.Element {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [rangeDays, setRangeDays] = useState<number>(RANGE_OPTIONS[0].value);
   const [timerForm, setTimerForm] = useState<TimerFormState>({ description: '', taskId: '' });
   const [formError, setFormError] = useState<string | null>(null);
@@ -234,7 +244,11 @@ export default function TimeModule(): JSX.Element {
       .slice(0, 10);
   }, [durations]);
 
-  const runningEntry = runningQuery.data;
+  const runningEntryRaw = runningQuery.data ?? null;
+  const activeEntry = runningEntryRaw && !runningEntryRaw.end_time ? runningEntryRaw : null;
+  const isTimerRunning = Boolean(activeEntry?.is_running);
+  const isTimerPaused = Boolean(activeEntry?.is_paused && !activeEntry?.is_running);
+  const activeEntrySeconds = activeEntry ? getDurationSeconds(activeEntry, nowTick) : 0;
 
   const startMutation = useMutation({
     mutationFn: (payload: { description: string | null; task_id: number | null }) =>
@@ -256,17 +270,25 @@ export default function TimeModule(): JSX.Element {
     },
   });
 
-  const stopMutation = useMutation({
+  const pauseMutation = useMutation({
     mutationFn: (entryId: number) =>
-      apiFetch<TimeEntry>(`/api/v1/time/${entryId}/stop`, { method: 'POST' }),
+      apiFetch<TimeEntry>(`/api/v1/time/${entryId}/pause`, { method: 'POST' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['time'] });
     },
   });
 
-  const resumeMutation = useMutation({
-    mutationFn: (taskId: number) =>
-      apiFetch<TimeEntry>(`/api/v1/time/resume/${taskId}`, { method: 'POST' }),
+  const resumeEntryMutation = useMutation({
+    mutationFn: (entryId: number) =>
+      apiFetch<TimeEntry>(`/api/v1/time/${entryId}/resume`, { method: 'POST' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['time'] });
+    },
+  });
+
+  const stopMutation = useMutation({
+    mutationFn: (entryId: number) =>
+      apiFetch<TimeEntry>(`/api/v1/time/${entryId}/stop`, { method: 'POST' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['time'] });
     },
@@ -285,11 +307,25 @@ export default function TimeModule(): JSX.Element {
     startMutation.mutate({ description, task_id: null });
   };
 
-  const handleStop = () => {
-    if (!runningEntry) {
+  const handlePause = () => {
+    if (!activeEntry) {
       return;
     }
-    stopMutation.mutate(runningEntry.id);
+    pauseMutation.mutate(activeEntry.id);
+  };
+
+  const handleResume = () => {
+    if (!activeEntry) {
+      return;
+    }
+    resumeEntryMutation.mutate(activeEntry.id);
+  };
+
+  const handleStop = () => {
+    if (!activeEntry) {
+      return;
+    }
+    stopMutation.mutate(activeEntry.id);
   };
 
   const handleRangeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -330,27 +366,39 @@ export default function TimeModule(): JSX.Element {
                   ))}
                 </Select>
               </div>
-              {runningEntry ? (
+              {activeEntry ? (
                 <div className="flex flex-col gap-3 rounded-xl border border-dashed border-[var(--accent-primary)] bg-[var(--surface-soft)] p-4">
-                  <div className="text-sm text-muted">Идёт с {formatDateTime(runningEntry.start_time)}</div>
+                  <div className="text-sm text-muted">
+                    {isTimerRunning
+                      ? `Идёт с ${formatDateTime(activeEntry.start_time)}`
+                      : `На паузе с ${formatDateTime(activeEntry.paused_at ?? activeEntry.start_time)}`}
+                  </div>
                   <div className="text-3xl font-semibold tracking-tight">
-                    {formatClock(getDurationSeconds(runningEntry, nowTick))}
+                    {formatClock(activeEntrySeconds)}
                   </div>
                   <div className="text-sm text-muted">
-                    {runningEntry.description || 'Без описания'}
-                    {runningEntry.task_id ? ` · задача #${runningEntry.task_id}` : ''}
+                    {activeEntry.description || 'Без описания'}
+                    {activeEntry.task_id ? ` · задача #${activeEntry.task_id}` : ''}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <Button onClick={handleStop} disabled={stopMutation.isPending} variant="primary">
-                      Остановить
+                    {isTimerRunning ? (
+                      <Button onClick={handlePause} disabled={pauseMutation.isPending} variant="primary">
+                        Пауза
+                      </Button>
+                    ) : (
+                      <Button onClick={handleResume} disabled={resumeEntryMutation.isPending} variant="primary">
+                        Возобновить
+                      </Button>
+                    )}
+                    <Button onClick={handleStop} disabled={stopMutation.isPending} variant="ghost">
+                      Завершить
                     </Button>
-                    {runningEntry.task_id ? (
+                    {activeEntry.task_id ? (
                       <Button
-                        onClick={() => resumeMutation.mutate(runningEntry.task_id!)}
-                        disabled={resumeMutation.isPending}
+                        onClick={() => router.push(`/tasks?task=${activeEntry.task_id}`)}
                         variant="ghost"
                       >
-                        Новая сессия по этой задаче
+                        Открыть задачу
                       </Button>
                     ) : null}
                   </div>

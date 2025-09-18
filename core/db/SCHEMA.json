@@ -1,8 +1,8 @@
 {
   "version": 1,
   "dialect": "postgresql",
-  "generated_at": "2025-09-17T09:20:31Z",
-  "metadata_hash": "75cc4b5988236cdea38071b5e916772f867dae957507a6d0363db61387400f3b",
+  "generated_at": "2025-09-18T09:20:29Z",
+  "metadata_hash": "ea9f36bf8b711361f51a9fbcaed7b0634261d738c27bda29c3688ac9e9544c8a",
   "enums": [
     {
       "name": "activitytype",
@@ -5453,6 +5453,16 @@
       "comment": "",
       "columns": [
         {
+          "name": "active_seconds",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": 0,
+          "server_default": null,
+          "comment": ""
+        },
+        {
           "name": "activity_type",
           "type": "activitytype",
           "nullable": true,
@@ -5523,8 +5533,28 @@
           "comment": ""
         },
         {
+          "name": "last_started_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
           "name": "owner_id",
           "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "paused_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
           "nullable": true,
           "primary_key": false,
           "autoincrement": true,
