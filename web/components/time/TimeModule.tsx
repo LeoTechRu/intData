@@ -16,7 +16,8 @@ import type {
   TimeSummaryDay,
   TimeSummaryProject,
 } from '../../lib/types';
-import { formatClock, formatDateTime, formatMinutes, parseDateToUtc } from '../../lib/time';
+import { formatClock, formatDateTime, formatMinutes, normalizeTimerDescription, parseDateToUtc } from '../../lib/time';
+import { useTimezone } from '../../lib/timezone';
 
 const MODULE_TITLE = 'Учёт времени';
 const MODULE_DESCRIPTION =
@@ -81,6 +82,7 @@ export default function TimeModule(): JSX.Element {
   const [timerForm, setTimerForm] = useState<TimerFormState>({ description: '', taskId: '' });
   const [formError, setFormError] = useState<string | null>(null);
   const [nowTick, setNowTick] = useState<number>(() => Date.now());
+  const timezone = useTimezone();
 
   useEffect(() => {
     const id = window.setInterval(() => {
@@ -259,6 +261,7 @@ export default function TimeModule(): JSX.Element {
   const isTimerRunning = Boolean(activeEntry?.is_running);
   const isTimerPaused = Boolean(activeEntry?.is_paused && !activeEntry?.is_running);
   const activeEntrySeconds = activeEntry ? getDurationSeconds(activeEntry, nowTick) : 0;
+  const activeEntryDescription = normalizeTimerDescription(activeEntry?.description);
 
   const startMutation = useMutation({
     mutationFn: (payload: { description: string | null; task_id: number | null }) =>
@@ -382,22 +385,48 @@ export default function TimeModule(): JSX.Element {
                 <div className="relative overflow-hidden rounded-2xl border border-dashed border-[var(--accent-primary)] bg-gradient-to-br from-[color-mix(in srgb, var(--accent-primary) 18%, transparent)] via-[color-mix(in srgb, var(--accent-primary) 8%, transparent)] to-transparent p-6">
                   <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex flex-1 items-start gap-5">
-                      <button
-                        type="button"
-                        className={clsx(
-                          'inline-flex h-20 w-20 items-center justify-center rounded-full text-white shadow-lg transition-transform duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]',
-                          isTimerRunning
-                            ? 'bg-emerald-500 hover:bg-emerald-400 focus-visible:ring-emerald-500'
-                            : 'bg-amber-500 hover:bg-amber-400 focus-visible:ring-amber-500',
-                          (pauseMutation.isPending || resumeEntryMutation.isPending) && 'opacity-70',
-                        )}
-                        onClick={isTimerRunning ? handlePause : handleResume}
-                        disabled={pauseMutation.isPending || resumeEntryMutation.isPending}
-                        title={isTimerRunning ? 'Пауза' : 'Продолжить'}
-                        aria-label={isTimerRunning ? 'Пауза' : 'Продолжить'}
-                      >
-                        {pauseMutation.isPending || resumeEntryMutation.isPending ? <LoaderIcon /> : isTimerRunning ? <PauseIcon /> : <PlayIcon />}
-                      </button>
+                      <div className="flex flex-col items-center gap-3">
+                        <button
+                          type="button"
+                          className={clsx(
+                            'inline-flex h-20 w-20 items-center justify-center rounded-full text-white shadow-lg transition-transform duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]',
+                            isTimerRunning
+                              ? 'bg-emerald-500 hover:bg-emerald-400 focus-visible:ring-emerald-500'
+                              : 'bg-amber-500 hover:bg-amber-400 focus-visible:ring-amber-500',
+                            (pauseMutation.isPending || resumeEntryMutation.isPending) && 'opacity-70',
+                          )}
+                          onClick={isTimerRunning ? handlePause : handleResume}
+                          disabled={pauseMutation.isPending || resumeEntryMutation.isPending}
+                          title={isTimerRunning ? 'Пауза' : 'Продолжить'}
+                          aria-label={isTimerRunning ? 'Пауза' : 'Продолжить'}
+                        >
+                          {pauseMutation.isPending || resumeEntryMutation.isPending ? <LoaderIcon /> : isTimerRunning ? <PauseIcon /> : <PlayIcon />}
+                        </button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            onClick={handleStop}
+                            disabled={stopMutation.isPending}
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-600 hover:bg-red-500/10 focus-visible:ring-red-500 dark:text-red-400"
+                            aria-label="Завершить сессию"
+                            title="Завершить сессию"
+                          >
+                            {stopMutation.isPending ? <LoaderIcon /> : <StopIcon />}
+                          </Button>
+                          {activeEntry.task_id ? (
+                            <Button
+                              onClick={() => router.push(`/tasks?task=${activeEntry.task_id}`)}
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Открыть задачу #${activeEntry.task_id}`}
+                              title={`Открыть задачу #${activeEntry.task_id}`}
+                            >
+                              <TaskIcon />
+                            </Button>
+                          ) : null}
+                        </div>
+                      </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-semibold uppercase tracking-wide text-muted">Таймер</span>
@@ -417,39 +446,15 @@ export default function TimeModule(): JSX.Element {
                         </div>
                         <p className="mt-1 text-xs text-muted">
                           {isTimerRunning
-                            ? `Запущен ${formatDateTime(activeEntry.start_time)}`
-                            : `Пауза с ${formatDateTime(activeEntry.paused_at ?? activeEntry.start_time)}`}
+                            ? `Запущен ${formatDateTime(activeEntry.start_time, timezone)}`
+                            : `Пауза с ${formatDateTime(activeEntry.paused_at ?? activeEntry.start_time, timezone)}`}
                         </p>
-                        {activeEntry.description ? (
+                        {activeEntryDescription ? (
                           <p className="mt-2 text-sm text-[var(--text-secondary)] line-clamp-2">
-                            {activeEntry.description}
+                            {activeEntryDescription}
                           </p>
                         ) : null}
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2 lg:flex-col lg:items-end lg:justify-between">
-                      <Button
-                        onClick={handleStop}
-                        disabled={stopMutation.isPending}
-                        variant="ghost"
-                        size="icon"
-                        className="text-red-600 hover:bg-red-500/10 focus-visible:ring-red-500 dark:text-red-400"
-                        aria-label="Завершить сессию"
-                        title="Завершить сессию"
-                      >
-                        {stopMutation.isPending ? <LoaderIcon /> : <StopIcon />}
-                      </Button>
-                      {activeEntry.task_id ? (
-                        <Button
-                          onClick={() => router.push(`/tasks?task=${activeEntry.task_id}`)}
-                          variant="ghost"
-                          size="icon"
-                          aria-label={`Открыть задачу #${activeEntry.task_id}`}
-                          title={`Открыть задачу #${activeEntry.task_id}`}
-                        >
-                          <TaskIcon />
-                        </Button>
-                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -647,12 +652,14 @@ export default function TimeModule(): JSX.Element {
                 {timeline.map(({ entry, seconds }) => (
                   <div key={entry.id} className="flex flex-col gap-1 p-4">
                     <div className="flex flex-wrap items-center justify-between gap-2 text-sm font-medium">
-                      <span>{entry.description || 'Без описания'}</span>
+                      <span>{normalizeTimerDescription(entry.description) ?? 'Без описания'}</span>
                       <span className="text-muted">{formatMinutes(seconds / 60)}</span>
                     </div>
                     <div className="text-xs text-muted">
-                      {formatDateTime(entry.start_time)}
-                      {entry.end_time ? ` · завершено ${formatDateTime(entry.end_time)}` : ' · в процессе'}
+                      {formatDateTime(entry.start_time, timezone)}
+                      {entry.end_time
+                        ? ` · завершено ${formatDateTime(entry.end_time, timezone)}`
+                        : ' · в процессе'}
                       {entry.task_id ? ` · задача #${entry.task_id}` : ''}
                     </div>
                   </div>

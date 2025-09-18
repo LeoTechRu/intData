@@ -17,7 +17,8 @@ import type {
   TimeEntry,
   ViewerProfileSummary,
 } from '../lib/types';
-import { formatClock, formatDateTime, parseDateToUtc } from '../lib/time';
+import { formatClock, formatDateTime, normalizeTimerDescription, parseDateToUtc } from '../lib/time';
+import { TimezoneProvider, useTimezone } from '../lib/timezone';
 import { Button, Card, StatusIndicator, type StatusIndicatorKind } from './ui';
 import { SidebarEditor } from './navigation/SidebarEditor';
 
@@ -292,6 +293,37 @@ export default function AppShell({
     [visibleNavItems, pathname],
   );
 
+  const defaultTimezone = useMemo(() => {
+    if (typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function') {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    }
+    return 'UTC';
+  }, []);
+
+  const timezoneQuery = useQuery<string>({
+    queryKey: ['user-settings', 'timezone'],
+    enabled: Boolean(viewer),
+    staleTime: 3_600_000,
+    gcTime: 3_600_000,
+    retry: false,
+    queryFn: async () => {
+      try {
+        const response = await apiFetch<{ key: string; value?: { name?: string | null } | null }>(
+          '/api/v1/user/settings/timezone',
+        );
+        const candidate = response?.value?.name;
+        if (candidate && candidate.length > 0) {
+          return candidate;
+        }
+      } catch (error) {
+        console.warn('Failed to fetch timezone setting', error);
+      }
+      return defaultTimezone;
+    },
+  });
+
+  const timezone = viewer ? timezoneQuery.data ?? defaultTimezone : defaultTimezone;
+
   const navVersion = navQuery.data?.v ?? 1;
   const userLayout = navQuery.data?.layout?.user ?? layoutFromItems(navVersion, navItems);
   const globalLayout = navQuery.data?.layout?.global ?? null;
@@ -373,9 +405,10 @@ export default function AppShell({
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface" data-app-shell>
-      <header className="sticky top-0 z-40 border-b border-subtle bg-[var(--surface-0)]/95 backdrop-blur">
-        <div className={headerClasses}>
+    <TimezoneProvider value={timezone}>
+      <div className="flex min-h-screen flex-col bg-surface" data-app-shell>
+        <header className="sticky top-0 z-40 border-b border-subtle bg-[var(--surface-0)]/95 backdrop-blur">
+          <div className={headerClasses}>
           <div className="flex items-center gap-2 md:gap-3">
             <button
               type="button"
@@ -582,7 +615,8 @@ export default function AppShell({
         savingUser={userSaving}
         savingGlobal={globalSaving}
       />
-    </div>
+      </div>
+    </TimezoneProvider>
   );
 }
 
@@ -590,6 +624,7 @@ function MiniTimerWidget({ viewer }: { viewer: ViewerProfileSummary | null }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [now, setNow] = useState(() => Date.now());
+  const timezone = useTimezone();
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -616,7 +651,7 @@ function MiniTimerWidget({ viewer }: { viewer: ViewerProfileSummary | null }) {
     mutationFn: () =>
       apiFetch<TimeEntry>('/api/v1/time/start', {
         method: 'POST',
-        body: JSON.stringify({ description: 'Быстрый таймер', task_id: null }),
+        body: JSON.stringify({ description: null, task_id: null }),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['time'] });
@@ -709,14 +744,14 @@ function MiniTimerWidget({ viewer }: { viewer: ViewerProfileSummary | null }) {
       return 'Авторизуйтесь, чтобы вести учёт времени';
     }
     if (isRunning) {
-      return `Таймер запущен с ${formatDateTime(activeEntry?.start_time ?? '')}`;
+      return `Таймер запущен с ${formatDateTime(activeEntry?.start_time ?? '', timezone)}`;
     }
     if (isPaused) {
-      return `Таймер на паузе с ${formatDateTime(activeEntry?.paused_at ?? activeEntry?.start_time ?? '')}`;
+      return `Таймер на паузе с ${formatDateTime(activeEntry?.paused_at ?? activeEntry?.start_time ?? '', timezone)}`;
     }
     return 'Нажмите, чтобы запустить быструю сессию';
   })();
-  const description = activeEntry?.description?.trim();
+  const description = normalizeTimerDescription(activeEntry?.description);
 
   const primaryLabel = !viewer
     ? 'Войти'
@@ -786,26 +821,63 @@ function MiniTimerWidget({ viewer }: { viewer: ViewerProfileSummary | null }) {
       data-widget="quick-timer"
       className={cardClass}
       tabIndex={0}
-      aria-label="Быстрый таймер"
+      aria-label="Таймер"
       onClick={onContainerClick}
       onKeyDown={onContainerKeyDown}
       title={tooltip}
     >
       <div className={gradientClass} aria-hidden />
       <div className="relative flex items-start gap-4">
-        <button
-          type="button"
-          className={primaryButtonClass}
-          onClick={(event) => {
-            event.stopPropagation();
-            primaryAction();
-          }}
-          disabled={isLoading}
-          title={primaryLabel}
-          aria-label={primaryLabel}
-        >
-          {primaryIcon}
-        </button>
+        <div className="flex flex-col items-center gap-2">
+          <button
+            type="button"
+            className={primaryButtonClass}
+            onClick={(event) => {
+              event.stopPropagation();
+              primaryAction();
+            }}
+            disabled={isLoading}
+            title={primaryLabel}
+            aria-label={primaryLabel}
+          >
+            {primaryIcon}
+          </button>
+          {viewer && activeEntry ? (
+            <div className="flex items-center gap-1.5">
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="text-red-600 hover:bg-red-500/10 focus-visible:ring-red-500 dark:text-red-400"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleStop(activeEntry);
+                }}
+                disabled={isLoading || stopMutation.isPending}
+                aria-label="Завершить сессию"
+                title="Завершить сессию"
+              >
+                {stopMutation.isPending ? <LoaderIcon /> : <StopIcon />}
+              </Button>
+              {activeEntry.task_id ? (
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    router.push(`/tasks?task=${activeEntry.task_id}`);
+                  }}
+                  disabled={isLoading}
+                  aria-label={`Открыть задачу #${activeEntry.task_id}`}
+                  title={`Открыть задачу #${activeEntry.task_id}`}
+                >
+                  <TaskIcon />
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold uppercase tracking-wide text-muted">Таймер</span>
@@ -828,50 +900,13 @@ function MiniTimerWidget({ viewer }: { viewer: ViewerProfileSummary | null }) {
           <p className="mt-1 text-xs text-muted">
             {activeEntry
               ? isRunning
-                ? `Запущен ${formatDateTime(activeEntry.start_time)}`
-                : `Пауза с ${formatDateTime(activeEntry.paused_at ?? activeEntry.start_time)}`
+                ? `Запущен ${formatDateTime(activeEntry.start_time, timezone)}`
+                : `Пауза с ${formatDateTime(activeEntry.paused_at ?? activeEntry.start_time, timezone)}`
               : 'Таймер готов к запуску'}
           </p>
           {description ? (
             <p className="mt-2 text-sm text-[var(--text-secondary)] line-clamp-2">{description}</p>
           ) : null}
-          <div className="mt-3 flex flex-wrap items-center gap-1.5">
-            {viewer && activeEntry ? (
-              <>
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  className="text-red-600 hover:bg-red-500/10 focus-visible:ring-red-500 dark:text-red-400"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    handleStop(activeEntry);
-                  }}
-                  disabled={isLoading || stopMutation.isPending}
-                  aria-label="Завершить сессию"
-                  title="Завершить сессию"
-                >
-                  {stopMutation.isPending ? <LoaderIcon /> : <StopIcon />}
-                </Button>
-                {activeEntry.task_id ? (
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      router.push(`/tasks?task=${activeEntry.task_id}`);
-                    }}
-                    disabled={isLoading}
-                    aria-label={`Открыть задачу #${activeEntry.task_id}`}
-                    title={`Открыть задачу #${activeEntry.task_id}`}
-                  >
-                    <TaskIcon />
-                  </Button>
-                ) : null}
-              </>
-            ) : null}
-          </div>
         </div>
       </div>
       <span className="sr-only" aria-live="polite">

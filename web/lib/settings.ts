@@ -6,6 +6,7 @@ import type {
   FavoriteOption,
   FavoritesSettings,
   ThemePreferences,
+  TimezoneSetting,
 } from './types';
 
 export interface UserSettingsBundle {
@@ -13,6 +14,7 @@ export interface UserSettingsBundle {
   favorites?: FavoritesSettings | null;
   theme_preferences?: ThemePreferences | null;
   favorite_options?: FavoriteOption[] | null;
+  timezone?: TimezoneSetting | null;
 }
 
 export interface GlobalThemeResponse {
@@ -30,7 +32,7 @@ export interface AdminSettingsResponse {
 
 export async function fetchUserSettingsBundle(): Promise<UserSettingsBundle> {
   return apiFetch<UserSettingsBundle>(
-    '/api/v1/user/settings?keys=dashboard_layout,favorites,theme_preferences,favorite_options',
+    '/api/v1/user/settings?keys=dashboard_layout,favorites,theme_preferences,favorite_options,timezone',
   );
 }
 
@@ -50,6 +52,13 @@ export async function updateFavorites(value: FavoritesSettings): Promise<void> {
 
 export async function updateThemePreferences(value: ThemePreferences | Record<string, never>): Promise<void> {
   await apiFetch('/api/v1/user/settings/theme_preferences', {
+    method: 'PUT',
+    body: JSON.stringify({ value }),
+  });
+}
+
+export async function updateTimezoneSetting(value: TimezoneSetting): Promise<void> {
+  await apiFetch('/api/v1/user/settings/timezone', {
     method: 'PUT',
     body: JSON.stringify({ value }),
   });

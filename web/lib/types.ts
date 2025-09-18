@@ -104,6 +104,11 @@ export interface ViewerProfileSummary {
   headline?: string | null;
 }
 
+export interface TimezoneSetting {
+  v: number;
+  name: string;
+}
+
 export interface Task {
   id: number;
   title: string;

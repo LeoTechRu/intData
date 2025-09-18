@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
@@ -39,15 +40,23 @@ class TimeEntryResponse(BaseModel):
     is_paused: bool
     elapsed_seconds: int
 
+    @staticmethod
+    def _iso(dt: datetime | None) -> str | None:
+        if dt is None:
+            return None
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.isoformat().replace('+00:00', 'Z')
+
     @classmethod
     def from_model(cls, entry: TimeEntry) -> "TimeEntryResponse":
-        last_started_at = entry.last_started_at.isoformat() if entry.last_started_at else None
-        paused_at = entry.paused_at.isoformat() if entry.paused_at else None
-        end_time = entry.end_time.isoformat() if entry.end_time else None
+        last_started_at = cls._iso(entry.last_started_at)
+        paused_at = cls._iso(entry.paused_at)
+        end_time = cls._iso(entry.end_time)
         return cls(
             id=entry.id,
             task_id=entry.task_id,
-            start_time=entry.start_time.isoformat(),
+            start_time=cls._iso(entry.start_time) or '',
             end_time=end_time,
             description=entry.description,
             active_seconds=entry.active_seconds or 0,
