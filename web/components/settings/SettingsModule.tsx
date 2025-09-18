@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import React, { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -623,34 +622,31 @@ export default function SettingsModule() {
     <div className="flex flex-col gap-12">
       {isLoading ? <span className="text-sm text-muted">Загружаем настройки…</span> : null}
 
-      <Card
-        className="relative overflow-hidden !border-transparent bg-gradient-to-r from-[color-mix(in srgb, var(--accent-primary) 24%, #ffffff 76%)] to-[color-mix(in srgb, var(--accent-primary) 56%, #1d1b5b 44%)] text-[var(--accent-on-primary)] shadow-lg"
-        padded
-      >
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="max-w-2xl space-y-2">
-            <span className="inline-flex items-center gap-2 rounded-full bg-[color-mix(in srgb, var(--accent-primary) 16%, #ffffff 84%)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--accent-primary)]">
-              Больше возможностей
+      <Card className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50/80 p-4 text-sm text-amber-900">
+        <div className="flex items-start justify-between gap-3">
+          <div className="space-y-1">
+            <span className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
+              Изменение тарифов
             </span>
-            <h2 className="text-2xl font-semibold leading-snug">Раскройте Pro и Enterprise-тарифы для своей команды</h2>
-            <p className="text-sm text-[color-mix(in srgb, #ffffff 78%, var(--accent-on-primary) 22%)]">
-              Подключите Habitica-экономику, расширенную аналитику и выделенную поддержку. Переход занимает один клик — текущие данные остаются с вами.
+            <h2 className="text-lg font-semibold text-amber-900">Скоро повышаем стоимость подписки</h2>
+            <p className="text-sm text-amber-800">
+              Проверьте обновлённые цены и зафиксируйте текущий план до обновления.
             </p>
           </div>
-          <div className="flex flex-col items-start gap-3 md:items-end">
-            <Link
-              href="/tariffs"
-              prefetch={false}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[var(--accent-on-primary)] px-5 text-sm font-semibold text-[var(--accent-primary)] shadow-soft transition-base hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-on-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
-            >
-              Посмотреть тарифы
-            </Link>
-            <span className="text-xs text-[color-mix(in srgb, #ffffff 75%, var(--accent-on-primary) 25%)]">
-              Solo остаётся бесплатным навсегда
-            </span>
-          </div>
         </div>
-        <div className="pointer-events-none absolute -left-16 top-8 h-40 w-40 rounded-full bg-[color-mix(in srgb, #ffffff 30%, transparent)] blur-3xl" aria-hidden="true" />
+        <div className="flex flex-wrap items-center gap-3">
+          <a
+            href="https://intdata.pro/tariffs"
+            className="inline-flex items-center gap-2 rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white shadow-soft transition-base hover:bg-amber-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-700 focus-visible:ring-offset-2 focus-visible:ring-offset-amber-100"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Посмотреть обновления тарифов
+          </a>
+          <span className="text-xs text-amber-700">
+            Solo-план остаётся бесплатным
+          </span>
+        </div>
       </Card>
 
       <Section spacing="lg" className="gap-6">

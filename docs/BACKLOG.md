@@ -39,6 +39,7 @@
 
 | Start (UTC) | Agent | Branch | Epic / Scope | Ключевые файлы | Статус |
 |-------------|-------|--------|--------------|----------------|--------|
+| 2025-09-18 17:45 | codex | feature/E17/profile-widget-codex | E17 / виджет профиля, меню тарифов | web/app, web/components, docs/* | завершено 2025-09-18 17:58 |
 | 2025-09-18 17:18 | codex | feature/E17/bot-landing-codex | E17 / фронт + веб-сервер | web/app, web/routes, docs/* | завершено 2025-09-18 17:28 |
 
 

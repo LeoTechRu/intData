@@ -85,4 +85,19 @@ export function getPersonaInfo(bundle: PersonaBundle, role?: string | null): Per
   return DEFAULT_PERSONA_BUNDLE.single;
 }
 
+export function getPreferredLocale(): string {
+  if (typeof navigator !== 'undefined' && navigator.language) {
+    const [language] = navigator.language.split('-');
+    return language || 'ru';
+  }
+  if (typeof document !== 'undefined') {
+    const docLang = document.documentElement.lang;
+    if (docLang) {
+      const [language] = docLang.split('-');
+      return language || 'ru';
+    }
+  }
+  return 'ru';
+}
+
 export { DEFAULT_PERSONA_BUNDLE };

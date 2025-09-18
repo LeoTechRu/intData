@@ -20,10 +20,17 @@ import { CSS } from '@dnd-kit/utilities';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useId } from 'react';
 import type { CSSProperties, FormEvent, ReactNode } from 'react';
 
 import { apiFetch, ApiError } from '../../lib/api';
+import {
+  DEFAULT_PERSONA_BUNDLE,
+  fetchPersonaBundle,
+  getPersonaInfo,
+  getPreferredLocale,
+  type PersonaBundle,
+} from '../../lib/persona';
 import type {
   DashboardHabitItem,
   DashboardLayoutSettings,
@@ -32,7 +39,7 @@ import type {
   DashboardOverview,
   DashboardTimelineItem,
 } from '../../lib/types';
-import { Badge, Button, Card, Textarea } from '../ui';
+import { Button, Card, Textarea } from '../ui';
 
 const MODULE_TITLE = 'Обзор workspace';
 const MODULE_DESCRIPTION =
@@ -611,9 +618,20 @@ function renderWidget({
 }
 
 function ProfileWidget({ profile }: { profile: DashboardOverview['profile'] }) {
+  const personaQuery = useQuery<PersonaBundle>({
+    queryKey: ['persona-bundle'],
+    enabled: Boolean(profile),
+    staleTime: 3_600_000,
+    gcTime: 3_600_000,
+    retry: false,
+    queryFn: () => fetchPersonaBundle(getPreferredLocale()),
+  });
+  const personaBundle = personaQuery.data ?? DEFAULT_PERSONA_BUNDLE;
+
   if (!profile) {
     return <SimpleEmptyState message="Свяжите Telegram-аккаунт, чтобы видеть персональные данные." />;
   }
+
   return (
     <div className="flex h-full flex-col gap-4">
       <div className="flex flex-col gap-3 rounded-xl border border-subtle bg-surface-soft p-4">
@@ -628,11 +646,44 @@ function ProfileWidget({ profile }: { profile: DashboardOverview['profile'] }) {
           <ProfileField label="Язык" value={profile.language || 'не указан'} />
         </div>
       </div>
-      <div className="flex items-center gap-2 rounded-xl bg-surface-soft px-4 py-3 text-sm text-muted">
-        <Badge tone="accent" size="sm">
-          {profile.role ? profile.role.toLowerCase() : 'роль'}
-        </Badge>
-        <span>Роль определяет доступ к областям и проектам.</span>
+      <ProfileRoleBadge role={profile.role} personaBundle={personaBundle} />
+    </div>
+  );
+}
+
+function ProfileRoleBadge({
+  role,
+  personaBundle,
+}: {
+  role?: string | null;
+  personaBundle: PersonaBundle;
+}) {
+  const persona = getPersonaInfo(personaBundle, role);
+  const tooltipId = useId();
+
+  return (
+    <div className="rounded-xl bg-surface-soft px-4 py-3">
+      <div className="relative inline-flex items-center gap-2 group/profile-role">
+        <div
+          tabIndex={0}
+          role="button"
+          aria-haspopup="true"
+          aria-describedby={tooltipId}
+          aria-label={`Роль: ${persona.label}`}
+          className="inline-flex items-center gap-1 rounded-full border border-subtle px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--accent-primary)] transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+        >
+          {persona.label}
+        </div>
+        <div
+          role="tooltip"
+          id={tooltipId}
+          className="pointer-events-none absolute left-0 top-full z-40 mt-2 w-max max-w-xs origin-top-left scale-95 rounded-xl border border-subtle bg-[var(--surface-0)] p-3 text-left text-xs text-[var(--text-primary)] opacity-0 shadow-soft transition-all duration-150 ease-out group-hover/profile-role:scale-100 group-hover/profile-role:opacity-100 group-focus-within/profile-role:scale-100 group-focus-within/profile-role:opacity-100"
+        >
+          <div className="leading-relaxed text-[var(--text-primary)]">{renderPersonaTooltip(persona.tooltipMd)}</div>
+          {persona.slogan ? (
+            <p className="mt-2 text-[0.65rem] font-semibold uppercase tracking-wide text-muted">{persona.slogan}</p>
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -672,6 +723,41 @@ function formatBirthday(value?: string | null): string {
   } catch {
     return value;
   }
+}
+
+function renderPersonaTooltip(md: string): ReactNode[] {
+  const result: ReactNode[] = [];
+  const linkPattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = linkPattern.exec(md))) {
+    if (match.index > lastIndex) {
+      result.push(md.slice(lastIndex, match.index));
+    }
+    result.push(
+      <a
+        key={`${match[2]}-${match.index}`}
+        href={match[2]}
+        target="_blank"
+        rel="noreferrer noopener"
+        className="text-[var(--accent-primary)] underline decoration-dotted"
+      >
+        {match[1]}
+      </a>,
+    );
+    lastIndex = linkPattern.lastIndex;
+  }
+
+  if (lastIndex < md.length) {
+    result.push(md.slice(lastIndex));
+  }
+
+  if (result.length === 0) {
+    return [md];
+  }
+
+  return result;
 }
 
 function TimelineWidget({ items }: { items: DashboardTimelineItem[] }) {

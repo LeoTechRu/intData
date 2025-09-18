@@ -9,7 +9,13 @@ import React, { ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { apiFetch, ApiError } from '../lib/api';
 import { fetchSidebarNav, updateGlobalSidebarLayout, updateUserSidebarLayout } from '../lib/navigation';
-import { fetchPersonaBundle, getPersonaInfo, DEFAULT_PERSONA_BUNDLE, type PersonaBundle } from '../lib/persona';
+import {
+  fetchPersonaBundle,
+  getPersonaInfo,
+  getPreferredLocale,
+  DEFAULT_PERSONA_BUNDLE,
+  type PersonaBundle,
+} from '../lib/persona';
 import type {
   SidebarLayoutSettings,
   SidebarNavItem,
@@ -55,11 +61,10 @@ const STATIC_NAV_FALLBACK: SidebarNavItem[] = [
     href: '/habits',
     hidden: false,
     position: 10,
-    status: { kind: 'locked', link: '/pricing' },
+    status: { kind: 'locked', link: '/tariffs' },
   },
   { key: 'team', label: 'Команда', href: '/users', hidden: false, position: 11, status: { kind: 'new' } },
   { key: 'products', label: 'Продукты', href: '/products', hidden: false, position: 12, status: { kind: 'wip' } },
-  { key: 'pricing', label: 'Тарифы', href: '/pricing', hidden: false, position: 13, status: { kind: 'new' } },
   { key: 'groups', label: 'Группы', href: '/groups', hidden: true, position: 14, status: { kind: 'wip' } },
   { key: 'admin', label: 'ЛК Админа', href: '/admin', hidden: true, position: 15, status: { kind: 'new' } },
   { key: 'settings', label: 'Настройки', href: '/settings', hidden: false, position: 16, status: { kind: 'new' } },
@@ -78,21 +83,6 @@ function getInitials(name: string): string {
     .map((part) => part.charAt(0).toUpperCase())
     .join('')
     .padEnd(2, '•');
-}
-
-function getPreferredLocale(): string {
-  if (typeof navigator !== 'undefined' && navigator.language) {
-    const [language] = navigator.language.split('-');
-    return language || 'ru';
-  }
-  if (typeof document !== 'undefined') {
-    const docLang = document.documentElement.lang;
-    if (docLang) {
-      const [language] = docLang.split('-');
-      return language || 'ru';
-    }
-  }
-  return 'ru';
 }
 
 function layoutFromItems(version: number, items: SidebarNavItem[]): SidebarLayoutSettings {
