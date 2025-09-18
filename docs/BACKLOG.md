@@ -40,6 +40,7 @@
 
 | Start (UTC) | Agent | Branch | Epic / Scope | Ключевые файлы | Статус |
 |-------------|-------|--------|--------------|----------------|--------|
+| 2025-09-18 21:23 | codex | feature/E17/merge-cleanup-codex | E17 / консолидация веток и перезапуск фронтенда | main, web/*, docs/BACKLOG.md | в работе |
 | 2025-09-18 20:37 | codex | feature/E17/legacy-migration-codex | E17 / миграция легаси-страниц на новый UI | web/app/*, web/templates/*, web/components/*, docs/* | завершено 2025-09-18 21:03 |
 | 2025-09-18 19:30 | codex | feature/E17/groups-products-ui-codex | E17 / тарифы, кнопки поддержки | web/components/marketing, web/components/AppShell.tsx, docs/* | завершено 2025-09-18 19:46 |
 | 2025-09-18 18:44 | codex | feature/E17/groups-products-ui-codex | E17 / модернизация groups & products, тултипы терминов | web/app/groups, web/app/products, web/components, docs/* | завершено 2025-09-18 19:18 |

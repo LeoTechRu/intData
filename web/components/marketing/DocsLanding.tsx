@@ -99,36 +99,37 @@ const methodologyBlocks: MethodologyBlock[] = [
     pill: 'Научные эффекты продуктивности',
     title: 'Измеримые метрики: меньше поиска, больше сфокусированной работы',
     description:
-      'McKinsey фиксирует, что без систематизации уходит до 9.3 часов в неделю на поиск данных. Исследования показывают, что наибольший эффект даёт совмещение PARA и игровых механик — мы внедрили это в Intelligent Data Pro.',
+      'McKinsey фиксирует, что без систематизации уходит до 9.3 часов в неделю на поиск данных. Исследование generative AI показывает, что структурированная база + ИИ сокращают рутину, а геймифицированные привычки поддерживают вовлечённость через месяцы после запуска.',
     references: [
-      { label: 'McKinsey — The social economy', href: 'https://www.mckinsey.com/industries/technology-media-and-telecommunications/our-insights/the-social-economy' },
-      { label: 'Habitica research summary', href: 'https://www.researchgate.net/publication/352125889_Gamification_and_habit_formation' },
+      { label: 'McKinsey workplace productivity', href: 'https://www.cnbc.com/2012/08/01/workers-spend-onefourth-of-workday-reading-responding-to-email-survey.html' },
+      { label: 'Generative AI work patterns', href: 'https://arxiv.org/abs/2504.11436' },
+      { label: 'Digital habit interventions', href: 'https://arxiv.org/abs/2310.10850' },
     ],
-    persona: 'Операционные менеджеры и лиды направлений, которым нужны измеримые метрики вовлечённости и продуктивности.',
+    persona: 'HR и операционные директора, оправдывающие инвестиции в знаниевую платформу метриками снижения потерь и роста удержания.',
   },
 ];
 
 const uiPrinciples: UiPrinciple[] = [
   {
-    title: 'Адаптивность и скорость',
+    title: 'Персональные дорожки документации',
     description:
-      'Документация работает стабильно на экранах от мобильных до ультрашироких, а интерактив подгружается лениво, чтобы не мешать чтению.',
+      'Persona-based walkthroughs и интерактивные демо повышают adoption — мы используем их в модальном onboarding и кастомных гайдах.',
     reference: {
-      label: 'Google UX Playbook',
-      href: 'https://services.google.com/fh/files/misc/ux_playbook_for_responsive_design.pdf',
+      label: 'UXPin — Design Doc Best Practices',
+      href: 'https://www.uxpin.com/studio/blog/7-best-practices-for-design-system-documentation',
     },
   },
   {
-    title: 'Интерактивные демонстрации',
+    title: 'Адаптивные макеты 2025 года',
     description:
-      'Пример API-запросов, snippets и превью схем развёртываются прямо на странице, без переключения контекстов.',
+      'Сетки repeat(auto-fit, minmax(320px, 1fr)) и sticky-навигация удерживают CTA в зоне видимости на любом экране.',
     reference: {
-      label: 'Stripe Dev Docs',
-      href: 'https://stripe.com/docs/development',
+      label: 'The66th — Web Design Best Practices 2025',
+      href: 'https://www.the66th.com/journal/best-web-design-practices',
     },
   },
   {
-    title: 'Доступность по WCAG 2.2',
+    title: 'Производительность и доступность',
     description:
       'Скорость <3 секунд, переменные шрифты и соответствие WCAG 2.2 стали стандартом документации в 2025 году.',
     reference: {
@@ -197,8 +198,7 @@ export default function DocsLanding() {
             </h1>
             <p className="max-w-2xl text-lg text-muted">
               PARA, Zettelkasten и геймифицированные привычки — в одной операционной системе продуктивности. Страница
-              открыта без авторизации: делитесь с командой, подключайтесь к сообществу {COMMUNITY_URL} и узнавайте о новых
-              возможностях первыми.
+              открыта без авторизации, делитесь с командой и клиентами.
             </p>
             <div className="flex flex-col gap-4 sm:flex-row">
               <Link

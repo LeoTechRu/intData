@@ -37,6 +37,7 @@ from .routes import (
     time_entries,
     products,
     pricing,
+    docs_public,
     groups,
     inbox,
     api_router,
@@ -354,6 +355,7 @@ app.include_router(habits.ui_router, include_in_schema=False)
 app.include_router(notes.ui_router, include_in_schema=False)
 app.include_router(pricing.ui_router, include_in_schema=False)
 app.include_router(products.ui_router, include_in_schema=False)
+app.include_router(docs_public.ui_router, include_in_schema=False)
 app.include_router(areas.ui_router, include_in_schema=False)
 app.include_router(projects.ui_router, include_in_schema=False)
 app.include_router(tasks.ui_router, include_in_schema=False)

@@ -6,7 +6,7 @@ import DocsLanding from '../../components/marketing/DocsLanding';
 export const metadata: Metadata = {
   title: 'Документация Intelligent Data Pro — PARA, Zettelkasten, геймификация',
   description:
-    'Публичный портал методологий Intelligent Data Pro: объясняем PARA и Zettelkasten, делимся исследованиями по продуктивности и показываем, как методологии встроены в тарифы.',
+    'Публичный портал Intelligent Data Pro: объясняем PARA и Zettelkasten, показываем геймификацию привычек и собираем исследования, подтверждающие эффект.',
 };
 
 export const dynamic = 'force-static';
@@ -27,6 +27,9 @@ export default function DocsPage() {
           </span>
         </Link>
         <nav className="hidden items-center gap-6 text-sm font-medium text-muted md:flex">
+          <Link href="/auth" prefetch={false} className="transition-base hover:text-[var(--accent-primary)]">
+            Войти
+          </Link>
           <Link href="/tariffs" prefetch={false} className="transition-base hover:text-[var(--accent-primary)]">
             Тарифы
           </Link>
@@ -79,4 +82,3 @@ export default function DocsPage() {
     </div>
   );
 }
-
