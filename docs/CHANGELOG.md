@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Роль-гейтед страница «ЛК Админа» (`/admin`) на Next.js, использующая `/api/v1/admin/overview` и существующие администртивные эндпоинты; legacy-встраивание `/cup/admin-embed` сохранено.
 - Next.js-страница `/auth` с лендингом продукта, Telegram SSO, reCAPTCHA и магическими ссылками (вместо Jinja-шаблонов).
 - Next.js-страница `/notes` с карточками, фильтрами, drag-n-drop сортировкой и модальным редактированием.
+- Маркетинговый лендинг `/tariffs` (Solo/Team/Pro/Enterprise) с переключателем биллинга, сравнительной таблицей, ROI-кейсами и FAQ; FastAPI-роут `/tariffs` возвращает страницу без 404.
 - API `/api/v1/auth/options` публикует конфигурацию и диагностику для страницы авторизации.
 - API `/api/v1/admin/overview` и обновлённые React-компоненты для управления web/TG-пользователями, группами, брендингом и рестартами сервисов.
 - Страница `/habits` на Next.js: HUD с XP/Gold/KP, фильтр по областям и управление привычками через React Query.
