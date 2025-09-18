@@ -37,6 +37,7 @@ from .routes import (
     time_entries,
     products,
     pricing,
+    docs_public,
     groups,
     inbox,
     api_router,
@@ -320,7 +321,7 @@ async def auth_middleware(request: Request, call_next):
         return await call_next(request)
 
     # Public marketing pages (Next.js static content)
-    if path.startswith("/pricing") or path.startswith("/tariffs") or path.startswith("/bot"):
+    if path.startswith("/pricing") or path.startswith("/tariffs") or path.startswith("/bot") or path.startswith("/docs"):
         return await call_next(request)
 
     # Authenticated users can access other routes directly
@@ -348,6 +349,7 @@ app.include_router(habits.ui_router, include_in_schema=False)
 app.include_router(notes.ui_router, include_in_schema=False)
 app.include_router(products.ui_router, include_in_schema=False)
 app.include_router(pricing.ui_router, include_in_schema=False)
+app.include_router(docs_public.ui_router, include_in_schema=False)
 app.include_router(areas.ui_router, include_in_schema=False)
 app.include_router(projects.ui_router, include_in_schema=False)
 app.include_router(tasks.ui_router, include_in_schema=False)
