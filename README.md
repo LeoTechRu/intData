@@ -453,7 +453,7 @@ Pull/MR с тестами приветствуются. Смотрите [Change
 - [ ] TL-2025-09-19-pytest-postgres-migration — Заменить sqlite-фикстуры на PostgreSQL во всех тестах (`tests/**`), устранить FK-конфликты seed-данных (owner: codex, ветка `feature/E9/test-postgres-env-codex`; сделано: Postgres-фикстуры, `ensure_user_stats`, перенос ключевых web/API тестов; осталось: добить зависание `tests/test_habit_service.py` и полный `pytest -q`).
 
 #### E10: Capture (бот/веб, Inbox)
-- [ ] TL-2025-09-19-notes-restore — Переработать страницу `/notes`: безопасное архивирование карточек с восстановлением, отдельный просмотр архива, синхронизация drag-n-drop и фильтров (owner: codex, ветка `feature/E10/notes-restore-frontend`, см. [E10](#e10-capture-ботвеб-inbox)).
+- [x] TL-2025-09-19-notes-restore — Переработать страницу `/notes`: безопасное архивирование карточек с восстановлением, отдельный просмотр архива, синхронизация drag-n-drop и фильтров (owner: codex, ветка `feature/E10/notes-restore-frontend`, merge 4934acc в `test→main`).
 
 #### E17: Frontend Modernization
 - [ ] TL-2025-09-18-nav-blueprint — Расширить NAV_BLUEPRINT и API `/api/v1/navigation/sidebar*` полями модулей и секций (owner: codex, ветка `feature/E17/menu-grouping-codex`, см. [E17](#e17-frontend-modernization)).
