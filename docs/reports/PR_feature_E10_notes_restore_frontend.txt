@@ -1,0 +1,14 @@
+TL-2025-09-19-notes-restore-frontend
+Base: test
+Head: feature/E10/notes-restore-frontend
+Title: feat: support note archive actions
+Body:
+## Summary
+- add archive/restore controls to note cards
+- show archived notes separately when filter active
+- extend tests for archive workflow
+
+## Testing
+- npm run lint
+- npm run test
+- npm run build
