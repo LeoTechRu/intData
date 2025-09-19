@@ -1,6 +1,6 @@
 import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from base import Base
@@ -11,8 +11,8 @@ from core.utils import utcnow
 
 
 @pytest_asyncio.fixture
-async def session():
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+async def session(postgres_engine):
+    engine = postgres_engine
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     async_session = sessionmaker(

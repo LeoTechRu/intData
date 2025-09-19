@@ -1,8 +1,6 @@
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
 
 from base import Base
 import core.db as db
@@ -20,13 +18,10 @@ except ModuleNotFoundError:  # pragma: no cover
 
 
 @pytest_asyncio.fixture
-async def client(monkeypatch):
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:?cache=shared")
-    async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+async def client(monkeypatch, postgres_db):
+    engine, _ = postgres_db
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    db.engine = engine
-    db.async_session = async_session
 
     async def fake_ban(chat_id, user_id):
         return True
@@ -39,7 +34,6 @@ async def client(monkeypatch):
 
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
-    await engine.dispose()
 
 
 async def _bootstrap_group() -> tuple[int, int, int]:

@@ -2,152 +2,111 @@ import time
 
 import pytest
 import pytest_asyncio
-from sqlalchemy.dialects.sqlite.base import SQLiteTypeCompiler
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import JSON
 
 from base import Base
 from core.services.access_control import AccessControlService
 from core.services.diagnostics_service import DiagnosticsService
 
 
-@pytest.fixture(autouse=True)
-def sqlite_array_support(monkeypatch):
-    monkeypatch.setattr(SQLiteTypeCompiler, 'visit_ARRAY', lambda self, type_, **_: 'TEXT', raising=False)
-
-
-
-
 @pytest_asyncio.fixture
-async def session():
-    users_column = Base.metadata.tables["users_web"].c.diagnostics_available
-    templates_column = Base.metadata.tables["diagnostic_templates"].c.config
-    results_column = Base.metadata.tables["diagnostic_results"].c.payload
+async def session(postgres_engine):
+    engine = postgres_engine
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    factory = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+    async with factory() as sess:
+        async with AccessControlService(sess) as access:
+            await access.seed_presets()
+            from sqlalchemy import select
+            from core.models import AuthPermission, Role
 
-    original_types = {
-        users_column: users_column.type,
-        templates_column: templates_column.type,
-        results_column: results_column.type,
-    }
-    original_defaults = {
-        users_column: users_column.server_default,
-        templates_column: templates_column.server_default,
-        results_column: results_column.server_default,
-    }
-
-    users_column.type = JSON()
-    templates_column.type = JSON()
-    results_column.type = JSON()
-
-    users_column.server_default = None
-    templates_column.server_default = None
-    results_column.server_default = None
-
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
-    try:
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-        factory = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
-        async with factory() as sess:
-            async with AccessControlService(sess) as access:
-                await access.seed_presets()
-                from sqlalchemy import select
-                from core.models import AuthPermission, Role
-
-                perm_defs = [
-                    {
-                        "code": "diagnostics.clients.manage",
-                        "name": "Diagnostics: manage clients",
-                        "description": "Просмотр и управление клиентами диагностик",
-                        "bit": 14,
-                    },
-                    {
-                        "code": "diagnostics.specialists.manage",
-                        "name": "Diagnostics: manage specialists",
-                        "description": "Управление специалистами и диагностиками",
-                        "bit": 15,
-                    },
-                ]
-                for definition in perm_defs:
-                    result = await sess.execute(
-                        select(AuthPermission).where(
-                            AuthPermission.code == definition["code"]
+            perm_defs = [
+                {
+                    "code": "diagnostics.clients.manage",
+                    "name": "Diagnostics: manage clients",
+                    "description": "Просмотр и управление клиентами диагностик",
+                    "bit": 14,
+                },
+                {
+                    "code": "diagnostics.specialists.manage",
+                    "name": "Diagnostics: manage specialists",
+                    "description": "Управление специалистами и диагностиками",
+                    "bit": 15,
+                },
+            ]
+            for definition in perm_defs:
+                result = await sess.execute(
+                    select(AuthPermission).where(AuthPermission.code == definition["code"])
+                )
+                existing = result.scalar_one_or_none()
+                if existing is None:
+                    sess.add(
+                        AuthPermission(
+                            code=definition["code"],
+                            name=definition["name"],
+                            description=definition["description"],
+                            category="diagnostics",
+                            bit_position=definition["bit"],
+                            mutable=False,
                         )
                     )
-                    existing = result.scalar_one_or_none()
-                    if existing is None:
-                        sess.add(
-                            AuthPermission(
-                                code=definition["code"],
-                                name=definition["name"],
-                                description=definition["description"],
-                                category="diagnostics",
-                                bit_position=definition["bit"],
-                                mutable=False,
-                            )
-                        )
-                await sess.flush()
+            await sess.flush()
 
-                role_defs = [
-                    {
-                        "slug": "diagnostics_client",
-                        "name": "Diagnostics Client",
-                        "description": "Клиент диагностических программ",
-                        "level": 5,
-                        "mask": 0,
-                        "grants_all": False,
-                    },
-                    {
-                        "slug": "diagnostics_specialist",
-                        "name": "Diagnostics Specialist",
-                        "description": "Специалист по диагностике",
-                        "level": 25,
-                        "mask": 1 << 14,
-                        "grants_all": False,
-                    },
-                    {
-                        "slug": "diagnostics_admin",
-                        "name": "Diagnostics Admin",
-                        "description": "Администратор диагностик",
-                        "level": 35,
-                        "mask": (1 << 14) | (1 << 15),
-                        "grants_all": False,
-                    },
-                ]
-                for definition in role_defs:
-                    result = await sess.execute(
-                        select(Role).where(Role.slug == definition["slug"])
+            role_defs = [
+                {
+                    "slug": "diagnostics_client",
+                    "name": "Diagnostics Client",
+                    "description": "Клиент диагностических программ",
+                    "level": 5,
+                    "mask": 0,
+                    "grants_all": False,
+                },
+                {
+                    "slug": "diagnostics_specialist",
+                    "name": "Diagnostics Specialist",
+                    "description": "Специалист по диагностике",
+                    "level": 25,
+                    "mask": 1 << 14,
+                    "grants_all": False,
+                },
+                {
+                    "slug": "diagnostics_admin",
+                    "name": "Diagnostics Admin",
+                    "description": "Администратор диагностик",
+                    "level": 35,
+                    "mask": (1 << 14) | (1 << 15),
+                    "grants_all": False,
+                },
+            ]
+            for definition in role_defs:
+                result = await sess.execute(
+                    select(Role).where(Role.slug == definition["slug"])
+                )
+                existing = result.scalar_one_or_none()
+                if existing is None:
+                    sess.add(
+                        Role(
+                            slug=definition["slug"],
+                            name=definition["name"],
+                            description=definition["description"],
+                            level=definition["level"],
+                            permissions_mask=definition["mask"],
+                            is_system=False,
+                            grants_all=definition["grants_all"],
+                        )
                     )
-                    existing = result.scalar_one_or_none()
-                    if existing is None:
-                        sess.add(
-                            Role(
-                                slug=definition["slug"],
-                                name=definition["name"],
-                                description=definition["description"],
-                                level=definition["level"],
-                                permissions_mask=definition["mask"],
-                                is_system=False,
-                                grants_all=definition["grants_all"],
-                            )
-                        )
-                    else:
-                        existing.name = definition["name"]
-                        existing.description = definition["description"]
-                        existing.level = definition["level"]
-                        existing.permissions_mask = definition["mask"]
-                        existing.grants_all = definition["grants_all"]
-                await sess.flush()
-                AccessControlService.invalidate_cache()
+                else:
+                    existing.name = definition["name"]
+                    existing.description = definition["description"]
+                    existing.level = definition["level"]
+                    existing.permissions_mask = definition["mask"]
+                    existing.grants_all = definition["grants_all"]
+            await sess.flush()
+            AccessControlService.invalidate_cache()
 
-            yield sess
-    finally:
-        for column, type_ in original_types.items():
-            column.type = type_
-        for column, default in original_defaults.items():
-            column.server_default = default
-        await engine.dispose()
+        yield sess
 
 
 @pytest.mark.asyncio

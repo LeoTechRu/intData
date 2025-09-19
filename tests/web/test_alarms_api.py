@@ -2,13 +2,12 @@ import pytest
 import pytest_asyncio
 from datetime import timedelta
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
 
 from base import Base
 import core.db as db
-from core.models import TgUser, Area, CalendarItem
-from core.utils import utcnow
+from core.models import Area, CalendarItem
+from core.utils import utcnow_aware
+from tests.utils.seeds import ensure_tg_user
 
 try:
     from main import app  # type: ignore
@@ -17,27 +16,24 @@ except ModuleNotFoundError:  # pragma: no cover
 
 
 @pytest_asyncio.fixture
-async def client():
-    engine = create_async_engine('sqlite+aiosqlite:///:memory:?cache=shared')
-    async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+async def client(postgres_db, monkeypatch):
+    engine, _ = postgres_db
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    db.engine = engine
-    db.async_session = async_session
+    monkeypatch.setattr("web.routes.alarms.utcnow", utcnow_aware)
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
-    await engine.dispose()
 
 
 async def _prepare_item(item_owner: int | None = 1):
     async with db.async_session() as session:  # type: ignore
         async with session.begin():
-            user = TgUser(telegram_id=1, first_name="tg")
-            session.add(user)
-            area = Area(owner_id=1, name="Area")
+            user = await ensure_tg_user(session, 1, first_name="tg")
+            owner_id = user.telegram_id
+            area = Area(owner_id=owner_id, name="Area")
             session.add(area)
             await session.flush()
-            now = utcnow()
+            now = utcnow_aware()
             item = CalendarItem(
                 owner_id=item_owner,
                 area_id=area.id,
@@ -54,7 +50,7 @@ async def _prepare_item(item_owner: int | None = 1):
 async def test_create_alarm(client: AsyncClient):
     item_id, _ = await _prepare_item()
     cookies = {"telegram_id": "1"}
-    now = utcnow()
+    now = utcnow_aware()
     trigger = now + timedelta(hours=1, minutes=30)
     resp = await client.post(
         f"/api/v1/calendar/items/{item_id}/alarms",
@@ -69,7 +65,7 @@ async def test_create_alarm(client: AsyncClient):
 async def test_alarm_time_bounds(client: AsyncClient):
     item_id, end_at = await _prepare_item()
     cookies = {"telegram_id": "1"}
-    now = utcnow()
+    now = utcnow_aware()
     past = now - timedelta(minutes=5)
     resp = await client.post(
         f"/api/v1/calendar/items/{item_id}/alarms",
@@ -90,7 +86,7 @@ async def test_alarm_time_bounds(client: AsyncClient):
 async def test_create_alarm_item_without_owner(client: AsyncClient):
     item_id, _ = await _prepare_item(item_owner=None)
     cookies = {"telegram_id": "1"}
-    trigger = utcnow() + timedelta(hours=1, minutes=30)
+    trigger = utcnow_aware() + timedelta(hours=1, minutes=30)
     resp = await client.post(
         f"/api/v1/calendar/items/{item_id}/alarms",
         json={"trigger_at": trigger.isoformat()},

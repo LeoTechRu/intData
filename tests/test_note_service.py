@@ -1,28 +1,22 @@
 import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
 
-from base import Base
 from core.services.note_service import NoteService
 from core.models import Area
+from tests.utils.seeds import ensure_tg_user
 
 
 @pytest_asyncio.fixture
-async def session():
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    async_session = sessionmaker(
-        engine, expire_on_commit=False, class_=AsyncSession
-    )
-    async with async_session() as sess:
+async def session(postgres_db):
+    engine, session_factory = postgres_db
+    async with session_factory() as sess:
         yield sess
 
 
 @pytest.mark.asyncio
 async def test_note_creation_and_listing(session):
     service = NoteService(session)
+    await ensure_tg_user(session, 1)
     area = Area(owner_id=1, name="Inbox")
     session.add(area)
     await session.flush()
@@ -36,6 +30,8 @@ async def test_note_creation_and_listing(session):
 @pytest.mark.asyncio
 async def test_list_notes_filters_by_owner(session):
     service = NoteService(session)
+    await ensure_tg_user(session, 1)
+    await ensure_tg_user(session, 2)
     a1 = Area(owner_id=1, name="A1")
     a2 = Area(owner_id=2, name="A2")
     session.add_all([a1, a2])
@@ -50,6 +46,7 @@ async def test_list_notes_filters_by_owner(session):
 @pytest.mark.asyncio
 async def test_delete_note(session):
     service = NoteService(session)
+    await ensure_tg_user(session, 1)
     area = Area(owner_id=1, name="X")
     session.add(area)
     await session.flush()
@@ -62,6 +59,7 @@ async def test_delete_note(session):
 @pytest.mark.asyncio
 async def test_update_note(session):
     service = NoteService(session)
+    await ensure_tg_user(session, 1)
     area = Area(owner_id=1, name="Z")
     session.add(area)
     await session.flush()
@@ -74,6 +72,7 @@ async def test_update_note(session):
 @pytest.mark.asyncio
 async def test_pin_archive_reorder(session):
     service = NoteService(session)
+    await ensure_tg_user(session, 1)
     area = Area(owner_id=1, name="R")
     session.add(area)
     await session.flush()
