@@ -41,7 +41,7 @@
 | Start (UTC) | Agent | Branch | Epic / Scope | Ключевые файлы | Статус |
 |-------------|-------|--------|--------------|----------------|--------|
 | 2025-09-19 07:55 | codex | feature/E3/notes-assign-detached-codex | E3 / починка POST /api/v1/notes/{id}/assign (DetachedInstanceError) | core/services/notes.py, web/routes/notes.py, tests/test_notes_assign.py | завершено 2025-09-19 08:09 |
-| 2025-09-19 07:48 | codex | feature/E17/appshell-nav-tuning-codex | E17 / модульная навигация AppShell — адаптация UX | web/components/AppShell.tsx, web/components/layout/PublicHeader.tsx, web/components/navigation/*, docs/* | в работе |
+| 2025-09-19 07:48 | codex | feature/E17/appshell-nav-tuning-codex | E17 / модульная навигация AppShell — адаптация UX | web/components/AppShell.tsx, web/components/layout/PublicHeader.tsx, web/components/navigation/*, docs/* | завершено 2025-09-19 08:28 |
 | 2025-09-19 00:32 | codex | feature/E18/crm-skeleton-codex | E18 / CRM Knowledge Hub — исследование и каркас | docs/reports/*crm*, docs/vision.md, docs/tasklist.md, web/app/crm/*, core/services/crm/* | завершено 2025-09-19 01:00 |
 | 2025-09-18 23:05 | codex | feature/E17/menu-grouping-codex | E17 / группировка меню AppShell | web/components/AppShell.tsx, web/lib/publicNav.ts, docs/* | в работе |
 | 2025-09-18 22:34 | codex | feature/E17/mobile-responsive-ui-codex | E17 / мобильная адаптация AppShell и обзора | web/components/AppShell.tsx, web/components/layout/PublicHeader.tsx, web/components/dashboard/OverviewDashboard.tsx | завершено 2025-09-18 22:44 |
