@@ -1,16 +1,14 @@
 import sqlalchemy as sa
 import pytest
 import pytest_asyncio
-import sqlalchemy as sa
 from datetime import date
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
 
 from base import Base
 import core.db as db
-from core.models import TgUser, Area, Project, WebUser
+from core.models import Area, Project
 from core.services.habits import metadata, habits
+from tests.utils.seeds import ensure_tg_user, ensure_user_stats, ensure_web_user
 
 try:
     from main import app  # type: ignore
@@ -19,33 +17,47 @@ except ModuleNotFoundError:  # pragma: no cover
 
 
 @pytest_asyncio.fixture
-async def client():
-    engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:?cache=shared", connect_args={"uri": True}
-    )
-    async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+async def client(postgres_db):
+    engine, _ = postgres_db
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await conn.run_sync(metadata.create_all)
-    db.engine = engine
-    db.async_session = async_session
+
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
-    await engine.dispose()
 
 
 async def _seed(owner_id: int, tg_id: int, area_id: int, project_id: int | None = None):
     async with db.async_session() as session:  # type: ignore
         async with session.begin():
-            session.add(WebUser(id=owner_id, username="u"))
-            session.add(TgUser(telegram_id=tg_id, first_name="tg"))
-            session.add(
-                Area(id=area_id, owner_id=tg_id, name="A", title="A")
+            await ensure_web_user(
+                session,
+                user_id=owner_id,
+                username=f"web{owner_id}",
+                password_hash="x",
+                role="single",
             )
+            await ensure_tg_user(
+                session,
+                tg_id,
+                first_name="tg",
+                role="single",
+            )
+            area = await session.get(Area, area_id)
+            if area is None:
+                session.add(Area(id=area_id, owner_id=tg_id, name="A", title="A"))
             if project_id is not None:
-                session.add(
-                    Project(id=project_id, owner_id=tg_id, area_id=area_id, name="P")
-                )
+                project = await session.get(Project, project_id)
+                if project is None:
+                    session.add(
+                        Project(
+                            id=project_id,
+                            owner_id=tg_id,
+                            area_id=area_id,
+                            name="P",
+                        )
+                    )
+            await ensure_user_stats(session, owner_id=owner_id)
 
 
 @pytest.mark.asyncio

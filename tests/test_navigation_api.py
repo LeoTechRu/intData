@@ -2,7 +2,7 @@ import pytest
 import pytest_asyncio
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 import core.db as db
@@ -13,8 +13,8 @@ from web.dependencies import get_current_web_user
 
 
 @pytest_asyncio.fixture
-async def async_session(monkeypatch):
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+async def async_session(monkeypatch, postgres_engine):
+    engine = postgres_engine
     async_sessionmaker = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
     async with engine.begin() as conn:
         await conn.run_sync(lambda sync_conn: UserSettings.__table__.create(sync_conn, checkfirst=True))

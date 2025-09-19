@@ -7,7 +7,7 @@ import pytest
 import sqlalchemy as sa
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 import core.db as db
@@ -21,8 +21,8 @@ from core.models import WebUser
 
 
 @pytest.mark.asyncio
-async def test_service_upsert_and_get():
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+async def test_service_upsert_and_get(postgres_engine):
+    engine = postgres_engine
     async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -42,8 +42,8 @@ async def test_service_upsert_and_get():
     assert loaded == data2
 
 
-def test_repair_migrates_favorites():
-    eng = sa.create_engine("sqlite:///:memory:")
+def test_repair_migrates_favorites(postgres_sync_engine):
+    eng = postgres_sync_engine
     with eng.connect() as conn:
         conn.execute(sa.text("CREATE TABLE users_web(id INTEGER PRIMARY KEY)")).close()
         conn.execute(
@@ -53,7 +53,7 @@ def test_repair_migrates_favorites():
         ).close()
         conn.execute(
             sa.text(
-                "CREATE TABLE user_settings(id INTEGER PRIMARY KEY AUTOINCREMENT,user_id INTEGER,key VARCHAR(64),value JSON,updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE(user_id,key))"
+                "CREATE TABLE user_settings(\n                    id SERIAL PRIMARY KEY,\n                    user_id INTEGER,\n                    key VARCHAR(64),\n                    value JSONB,\n                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n                    UNIQUE(user_id,key)\n                )"
             )
         ).close()
         conn.execute(sa.text("INSERT INTO users_web(id) VALUES (1)"))
@@ -68,19 +68,20 @@ def test_repair_migrates_favorites():
                 "SELECT value FROM user_settings WHERE user_id=1 AND key='favorites'"
             )
         ).scalar()
-    assert json.loads(res)["items"][0]["path"] == "/x"
+    if isinstance(res, str):
+        data = json.loads(res)
+    else:
+        data = res
+    assert data["items"][0]["path"] == "/x"
 
 
 @pytest.mark.asyncio
-async def test_api_defaults_and_put(monkeypatch):
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
-    async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+async def test_api_defaults_and_put(postgres_db):
+    engine, session_factory = postgres_db
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    monkeypatch.setattr(db, "async_session", lambda: async_session())
-
-    async with async_session() as session:
+    async with session_factory() as session:
         wsvc = WebUserService(session)
         user = await wsvc.register(username="u_api", password="pw")
 

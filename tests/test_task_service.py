@@ -1,6 +1,6 @@
 import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from base import Base
@@ -12,12 +12,13 @@ from core.models import (
     TaskControlStatus,
     TaskRefuseReason,
     Area,
+    TgUser,
 )
 
 
 @pytest_asyncio.fixture
-async def session():
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+async def session(postgres_engine):
+    engine = postgres_engine
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     async_session = sessionmaker(
@@ -27,9 +28,16 @@ async def session():
         yield sess
 
 
+async def ensure_tg_user(session, telegram_id: int) -> None:
+    if await session.get(TgUser, telegram_id) is None:
+        session.add(TgUser(telegram_id=telegram_id, first_name=f"user{telegram_id}"))
+        await session.flush()
+
+
 @pytest.mark.asyncio
 async def test_task_creation_and_listing(session):
     service = TaskService(session)
+    await ensure_tg_user(session, 1)
     area = Area(owner_id=1, name="A1")
     session.add(area)
     await session.flush()
@@ -44,6 +52,7 @@ async def test_task_creation_and_listing(session):
 @pytest.mark.asyncio
 async def test_task_custom_status(session):
     service = TaskService(session)
+    await ensure_tg_user(session, 1)
     area = Area(owner_id=1, name="A1")
     session.add(area)
     await session.flush()
@@ -57,6 +66,7 @@ async def test_task_custom_status(session):
 @pytest.mark.asyncio
 async def test_mark_task_done(session):
     service = TaskService(session)
+    await ensure_tg_user(session, 1)
     area = Area(owner_id=1, name="A1")
     session.add(area)
     await session.flush()
@@ -69,6 +79,7 @@ async def test_mark_task_done(session):
 @pytest.mark.asyncio
 async def test_update_and_delete_task(session):
     service = TaskService(session)
+    await ensure_tg_user(session, 1)
     area = Area(owner_id=1, name="A1")
     session.add(area)
     await session.flush()
@@ -85,6 +96,7 @@ async def test_update_and_delete_task(session):
 @pytest.mark.asyncio
 async def test_requires_area_or_project(session):
     service = TaskService(session)
+    await ensure_tg_user(session, 1)
     with pytest.raises(ValueError):
         await service.create_task(owner_id=1, title="No PARA")
 
@@ -92,6 +104,7 @@ async def test_requires_area_or_project(session):
 @pytest.mark.asyncio
 async def test_add_and_leave_watcher(session):
     service = TaskService(session)
+    await ensure_tg_user(session, 1)
     area = Area(owner_id=1, name="A1")
     session.add(area)
     await session.flush()
@@ -111,6 +124,7 @@ async def test_add_and_leave_watcher(session):
 @pytest.mark.asyncio
 async def test_stats_by_owner(session):
     service = TaskService(session)
+    await ensure_tg_user(session, 1)
     area = Area(owner_id=1, name="A1")
     session.add(area)
     await session.flush()
@@ -133,6 +147,7 @@ async def test_stats_by_owner(session):
 @pytest.mark.asyncio
 async def test_ensure_default_area(session):
     service = TaskService(session)
+    await ensure_tg_user(session, 7)
     area = await service.ensure_default_area(owner_id=7)
     assert area.slug == "inbox"
     again = await service.ensure_default_area(owner_id=7)

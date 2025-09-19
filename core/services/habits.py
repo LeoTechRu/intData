@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import math
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta, datetime, timezone
 from typing import Any, Dict, Optional, List
 
 import sqlalchemy as sa
@@ -336,7 +336,7 @@ class HabitsService:
         val = habit["val"]
         base_xp = config.XP_BASE[diff]
         base_gold = config.GOLD_BASE[diff]
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         xp = int(base_xp)
         gold = int(base_gold)
         if config.HABITS_ANTIFARM_ENABLED:
@@ -400,7 +400,7 @@ class HabitsService:
             return None
         diff = habit["difficulty"]
         val = habit["val"]
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         if config.HABITS_ANTIFARM_ENABLED:
             last = habit.get("last_action_at")
             if last and (now - last).total_seconds() < habit["cooldown_sec"]:

@@ -1,6 +1,7 @@
 import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+import sqlalchemy as sa
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from base import Base
@@ -9,12 +10,9 @@ from core.services.access_control import AccessControlService, AccessScope
 
 
 @pytest_asyncio.fixture
-async def session():
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
-    async with async_session() as sess:
+async def session(postgres_db):
+    engine, session_factory = postgres_db
+    async with session_factory() as sess:
         yield sess
 
 
@@ -55,15 +53,28 @@ async def test_grant_and_revoke_role(session):
     assert effective_after.is_superuser
 
 
+async def _ensure_tg(session, telegram_id: int, **kwargs) -> TgUser:
+    stmt = sa.select(TgUser).where(TgUser.telegram_id == telegram_id)
+    existing = await session.execute(stmt)
+    user = existing.scalar_one_or_none()
+    if user is None:
+        user = TgUser(telegram_id=telegram_id)
+        session.add(user)
+    for key, value in kwargs.items():
+        setattr(user, key, value)
+    await session.flush()
+    return user
+
+
 @pytest.mark.asyncio
 async def test_scope_inheritance(session):
     service = AccessControlService(session)
     await service.seed_presets()
 
-    tg_owner = TgUser(telegram_id=101, role="single", first_name="Owner")
+    tg_owner = await _ensure_tg(session, 101, role="single", first_name="Owner")
     user = WebUser(username="charlie", password_hash="", role="single")
     area = Area(owner_id=tg_owner.telegram_id, name="Ops", title="Ops")
-    session.add_all([tg_owner, user, area])
+    session.add_all([user, area])
     await session.flush()
 
     project = Project(

@@ -1,11 +1,9 @@
 import sqlalchemy as sa
-from sqlalchemy import create_engine
-
 from core.db import repair
 
 
-def test_backfill_habits_area_from_project():
-    engine = create_engine("sqlite:///:memory:")
+def test_backfill_habits_area_from_project(postgres_sync_engine):
+    engine = postgres_sync_engine
     with engine.begin() as conn:
         conn.execute(sa.text("CREATE TABLE areas (id INTEGER PRIMARY KEY, owner_id INTEGER, title TEXT)"))
         conn.execute(sa.text("CREATE TABLE projects (id INTEGER PRIMARY KEY, owner_id INTEGER, area_id INTEGER)"))
@@ -15,12 +13,13 @@ def test_backfill_habits_area_from_project():
         conn.execute(sa.text("INSERT INTO habits (id, owner_id, project_id, area_id) VALUES (1,1,1,NULL)"))
         updated = repair.backfill_habits_area(conn)
         assert updated == 1
-        area_id = conn.execute(sa.text("SELECT area_id FROM habits WHERE id=1")).scalar()
+        area_id = conn.execute(sa.text("SELECT area_id FROM habits WHERE id=1"))
+        area_id = area_id.scalar()
         assert area_id == 1
 
 
-def test_backfill_habits_antifarm_defaults():
-    engine = create_engine("sqlite:///:memory:")
+def test_backfill_habits_antifarm_defaults(postgres_sync_engine):
+    engine = postgres_sync_engine
     with engine.begin() as conn:
         conn.execute(
             sa.text(

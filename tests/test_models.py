@@ -1,6 +1,5 @@
 import bcrypt
 import pytest
-from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from base import Base
@@ -8,8 +7,8 @@ from core.models import TgUser, WebUser, UserRole
 
 
 @pytest.fixture()
-def session():
-    engine = create_engine("sqlite:///:memory:")
+def session(postgres_sync_engine):
+    engine = postgres_sync_engine
     Base.metadata.create_all(engine)
     with Session(engine) as sess:
         yield sess

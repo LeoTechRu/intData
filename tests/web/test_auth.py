@@ -6,8 +6,6 @@ import time
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
 
 import core.db as db
 from base import Base
@@ -33,17 +31,14 @@ def _generate_hash(data: dict) -> str:
 
 
 @pytest_asyncio.fixture
-async def client():
-    engine = create_async_engine('sqlite+aiosqlite:///:memory:')
-    async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+async def client(postgres_db):
+    engine, _ = postgres_db
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    db.async_session = async_session
     db.TG_BOT_TOKEN = TG_BOT_TOKEN
     S.TG_BOT_TOKEN = TG_BOT_TOKEN
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
-    await engine.dispose()
 
 
 @pytest.mark.asyncio

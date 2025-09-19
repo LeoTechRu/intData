@@ -1,8 +1,6 @@
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
 
 from base import Base
 from core.models import WebUser, UserRole
@@ -15,16 +13,12 @@ except ModuleNotFoundError:  # pragma: no cover
 
 
 @pytest_asyncio.fixture
-async def client():
-    engine = create_async_engine('sqlite+aiosqlite:///:memory:?cache=shared')
-    async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+async def client(postgres_db):
+    engine, _ = postgres_db
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    db.engine = engine
-    db.async_session = async_session
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
-    await engine.dispose()
 
 
 async def _create_user(role: UserRole, username: str) -> int:

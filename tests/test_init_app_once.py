@@ -5,7 +5,7 @@ import importlib
 from pathlib import Path
 
 import pytest
-from sqlalchemy.ext.asyncio import create_async_engine
+from tests.utils import db as db_utils
 
 from core.env import env
 from core.db import bootstrap
@@ -73,36 +73,34 @@ async def test_init_app_once_idempotent(dummy_engine, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_init_app_once_executes_after_failure(tmp_path, monkeypatch):
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
-    monkeypatch.setattr(db_engine, "engine", engine)
-    monkeypatch.setattr(init_app, "engine", engine)
-    monkeypatch.setattr(db_engine, "ENGINE_MODE", "async")
-    monkeypatch.setattr(init_app, "ENGINE_MODE", "async")
+    async with db_utils.async_engine() as engine:
+        monkeypatch.setattr(db_engine, "engine", engine)
+        monkeypatch.setattr(init_app, "engine", engine)
+        monkeypatch.setattr(db_engine, "ENGINE_MODE", "async")
+        monkeypatch.setattr(init_app, "ENGINE_MODE", "async")
 
-    ddl_dir = tmp_path
-    ddl_file = ddl_dir / "001_test.sql"
-    ddl_file.write_text(
-        "CREATE TABLE t1(id INT);\n" "ALTER TABLE not_exist ADD COLUMN foo INT;\n" "CREATE TABLE t2(id INT);"
-    )
-    monkeypatch.setattr(bootstrap, "DDL_DIR", ddl_dir)
-
-    env.DB_BOOTSTRAP = True
-    env.DB_REPAIR = False
-    env.DEV_INIT_MODELS = False
-    monkeypatch.setattr(init_app, "_inited", False)
-    monkeypatch.setattr(init_app, "run_repair", lambda conn: None)
-
-    await init_app.init_app_once(env)
-
-    async with engine.connect() as conn:
-        res = await conn.exec_driver_sql(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='t2'"
+        ddl_dir = tmp_path
+        ddl_file = ddl_dir / "001_test.sql"
+        ddl_file.write_text(
+            "CREATE TABLE t1(id INT);\n"
+            "ALTER TABLE not_exist ADD COLUMN foo INT;\n"
+            "CREATE TABLE t2(id INT);"
         )
-        assert res.first() is not None
-        res = await conn.exec_driver_sql("SELECT 1")
-        assert res.scalar() == 1
+        monkeypatch.setattr(bootstrap, "DDL_DIR", ddl_dir)
 
-    await engine.dispose()
+        env.DB_BOOTSTRAP = True
+        env.DB_REPAIR = False
+        env.DEV_INIT_MODELS = False
+        monkeypatch.setattr(init_app, "_inited", False)
+        monkeypatch.setattr(init_app, "run_repair", lambda conn: None)
+
+        await init_app.init_app_once(env)
+
+        async with engine.connect() as conn:
+            res = await conn.exec_driver_sql("SELECT to_regclass('t2')")
+            assert res.scalar() == 't2'
+            res = await conn.exec_driver_sql("SELECT 1")
+            assert res.scalar() == 1
 
 
 def test_entrypoints_use_init_app_once():

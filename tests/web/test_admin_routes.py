@@ -1,8 +1,6 @@
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
 
 from base import Base
 from core.models import WebUser, UserRole, TgUser, WebTgLink
@@ -10,6 +8,7 @@ from core.services.audit_log import AuditLogService
 from core.services.profile_service import ProfileService
 from sqlalchemy import select
 import core.db as db
+from tests.utils.seeds import ensure_tg_user
 
 try:
     from core.main import app  # type: ignore
@@ -18,16 +17,12 @@ except ModuleNotFoundError:  # pragma: no cover
 
 
 @pytest_asyncio.fixture
-async def client():
-    engine = create_async_engine('sqlite+aiosqlite:///:memory:?cache=shared')
-    async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+async def client(postgres_db):
+    engine, _ = postgres_db
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    db.engine = engine
-    db.async_session = async_session
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
-    await engine.dispose()
 
 
 async def _create_user(role: UserRole, username: str) -> int:
@@ -78,8 +73,7 @@ async def test_role_and_link_operations(client: AsyncClient):
     user_id = await _create_user(UserRole.single, username="web")
     async with db.async_session() as session:  # type: ignore
         async with session.begin():
-            tg = TgUser(telegram_id=123, first_name="tg")
-            session.add(tg)
+            tg = await ensure_tg_user(session, 123, first_name="tg")
         tg_id = tg.id
         telegram_id = tg.telegram_id
 
