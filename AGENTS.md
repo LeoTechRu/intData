@@ -12,22 +12,49 @@
 
 ## Communication Rules
 - Все ответы codex-cli пользователям формулируем на русском языке независимо от контекста задачи.
+- В каждом сообщении агент явно указывает текущую роль и говорит от лица этой роли (пример: «Агент Frontend Codex …»).
+- Общение с владельцем продукта координирует Team Lead; остальные роли подключаются только после handoff.
 
 ## Multi-Session Workflow (codex-cli)
-- Перед запуском новой сессии обязательно проверьте таблицу Agent Sync в этом файле и закрепите задачу: укажите позывной, ветку `feature/<epic>/<scope>-<role>`, список файлов и время в UTC. Без брони правки запрещены.
+- Перед запуском новой сессии обязательно проверьте Agent Sync и закрепите задачу: укажите позывной, ветку `feature/<epic>/<scope>-<agent>`, список файлов и время в UTC. Без брони правки запрещены.
 - Используйте lock-файлы или записи в Agent Sync для файлов: пока замок не снят, другие сессии не редактируют перечисленные пути. При завершении работы очистите запись, чтобы исключить конфликтную правку.
-- Работайте строго в своей ветке; общие изменения мерджим через стандартный git-flow. Каждая сессия обязана завершаться `git push` в собственную ветку и обновлением Agent Sync.
-- После завершения фичи сессия закрывается push’ем в свою feature-ветку и обновлением Agent Sync.
-  Merge выполняет только тимлид: feature/* → PR в `test` → CI/tests → ручная проверка TL → fast-forward `test → main`.
-  Прямые merge в `main` запрещены.
+- Работайте строго в своей ветке; общие изменения мерджим через стандартный git-flow. Каждая сессия завершается `git push` в собственную ветку и обновлением Agent Sync.
+- После завершения фичи codex-cli обязан сам провести merge своей ветки в `main`, выполнить повторный деплой, перезапустить соответствующие сервисы, проверить логи/мониторинг, оперативно исправить выявленные ошибки и убедиться, что продукт доступен для пользователей.
 - В начале работы перечитайте разделы README.md «Workflow Playbook», «Idea Log», «Vision Deck», «Conventions Catalog» и «Tasklist»: синхронизация → анализ → планирование через `update_plan` → исполнение → документация. Все временные договорённости фиксируйте в соответствующих разделах README.
 - Перед коммитом убедитесь, что список задач в README.md (секция «Tasklist») обновлён: отметьте выполненные пункты и добавьте ссылки на PR/коммиты. Это поддерживает прозрачность и снижает риск дублирования работы.
+- Все прямые коммуникации с владельцем ведём строго на русском языке, независимо от роли.
+- `README.md` поддерживаем только на русском языке для полной совместимости с владельцем.
+
+## Stage-Gate Playbook (IntData)
+> Этот раздел **нельзя удалять или сокращать**. Любой merge/pull-request, в котором отсутствуют пункты Stage-Gate Playbook, отклоняем без обсуждений.
+
+- TL остаётся единым входом для владельца: intake, разбор противоречий, декомпозиция, финальное ревью и merge.
+- Вся команда поддерживает **воронку README**: «idea → vision → conventions → tasklist → workflow». Любое изменение кода сопровождается обновлением нужных секций и ссылкой в Changelog.
+- Stage-Gate конвейер codex-cli фиксируется GateRecord (UTC-время, риски, решение TL) и хранится в `docs/reports/`.
+
+### Этапы
+0. **Funnel upkeep (постоянно)** — README, Agent Sync, GateRecord синхронизированы.
+1. **Intake / TL-Gate-0** — TL оформляет TaskCard: цель, ограничения, AC, ветка, роли.
+2. **Architecture / TL-Gate-1** — Architect подтверждает инварианты, обновляет ADR/Conventions без кода.
+3. **Decomposition & Routing / TL-Gate-2** — TL раздаёт TaskCards, фиксирует handoff и блокировки.
+4. **Implementation / TL-Gate-3** — роли работают в своих ветках, ведут Agent Sync, готовят отчёты и тесты.
+5. **Merge to `test` → QA стартует** — только TL мержит feature-ветки в `test`, QA запускает проверки.
+6. **InfoSec Advisory** — автоматические анализаторы (semgrep/bandit/trivy) выдаются в отчёте, дефекты заводятся задачами.
+7. **Release / TL-Gate-4** — DevOps готовит runbook, TL делает fast-forward `test→main`, проверяет мониторинг.
+8. **Documentation / TL-Gate-5** — Tech Writer обновляет README/Changelog/Workflow, закрывает итерацию и архивирует GateRecord.
+
+### Agent Sync & Handoff в Stage-Gate
+- Agent Sync является официальным GateLog: каждая запись содержит `when_utc`, ветку, TTL, статус, список замков и ссылку на TaskCard.
+- Статусы обновляем не реже чем раз в 60 минут; просроченные записи снимает TL.
+- После handoff или merge строку переводим в `Done` и удаляем.
+- Любое изменение в Stage-Gate Playbook, Agent Sync или Funnel фиксируем коммитом `docs(agents)` и ссылкой на GateRecord.
 
 ## Agent Sync
-> Таблица броней обновляется агентами codex-cli. Время фиксируем в UTC. После merge или отмены работы строку удаляем.
+> Agent Sync ведём в YAML-формате GateLog. Время фиксируем в UTC, `ttl_minutes` указывает, когда запись должна быть обновлена или снята.
 
 | Start (UTC) | Agent | Role | Branch | Task | Epic / Scope | Ключевые файлы | PR | AC link | Статус |
 |-------------|-------|------|--------|------|--------------|----------------|----|---------|--------|
+| 2025-09-19 20:42 | codex | fe | feature/E10/notes-restore-frontend | TL-2025-09-19-notes-restore | E10 / восстановление Next.js `/notes` | web/app/notes/page.tsx, web/components/notes/*, web/lib/types.ts, tests/web/test_notes_page.py | — | [AC](README.md#e10-capture-%D0%B1%D0%BE%D1%82%D0%B2%D0%B5%D0%B1-inbox) | на паузе (см. docs/reports/2025-09-19-notes-restore-wip.md) |
 | 2025-09-19 18:26 | codex | be | feature/E9/test-postgres-env-codex | TL-2025-09-19-pytest-postgres-migration | E9 / pytest: Postgres окружение + ветка test | tests/conftest.py, tests/test_habit_service.py, tests/test_task_service.py, tests/test_time_task_link.py, tests/test_services.py, docs/reports/2025-09-19-pytest-postgres-migration.md | — | [AC](README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3) | в работе (ядро-тесты на Postgres: habits/task/time/service закрыты; дальше — перенос web/API и полный `pytest -q`) |
 | 2025-09-19 10:22 | codex | be | feature/E9/test-postgres-env-codex | TL-2025-09-19-pytest-postgres-env | E9 / pytest: Postgres окружение | tests/conftest.py, .env*, docs/* | — | — | завершено 2025-09-19 10:33 |
 | 2025-09-19 08:43 | codex | ops | main | — | Ops / синхронизация main + рестарт сервисов | git (main), systemctl, logs/* | — | — | завершено 2025-09-19 08:47 |
@@ -308,28 +335,11 @@ Exit: PR с пайплайнами/конфигами, обновлённый ru
 ### Multi-agent Coordination (codex-cli)
 - Каждый экземпляр codex-cli работает в собственной рабочей копии: отдельный `git clone` или `git worktree add ../<agent-branch>`. Запрещено вести параллельную работу из одного каталога.
 - Перед стартом сессии: `git fetch --all`, `git status`, убедись, что нет чужих незакоммиченных правок. При обнаружении — синхронизируйся с владельцем задачи.
-- Для каждой задачи обязательно создавай персональную ветку формата `feature/<epic>/<scope>-<role>` до внесения изменений. Агент своей роли коммитит и пушит работу, merge выполняет тимлид через PR `feature/* → test` и fast-forward `test → main`.
+- Для каждой задачи обязательно создавай персональную ветку формата `feature/<epic>/<scope>-<agent>` до внесения изменений. codex-cli сам коммитит в эту ветку, затем выполняет `git fetch`, решает конфликты (`rebase`/`merge`) и вливает её в `main` без привлечения других агентов.
 - Резервируй задачи и файлы в [Agent Sync](#agent-sync): укажи позывной, дату/время (UTC), ветку и ключевые файлы. После merge/отмены работы снимай бронь.
 - Если требуются правки в файлах, занятых другим агентом, договорись через Agent Sync о порядке работ; одновременное редактирование одного файла запрещено.
 - Для крупных фич раскладывай изменения на подзадачи в README.md (секция «Roadmap & Epics») и, по возможности, включай фичефлаги, чтобы ограничить зону конфликта.
 - Конфликты при `git rebase`/`merge` решает агент, начавший работу позже: обнови ветку, переиграй свои правки и только после этого пушь результат.
-
-### Role Boundaries by Paths & Branches
-
-- TL мёржит только через PR: `feature/* → test`. Никто, кроме TL, не вливает в `test`/`main`.
-- BE редактирует только `core/**`, `web/api/**`, `api/openapi.json` (через экспорт), `tests/**` (бэкендовые).
-- FE редактирует только `web/app/**`, `web/components/**`, `web/lib/**`, `frontend/**`, `tests/**` (UI).
-- QA редактирует только `tests/**`, файлы окружений тестов и фикстуры (`.env.test`), отчёты в `docs/reports/*tests*`.
-- TW редактирует `README.md`, `AGENTS.md`, `docs/**`, экспортирует `api/openapi.json`.
-- Architect редактирует только `docs/reports/*`, `README.md` (Vision/Conventions) и DDL-планы (без кода).
-- OPS редактирует `CI/**`, `infra/**`, `utils/deploy/**`, секреты/ранбуки.
-
-Формат веток: `feature/<epic>/<scope>-<role>` — например:
-- `feature/E9/test-postgres-env-be`
-- `feature/E17/menu-grouping-fe`
-- `feature/E3/notes-assign-qa`
-- `feature/E18/crm-blueprint-arch`
-- `feature/Ops/test-deploy-ops`
 
 ## Жёсткие архитектурные правила (не нарушать)
 - Вся логика и зависимости, без которых бэкенд не стартует, живут в `core/`.
@@ -355,6 +365,7 @@ Exit: PR с пайплайнами/конфигами, обновлённый ru
 - [ ] Локальные тесты зелёные (`pytest -q`)?
 
 ## Do Not Do
+- Не удалять и не сокращать раздел «Stage-Gate Playbook (IntData)» и связанные инструкции.
 - Не создавать дубли напоминаний вне календаря.
 - Не материализовать ежедневки в `calendar_items` — только виртуальная интеграция (agenda/ICS).
 - Не класть бизнес-логику в `/web` или `/bot`.
