@@ -38,16 +38,6 @@ Intelligent Data Pro — приватный продуктовый репози�
 
 Полные промпты и Definition of Done для ролей см. в `AGENTS.md` → «Ролевой каталог».
 
-## Навигация по документу
-- [🗂️ Idea Log](#-idea-log)
-- [🎯 Vision Deck](#-vision-deck)
-- [📚 Conventions Catalog](#-conventions-catalog)
-- [🛠️ Workflow Playbook](#-workflow-playbook)
-- [📋 Tasklist](#-tasklist)
-- [🗺️ Roadmap & Epics](#-roadmap--epics)
-- [🧾 Changelog](#-changelog)
-- [📎 Reports & Links](#-reports--links)
-
 ## Доменные ориентиры
 - **Стек:** Python 3.11+, FastAPI, PostgreSQL, Next.js/React, Aiogram. Виртуальное окружение `venv`, зависимости в `requirements.txt`.
 - **Env:** секреты в `.env`, пример — `.env.example`; для тестов `.env.test` (ignored). Ключевые переменные: `DB_*`, `TG_BOT_TOKEN`, `PUBLIC_URL`, `SESSION_MAX_AGE`, `DB_BOOTSTRAP`, `DB_REPAIR`, `DEV_INIT_MODELS`.
