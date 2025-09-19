@@ -452,6 +452,9 @@ Pull/MR с тестами приветствуются. Смотрите [Change
 - [ ] TL-2025-09-19-test-runbook — Описать release-runbook `test → main` и smoke-чеклист (owner: TBD, см. [E9](#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3)).
 - [ ] TL-2025-09-19-pytest-postgres-migration — Заменить sqlite-фикстуры на PostgreSQL во всех тестах (`tests/**`), устранить FK-конфликты seed-данных (owner: codex, ветка `feature/E9/test-postgres-env-codex`; сделано: Postgres-фикстуры, `ensure_user_stats`, перенос ключевых web/API тестов; осталось: добить зависание `tests/test_habit_service.py` и полный `pytest -q`).
 
+#### E10: Capture (бот/веб, Inbox)
+- [ ] TL-2025-09-19-notes-restore — Переработать страницу `/notes`: безопасное архивирование карточек с восстановлением, отдельный просмотр архива, синхронизация drag-n-drop и фильтров (owner: codex, ветка `feature/E10/notes-restore-frontend`, см. [E10](#e10-capture-ботвеб-inbox)).
+
 #### E17: Frontend Modernization
 - [ ] TL-2025-09-18-nav-blueprint — Расширить NAV_BLUEPRINT и API `/api/v1/navigation/sidebar*` полями модулей и секций (owner: codex, ветка `feature/E17/menu-grouping-codex`, см. [E17](#e17-frontend-modernization)).
 - [ ] TL-2025-09-18-appshell-modules — Перестроить AppShell и SidebarEditor: секции + collapsible, единый список избранных страниц без дублей (owner: codex, ветка `feature/E17/menu-grouping-codex`).
@@ -1112,6 +1115,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - structured JSON logging with request correlation.
 - `/metrics`, `/healthz` and `/readyz` endpoints.
 - security headers, rate limiting and request body size guard.
+
+### Changed
+- `/notes`: управление заметками стало безопасным — кнопка «Архивировать» заменяет безвозвратное удаление, фильтр «Показать архив» отображает только архивные карточки с меткой «В архиве» и кнопкой «Восстановить», drag-and-drop отключается для архива, а React Query обновляет список без перезагрузки.
 - UI kit skeleton with reusable components.
 - Shared Next.js UI primitives (Button, Card, Field, Input, Select, Textarea, Badge, Checkbox, Toolbar) powered by clsx/tailwind-merge для консистентного фронтенд-стайлинга.
 - Time summary endpoint `/api/v1/time/summary` for aggregating durations by day, project, area or user.
