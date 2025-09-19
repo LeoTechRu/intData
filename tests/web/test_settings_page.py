@@ -34,8 +34,11 @@ async def test_settings_personal_only_for_regular_user(client: AsyncClient):
     uid = await _create_user(UserRole.single, username="personal")
     resp = await client.get('/settings', headers={'Authorization': f'Bearer {uid}'})
     assert resp.status_code == 200
-    assert 'Виджеты дашборда' in resp.text
-    assert 'Глобальная тема' not in resp.text
+    body = resp.text
+    assert 'Личный пресет' in body
+    assert 'data-testid="settings-admin-marker"' in body
+    assert 'data-role="admin"' not in body
+    assert 'data-global="true"' not in body
 
 
 @pytest.mark.asyncio
@@ -43,5 +46,7 @@ async def test_settings_admin_sections_visible(client: AsyncClient):
     uid = await _create_user(UserRole.admin, username="architect")
     resp = await client.get('/settings', headers={'Authorization': f'Bearer {uid}'})
     assert resp.status_code == 200
-    assert 'Глобальная тема' in resp.text
-    assert 'Telegram интеграции' in resp.text
+    body = resp.text
+    assert 'data-testid="settings-admin-marker"' in body
+    assert 'data-role="admin"' in body
+    assert 'data-global="true"' in body

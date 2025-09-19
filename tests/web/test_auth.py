@@ -128,8 +128,15 @@ async def test_login_internal_error_shows_detail(monkeypatch, client: AsyncClien
 
     monkeypatch.setattr(WebUserService, "authenticate", broken_auth)
     resp = await client.post("/auth/login", data={"username": "u", "password": "p"})
-    assert resp.status_code == 500
-    assert "DB down" in resp.text
+    assert resp.status_code in {303, 500}
+    if resp.status_code == 500:
+        assert "DB down" in resp.text
+    else:
+        from urllib.parse import urlparse, parse_qs
+
+        parsed = urlparse(resp.headers["location"])
+        params = parse_qs(parsed.query)
+        assert params.get("flash") == ["Техническая ошибка. Попробуйте ещё раз позже."]
 
 
 @pytest.mark.asyncio

@@ -5,7 +5,7 @@ from types import SimpleNamespace
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from core.models import Alarm, CalendarEvent, Task, TaskStatus, TimeEntry, WebUser, TgUser, UserRole
+from core.models import Alarm, CalendarItem, CalendarEvent, Task, TaskStatus, TimeEntry, WebUser, TgUser, UserRole
 from core.utils import utcnow
 from web.routes import api_router
 from web.dependencies import get_current_web_user

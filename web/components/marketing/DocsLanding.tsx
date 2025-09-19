@@ -173,7 +173,7 @@ const planMapping: PlanMapping[] = [
 ];
 
 const resourceLinks: ResourceLink[] = [
-  { label: 'OpenAPI спецификация Intelligent Data Pro', href: '/api/openapi.json' },
+  { label: 'OpenAPI спецификация Intelligent Data Pro', href: '/api/v1/openapi.json' },
   {
     label: 'Postman коллекция API v1',
     href: 'https://intdata.pro/static/postman/intdata_v1.postman_collection.json',

@@ -203,7 +203,7 @@ async def swagger_ui():
     we override CSP for this response to allow the required sources.
     """
     resp = get_swagger_ui_html(
-        openapi_url="/api/openapi.json",
+        openapi_url="/api/v1/openapi.json",
         title="API v1 - Swagger UI",
     )
     # Narrowly relax CSP for Swagger UI only
@@ -222,11 +222,20 @@ async def swagger_docs_redirect():
     return RedirectResponse("/api", status_code=307)
 
 
-@app.get("/api/openapi.json", include_in_schema=False)
-async def openapi_json() -> Response:
+def _build_openapi_response() -> Response:
     data = app.openapi()
     text = json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True)
     return Response(text, media_type="application/json")
+
+
+@app.get("/api/openapi.json", include_in_schema=False)
+async def openapi_json() -> Response:
+    return _build_openapi_response()
+
+
+@app.get("/api/v1/openapi.json", include_in_schema=False)
+async def openapi_json_v1() -> Response:
+    return _build_openapi_response()
 
 
 
@@ -299,6 +308,7 @@ async def auth_middleware(request: Request, call_next):
         path == "/api"
         or path == "/api/docs"  # back-compat path
         or path == "/api/openapi.json"
+        or path == "/api/v1/openapi.json"
         or path == "/api/v1/auth/tg-webapp/exchange"
     ):
         return await call_next(request)

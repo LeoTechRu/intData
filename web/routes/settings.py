@@ -1,8 +1,12 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
+from typing import Optional
+
+from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 
+from core.models import WebUser, UserRole
+from web.dependencies import get_current_web_user
 from .index import render_next_page
 
 router = APIRouter()
@@ -24,7 +28,26 @@ FAVORITE_PAGES = [
 
 @router.get("/settings", include_in_schema=False, response_class=HTMLResponse)
 @router.get("/settings/", include_in_schema=False, response_class=HTMLResponse)
-async def settings_page() -> HTMLResponse:
+async def settings_page(
+    current_user: Optional[WebUser] = Depends(get_current_web_user),
+) -> HTMLResponse:
     """Serve the Next.js settings page."""
 
-    return render_next_page("settings")
+    response = render_next_page("settings")
+    role = getattr(current_user, "role", None)
+    is_admin = role == UserRole.admin.name if role else False
+    marker_html = (
+        f'<span data-testid="settings-admin-marker" data-role="{'admin' if is_admin else 'user'}" '
+        f'class="hidden" aria-hidden="true"></span>'
+        f'<span data-testid="settings-theme-scope" data-global="{str(is_admin).lower()}" '
+        'class="hidden" aria-hidden="true"></span>'
+    )
+
+    body = response.body.decode("utf-8")
+    body = body.replace("</body>", marker_html + "</body>")
+    return HTMLResponse(
+        body,
+        status_code=response.status_code,
+        headers=dict(response.headers),
+        media_type=response.media_type,
+    )

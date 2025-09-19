@@ -1,0 +1,22 @@
+Дата: 2025-09-19
+Ветка: feature/E9/test-postgres-env-codex
+Роль: backend (перенос web-тестов на Postgres)
+
+Что сделано
+- Прогнал `pytest tests/web -vv`: все 55 тестов зелёные.
+- Добавил сид ролей/permissions для фикстуры `postgres_db` (AccessControlService.seed_presets).
+- Адаптировал web-тесты (auth, registration, settings, dashboard, Next static) под редиректы и новые маркеры.
+- Переопределил эндпоинты `/api/openapi.json` → `/api/v1/openapi.json`, обновил маркеры в settings.
+
+Текущее состояние
+- Полный `pytest -q` падает на `tests/test_diagnostics_service.py::test_diagnostics_workflow`: конфликт транзакций (`InvalidRequestError: A transaction is already begun`). Начат фикc — добавлен явный `commit()` после seed, но нужно перепроверить подход.
+- Код изменений не закоммичен, находится в рабочем дереве.
+
+Что сделать дальше
+1. Дочистить фикстуру diagnostics (убедиться, что seed выполняется вне активной транзакции, повторно прогнать `pytest -q`).
+2. Обновить README Tasklist/Changelog после полного зелёного прогона.
+3. Подготовить handoff на QA, зафиксировать Agent Sync.
+
+Примечания
+- Логи веб-тестов хранятся в отчёте `docs/reports/2025-09-19-pytest-postgres-migration.md` (обновление потребуется после завершения diagnostics).
+- Маркеры для настроек: `data-role="admin|user"`, `data-global="true|false"` — используются в веб-тестах вместо поиска русских строк.
