@@ -388,6 +388,8 @@ export interface SidebarNavItem {
   hidden: boolean;
   position: number;
   status?: SidebarNavStatus;
+  module?: string;
+  section_order?: number;
 }
 
 export interface SidebarWidgetItem {
@@ -399,9 +401,16 @@ export interface SidebarWidgetItem {
   position: number;
 }
 
+export interface SidebarModuleDefinition {
+  id: string;
+  label: string;
+  order: number;
+}
+
 export interface SidebarNavPayload {
   v: number;
   items: SidebarNavItem[];
+  modules: SidebarModuleDefinition[];
   widgets: SidebarWidgetItem[];
   layout: {
     user: SidebarLayoutSettings;

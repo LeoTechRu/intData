@@ -18,6 +18,7 @@ import {
 } from '../lib/persona';
 import type {
   SidebarLayoutSettings,
+  SidebarModuleDefinition,
   SidebarNavItem,
   SidebarNavPayload,
   TimeEntry,
@@ -49,29 +50,165 @@ const COMMUNITY_CHANNEL_URL = 'https://t.me/intDataHELP';
 const SUPPORT_CHANNEL_URL = 'https://t.me/HELPintData';
 const DEVELOPER_CONTACT_URL = 'https://t.me/leotechru';
 
+const STATIC_MODULES: SidebarModuleDefinition[] = [
+  { id: 'control', label: 'Пульт', order: 1000 },
+  { id: 'calendar', label: 'Календарь', order: 2000 },
+  { id: 'tasks', label: 'Задачи', order: 3000 },
+  { id: 'knowledge', label: 'Знания', order: 4000 },
+  { id: 'team', label: 'Команда', order: 5000 },
+  { id: 'admin', label: 'Администрирование', order: 6000 },
+];
+
 const STATIC_NAV_FALLBACK: SidebarNavItem[] = [
-  { key: 'overview', label: 'Обзор', href: '/', hidden: false, position: 1, status: { kind: 'new' } },
-  { key: 'calendar', label: 'Календарь', href: '/calendar', hidden: false, position: 2, status: { kind: 'new' } },
-  { key: 'inbox', label: 'Входящие', href: '/inbox', hidden: false, position: 3 },
-  { key: 'tasks', label: 'Задачи', href: '/tasks', hidden: false, position: 4, status: { kind: 'wip' } },
-  { key: 'time', label: 'Время', href: '/time', hidden: false, position: 5, status: { kind: 'new' } },
-  { key: 'notes', label: 'Заметки', href: '/notes', hidden: false, position: 6, status: { kind: 'new' } },
-  { key: 'areas', label: 'Области', href: '/areas', hidden: false, position: 7, status: { kind: 'new' } },
-  { key: 'projects', label: 'Проекты', href: '/projects', hidden: false, position: 8, status: { kind: 'new' } },
-  { key: 'resources', label: 'Ресурсы', href: '/resources', hidden: false, position: 9, status: { kind: 'wip' } },
+  {
+    key: 'overview',
+    label: 'Обзор',
+    href: '/',
+    hidden: false,
+    position: 1,
+    status: { kind: 'new' },
+    module: 'control',
+    section_order: 100,
+  },
+  {
+    key: 'inbox',
+    label: 'Входящие',
+    href: '/inbox',
+    hidden: false,
+    position: 2,
+    module: 'control',
+    section_order: 110,
+  },
+  {
+    key: 'calendar',
+    label: 'Календарь',
+    href: '/calendar',
+    hidden: false,
+    position: 3,
+    status: { kind: 'new' },
+    module: 'calendar',
+    section_order: 200,
+  },
+  {
+    key: 'time',
+    label: 'Время',
+    href: '/time',
+    hidden: false,
+    position: 4,
+    status: { kind: 'new' },
+    module: 'calendar',
+    section_order: 210,
+  },
+  {
+    key: 'tasks',
+    label: 'Задачи',
+    href: '/tasks',
+    hidden: false,
+    position: 5,
+    status: { kind: 'wip' },
+    module: 'tasks',
+    section_order: 300,
+  },
+  {
+    key: 'projects',
+    label: 'Проекты',
+    href: '/projects',
+    hidden: false,
+    position: 6,
+    status: { kind: 'new' },
+    module: 'tasks',
+    section_order: 310,
+  },
+  {
+    key: 'areas',
+    label: 'Области',
+    href: '/areas',
+    hidden: false,
+    position: 7,
+    status: { kind: 'new' },
+    module: 'tasks',
+    section_order: 320,
+  },
+  {
+    key: 'resources',
+    label: 'Ресурсы',
+    href: '/resources',
+    hidden: false,
+    position: 8,
+    status: { kind: 'wip' },
+    module: 'tasks',
+    section_order: 330,
+  },
+  {
+    key: 'notes',
+    label: 'Заметки',
+    href: '/notes',
+    hidden: false,
+    position: 9,
+    status: { kind: 'new' },
+    module: 'knowledge',
+    section_order: 400,
+  },
+  {
+    key: 'products',
+    label: 'Продукты',
+    href: '/products',
+    hidden: false,
+    position: 10,
+    status: { kind: 'new' },
+    module: 'knowledge',
+    section_order: 410,
+  },
   {
     key: 'habits',
     label: 'Привычки',
     href: '/habits',
     hidden: false,
-    position: 10,
+    position: 11,
     status: { kind: 'locked', link: '/tariffs' },
+    module: 'team',
+    section_order: 500,
   },
-  { key: 'team', label: 'Команда', href: '/users', hidden: false, position: 11, status: { kind: 'new' } },
-  { key: 'products', label: 'Продукты', href: '/products', hidden: false, position: 12, status: { kind: 'new' } },
-  { key: 'groups', label: 'Группы', href: '/groups', hidden: false, position: 14, status: { kind: 'new' } },
-  { key: 'admin', label: 'ЛК Админа', href: '/admin', hidden: true, position: 15, status: { kind: 'new' } },
-  { key: 'settings', label: 'Настройки', href: '/settings', hidden: false, position: 16, status: { kind: 'new' } },
+  {
+    key: 'team',
+    label: 'Команда',
+    href: '/users',
+    hidden: false,
+    position: 12,
+    status: { kind: 'new' },
+    module: 'team',
+    section_order: 510,
+  },
+  {
+    key: 'groups',
+    label: 'Группы',
+    href: '/groups',
+    hidden: false,
+    position: 13,
+    status: { kind: 'new' },
+    module: 'team',
+    section_order: 520,
+  },
+  {
+    key: 'settings',
+    label: 'Настройки',
+    href: '/settings',
+    hidden: false,
+    position: 14,
+    status: { kind: 'new' },
+    module: 'admin',
+    section_order: 600,
+  },
+  {
+    key: 'admin',
+    label: 'ЛК Админа',
+    href: '/admin',
+    hidden: true,
+    position: 15,
+    status: { kind: 'new' },
+    module: 'admin',
+    section_order: 610,
+  },
 ];
 
 function getInitials(name: string): string {
@@ -275,17 +412,59 @@ export default function AppShell({
     setIsMobileNavOpen((prev) => !prev);
   };
 
-  const navItems = navQuery.data?.items ?? STATIC_NAV_FALLBACK;
-  const visibleNavItems = useMemo(() => navItems.filter((item) => !item.hidden), [navItems]);
-  const navItemsWithActive = useMemo(
-    () =>
-      visibleNavItems.map((item) => {
-        const href = item.href;
-        const active = href && pathname ? pathname === href || pathname.startsWith(`${href}/`) : false;
-        return { item, active };
-      }),
-    [visibleNavItems, pathname],
-  );
+  const navItems: SidebarNavItem[] = navQuery.data?.items ?? STATIC_NAV_FALLBACK;
+  const navModules = useMemo(() => {
+    const payload = navQuery.data?.modules;
+    const source = payload && payload.length > 0 ? payload : STATIC_MODULES;
+    return [...source].sort((a, b) => a.order - b.order);
+  }, [navQuery.data?.modules]);
+  const moduleMap = useMemo(() => new Map(navModules.map((section) => [section.id, section])), [navModules]);
+  const navSections = useMemo(() => {
+    const buckets = new Map<
+      string,
+      { module: SidebarModuleDefinition; items: { item: SidebarNavItem; active: boolean }[] }
+    >();
+    const ensureBucket = (
+      moduleId: string,
+    ): { module: SidebarModuleDefinition; items: { item: SidebarNavItem; active: boolean }[] } => {
+      const existing = buckets.get(moduleId);
+      if (existing) {
+        return existing;
+      }
+      const moduleFromPayload = moduleMap.get(moduleId);
+      const moduleOrder = moduleFromPayload?.order ?? 9000;
+      const moduleDef: SidebarModuleDefinition =
+        moduleFromPayload ?? { id: moduleId, label: moduleId, order: moduleOrder };
+      const bucket = { module: moduleDef, items: [] as { item: SidebarNavItem; active: boolean }[] };
+      buckets.set(moduleId, bucket);
+      return bucket;
+    };
+    navItems.forEach((item) => {
+      if (item.hidden) {
+        return;
+      }
+      const href = item.href;
+      const active = href && pathname ? pathname === href || pathname.startsWith(`${href}/`) : false;
+      const moduleId = item.module ?? 'general';
+      ensureBucket(moduleId).items.push({ item, active });
+    });
+    const sections: { module: SidebarModuleDefinition; items: { item: SidebarNavItem; active: boolean }[] }[] = [];
+    navModules
+      .filter((module) => buckets.has(module.id))
+      .forEach((module) => {
+        sections.push(buckets.get(module.id)!);
+        buckets.delete(module.id);
+      });
+    Array.from(buckets.values())
+      .sort((a, b) => {
+        if (a.module.order !== b.module.order) {
+          return a.module.order - b.module.order;
+        }
+        return a.module.id.localeCompare(b.module.id);
+      })
+      .forEach((section) => sections.push(section));
+    return sections;
+  }, [navItems, navModules, moduleMap, pathname]);
 
   const viewerRole = viewer?.role?.toLowerCase() ?? null;
   const hasPaidSupport = Boolean(viewer) && viewerRole !== 'single' && viewerRole !== 'suspended';
@@ -327,6 +506,110 @@ export default function AppShell({
   const userLayout = navQuery.data?.layout?.user ?? layoutFromItems(navVersion, navItems);
   const globalLayout = navQuery.data?.layout?.global ?? null;
   const canEditGlobal = Boolean(navQuery.data?.can_edit_global);
+
+  const currentNavEntry = useMemo<SidebarNavItem | null>(() => {
+    let best: SidebarNavItem | null = null;
+    let bestLength = -1;
+    navItems.forEach((item) => {
+      const href = item.href;
+      if (!href) {
+        return;
+      }
+      if (pathname === href || pathname.startsWith(`${href}/`)) {
+        const length = href.length;
+        if (length > bestLength) {
+          best = item;
+          bestLength = length;
+        }
+      }
+    });
+    return best;
+  }, [navItems, pathname]);
+
+  const canToggleFavorite = Boolean(viewer && currentNavEntry);
+  const isFavorite = currentNavEntry ? !currentNavEntry.hidden : false;
+
+  const moduleTabsData = useMemo(() => {
+    type ModuleBucket = { module: SidebarModuleDefinition; items: SidebarNavItem[] };
+    const buckets = new Map<string, ModuleBucket>();
+    const ensureBucket = (moduleId: string): ModuleBucket => {
+      const existing = buckets.get(moduleId);
+      if (existing) {
+        return existing;
+      }
+      const moduleFromPayload = moduleMap.get(moduleId);
+      const moduleOrder = moduleFromPayload?.order ?? 9000;
+      const moduleDef: SidebarModuleDefinition =
+        moduleFromPayload ?? { id: moduleId, label: moduleId, order: moduleOrder };
+      const bucket: ModuleBucket = { module: moduleDef, items: [] };
+      buckets.set(moduleId, bucket);
+      return bucket;
+    };
+    navItems.forEach((item) => {
+      if (!item.href || item.disabled) {
+        return;
+      }
+      const moduleId = item.module ?? 'general';
+      const bucket = ensureBucket(moduleId);
+      bucket.items.push(item);
+    });
+    const sections = Array.from(buckets.values()).map((section) => {
+      const items = [...section.items].sort((a, b) => {
+        const orderA = a.section_order ?? 0;
+        const orderB = b.section_order ?? 0;
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        }
+        return a.position - b.position;
+      });
+      return { module: section.module, items };
+    });
+    sections.sort((a, b) => {
+      if (a.module.order !== b.module.order) {
+        return a.module.order - b.module.order;
+      }
+      return a.module.id.localeCompare(b.module.id);
+    });
+    return sections;
+  }, [moduleMap, navItems]);
+
+  const activeModuleId = currentNavEntry?.module ?? moduleTabsData[0]?.module.id ?? navModules[0]?.id ?? 'general';
+  const activeModule = moduleMap.get(activeModuleId) ?? { id: activeModuleId, label: activeModuleId, order: 9000 };
+  const activeModuleTabs = useMemo(() => {
+    const section = moduleTabsData.find((candidate) => candidate.module.id === activeModuleId);
+    if (!section) {
+      return [] as Array<{ item: SidebarNavItem; active: boolean; hidden: boolean }>;
+    }
+    return section.items.map((item) => ({
+      item,
+      active: currentNavEntry ? item.key === currentNavEntry.key : false,
+      hidden: Boolean(item.hidden),
+    }));
+  }, [activeModuleId, currentNavEntry, moduleTabsData]);
+
+  const handleToggleFavorite = async () => {
+    if (!currentNavEntry || saveUserLayoutMutation.isPending) {
+      return;
+    }
+    if (!viewer) {
+      router.push('/auth');
+      return;
+    }
+    const nextHidden = isFavorite;
+    const layout: SidebarLayoutSettings = {
+      v: navVersion,
+      items: navItems.map((item, index) => ({
+        key: item.key,
+        position: index + 1,
+        hidden: item.key === currentNavEntry.key ? nextHidden : item.hidden,
+      })),
+    };
+    try {
+      await handleSaveUserLayout(layout);
+    } catch (error) {
+      console.error('Failed to toggle favorite', error);
+    }
+  };
 
   const handleStatusNavigate = (
     status: SidebarNavItem['status'] | undefined,
@@ -385,6 +668,57 @@ export default function AppShell({
   const userSaving = saveUserLayoutMutation.isPending || resetUserLayoutMutation.isPending;
   const globalSaving = saveGlobalLayoutMutation.isPending || resetGlobalLayoutMutation.isPending;
   const canOpenEditor = Boolean(navQuery.data);
+
+  const moduleTabsBar = activeModuleTabs.length > 1 ? (
+    <div className="border-t border-subtle/70 bg-[var(--surface-0)]/95 px-4 py-2 md:px-6" data-module-tabs>
+      <nav
+        className="flex gap-2 overflow-x-auto pb-1"
+        aria-label={`Навигация модуля ${activeModule.label}`}
+      >
+        {activeModuleTabs.map(({ item, active, hidden }) => {
+          const baseClass =
+            'inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]';
+          const variant = active
+            ? 'bg-[var(--accent-primary)] text-[var(--accent-on-primary)] shadow-soft'
+            : hidden
+            ? 'border border-dashed border-subtle text-muted hover:text-[var(--text-primary)]'
+            : 'bg-surface-soft text-muted hover:text-[var(--text-primary)]';
+          const className = clsx(baseClass, variant);
+          if (!item.href) {
+            return (
+              <span key={item.key} className={className} aria-disabled>
+                {item.label}
+              </span>
+            );
+          }
+          if (item.external) {
+            return (
+              <a key={item.key} href={item.href} target="_blank" rel="noreferrer" className={className}>
+                <span>{item.label}</span>
+                {hidden ? (
+                  <span className="text-[10px] uppercase tracking-wide text-muted">Скрыто</span>
+                ) : null}
+              </a>
+            );
+          }
+          return (
+            <Link
+              key={item.key}
+              href={item.href}
+              className={className}
+              aria-current={active ? 'page' : undefined}
+              prefetch={false}
+            >
+              <span>{item.label}</span>
+              {hidden ? (
+                <span className="text-[10px] uppercase tracking-wide text-muted">Скрыто</span>
+              ) : null}
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
+  ) : null;
 
   const sidebarClassName = clsx(
     'fixed inset-y-0 left-0 z-50 w-72 transform border-r border-subtle bg-[var(--surface-0)] px-4 py-6 transition-transform duration-200 ease-out md:static md:px-5 md:py-8',
@@ -466,14 +800,39 @@ export default function AppShell({
             </Link>
           </div>
           <div className="col-span-2 order-3 flex min-w-0 flex-col items-center gap-0.5 text-center md:order-2 md:col-span-1">
-            <h1
-              id={headingId}
-              className="truncate text-lg font-semibold leading-tight text-[var(--text-primary)] md:text-xl"
-              title={subtitle ?? undefined}
-              aria-describedby={headingDescriptionId}
-            >
-              {title}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1
+                id={headingId}
+                className="truncate text-lg font-semibold leading-tight text-[var(--text-primary)] md:text-xl"
+                title={subtitle ?? undefined}
+                aria-describedby={headingDescriptionId}
+              >
+                {title}
+              </h1>
+              <button
+                type="button"
+                onClick={handleToggleFavorite}
+                disabled={!canToggleFavorite || saveUserLayoutMutation.isPending}
+                aria-pressed={isFavorite}
+                aria-label={isFavorite ? 'Убрать страницу из меню' : 'Закрепить страницу в меню'}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted transition-base hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:opacity-40"
+              >
+                <svg
+                  aria-hidden
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill={isFavorite ? 'currentColor' : 'none'}
+                  stroke="currentColor"
+                  strokeWidth={isFavorite ? 0 : 1.6}
+                >
+                  <path
+                    d="M12 3.25l2.317 4.695 5.182.753-3.75 3.655.886 5.168L12 15.986l-4.635 2.53.886-5.168-3.75-3.655 5.182-.753L12 3.25z"
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
             {subtitle ? (
               <p id={headingDescriptionId} className="sr-only">
                 {subtitle}
@@ -486,6 +845,7 @@ export default function AppShell({
           </div>
         </div>
       </header>
+      {moduleTabsBar}
       <div className="relative flex flex-1">
         <aside
           className={sidebarClassName}
@@ -507,75 +867,85 @@ export default function AppShell({
                 </svg>
               </button>
             </div>
-            <nav className="flex flex-col gap-1" aria-label="Основное меню">
-              {navItemsWithActive.map(({ item, active }) => {
-                const baseClass =
-                  'flex items-center justify-between rounded-lg px-4 py-2 text-sm font-medium transition-base';
-                const interactiveFocus =
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]';
-                const stateClass = item.disabled
-                  ? 'cursor-not-allowed text-muted opacity-70'
-                  : active
-                  ? 'bg-[var(--accent-primary)] text-[var(--accent-on-primary)] shadow-soft'
-                  : 'text-muted hover:bg-surface-soft hover:text-[var(--text-primary)]';
-                const className = `${baseClass} ${stateClass} ${item.disabled ? '' : interactiveFocus}`;
-                const status = item.status;
-                let statusNode: React.ReactNode = null;
-                if (status) {
-                  const tooltip = NAV_STATUS_TOOLTIPS[status.kind as StatusIndicatorKind] ?? '';
-                  if (status.link) {
-                    const link = status.link;
-                    statusNode = (
-                      <span
-                        className="ml-2 inline-flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
-                        role="link"
-                        tabIndex={0}
-                        onClick={(event) => handleStatusNavigate(status, event)}
-                        onKeyDown={(event) => {
-                          if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            router.push(link);
-                          }
-                        }}
-                      >
-                        <StatusIndicator kind={status.kind as StatusIndicatorKind} tooltip={tooltip} />
-                      </span>
-                    );
-                  } else {
-                    statusNode = <StatusIndicator kind={status.kind as StatusIndicatorKind} tooltip={tooltip} />;
-                  }
-                }
-                const content = (
-                  <>
-                    <span className="truncate">{item.label}</span>
-                    {statusNode}
-                  </>
-                );
-                if (item.disabled || !item.href) {
-                  return (
-                    <span key={item.key} className={className} aria-disabled>
-                      {content}
-                    </span>
-                  );
-                }
-                if (item.external) {
-                  return (
-                    <a key={item.key} href={item.href} target="_blank" rel="noreferrer" className={className}>
-                      {content}
-                    </a>
-                  );
+            <nav className="flex flex-col gap-4" aria-label="Основное меню">
+              {navSections.map(({ module, items }) => {
+                if (items.length === 0) {
+                  return null;
                 }
                 return (
-                  <Link
-                    key={item.key}
-                    href={item.href}
-                    className={className}
-                    aria-current={active ? 'page' : undefined}
-                    prefetch={false}
-                  >
-                    {content}
-                  </Link>
+                  <section key={module.id} className="flex flex-col gap-1">
+                    <h3 className="px-4 text-xs font-semibold uppercase tracking-wide text-muted">{module.label}</h3>
+                    {items.map(({ item, active }) => {
+                      const baseClass =
+                        'flex items-center justify-between rounded-lg px-4 py-2 text-sm font-medium transition-base';
+                      const interactiveFocus =
+                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]';
+                      const stateClass = item.disabled
+                        ? 'cursor-not-allowed text-muted opacity-70'
+                        : active
+                        ? 'bg-[var(--accent-primary)] text-[var(--accent-on-primary)] shadow-soft'
+                        : 'text-muted hover:bg-surface-soft hover:text-[var(--text-primary)]';
+                      const className = `${baseClass} ${stateClass} ${item.disabled ? '' : interactiveFocus}`;
+                      const status = item.status;
+                      let statusNode: React.ReactNode = null;
+                      if (status) {
+                        const tooltip = NAV_STATUS_TOOLTIPS[status.kind as StatusIndicatorKind] ?? '';
+                        if (status.link) {
+                          const link = status.link;
+                          statusNode = (
+                            <span
+                              className="ml-2 inline-flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+                              role="link"
+                              tabIndex={0}
+                              onClick={(event) => handleStatusNavigate(status, event)}
+                              onKeyDown={(event) => {
+                                if (event.key === 'Enter' || event.key === ' ') {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                  router.push(link);
+                                }
+                              }}
+                            >
+                              <StatusIndicator kind={status.kind as StatusIndicatorKind} tooltip={tooltip} />
+                            </span>
+                          );
+                        } else {
+                          statusNode = <StatusIndicator kind={status.kind as StatusIndicatorKind} tooltip={tooltip} />;
+                        }
+                      }
+                      const content = (
+                        <>
+                          <span className="truncate">{item.label}</span>
+                          {statusNode}
+                        </>
+                      );
+                      if (item.disabled || !item.href) {
+                        return (
+                          <span key={item.key} className={className} aria-disabled>
+                            {content}
+                          </span>
+                        );
+                      }
+                      if (item.external) {
+                        return (
+                          <a key={item.key} href={item.href} target="_blank" rel="noreferrer" className={className}>
+                            {content}
+                          </a>
+                        );
+                      }
+                      return (
+                        <Link
+                          key={item.key}
+                          href={item.href}
+                          className={className}
+                          aria-current={active ? 'page' : undefined}
+                          prefetch={false}
+                        >
+                          {content}
+                        </Link>
+                      );
+                    })}
+                  </section>
                 );
               })}
             </nav>
@@ -652,6 +1022,7 @@ export default function AppShell({
         open={isNavEditorOpen}
         version={navVersion}
         items={navItems}
+        modules={navModules}
         userLayout={userLayout}
         globalLayout={globalLayout}
         canEditGlobal={canEditGlobal}

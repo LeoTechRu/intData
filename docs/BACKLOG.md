@@ -40,6 +40,7 @@
 
 | Start (UTC) | Agent | Branch | Epic / Scope | Ключевые файлы | Статус |
 |-------------|-------|--------|--------------|----------------|--------|
+| 2025-09-18 23:05 | codex | feature/E17/menu-grouping-codex | E17 / группировка меню AppShell | web/components/AppShell.tsx, web/lib/publicNav.ts, docs/* | в работе |
 | 2025-09-18 22:34 | codex | feature/E17/mobile-responsive-ui-codex | E17 / мобильная адаптация AppShell и обзора | web/components/AppShell.tsx, web/components/layout/PublicHeader.tsx, web/components/dashboard/OverviewDashboard.tsx | завершено 2025-09-18 22:44 |
 | 2025-09-18 21:41 | codex | feature/E17/public-header-codex | E17 / унификация публичных лендингов | web/app/(auth|tariffs|bot|docs)/*, web/components/*, docs/BACKLOG.md | завершено 2025-09-18 22:01 |
 | 2025-09-18 20:37 | codex | feature/E17/legacy-migration-codex | E17 / миграция легаси-страниц на новый UI | web/app/*, web/templates/*, web/components/*, docs/* | завершено 2025-09-18 21:03 |

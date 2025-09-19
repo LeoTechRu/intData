@@ -53,7 +53,18 @@ function isNavigationUrl(input: RequestInfo | URL): boolean {
 const navResponse = {
   v: 1,
   items: [
-    { key: 'overview', label: 'Обзор', href: '/', hidden: false, position: 1 },
+    {
+      key: 'overview',
+      label: 'Обзор',
+      href: '/',
+      hidden: false,
+      position: 1,
+      module: 'control',
+      section_order: 100,
+    },
+  ],
+  modules: [
+    { id: 'control', label: 'Пульт', order: 1000 },
   ],
   layout: {
     user: { v: 1, items: [{ key: 'overview', position: 1, hidden: false }] },

@@ -18,6 +18,17 @@ GLOBAL_LAYOUT_KEY = "ui.nav.sidebar.layout"
 GLOBAL_PREFIX = "ui.nav.sidebar."
 PAYWALL_ROUTE = "/tariffs"
 
+MODULE_DEFINITIONS: Tuple[Tuple[str, str, int], ...] = (
+    ("control", "Пульт", 1000),
+    ("calendar", "Календарь", 2000),
+    ("tasks", "Задачи", 3000),
+    ("knowledge", "Знания", 4000),
+    ("team", "Команда", 5000),
+    ("admin", "Администрирование", 6000),
+)
+
+MODULE_MAP = {module_id: (label, order) for module_id, label, order in MODULE_DEFINITIONS}
+
 
 @dataclass(frozen=True)
 class NavStatus:
@@ -40,6 +51,8 @@ class NavBlueprintItem:
     status: Optional[NavStatus] = None
     permissions: Tuple[str, ...] = ()
     roles: Tuple[str, ...] = ()
+    module: str = 'general'
+    section_order: int = 0
 
 
 NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
@@ -49,6 +62,16 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         route="/",
         status=NavStatus("new"),
         permissions=("app.dashboard.view",),
+        module="control",
+        section_order=100,
+    ),
+    NavBlueprintItem(
+        key="inbox",
+        label="Входящие",
+        route="/inbox",
+        permissions=("app.tasks.manage",),
+        module="control",
+        section_order=110,
     ),
     NavBlueprintItem(
         key="calendar",
@@ -56,19 +79,8 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         route="/calendar",
         status=NavStatus("new"),
         permissions=("app.calendar.manage",),
-    ),
-    NavBlueprintItem(
-        key="inbox",
-        label="Входящие",
-        route="/inbox",
-        permissions=("app.tasks.manage",),
-    ),
-    NavBlueprintItem(
-        key="tasks",
-        label="Задачи",
-        route="/tasks",
-        status=NavStatus("wip"),
-        permissions=("app.tasks.manage",),
+        module="calendar",
+        section_order=200,
     ),
     NavBlueprintItem(
         key="time",
@@ -76,20 +88,17 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         route="/time",
         status=NavStatus("new"),
         permissions=("app.tasks.manage",),
+        module="calendar",
+        section_order=210,
     ),
     NavBlueprintItem(
-        key="notes",
-        label="Заметки",
-        route="/notes",
-        status=NavStatus("new"),
+        key="tasks",
+        label="Задачи",
+        route="/tasks",
+        status=NavStatus("wip"),
         permissions=("app.tasks.manage",),
-    ),
-    NavBlueprintItem(
-        key="areas",
-        label="Области",
-        route="/areas",
-        status=NavStatus("new"),
-        permissions=("app.areas.manage",),
+        module="tasks",
+        section_order=300,
     ),
     NavBlueprintItem(
         key="projects",
@@ -97,6 +106,17 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         route="/projects",
         status=NavStatus("new"),
         permissions=("app.projects.manage",),
+        module="tasks",
+        section_order=310,
+    ),
+    NavBlueprintItem(
+        key="areas",
+        label="Области",
+        route="/areas",
+        status=NavStatus("new"),
+        permissions=("app.areas.manage",),
+        module="tasks",
+        section_order=320,
     ),
     NavBlueprintItem(
         key="resources",
@@ -104,12 +124,25 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         route="/resources",
         status=NavStatus("wip"),
         permissions=("app.projects.manage",),
+        module="tasks",
+        section_order=330,
+    ),
+    NavBlueprintItem(
+        key="notes",
+        label="Заметки",
+        route="/notes",
+        status=NavStatus("new"),
+        permissions=("app.tasks.manage",),
+        module="knowledge",
+        section_order=400,
     ),
     NavBlueprintItem(
         key="products",
         label="Продукты",
         route="/products",
         status=NavStatus("new"),
+        module="knowledge",
+        section_order=410,
     ),
     NavBlueprintItem(
         key="habits",
@@ -117,6 +150,8 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         route="/habits",
         status=NavStatus("locked", PAYWALL_ROUTE),
         permissions=("app.habits.manage",),
+        module="team",
+        section_order=500,
     ),
     NavBlueprintItem(
         key="team",
@@ -124,6 +159,8 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         route="/users",
         status=NavStatus("new"),
         permissions=("app.users.invite",),
+        module="team",
+        section_order=510,
     ),
     NavBlueprintItem(
         key="groups",
@@ -131,12 +168,16 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         route="/groups",
         status=NavStatus("new"),
         roles=("admin",),
+        module="team",
+        section_order=520,
     ),
     NavBlueprintItem(
         key="settings",
         label="Настройки",
         route="/settings",
         status=NavStatus("new"),
+        module="admin",
+        section_order=600,
     ),
     NavBlueprintItem(
         key="admin",
@@ -144,8 +185,11 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         route="/admin",
         status=NavStatus("new"),
         roles=("admin",),
+        module="admin",
+        section_order=610,
     ),
 )
+
 
 
 def allowed_blueprint(
@@ -331,6 +375,7 @@ async def build_navigation_payload(
     base = legacy_base.rstrip("/") if legacy_base else None
     blueprint_map = {item.key: item for item in allowed_items}
     items_payload: List[Dict[str, object]] = []
+    modules_present: Dict[str, Dict[str, object]] = {}
     for entry in merged_items:
         key = entry["key"]
         item = blueprint_map.get(key)
@@ -346,6 +391,14 @@ async def build_navigation_payload(
             else:
                 href = None
                 disabled = True
+        module_id = item.module
+        if module_id:
+            label, order = MODULE_MAP.get(module_id, (module_id.title(), 9000))
+            modules_present.setdefault(module_id, {
+                "id": module_id,
+                "label": label,
+                "order": order,
+            })
         payload_entry: Dict[str, object] = {
             "key": key,
             "label": item.label,
@@ -353,6 +406,8 @@ async def build_navigation_payload(
             "position": entry["position"],
             "external": external,
             "disabled": disabled,
+            "module": module_id,
+            "section_order": item.section_order,
         }
         if href and not disabled:
             payload_entry["href"] = href
@@ -360,9 +415,12 @@ async def build_navigation_payload(
             payload_entry["status"] = item.status.as_dict()
         items_payload.append(payload_entry)
 
+    modules_payload = sorted(modules_present.values(), key=lambda data: (data["order"], data["id"]))
+
     result: Dict[str, object] = {
         "v": NAV_VERSION,
         "items": items_payload,
+        "modules": modules_payload,
         "layout": {
             "user": user_layout,
             "global": global_layout if expose_global else None,

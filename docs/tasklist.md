@@ -17,6 +17,9 @@
 ## Текущий список
 
 ## E17: Frontend Modernization
+- [ ] TL-2025-09-18-nav-blueprint — Расширить NAV_BLUEPRINT и API `/api/v1/navigation/sidebar*` полями модулей и секций (owner: codex, ветка `feature/E17/menu-grouping-codex`, см. vision «Modular Navigation»).
+- [ ] TL-2025-09-18-appshell-modules — Перестроить AppShell и SidebarEditor: секции + collapsible, единый список избранных страниц без дублей (owner: codex, ветка `feature/E17/menu-grouping-codex`).
+- [ ] TL-2025-09-18-module-tabs — Добавить верхние вкладки модулей и компонент FavoriteToggle, управляющий видимостью страниц в меню (owner: codex, ветка `feature/E17/menu-grouping-codex`).
 - [x] TL-2025-09-18-bot — Восстановить публичный лендинг `/bot` на Next.js (agent: codex, ветка `feature/E17/bot-landing-codex`).
 - [x] TL-2025-09-18-groups — Перенести `/groups`, `/groups/manage/{id}` и `/products` на Next.js, добавить тултипы `TermHint`, удалить legacy-шаблоны и `ui_router` (agent: codex, ветка `feature/E17/groups-products-ui-codex`).
 - [x] TL-2025-09-18-support — Обновить лендинг `/tariffs` (кликабельное сообщество, упоминания поддержки) и добавить условные кнопки поддержки в AppShell (agent: codex, ветка `feature/E17/groups-products-ui-codex`).

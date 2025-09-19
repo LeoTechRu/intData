@@ -24,6 +24,7 @@
 
 ## Documentation Workflow (idea → vision → conventions → tasklist → workflow)
 - `docs/idea.md` — журнал сырых идей; любые новые гипотезы фиксируются здесь до формализации.
+- Все результаты исследований оформляем отдельными файлами в `docs/reports`, ссылки на них даём в обсуждениях; хранить выводы внутри одной codex-cli сессии запрещено.
 - `docs/vision.md` — описание целевых решений; каждая идея переводится сюда перед декомпозицией задач.
 - `docs/conventions.md` — источник правил разработки, которые рождаются из реализованных vision. Обновляйте его после утверждения подходов.
 - `docs/tasklist.md` — оперативный список задач; синхронизируйте с BACKLOG и поддерживайте актуальные статусы.
@@ -134,7 +135,7 @@
 - Table names: prefix by module; user-related tables use `users_` (e.g., `users_tg`).
 - Branding: use “Intelligent Data Pro” for product/headers; bot is “@intDataBot”. Default links to `https://intdata.pro/` and bot to `https://intdata.pro/bot`.
 - Language: prioritize Russian-speaking users. All user-facing texts (bot/web) default to Russian; keep code identifiers/comments in English. Add i18n only when needed, with Russian as the primary locale.
-- Frontend updates must maintain a unified responsive layout so the application remains comfortable on widescreen monitors, square displays, narrow phones, and any other screen sizes.
+- UI разрабатываем адаптивным: поддерживаем диапазон устройств от узких телефонов с соотношением 18:9 до широкоформатных мониторов 16:9, сохраняя единый отзывчивый layout без дублирования маркап.
 - Page titles are rendered in the header via `MODULE_TITLE`; do not duplicate the module name with an extra `<h1>` inside pages.
 
 ## Testing Guidelines

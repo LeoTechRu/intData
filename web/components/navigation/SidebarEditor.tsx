@@ -21,7 +21,7 @@ import { CSS } from '@dnd-kit/utilities';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Button, Checkbox, StatusIndicator } from '../ui';
-import type { SidebarLayoutSettings, SidebarNavItem } from '../../lib/types';
+import type { SidebarLayoutSettings, SidebarModuleDefinition, SidebarNavItem } from '../../lib/types';
 import { Modal } from '../../ui/uikit/Modal';
 
 interface EditableNavItem {
@@ -30,12 +30,14 @@ interface EditableNavItem {
   hidden: boolean;
   statusKind?: string;
   statusLink?: string;
+  moduleId?: string;
 }
 
 interface SidebarEditorProps {
   open: boolean;
   version: number;
   items: SidebarNavItem[];
+  modules: SidebarModuleDefinition[];
   userLayout: SidebarLayoutSettings;
   globalLayout?: SidebarLayoutSettings | null;
   canEditGlobal: boolean;
@@ -73,6 +75,7 @@ function toEditable(
         hidden: Boolean(entry.hidden ?? base.hidden),
         statusKind: base.status?.kind,
         statusLink: base.status?.link,
+        moduleId: base.module,
       });
       seen.add(entry.key);
     });
@@ -84,6 +87,7 @@ function toEditable(
         hidden: Boolean(item.hidden),
         statusKind: item.status?.kind,
         statusLink: item.status?.link,
+        moduleId: item.module,
       });
     }
   });
@@ -105,6 +109,7 @@ export function SidebarEditor({
   open,
   version,
   items,
+  modules,
   userLayout,
   globalLayout,
   canEditGlobal,
@@ -138,6 +143,31 @@ export function SidebarEditor({
   );
 
   const activeDraft = activeTab === 'personal' ? personalDraft : globalDraft;
+
+  const moduleSections = useMemo(() => {
+    const bucket = new Map<string, EditableNavItem[]>();
+    activeDraft.forEach((item) => {
+      const moduleId = item.moduleId ?? 'general';
+      if (!bucket.has(moduleId)) {
+        bucket.set(moduleId, []);
+      }
+      bucket.get(moduleId)!.push(item);
+    });
+    const ordered: Array<{ module: SidebarModuleDefinition; items: EditableNavItem[] }> = [];
+    modules.forEach((module) => {
+      const itemsForModule = bucket.get(module.id);
+      if (itemsForModule && itemsForModule.length > 0) {
+        ordered.push({ module, items: itemsForModule });
+        bucket.delete(module.id);
+      }
+    });
+    Array.from(bucket.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .forEach(([moduleId, itemsForModule]) => {
+        ordered.push({ module: { id: moduleId, label: moduleId, order: 9000 }, items: itemsForModule });
+      });
+    return ordered;
+  }, [activeDraft, modules]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -267,8 +297,15 @@ export function SidebarEditor({
           >
             <SortableContext items={activeDraft.map((item) => item.key)} strategy={verticalListSortingStrategy}>
               <ul className="flex max-h-96 flex-col gap-2 overflow-y-auto pr-2" aria-live="polite">
-                {activeDraft.map((item) => (
-                  <SortableNavRow key={item.key} item={item} onToggle={toggleVisibility} />
+                {moduleSections.map(({ module, items }) => (
+                  <React.Fragment key={module.id}>
+                    <li className="px-2 text-xs font-semibold uppercase tracking-wide text-muted" aria-hidden>
+                      {module.label}
+                    </li>
+                    {items.map((item) => (
+                      <SortableNavRow key={item.key} item={item} onToggle={toggleVisibility} />
+                    ))}
+                  </React.Fragment>
                 ))}
               </ul>
             </SortableContext>

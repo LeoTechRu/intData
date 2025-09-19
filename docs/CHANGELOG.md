@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- AppShell: модульные секции бокового меню, вкладки модуля и звёздочка «закрепить» для управления видимостью страниц без дублирования пунктов.
 - Next.js-панель `/groups` и `/groups/manage/{id}` с CRM-дашбордом: цифровая воронка, участники, массовые операции, React Query; удалены Jinja-шаблоны и FastAPI `ui_router`.
 - Next.js-каталог `/products` и профили `/products/{slug}` с карточками продуктов, поиском и загрузкой данных через `/api/v1/profiles/products`.
 - Компонент `TermHint` для тултипов по непонятным терминам (slug, Telegram ID, CRM-метрики) и его внедрение на страницах Next.js.
