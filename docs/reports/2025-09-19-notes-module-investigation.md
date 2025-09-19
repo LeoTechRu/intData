@@ -2,6 +2,12 @@
 
 Источник логов: `/home/leon/.codex/sessions/2025/09/`. Указаны фрагменты, где явно упоминается модуль `/notes`, его API или связанные файлы.
 
+### Быстрые выводы
+- 2025-09-17 ~22:20 UTC: ветка `feature/E13/timer-utc-codex` содержала полный набор React-компонентов для Next.js-страницы `/notes` (`NoteCard`, `NoteComposer`, `NoteDetailsPanel`, `NotesModule`, `web/app/notes/page.tsx`, `web/lib/notes.ts`).
+- Commit `21e51f72c192d9e13ac553709bc7f5652e0eece1` (18 сентября 2025) фиксировал эту реализацию; стоит восстановить файлы напрямую из него, если текущая ветка их потеряла.
+- В логах отражены попытки checkout’а из веток `feature/E17/auth-landing-codex` и `feature/E10/notes-ui-codex` — там тоже есть копии компонентов, пригодные для cherry-pick.
+- Legacy-файлы (`web/static/css/notes.css`, `web/static/js/notes.js`, `web/templates/notes.html`) удалялись в рамках миграции на Next.js; при восстановлении убедитесь, что UI не зависит от старых ассетов.
+
 ## Сессия 08/rollout-2025-09-08T20-01-31-aa6e06da-4f0b-4c43-8a1f-8f1a2c63b0c7.jsonl
 - —: {"command":["bash","-lc","sed -n '1,220p' web/routes/notes.py"]}
 - —: {"command":["bash","-lc","grep -n \"reorder\" -n web/routes/notes.py && sed -n '220,440p' web/routes/notes.py"]}
@@ -278,4 +284,3 @@
 - 2025-09-19T16:25:46.151Z: {"command":["bash","-lc","sed -n '1,200p' web/components/notes/NotesModule.tsx"],"workdir":"/sd/intdata"}
 - 2025-09-19T16:25:50.584Z: {"command":["bash","-lc","sed -n '1,160p' web/components/notes/SortableNoteCard.tsx"],"workdir":"/sd/intdata"}
 - 2025-09-19T16:25:54.487Z: {"command":["bash","-lc","sed -n '1,200p' web/components/notes/NoteCard.tsx"],"workdir":"/sd/intdata"}
-
