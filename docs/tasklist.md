@@ -17,7 +17,7 @@
 ## Текущий список
 
 ## E3: API / Calendar & Notes
-- [ ] TL-2025-09-19-notes-assign-detached — Исправить DetachedInstanceError при `POST /api/v1/notes/{id}/assign`, убедиться что ответ содержит `area`/`project` без ленивых загрузок (owner: codex, ветка `feature/E3/notes-assign-detached-codex`, см. [BACKLOG E3](./BACKLOG.md#e3-api-calendar-calendaritems-calendaragenda-calendarfeedics-projectsidnotifications)).
+- [x] TL-2025-09-19-notes-assign-detached — Исправить DetachedInstanceError при `POST /api/v1/notes/{id}/assign`, убедиться что ответ содержит `area`/`project` без ленивых загрузок (owner: codex, ветка `feature/E3/notes-assign-detached-codex`, PR [#102](https://github.com/LeoTechRu/intData/pull/102), см. [BACKLOG E3](./BACKLOG.md#e3-api-calendar-calendaritems-calendaragenda-calendarfeedics-projectsidnotifications)).
 
 ## E17: Frontend Modernization
 - [ ] TL-2025-09-18-nav-blueprint — Расширить NAV_BLUEPRINT и API `/api/v1/navigation/sidebar*` полями модулей и секций (owner: codex, ветка `feature/E17/menu-grouping-codex`, см. vision «Modular Navigation»).
