@@ -28,7 +28,6 @@
 
 | Start (UTC) | Agent | Role | Branch | Task | Epic / Scope | Ключевые файлы | PR | AC link | Статус |
 |-------------|-------|------|--------|------|--------------|----------------|----|---------|--------|
-| 2025-09-19 17:26 | codex | tw | feature/Ops/roles-charter-tw | TL-2025-09-19-roles-charter | Ops / обновление AGENTS & README (Roles Charter) | AGENTS.md, README.md | — | README.md#tasklist | в работе |
 | 2025-09-19 16:10 | codex | — | feature/E9/test-postgres-env-codex | — | E9 / pytest: Postgres окружение + ветка test | tests/conftest.py, tests/web/*, docs/reports/2025-09-19-pytest-postgres-migration.md | — | — | в работе (фикстуры+seed, web-тесты на Postgres; зависание teardown `tests/test_habit_service.py`) |
 | 2025-09-19 10:22 | codex | — | feature/E9/test-postgres-env-codex | — | E9 / pytest: Postgres окружение | tests/conftest.py, .env*, docs/* | — | — | завершено 2025-09-19 10:33 |
 | 2025-09-19 08:43 | codex | — | main | — | Ops / синхронизация main + рестарт сервисов | git (main), systemctl, logs/* | — | — | завершено 2025-09-19 08:47 |
