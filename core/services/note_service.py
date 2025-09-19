@@ -187,6 +187,7 @@ class NoteService:
         note.container_type = container_type
         note.container_id = container_id
         await self.session.flush()
+        await self.session.refresh(note, attribute_names=["area", "project"])
         return note
 
     async def archive(self, note_id: int, *, owner_id: int) -> bool:

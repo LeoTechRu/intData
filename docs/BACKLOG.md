@@ -40,6 +40,8 @@
 
 | Start (UTC) | Agent | Branch | Epic / Scope | Ключевые файлы | Статус |
 |-------------|-------|--------|--------------|----------------|--------|
+| 2025-09-19 07:55 | codex | feature/E3/notes-assign-detached-codex | E3 / починка POST /api/v1/notes/{id}/assign (DetachedInstanceError) | core/services/notes.py, web/routes/notes.py, tests/test_notes_assign.py | завершено 2025-09-19 08:09 |
+| 2025-09-19 07:48 | codex | feature/E17/appshell-nav-tuning-codex | E17 / модульная навигация AppShell — адаптация UX | web/components/AppShell.tsx, web/components/layout/PublicHeader.tsx, web/components/navigation/*, docs/* | в работе |
 | 2025-09-19 00:32 | codex | feature/E18/crm-skeleton-codex | E18 / CRM Knowledge Hub — исследование и каркас | docs/reports/*crm*, docs/vision.md, docs/tasklist.md, web/app/crm/*, core/services/crm/* | завершено 2025-09-19 01:00 |
 | 2025-09-18 23:05 | codex | feature/E17/menu-grouping-codex | E17 / группировка меню AppShell | web/components/AppShell.tsx, web/lib/publicNav.ts, docs/* | в работе |
 | 2025-09-18 22:34 | codex | feature/E17/mobile-responsive-ui-codex | E17 / мобильная адаптация AppShell и обзора | web/components/AppShell.tsx, web/components/layout/PublicHeader.tsx, web/components/dashboard/OverviewDashboard.tsx | завершено 2025-09-18 22:44 |
@@ -513,6 +515,7 @@ Reference: см. архивный отчёт `docs/archive/report_frontend_moder
 - [x] P1•S — Обновить лендинг `/tariffs`: сделать ссылку на сообщество кликабельной, убрать прямые контакты техподдержки и разработчика из текста.
 - [x] P1•S — Добавить в AppShell условные кнопки «Техподдержка» и «Связь с разработчиком» в зависимости от тарифа пользователя.
 - [x] P1•S — Обеспечить адаптивность AppShell и обзора (`/`): перестроить шапку под мобильную сетку, скрывать второстепенные элементы (роль) на узких экранах и отключать редактор дашборда на мобайле.
+- [x] P1•M — Перестроить AppShell: компактная мобильная шапка, вкладки модулей справа от сайдбара на десктопе, независимый скролл контента и сворачиваемые секции меню с быстрым управлением страницами.
 - [x] P0•S — Вынести админский сектор в страницу «ЛК Админа» нового UI, доступную только роли `admin`, с полным набором действий.
 - [x] P0•S — Маркетинговый лендинг `/tariffs`: планы Solo/Team/Pro/Enterprise, переключатель биллинга, сравнительная таблица, ROI-кейсы и FAQ; основные CTA ведут в `CONTACT_URL`.
 - [x] P0•S — FastAPI-роут `/tariffs` и раздел `web/components/marketing/TariffsLanding.tsx` выступают единой SSoT по тарифам, запрещено удалять страницу при дальнейшей миграции.
