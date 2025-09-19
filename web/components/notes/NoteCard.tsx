@@ -5,6 +5,15 @@ import React from 'react';
 import type { Note } from '../../lib/types';
 import { cn } from '../../lib/cn';
 
+interface NoteCardProps {
+  note: Note;
+  isArchiveView?: boolean;
+  onOpen: (note: Note) => void;
+  onTogglePin?: (note: Note) => void;
+  onArchive?: (note: Note) => void;
+  onRestore?: (note: Note) => void;
+}
+
 function autoTextColor(hex: string | null | undefined): string {
   if (!hex) return 'var(--text-primary)';
   let normalized = hex.replace('#', '');
@@ -38,17 +47,18 @@ function NoteChip({ label, background }: { label: string; background: string | n
 
 export function NoteCard({
   note,
+  isArchiveView = false,
   onOpen,
   onTogglePin,
-  onDelete,
-}: {
-  note: Note;
-  onOpen: (note: Note) => void;
-  onTogglePin: (note: Note) => void;
-  onDelete: (note: Note) => void;
-}) {
+  onArchive,
+  onRestore,
+}: NoteCardProps) {
   const textColor = autoTextColor(note.color);
   const background = note.color || 'var(--surface-0)';
+  const isArchived = Boolean(note.archived_at);
+  const showRestoreAction = isArchived && onRestore;
+  const showArchiveAction = !isArchived && onArchive;
+  const canTogglePin = !isArchived && !isArchiveView && onTogglePin;
 
   return (
     <article
@@ -59,6 +69,11 @@ export function NoteCard({
     >
       <header className="flex items-start justify-between gap-3">
         <div className="flex flex-col gap-2">
+          {isArchived ? (
+            <span className="inline-flex w-fit items-center rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white/90">
+              В архиве
+            </span>
+          ) : null}
           {note.title ? (
             <h3 className="text-lg font-semibold" style={{ color: textColor }}>
               {note.title}
@@ -69,30 +84,46 @@ export function NoteCard({
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onTogglePin(note);
-            }}
-            className={cn(
-              'inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/40 transition-base hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70',
-              note.pinned ? 'bg-white/20 text-white' : 'text-white/80',
-            )}
-            aria-label={note.pinned ? 'Открепить заметку' : 'Закрепить заметку'}
-          >
-            <span className="text-lg">📌</span>
-          </button>
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onDelete(note);
-            }}
-            className="hidden rounded-full bg-black/30 px-3 py-1 text-xs text-white transition-base group-hover:inline-flex"
-          >
-            Удалить
-          </button>
+          {canTogglePin ? (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onTogglePin?.(note);
+              }}
+              className={cn(
+                'inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/40 transition-base hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70',
+                note.pinned ? 'bg-white/20 text-white' : 'text-white/80',
+              )}
+              aria-label={note.pinned ? 'Открепить заметку' : 'Закрепить заметку'}
+            >
+              <span className="text-lg">📌</span>
+            </button>
+          ) : null}
+          {showRestoreAction ? (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onRestore?.(note);
+              }}
+              className="inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white transition-base hover:bg-white/30"
+            >
+              Восстановить
+            </button>
+          ) : null}
+          {showArchiveAction ? (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onArchive?.(note);
+              }}
+              className="inline-flex rounded-full bg-black/30 px-3 py-1 text-xs text-white transition-base hover:bg-black/40"
+            >
+              Архивировать
+            </button>
+          ) : null}
         </div>
       </header>
       <footer className="flex flex-wrap items-center gap-2">

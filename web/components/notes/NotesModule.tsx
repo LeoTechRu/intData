@@ -46,6 +46,7 @@ import {
   Toolbar,
 } from '../ui';
 import { Modal } from '../../ui/uikit/Modal';
+import { NoteCard } from './NoteCard';
 import { SortableNoteCard } from './SortableNoteCard';
 
 const MODULE_TITLE = 'Заметки';
@@ -162,8 +163,10 @@ export default function NotesModule() {
   const [editorState, setEditorState] = useState<NoteEditorState | null>(null);
   const [editorError, setEditorError] = useState<string | null>(null);
   const [isEditorOpen, setEditorOpen] = useState(false);
+  const [listError, setListError] = useState<string | null>(null);
 
   const notesQuery = useNotes(filters);
+  const isArchiveView = filters.includeArchived;
 
   const areaOptions = useMemo(() => buildAreaOptions(areasQuery.data ?? []), [areasQuery.data]);
   const projectsByArea = useMemo(() => mapProjectsByArea(projectsQuery.data ?? []), [projectsQuery.data]);
@@ -225,6 +228,7 @@ export default function NotesModule() {
     onSuccess: () => {
       setQuickNote((prev) => ({ ...prev, title: '', content: '', pinned: false }));
       setQuickError(null);
+      setListError(null);
       queryClient.invalidateQueries({ queryKey: ['notes'] });
     },
     onError: (error) => {
@@ -257,6 +261,7 @@ export default function NotesModule() {
       setEditorOpen(false);
       setEditorState(null);
       setEditorError(null);
+      setListError(null);
     },
     onError: (error) => {
       const message = error instanceof ApiError ? error.message : 'Не удалось обновить заметку';
@@ -264,20 +269,33 @@ export default function NotesModule() {
     },
   });
 
-  const deleteMutation = useMutation({
+  const archiveMutation = useMutation({
     mutationFn: (id: number) =>
-      apiFetch(`/api/v1/notes/${id}`, {
-        method: 'DELETE',
+      apiFetch(`/api/v1/notes/${id}/archive`, {
+        method: 'POST',
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
-      if (editorState) {
-        setEditorOpen(false);
-        setEditorState(null);
-      }
+      setEditorOpen(false);
+      setEditorState(null);
+      setListError(null);
     },
     onError: () => {
-      setEditorError('Не удалось удалить заметку');
+      setListError('Не удалось архивировать заметку');
+    },
+  });
+
+  const restoreMutation = useMutation({
+    mutationFn: (id: number) =>
+      apiFetch(`/api/v1/notes/${id}/unarchive`, {
+        method: 'POST',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      setListError(null);
+    },
+    onError: () => {
+      setListError('Не удалось восстановить заметку');
     },
   });
 
@@ -307,6 +325,7 @@ export default function NotesModule() {
 
   const handleFiltersSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setListError(null);
     setFilters(filtersDraft);
   };
 
@@ -337,17 +356,29 @@ export default function NotesModule() {
     [updateMutation],
   );
 
-  const handleDelete = useCallback(
+  const handleArchive = useCallback(
     (note: Note) => {
-      const ok = window.confirm('Удалить заметку? Это действие нельзя отменить.');
-      if (!ok) return;
-      deleteMutation.mutate(note.id);
+      const confirmed = window.confirm(
+        'Переместить заметку в архив? Её можно будет восстановить позже.',
+      );
+      if (!confirmed) return;
+      archiveMutation.mutate(note.id);
     },
-    [deleteMutation],
+    [archiveMutation],
+  );
+
+  const handleRestore = useCallback(
+    (note: Note) => {
+      restoreMutation.mutate(note.id);
+    },
+    [restoreMutation],
   );
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
+      if (isArchiveView) {
+        return;
+      }
       const { active, over } = event;
       if (!over || active.id === over.id) {
         return;
@@ -365,7 +396,7 @@ export default function NotesModule() {
         projectId: filters.projectId ? Number(filters.projectId) : undefined,
       });
     },
-    [filters, notes, queryClient, reorderMutation],
+    [filters, isArchiveView, notes, queryClient, reorderMutation],
   );
 
   const handleEditorSave = () => {
@@ -573,6 +604,9 @@ export default function NotesModule() {
               </div>
             </Toolbar>
           </form>
+          {listError ? (
+            <div className="px-6 pb-4 text-sm text-[var(--accent-danger)]">{listError}</div>
+          ) : null}
           <div className="border-t border-subtle" />
           <div className="p-6">
             {isLoading ? (
@@ -582,6 +616,18 @@ export default function NotesModule() {
                 title="Нет заметок"
                 description="Создайте первую заметку через форму выше или измените фильтры."
               />
+            ) : isArchiveView ? (
+              <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+                {notes.map((note) => (
+                  <NoteCard
+                    key={note.id}
+                    note={note}
+                    isArchiveView
+                    onOpen={handleOpenEditor}
+                    onRestore={handleRestore}
+                  />
+                ))}
+              </div>
             ) : (
               <DndContext
                 sensors={sensors}
@@ -594,9 +640,11 @@ export default function NotesModule() {
                       <SortableNoteCard
                         key={note.id}
                         note={note}
+                        isArchiveView={false}
                         onOpen={handleOpenEditor}
                         onTogglePin={handleTogglePin}
-                        onDelete={handleDelete}
+                        onArchive={handleArchive}
+                        onRestore={handleRestore}
                       />
                     ))}
                   </div>
@@ -702,15 +750,17 @@ export default function NotesModule() {
                 variant="ghost"
                 onClick={() => {
                   if (editorState) {
-                    const confirmed = window.confirm('Удалить заметку? Это действие нельзя отменить.');
+                    const confirmed = window.confirm(
+                      'Переместить заметку в архив? Её можно будет восстановить позже.',
+                    );
                     if (confirmed) {
-                      deleteMutation.mutate(editorState.id);
+                      archiveMutation.mutate(editorState.id);
                     }
                   }
                 }}
                 className="text-[var(--accent-danger)] hover:text-[var(--accent-danger)]"
               >
-                Удалить
+                Архивировать
               </Button>
               <div className="flex gap-2">
                 <Button type="button" variant="secondary" onClick={() => setEditorOpen(false)}>

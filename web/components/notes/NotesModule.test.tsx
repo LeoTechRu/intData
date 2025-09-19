@@ -112,7 +112,10 @@ describe('NotesModule', () => {
           }),
         );
       }
-      if (url.endsWith('/api/v1/notes') && init?.method === 'DELETE') {
+      if (url.endsWith('/api/v1/notes/101/archive') && init?.method === 'POST') {
+        return Promise.resolve(new Response(null, { status: 204 }));
+      }
+      if (url.endsWith('/api/v1/notes/101/unarchive') && init?.method === 'POST') {
         return Promise.resolve(new Response(null, { status: 204 }));
       }
       if (url.endsWith('/api/v1/notes/reorder') && init?.method === 'POST') {
@@ -192,6 +195,12 @@ describe('NotesModule', () => {
           }),
         );
       }
+      if (url.includes('/api/v1/notes/') && url.endsWith('/archive') && init?.method === 'POST') {
+        return Promise.resolve(new Response(null, { status: 204 }));
+      }
+      if (url.includes('/api/v1/notes/') && url.endsWith('/unarchive') && init?.method === 'POST') {
+        return Promise.resolve(new Response(null, { status: 204 }));
+      }
       if (url.endsWith('/api/v1/notes/reorder')) {
         return Promise.resolve(new Response(null, { status: 204 }));
       }
@@ -215,5 +224,115 @@ describe('NotesModule', () => {
 
     await waitFor(() => expect(notesRequestCount).toBeGreaterThan(1));
     expect(await screen.findByText('Экосистемные идеи')).toBeInTheDocument();
+  });
+
+  it('archives and restores note through list actions', async () => {
+    let notesRequestCount = 0;
+    const fetchMock = vi.spyOn(global, 'fetch').mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      if (url.endsWith('/api/v1/areas')) {
+        return Promise.resolve(jsonResponse(areasPayload));
+      }
+      if (url.endsWith('/api/v1/projects')) {
+        return Promise.resolve(jsonResponse(projectsPayload));
+      }
+      if (url.includes('/api/v1/profiles')) {
+        return Promise.resolve(jsonResponse({}));
+      }
+      if (url.includes('/api/v1/navigation/sidebar')) {
+        return Promise.resolve(jsonResponse({ items: [] }));
+      }
+      if (url.includes('/api/v1/notes') && (!init || init.method === undefined)) {
+        notesRequestCount += 1;
+        if (notesRequestCount === 1) {
+          return Promise.resolve(
+            jsonResponse([
+              {
+                id: 101,
+                title: 'Планы на релиз',
+                content: 'Согласовать фичи и дедлайны.',
+                pinned: false,
+                archived_at: null,
+                order_index: 10,
+                area_id: 2,
+                project_id: 11,
+                color: '#C7D2FE',
+                area: { id: 2, name: 'Продукт', slug: 'product', color: '#C7D2FE' },
+                project: { id: 11, name: 'Pulse' },
+              },
+            ]),
+          );
+        }
+        if (notesRequestCount === 2) {
+          return Promise.resolve(jsonResponse([]));
+        }
+        if (notesRequestCount === 3) {
+          return Promise.resolve(
+            jsonResponse([
+              {
+                id: 101,
+                title: 'Планы на релиз',
+                content: 'Согласовать фичи и дедлайны.',
+                pinned: false,
+                archived_at: '2025-09-18T10:00:00Z',
+                order_index: 10,
+                area_id: 2,
+                project_id: 11,
+                color: '#C7D2FE',
+                area: { id: 2, name: 'Продукт', slug: 'product', color: '#C7D2FE' },
+                project: { id: 11, name: 'Pulse' },
+              },
+            ]),
+          );
+        }
+        return Promise.resolve(jsonResponse([]));
+      }
+      if (url.endsWith('/api/v1/notes/101/archive') && init?.method === 'POST') {
+        return Promise.resolve(new Response(null, { status: 204 }));
+      }
+      if (url.endsWith('/api/v1/notes/101/unarchive') && init?.method === 'POST') {
+        return Promise.resolve(new Response(null, { status: 204 }));
+      }
+      return Promise.resolve(new Response(null, { status: 404 }));
+    });
+
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    renderWithClient(<NotesModule />);
+
+    expect(await screen.findByText('Планы на релиз')).toBeInTheDocument();
+
+    const archiveButton = screen.getByRole('button', { name: 'Архивировать' });
+    fireEvent.click(archiveButton);
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${API_BASE}/api/v1/notes/101/archive`,
+        expect.objectContaining({ method: 'POST' }),
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Нет заметок')).toBeInTheDocument();
+    });
+
+    const archiveToggle = screen.getByLabelText('Показать архив');
+    fireEvent.click(archiveToggle);
+    const applyFilters = screen.getByRole('button', { name: 'Применить фильтры' });
+    fireEvent.click(applyFilters);
+
+    await waitFor(() => {
+      expect(screen.getByText('В архиве')).toBeInTheDocument();
+    });
+
+    const restoreButton = screen.getByRole('button', { name: 'Восстановить' });
+    fireEvent.click(restoreButton);
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        `${API_BASE}/api/v1/notes/101/unarchive`,
+        expect.objectContaining({ method: 'POST' }),
+      );
+    });
   });
 });

@@ -9,12 +9,21 @@ import { NoteCard } from './NoteCard';
 
 interface SortableNoteCardProps {
   note: Note;
+  isArchiveView?: boolean;
   onOpen: (note: Note) => void;
-  onTogglePin: (note: Note) => void;
-  onDelete: (note: Note) => void;
+  onTogglePin?: (note: Note) => void;
+  onArchive?: (note: Note) => void;
+  onRestore?: (note: Note) => void;
 }
 
-export function SortableNoteCard({ note, onOpen, onTogglePin, onDelete }: SortableNoteCardProps) {
+export function SortableNoteCard({
+  note,
+  isArchiveView,
+  onOpen,
+  onTogglePin,
+  onArchive,
+  onRestore,
+}: SortableNoteCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: note.id,
   });
@@ -28,7 +37,14 @@ export function SortableNoteCard({ note, onOpen, onTogglePin, onDelete }: Sortab
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <NoteCard note={note} onOpen={onOpen} onTogglePin={onTogglePin} onDelete={onDelete} />
+      <NoteCard
+        note={note}
+        isArchiveView={isArchiveView}
+        onOpen={onOpen}
+        onTogglePin={onTogglePin}
+        onArchive={onArchive}
+        onRestore={onRestore}
+      />
     </div>
   );
 }
