@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- CRM Knowledge Hub исследование: `docs/reports/2025-09-19-crm-competitive-research.md` (Bitrix24, Kommo, HubSpot, monday.com, Salesforce, Pipedrive) и обновлённый раздел vision E18.
+- Бэкенд CRM foundation: DDL `20250919_crm_foundation.sql`, новые модели SQLAlchemy, сервисные методы и API `/api/v1/crm/products`, `/api/v1/crm/subscriptions/transition` с поддержкой upgrade/downgrade потоков.
+- Next.js-модуль `/crm` (страницы `/crm/products`, `/crm/deals`, `/crm/accounts`, `/crm/analytics`) с новым UI каталога продуктов, тарифов, потоков и формой переходов между тарифами.
+- Автоопределение идентификатора в форме авторизации: единое поле переключается между логином, email и телефоном, синхронно обновляя placeholder и `autoComplete`.
 - AppShell: модульные секции бокового меню, вкладки модуля и звёздочка «закрепить» для управления видимостью страниц без дублирования пунктов.
 - Next.js-панель `/groups` и `/groups/manage/{id}` с CRM-дашбордом: цифровая воронка, участники, массовые операции, React Query; удалены Jinja-шаблоны и FastAPI `ui_router`.
 - Next.js-каталог `/products` и профили `/products/{slug}` с карточками продуктов, поиском и загрузкой данных через `/api/v1/profiles/products`.

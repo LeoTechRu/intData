@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
 
-export default function ProductsLegacyPage() {
+export default function CRMIndexPage() {
   redirect('/crm/products');
 }

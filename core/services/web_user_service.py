@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional, Any, Union, List
+import re
 from datetime import datetime
 import secrets
 from sqlalchemy import select, text, func
@@ -11,6 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from core import db
 from core.models import WebUser, TgUser, WebTgLink, UserRole, Role, UserRoleLink
 from core.db import bcrypt
+from core.utils import utcnow
 from core.services.access_control import AccessControlService, AccessScope
 from core.services.profile_service import ProfileService, VISIBILITY_CHOICES
 
@@ -24,6 +26,25 @@ def _parse_birthday(value: Optional[str]):
         except ValueError:
             continue
     raise ValueError("Invalid date format")
+
+
+def _guess_identifier_kind(identifier: str) -> str:
+    value = (identifier or "").strip()
+    if "@" in value:
+        return "email"
+    digits = re.sub(r"\D", "", value)
+    if value.startswith("+") and digits:
+        return "phone"
+    if digits and digits == value:
+        return "phone"
+    return "username"
+
+
+def _normalize_phone(value: str | None) -> str | None:
+    if not value:
+        return None
+    digits = re.sub(r"[^0-9+]", "", value)
+    return digits or None
 
 
 class WebUserService:
@@ -61,6 +82,32 @@ class WebUserService:
         )
         return result.scalar_one_or_none()
 
+    async def get_by_email(self, email: str) -> Optional[WebUser]:
+        normalized = email.lower().strip()
+        if not normalized:
+            return None
+        result = await self.session.execute(
+            select(WebUser).where(func.lower(WebUser.email) == normalized)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_phone(self, phone: str) -> Optional[WebUser]:
+        normalized = _normalize_phone(phone)
+        if not normalized:
+            return None
+        result = await self.session.execute(
+            select(WebUser).where(WebUser.phone == normalized)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_identifier(self, identifier: str) -> Optional[WebUser]:
+        kind = _guess_identifier_kind(identifier)
+        if kind == "email":
+            return await self.get_by_email(identifier)
+        if kind == "phone":
+            return await self.get_by_phone(identifier)
+        return await self.get_by_username(identifier)
+
     async def register(
         self,
         *,
@@ -71,11 +118,35 @@ class WebUserService:
     ) -> WebUser:
         if await self.get_by_username(username):
             raise ValueError("username taken")
-        hashed = bcrypt.generate_password_hash(password)
-        user = WebUser(
-            username=username, password_hash=hashed, email=email, phone=phone
+        normalized_phone = _normalize_phone(phone)
+        email_owner = await self.get_by_email(email) if email else None
+        phone_owner = (
+            await self.get_by_phone(normalized_phone)
+            if normalized_phone
+            else None
         )
-        self.session.add(user)
+        base_user = email_owner or phone_owner
+        if base_user and base_user.username:
+            raise ValueError("identifier already registered")
+
+        hashed = bcrypt.generate_password_hash(password)
+        if base_user:
+            base_user.username = username
+            base_user.password_hash = hashed
+            if email:
+                base_user.email = email
+            if normalized_phone:
+                base_user.phone = normalized_phone
+            base_user.updated_at = utcnow()
+            user = base_user
+        else:
+            user = WebUser(
+                username=username,
+                password_hash=hashed,
+                email=email,
+                phone=normalized_phone,
+            )
+            self.session.add(user)
         try:
             await self.session.flush()
         except IntegrityError:
@@ -99,9 +170,9 @@ class WebUserService:
         return user
 
     async def authenticate(
-        self, username: str, password: str
+        self, identifier: str, password: str
     ) -> Optional[WebUser]:
-        user = await self.get_by_username(username)
+        user = await self.get_by_identifier(identifier)
         if not user or not user.password_hash:
             return None
         if user.check_password(password):

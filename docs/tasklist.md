@@ -27,4 +27,8 @@
 - [x] TL-2025-09-18-mobile-ui — Подточить мобильную адаптивность AppShell и дашборда (`/`): убрать чип роли на узких экранах, перестроить сетку шапки, скрыть редактор дашборда (agent: codex, ветка `feature/E17/mobile-responsive-ui-codex`).
 
 ## E18: CRM Knowledge Hub
-- [ ] TL-2025-09-18-crm-blueprint — Подготовить архитектурный план CRM (PARA × Zettelkasten), описать автоматизации и данные в `docs/vision.md` (owner: TBD, epic E18).
+- [x] TL-2025-09-18-crm-blueprint — Подготовить архитектурный план CRM (PARA × Zettelkasten), описать автоматизации и данные в `docs/vision.md` (owner: codex, epic E18).
+- [x] TL-2025-09-19-crm-ddl — Добавить DDL для продуктов, тарифов, версий, сделок, подписок и коммуникаций (`core/db/ddl`, SCHEMA, repair); обеспечить наследование PARA и отсутствие новой таблицы для клиента (owner: codex).
+- [x] TL-2025-09-19-crm-services — Реализовать `core/services/crm` (products, deals, accounts, subscriptions, automations) с поддержкой upgrade/downgrade потоков (owner: codex).
+- [x] TL-2025-09-19-crm-ui — Собрать модуль `/crm` (deals канбан, accounts, products с тарифами/потоками, analytics), перенести legacy `/products` и добавить knowledge panel (owner: codex).
+- [x] TL-2025-09-19-auth-multichannel — Обновить авторизацию (username/email/телефон) и UI-автодетект режима, синхронизировать API/бот (owner: codex).

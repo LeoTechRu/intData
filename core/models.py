@@ -18,11 +18,13 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     Float,
+    Numeric,
     SmallInteger,
     String,
     Text,
     JSON,
     UniqueConstraint,
+    CheckConstraint,
     Index,
     func,
 )
@@ -66,6 +68,58 @@ class ProductStatus(PyEnum):
     gift = "gift"
 
 
+class CRMAccountType(PyEnum):
+    person = "person"
+    company = "company"
+
+
+class CRMDealStatus(PyEnum):
+    lead = "lead"
+    qualified = "qualified"
+    proposal = "proposal"
+    won = "won"
+    lost = "lost"
+    archived = "archived"
+
+
+class CRMBillingType(PyEnum):
+    free = "free"
+    one_off = "one_off"
+    subscription = "subscription"
+    upgrade = "upgrade"
+    downgrade = "downgrade"
+
+
+class CRMTouchpointChannel(PyEnum):
+    email = "email"
+    telegram = "telegram"
+    phone_call = "phone_call"
+    meeting = "meeting"
+    note = "note"
+    system = "system"
+    web_form = "web_form"
+
+
+class CRMTouchpointDirection(PyEnum):
+    inbound = "inbound"
+    outbound = "outbound"
+    internal = "internal"
+
+
+class CRMSubscriptionStatus(PyEnum):
+    active = "active"
+    pending = "pending"
+    completed = "completed"
+    cancelled = "cancelled"
+    failed = "failed"
+
+
+class CRMPricingMode(PyEnum):
+    cohort = "cohort"
+    rolling = "rolling"
+    perpetual = "perpetual"
+
+
 class TgUser(Base):
     """Telegram user data stored separately from web accounts."""
 
@@ -92,11 +146,11 @@ class WebUser(Base):
     __tablename__ = "users_web"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    username = Column(String(64), unique=True, nullable=False)
+    username = Column(String(64), unique=True, nullable=True)
     email = Column(String(255))
     phone = Column(String(20))
     full_name = Column(String(255))
-    password_hash = Column(String(255))
+    password_hash = Column(String(255), nullable=True)
     role = Column(String(20), default=UserRole.single.name)
     privacy_settings = Column(JSON, default=dict)
     birthday = Column(Date)
@@ -126,6 +180,10 @@ class WebUser(Base):
 
     __table_args__ = (
         Index("ix_users_web_username_ci", func.lower(username), unique=True),
+        CheckConstraint(
+            "username IS NOT NULL OR email IS NOT NULL OR phone IS NOT NULL",
+            name="users_web_contact_present",
+        ),
     )
 
     telegram_accounts = relationship(
@@ -166,6 +224,8 @@ class WebUser(Base):
 
     def check_password(self, password: str) -> bool:
         """Validate password against stored bcrypt hash."""
+        if not self.password_hash:
+            return False
         return bcrypt.check_password_hash(self.password_hash, password)
 
     @property
@@ -218,6 +278,227 @@ class EntityProfile(Base):
         UniqueConstraint("entity_type", "entity_id", name="uq_entity_profiles_entity"),
         UniqueConstraint("entity_type", "slug", name="uq_entity_profiles_slug"),
     )
+
+
+class CRMProduct(Base):
+    __tablename__ = "crm_products"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    slug = Column(String(96), unique=True, nullable=False)
+    title = Column(String(255), nullable=False)
+    summary = Column(Text)
+    kind = Column(String(32), nullable=False, default="default")
+    area_id = Column(Integer, ForeignKey("areas.id", ondelete="SET NULL"))
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="SET NULL"))
+    is_active = Column(Boolean, nullable=False, default=True)
+    config = Column("metadata", JSON, default=dict, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+    versions = relationship(
+        "CRMProductVersion",
+        back_populates="product",
+        cascade="all, delete-orphan",
+    )
+    tariffs = relationship(
+        "CRMProductTariff",
+        back_populates="product",
+        cascade="all, delete-orphan",
+    )
+
+
+class CRMPipeline(Base):
+    __tablename__ = "crm_pipelines"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    slug = Column(String(96), unique=True, nullable=False)
+    title = Column(String(255), nullable=False)
+    description = Column(Text)
+    area_id = Column(Integer, ForeignKey("areas.id", ondelete="SET NULL"))
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="SET NULL"))
+    config = Column("metadata", JSON, default=dict, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+    stages = relationship(
+        "CRMPipelineStage",
+        back_populates="pipeline",
+        order_by="CRMPipelineStage.position",
+        cascade="all, delete-orphan",
+    )
+
+
+class CRMPipelineStage(Base):
+    __tablename__ = "crm_pipeline_stages"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    pipeline_id = Column(BigInteger, ForeignKey("crm_pipelines.id", ondelete="CASCADE"))
+    slug = Column(String(96), nullable=False)
+    title = Column(String(255), nullable=False)
+    position = Column(Integer, nullable=False, default=0)
+    probability = Column(Numeric(5, 2))
+    config = Column("metadata", JSON, default=dict, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+    pipeline = relationship("CRMPipeline", back_populates="stages")
+
+
+class CRMProductVersion(Base):
+    __tablename__ = "crm_product_versions"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    product_id = Column(BigInteger, ForeignKey("crm_products.id", ondelete="CASCADE"))
+    parent_version_id = Column(BigInteger, ForeignKey("crm_product_versions.id", ondelete="SET NULL"))
+    slug = Column(String(96), nullable=False)
+    title = Column(String(255), nullable=False)
+    pricing_mode = Column(
+        Enum(CRMPricingMode, name="crm_pricing_mode"), nullable=False
+    )
+    starts_at = Column(DateTime(timezone=True))
+    ends_at = Column(DateTime(timezone=True))
+    seats_limit = Column(Integer)
+    area_id = Column(Integer, ForeignKey("areas.id", ondelete="SET NULL"))
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="SET NULL"))
+    config = Column("metadata", JSON, default=dict, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+    product = relationship("CRMProduct", back_populates="versions")
+    parent_version = relationship("CRMProductVersion", remote_side=[id])
+
+
+class CRMProductTariff(Base):
+    __tablename__ = "crm_product_tariffs"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    product_id = Column(BigInteger, ForeignKey("crm_products.id", ondelete="CASCADE"))
+    version_id = Column(BigInteger, ForeignKey("crm_product_versions.id", ondelete="SET NULL"))
+    slug = Column(String(96), nullable=False)
+    title = Column(String(255), nullable=False)
+    billing_type = Column(Enum(CRMBillingType, name="crm_billing_type"), nullable=False)
+    amount = Column(Numeric(12, 2))
+    currency = Column(String(3), nullable=False, default="RUB")
+    is_active = Column(Boolean, nullable=False, default=True)
+    config = Column("metadata", JSON, default=dict, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+    product = relationship("CRMProduct", back_populates="tariffs")
+    version = relationship("CRMProductVersion")
+
+
+class CRMAccount(Base):
+    __tablename__ = "crm_accounts"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    account_type = Column(Enum(CRMAccountType, name="crm_account_type"), nullable=False)
+    web_user_id = Column(Integer, ForeignKey("users_web.id", ondelete="SET NULL"))
+    title = Column(String(255), nullable=False)
+    email = Column(String(255))
+    phone = Column(String(32))
+    area_id = Column(Integer, ForeignKey("areas.id", ondelete="SET NULL"))
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="SET NULL"))
+    source = Column(String(64))
+    tags = Column(ARRAY(String), default=list)
+    context = Column(JSON, default=dict, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+    web_user = relationship("WebUser")
+
+
+class CRMDeal(Base):
+    __tablename__ = "crm_deals"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    account_id = Column(BigInteger, ForeignKey("crm_accounts.id", ondelete="CASCADE"))
+    owner_id = Column(Integer, ForeignKey("users_web.id", ondelete="SET NULL"))
+    pipeline_id = Column(BigInteger, ForeignKey("crm_pipelines.id", ondelete="CASCADE"))
+    stage_id = Column(BigInteger, ForeignKey("crm_pipeline_stages.id", ondelete="RESTRICT"))
+    product_id = Column(BigInteger, ForeignKey("crm_products.id", ondelete="SET NULL"))
+    version_id = Column(BigInteger, ForeignKey("crm_product_versions.id", ondelete="SET NULL"))
+    tariff_id = Column(BigInteger, ForeignKey("crm_product_tariffs.id", ondelete="SET NULL"))
+    title = Column(String(255), nullable=False)
+    status = Column(Enum(CRMDealStatus, name="crm_deal_status"), nullable=False)
+    value = Column(Numeric(14, 2))
+    currency = Column(String(3), nullable=False, default="RUB")
+    probability = Column(Numeric(5, 2))
+    knowledge_node_id = Column(Integer)
+    area_id = Column(Integer, ForeignKey("areas.id", ondelete="SET NULL"))
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="SET NULL"))
+    opened_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+    closed_at = Column(DateTime(timezone=True))
+    close_forecast_at = Column(DateTime(timezone=True))
+    context = Column("metadata", JSON, default=dict, nullable=False)
+
+    account = relationship("CRMAccount")
+    pipeline = relationship("CRMPipeline")
+    stage = relationship("CRMPipelineStage")
+    product = relationship("CRMProduct")
+    version = relationship("CRMProductVersion")
+    tariff = relationship("CRMProductTariff")
+
+
+class CRMTouchpoint(Base):
+    __tablename__ = "crm_touchpoints"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    deal_id = Column(BigInteger, ForeignKey("crm_deals.id", ondelete="CASCADE"))
+    account_id = Column(BigInteger, ForeignKey("crm_accounts.id", ondelete="CASCADE"))
+    channel = Column(Enum(CRMTouchpointChannel, name="crm_touchpoint_channel"), nullable=False)
+    direction = Column(Enum(CRMTouchpointDirection, name="crm_touchpoint_direction"), nullable=False)
+    occurred_at = Column(DateTime(timezone=True), default=utcnow)
+    summary = Column(Text)
+    payload = Column("payload", JSON, default=dict, nullable=False)
+    emotion_score = Column(Numeric(5, 2))
+    created_by = Column(Integer, ForeignKey("users_web.id", ondelete="SET NULL"))
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+
+    deal = relationship("CRMDeal")
+    account = relationship("CRMAccount")
+
+
+class CRMSubscription(Base):
+    __tablename__ = "crm_subscriptions"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    web_user_id = Column(Integer, ForeignKey("users_web.id", ondelete="CASCADE"))
+    product_id = Column(BigInteger, ForeignKey("crm_products.id", ondelete="CASCADE"))
+    version_id = Column(BigInteger, ForeignKey("crm_product_versions.id", ondelete="SET NULL"))
+    tariff_id = Column(BigInteger, ForeignKey("crm_product_tariffs.id", ondelete="SET NULL"))
+    status = Column(Enum(CRMSubscriptionStatus, name="crm_subscription_status"), nullable=False)
+    started_at = Column(DateTime(timezone=True), default=utcnow)
+    activation_source = Column(String(64))
+    ended_at = Column(DateTime(timezone=True))
+    expires_at = Column(DateTime(timezone=True))
+    area_id = Column(Integer, ForeignKey("areas.id", ondelete="SET NULL"))
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="SET NULL"))
+    context = Column("metadata", JSON, default=dict, nullable=False)
+
+    user = relationship("WebUser")
+    product = relationship("CRMProduct")
+    version = relationship("CRMProductVersion")
+    tariff = relationship("CRMProductTariff")
+    events = relationship(
+        "CRMSubscriptionEvent",
+        back_populates="subscription",
+        cascade="all, delete-orphan",
+    )
+
+
+class CRMSubscriptionEvent(Base):
+    __tablename__ = "crm_subscription_events"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    subscription_id = Column(BigInteger, ForeignKey("crm_subscriptions.id", ondelete="CASCADE"))
+    event_type = Column(String(64), nullable=False)
+    occurred_at = Column(DateTime(timezone=True), default=utcnow)
+    details = Column(JSON, default=dict, nullable=False)
+    created_by = Column(Integer, ForeignKey("users_web.id", ondelete="SET NULL"))
+
+    subscription = relationship("CRMSubscription", back_populates="events")
 
 
 class EntityProfileGrant(Base):

@@ -379,11 +379,23 @@ async def restore_password(
     )
 
 
+def _detect_identifier_kind(value: str) -> str:
+    value = (value or "").strip()
+    if "@" in value:
+        return "email"
+    digits = "".join(ch for ch in value if ch.isdigit())
+    if value.startswith("+") and digits:
+        return "phone"
+    if digits and digits == value:
+        return "phone"
+    return "username"
+
+
 @router.post("/auth/login")
 @router.post("/login")
 async def login(
     request: Request,
-    username: str = Form(...),
+    identifier: str = Form(..., alias="username"),
     password: str = Form(...),
     g_recaptcha_response: str | None = Form(None, alias="g-recaptcha-response"),
     next_url: str | None = Form(None, alias="next"),
@@ -393,7 +405,7 @@ async def login(
         return auth_feedback(
             request,
             active="login",
-            form_values={"username": username},
+            form_values={"username": identifier},
             flash="Проверка reCAPTCHA не пройдена",
             status_code=400,
         )
@@ -401,9 +413,9 @@ async def login(
     user: WebUser | None = None
     try:
         async with WebUserService() as service:
-            user = await service.authenticate(username, password)
+            user = await service.authenticate(identifier, password)
             if not user:
-                existing = await service.get_by_username(username)
+                existing = await service.get_by_identifier(identifier)
                 if existing:
                     if existing.email:
                         try:
@@ -424,13 +436,18 @@ async def login(
                         except Exception:
                             pass
                     try:
-                        log_event(request, "login_fail", None, {"username": username})
+                        log_event(
+                            request,
+                            "login_fail",
+                            None,
+                            {"identifier": identifier},
+                        )
                     except Exception:
                         pass
                     return auth_feedback(
                         request,
                         active="login",
-                        form_values={"username": username},
+                        form_values={"username": identifier},
                         form_errors={
                             "username": "Неверный логин или пароль",
                             "password": "Неверный логин или пароль",
@@ -438,13 +455,28 @@ async def login(
                         flash="Неверный логин или пароль",
                         status_code=400,
                     )
+                identifier_kind = _detect_identifier_kind(identifier)
+                if identifier_kind != "username":
+                    return auth_feedback(
+                        request,
+                        active="login",
+                        form_values={"username": identifier},
+                        form_errors={
+                            "username": "Аккаунт не найден",
+                            "password": "",
+                        },
+                        flash="Аккаунт не найден",
+                        status_code=404,
+                    )
                 try:
-                    new_user = await service.register(username=username, password=password)
+                    new_user = await service.register(
+                        username=identifier, password=password
+                    )
                 except ValueError:
                     return auth_feedback(
                         request,
                         active="login",
-                        form_values={"username": username},
+                        form_values={"username": identifier},
                         flash="Не удалось создать пользователя",
                         status_code=400,
                     )
@@ -481,7 +513,7 @@ async def login(
         return auth_feedback(
             request,
             active="login",
-            form_values={"username": username},
+            form_values={"username": identifier},
             form_errors={
                 "username": "Техническая ошибка",
                 "password": "Техническая ошибка",

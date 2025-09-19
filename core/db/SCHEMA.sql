@@ -116,6 +116,201 @@ CREATE TABLE channels (
 	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id)
 );
 
+CREATE TABLE crm_accounts (
+	id BIGSERIAL NOT NULL, 
+	account_type crm_account_type NOT NULL, 
+	web_user_id INTEGER, 
+	title VARCHAR(255) NOT NULL, 
+	email VARCHAR(255), 
+	phone VARCHAR(32), 
+	area_id INTEGER, 
+	project_id INTEGER, 
+	source VARCHAR(64), 
+	tags VARCHAR[], 
+	context JSON NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	updated_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(web_user_id) REFERENCES users_web (id) ON DELETE SET NULL, 
+	FOREIGN KEY(area_id) REFERENCES areas (id) ON DELETE SET NULL, 
+	FOREIGN KEY(project_id) REFERENCES projects (id) ON DELETE SET NULL
+);
+
+CREATE TABLE crm_deals (
+	id BIGSERIAL NOT NULL, 
+	account_id BIGINT, 
+	owner_id INTEGER, 
+	pipeline_id BIGINT, 
+	stage_id BIGINT, 
+	product_id BIGINT, 
+	version_id BIGINT, 
+	tariff_id BIGINT, 
+	title VARCHAR(255) NOT NULL, 
+	status crm_deal_status NOT NULL, 
+	value NUMERIC(14, 2), 
+	currency VARCHAR(3) NOT NULL, 
+	probability NUMERIC(5, 2), 
+	knowledge_node_id INTEGER, 
+	area_id INTEGER, 
+	project_id INTEGER, 
+	opened_at TIMESTAMP WITH TIME ZONE, 
+	updated_at TIMESTAMP WITH TIME ZONE, 
+	closed_at TIMESTAMP WITH TIME ZONE, 
+	close_forecast_at TIMESTAMP WITH TIME ZONE, 
+	metadata JSON NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(account_id) REFERENCES crm_accounts (id) ON DELETE CASCADE, 
+	FOREIGN KEY(owner_id) REFERENCES users_web (id) ON DELETE SET NULL, 
+	FOREIGN KEY(pipeline_id) REFERENCES crm_pipelines (id) ON DELETE CASCADE, 
+	FOREIGN KEY(stage_id) REFERENCES crm_pipeline_stages (id) ON DELETE RESTRICT, 
+	FOREIGN KEY(product_id) REFERENCES crm_products (id) ON DELETE SET NULL, 
+	FOREIGN KEY(version_id) REFERENCES crm_product_versions (id) ON DELETE SET NULL, 
+	FOREIGN KEY(tariff_id) REFERENCES crm_product_tariffs (id) ON DELETE SET NULL, 
+	FOREIGN KEY(area_id) REFERENCES areas (id) ON DELETE SET NULL, 
+	FOREIGN KEY(project_id) REFERENCES projects (id) ON DELETE SET NULL
+);
+
+CREATE TABLE crm_pipeline_stages (
+	id BIGSERIAL NOT NULL, 
+	pipeline_id BIGINT, 
+	slug VARCHAR(96) NOT NULL, 
+	title VARCHAR(255) NOT NULL, 
+	position INTEGER NOT NULL, 
+	probability NUMERIC(5, 2), 
+	metadata JSON NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	updated_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(pipeline_id) REFERENCES crm_pipelines (id) ON DELETE CASCADE
+);
+
+CREATE TABLE crm_pipelines (
+	id BIGSERIAL NOT NULL, 
+	slug VARCHAR(96) NOT NULL, 
+	title VARCHAR(255) NOT NULL, 
+	description TEXT, 
+	area_id INTEGER, 
+	project_id INTEGER, 
+	metadata JSON NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	updated_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	UNIQUE (slug), 
+	FOREIGN KEY(area_id) REFERENCES areas (id) ON DELETE SET NULL, 
+	FOREIGN KEY(project_id) REFERENCES projects (id) ON DELETE SET NULL
+);
+
+CREATE TABLE crm_product_tariffs (
+	id BIGSERIAL NOT NULL, 
+	product_id BIGINT, 
+	version_id BIGINT, 
+	slug VARCHAR(96) NOT NULL, 
+	title VARCHAR(255) NOT NULL, 
+	billing_type crm_billing_type NOT NULL, 
+	amount NUMERIC(12, 2), 
+	currency VARCHAR(3) NOT NULL, 
+	is_active BOOLEAN NOT NULL, 
+	metadata JSON NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	updated_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(product_id) REFERENCES crm_products (id) ON DELETE CASCADE, 
+	FOREIGN KEY(version_id) REFERENCES crm_product_versions (id) ON DELETE SET NULL
+);
+
+CREATE TABLE crm_product_versions (
+	id BIGSERIAL NOT NULL, 
+	product_id BIGINT, 
+	parent_version_id BIGINT, 
+	slug VARCHAR(96) NOT NULL, 
+	title VARCHAR(255) NOT NULL, 
+	pricing_mode crm_pricing_mode NOT NULL, 
+	starts_at TIMESTAMP WITH TIME ZONE, 
+	ends_at TIMESTAMP WITH TIME ZONE, 
+	seats_limit INTEGER, 
+	area_id INTEGER, 
+	project_id INTEGER, 
+	metadata JSON NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	updated_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(product_id) REFERENCES crm_products (id) ON DELETE CASCADE, 
+	FOREIGN KEY(parent_version_id) REFERENCES crm_product_versions (id) ON DELETE SET NULL, 
+	FOREIGN KEY(area_id) REFERENCES areas (id) ON DELETE SET NULL, 
+	FOREIGN KEY(project_id) REFERENCES projects (id) ON DELETE SET NULL
+);
+
+CREATE TABLE crm_products (
+	id BIGSERIAL NOT NULL, 
+	slug VARCHAR(96) NOT NULL, 
+	title VARCHAR(255) NOT NULL, 
+	summary TEXT, 
+	kind VARCHAR(32) NOT NULL, 
+	area_id INTEGER, 
+	project_id INTEGER, 
+	is_active BOOLEAN NOT NULL, 
+	metadata JSON NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	updated_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	UNIQUE (slug), 
+	FOREIGN KEY(area_id) REFERENCES areas (id) ON DELETE SET NULL, 
+	FOREIGN KEY(project_id) REFERENCES projects (id) ON DELETE SET NULL
+);
+
+CREATE TABLE crm_subscription_events (
+	id BIGSERIAL NOT NULL, 
+	subscription_id BIGINT, 
+	event_type VARCHAR(64) NOT NULL, 
+	occurred_at TIMESTAMP WITH TIME ZONE, 
+	details JSON NOT NULL, 
+	created_by INTEGER, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(subscription_id) REFERENCES crm_subscriptions (id) ON DELETE CASCADE, 
+	FOREIGN KEY(created_by) REFERENCES users_web (id) ON DELETE SET NULL
+);
+
+CREATE TABLE crm_subscriptions (
+	id BIGSERIAL NOT NULL, 
+	web_user_id INTEGER, 
+	product_id BIGINT, 
+	version_id BIGINT, 
+	tariff_id BIGINT, 
+	status crm_subscription_status NOT NULL, 
+	started_at TIMESTAMP WITH TIME ZONE, 
+	activation_source VARCHAR(64), 
+	ended_at TIMESTAMP WITH TIME ZONE, 
+	expires_at TIMESTAMP WITH TIME ZONE, 
+	area_id INTEGER, 
+	project_id INTEGER, 
+	metadata JSON NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(web_user_id) REFERENCES users_web (id) ON DELETE CASCADE, 
+	FOREIGN KEY(product_id) REFERENCES crm_products (id) ON DELETE CASCADE, 
+	FOREIGN KEY(version_id) REFERENCES crm_product_versions (id) ON DELETE SET NULL, 
+	FOREIGN KEY(tariff_id) REFERENCES crm_product_tariffs (id) ON DELETE SET NULL, 
+	FOREIGN KEY(area_id) REFERENCES areas (id) ON DELETE SET NULL, 
+	FOREIGN KEY(project_id) REFERENCES projects (id) ON DELETE SET NULL
+);
+
+CREATE TABLE crm_touchpoints (
+	id BIGSERIAL NOT NULL, 
+	deal_id BIGINT, 
+	account_id BIGINT, 
+	channel crm_touchpoint_channel NOT NULL, 
+	direction crm_touchpoint_direction NOT NULL, 
+	occurred_at TIMESTAMP WITH TIME ZONE, 
+	summary TEXT, 
+	payload JSON NOT NULL, 
+	emotion_score NUMERIC(5, 2), 
+	created_by INTEGER, 
+	created_at TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(deal_id) REFERENCES crm_deals (id) ON DELETE CASCADE, 
+	FOREIGN KEY(account_id) REFERENCES crm_accounts (id) ON DELETE CASCADE, 
+	FOREIGN KEY(created_by) REFERENCES users_web (id) ON DELETE SET NULL
+);
+
 CREATE TABLE dailies (
 	id SERIAL NOT NULL, 
 	owner_id BIGINT, 
@@ -754,7 +949,7 @@ CREATE TABLE users_tg (
 
 CREATE TABLE users_web (
 	id SERIAL NOT NULL, 
-	username VARCHAR(64) NOT NULL, 
+	username VARCHAR(64), 
 	email VARCHAR(255), 
 	phone VARCHAR(20), 
 	full_name VARCHAR(255), 
@@ -769,6 +964,7 @@ CREATE TABLE users_web (
 	created_at TIMESTAMP WITH TIME ZONE, 
 	updated_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 
+	CONSTRAINT users_web_contact_present CHECK (username IS NOT NULL OR email IS NOT NULL OR phone IS NOT NULL), 
 	UNIQUE (username)
 );
 

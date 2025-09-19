@@ -332,6 +332,285 @@
         "title": "BrandingIn",
         "type": "object"
       },
+      "CRMBillingType": {
+        "enum": [
+          "free",
+          "one_off",
+          "subscription",
+          "upgrade",
+          "downgrade"
+        ],
+        "title": "CRMBillingType",
+        "type": "string"
+      },
+      "CRMPricingMode": {
+        "enum": [
+          "cohort",
+          "rolling",
+          "perpetual"
+        ],
+        "title": "CRMPricingMode",
+        "type": "string"
+      },
+      "CRMProductOut": {
+        "properties": {
+          "area_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area Id"
+          },
+          "config": {
+            "additionalProperties": true,
+            "title": "Config",
+            "type": "object"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "tariffs": {
+            "items": {
+              "$ref": "#/components/schemas/CRMTariffOut"
+            },
+            "title": "Tariffs",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "versions": {
+            "items": {
+              "$ref": "#/components/schemas/CRMProductVersionOut"
+            },
+            "title": "Versions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "summary",
+          "kind",
+          "area_id",
+          "project_id",
+          "is_active",
+          "versions",
+          "tariffs"
+        ],
+        "title": "CRMProductOut",
+        "type": "object"
+      },
+      "CRMProductVersionOut": {
+        "properties": {
+          "area_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area Id"
+          },
+          "config": {
+            "additionalProperties": true,
+            "title": "Config",
+            "type": "object"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "pricing_mode": {
+            "$ref": "#/components/schemas/CRMPricingMode"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "seats_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seats Limit"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "pricing_mode",
+          "starts_at",
+          "ends_at",
+          "seats_limit",
+          "area_id",
+          "project_id"
+        ],
+        "title": "CRMProductVersionOut",
+        "type": "object"
+      },
+      "CRMSubscriptionStatus": {
+        "enum": [
+          "active",
+          "pending",
+          "completed",
+          "cancelled",
+          "failed"
+        ],
+        "title": "CRMSubscriptionStatus",
+        "type": "string"
+      },
+      "CRMTariffOut": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Amount"
+          },
+          "billing_type": {
+            "$ref": "#/components/schemas/CRMBillingType"
+          },
+          "config": {
+            "additionalProperties": true,
+            "title": "Config",
+            "type": "object"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "version_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Id"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "billing_type",
+          "amount",
+          "currency",
+          "is_active",
+          "version_id"
+        ],
+        "title": "CRMTariffOut",
+        "type": "object"
+      },
       "CalendarItemCreate": {
         "description": "Payload to create a calendar item.",
         "properties": {
@@ -2701,6 +2980,164 @@
         "title": "StatsOut",
         "type": "object"
       },
+      "SubscriptionTransitionPayload": {
+        "properties": {
+          "activation_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activation Source"
+          },
+          "area_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area Id"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "integer"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "tariff_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tariff Id"
+          },
+          "transition_type": {
+            "enum": [
+              "free",
+              "upgrade",
+              "downgrade"
+            ],
+            "title": "Transition Type",
+            "type": "string"
+          },
+          "version_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version Id"
+          },
+          "web_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Web User Id"
+          }
+        },
+        "required": [
+          "product_id",
+          "version_id",
+          "tariff_id",
+          "transition_type",
+          "activation_source",
+          "area_id",
+          "project_id",
+          "web_user_id",
+          "email",
+          "phone",
+          "full_name"
+        ],
+        "title": "SubscriptionTransitionPayload",
+        "type": "object"
+      },
+      "SubscriptionTransitionResponse": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/CRMSubscriptionStatus"
+          },
+          "subscription_id": {
+            "title": "Subscription Id",
+            "type": "integer"
+          },
+          "transition_type": {
+            "title": "Transition Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subscription_id",
+          "status",
+          "transition_type"
+        ],
+        "title": "SubscriptionTransitionResponse",
+        "type": "object"
+      },
       "SummaryItem": {
         "properties": {
           "area_id": {
@@ -4599,6 +5036,72 @@
         "summary": "List Clients",
         "tags": [
           "diagnostics"
+        ]
+      }
+    },
+    "/api/v1/crm/products": {
+      "get": {
+        "operationId": "list_crm_products_api_v1_crm_products_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CRMProductOut"
+                  },
+                  "title": "Response List Crm Products Api V1 Crm Products Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Crm Products",
+        "tags": [
+          "crm"
+        ]
+      }
+    },
+    "/api/v1/crm/subscriptions/transition": {
+      "post": {
+        "operationId": "transition_subscription_api_v1_crm_subscriptions_transition_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscriptionTransitionPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionTransitionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Transition Subscription",
+        "tags": [
+          "crm"
         ]
       }
     },

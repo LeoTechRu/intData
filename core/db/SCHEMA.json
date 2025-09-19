@@ -1,8 +1,8 @@
 {
   "version": 1,
   "dialect": "postgresql",
-  "generated_at": "2025-09-18T09:20:29Z",
-  "metadata_hash": "ea9f36bf8b711361f51a9fbcaed7b0634261d738c27bda29c3688ac9e9544c8a",
+  "generated_at": "2025-09-19T00:46:52Z",
+  "metadata_hash": "332f089acaaaeb42f05f7a06cbb7b9940bd89eae03c033b67faa864b3fd89b83",
   "enums": [
     {
       "name": "activitytype",
@@ -45,6 +45,72 @@
         "area",
         "project",
         "resource"
+      ]
+    },
+    {
+      "name": "crm_account_type",
+      "values": [
+        "company",
+        "person"
+      ]
+    },
+    {
+      "name": "crm_billing_type",
+      "values": [
+        "downgrade",
+        "free",
+        "one_off",
+        "subscription",
+        "upgrade"
+      ]
+    },
+    {
+      "name": "crm_deal_status",
+      "values": [
+        "archived",
+        "lead",
+        "lost",
+        "proposal",
+        "qualified",
+        "won"
+      ]
+    },
+    {
+      "name": "crm_pricing_mode",
+      "values": [
+        "cohort",
+        "perpetual",
+        "rolling"
+      ]
+    },
+    {
+      "name": "crm_subscription_status",
+      "values": [
+        "active",
+        "cancelled",
+        "completed",
+        "failed",
+        "pending"
+      ]
+    },
+    {
+      "name": "crm_touchpoint_channel",
+      "values": [
+        "email",
+        "meeting",
+        "note",
+        "phone_call",
+        "system",
+        "telegram",
+        "web_form"
+      ]
+    },
+    {
+      "name": "crm_touchpoint_direction",
+      "values": [
+        "inbound",
+        "internal",
+        "outbound"
       ]
     },
     {
@@ -1137,6 +1203,1748 @@
           ]
         }
       ],
+      "indexes": [],
+      "checks": []
+    },
+    "crm_accounts": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "account_type",
+          "type": "crm_account_type",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "area_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "context",
+          "type": "JSON",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "email",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "phone",
+          "type": "VARCHAR(32)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "project_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "source",
+          "type": "VARCHAR(64)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "tags",
+          "type": "VARCHAR[]",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "web_user_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "area_id"
+          ],
+          "ref_table": "areas",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "project_id"
+          ],
+          "ref_table": "projects",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "web_user_id"
+          ],
+          "ref_table": "users_web",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "crm_deals": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "account_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "area_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "close_forecast_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "closed_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "currency",
+          "type": "VARCHAR(3)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "RUB",
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "knowledge_node_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "metadata",
+          "type": "JSON",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "opened_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "pipeline_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "probability",
+          "type": "NUMERIC(5, 2)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "product_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "project_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "stage_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "crm_deal_status",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "tariff_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "value",
+          "type": "NUMERIC(14, 2)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "version_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "account_id"
+          ],
+          "ref_table": "crm_accounts",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "CASCADE",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "area_id"
+          ],
+          "ref_table": "areas",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "owner_id"
+          ],
+          "ref_table": "users_web",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "pipeline_id"
+          ],
+          "ref_table": "crm_pipelines",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "CASCADE",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "product_id"
+          ],
+          "ref_table": "crm_products",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "project_id"
+          ],
+          "ref_table": "projects",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "stage_id"
+          ],
+          "ref_table": "crm_pipeline_stages",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "RESTRICT",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "tariff_id"
+          ],
+          "ref_table": "crm_product_tariffs",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "version_id"
+          ],
+          "ref_table": "crm_product_versions",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "crm_pipeline_stages": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "metadata",
+          "type": "JSON",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "pipeline_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "position",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": 0,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "probability",
+          "type": "NUMERIC(5, 2)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "slug",
+          "type": "VARCHAR(96)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "pipeline_id"
+          ],
+          "ref_table": "crm_pipelines",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "CASCADE",
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "crm_pipelines": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "area_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "metadata",
+          "type": "JSON",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "project_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "slug",
+          "type": "VARCHAR(96)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "area_id"
+          ],
+          "ref_table": "areas",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "project_id"
+          ],
+          "ref_table": "projects",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [
+        {
+          "name": null,
+          "columns": [
+            "slug"
+          ]
+        }
+      ],
+      "indexes": [],
+      "checks": []
+    },
+    "crm_product_tariffs": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "amount",
+          "type": "NUMERIC(12, 2)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "billing_type",
+          "type": "crm_billing_type",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "currency",
+          "type": "VARCHAR(3)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "RUB",
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": true,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "metadata",
+          "type": "JSON",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "product_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "slug",
+          "type": "VARCHAR(96)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "version_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "product_id"
+          ],
+          "ref_table": "crm_products",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "CASCADE",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "version_id"
+          ],
+          "ref_table": "crm_product_versions",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "crm_product_versions": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "area_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "ends_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "metadata",
+          "type": "JSON",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "parent_version_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "pricing_mode",
+          "type": "crm_pricing_mode",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "product_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "project_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "seats_limit",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "slug",
+          "type": "VARCHAR(96)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "starts_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "area_id"
+          ],
+          "ref_table": "areas",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "parent_version_id"
+          ],
+          "ref_table": "crm_product_versions",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "product_id"
+          ],
+          "ref_table": "crm_products",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "CASCADE",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "project_id"
+          ],
+          "ref_table": "projects",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "crm_products": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "area_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": true,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "kind",
+          "type": "VARCHAR(32)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": "default",
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "metadata",
+          "type": "JSON",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "project_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "slug",
+          "type": "VARCHAR(96)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "summary",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "title",
+          "type": "VARCHAR(255)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "area_id"
+          ],
+          "ref_table": "areas",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "project_id"
+          ],
+          "ref_table": "projects",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [
+        {
+          "name": null,
+          "columns": [
+            "slug"
+          ]
+        }
+      ],
+      "indexes": [],
+      "checks": []
+    },
+    "crm_subscription_events": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "created_by",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "details",
+          "type": "JSON",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "event_type",
+          "type": "VARCHAR(64)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "occurred_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "subscription_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "created_by"
+          ],
+          "ref_table": "users_web",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "subscription_id"
+          ],
+          "ref_table": "crm_subscriptions",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "CASCADE",
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "crm_subscriptions": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "activation_source",
+          "type": "VARCHAR(64)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "area_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "ended_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "expires_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "metadata",
+          "type": "JSON",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "product_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "project_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "started_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "status",
+          "type": "crm_subscription_status",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "tariff_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "version_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "web_user_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "area_id"
+          ],
+          "ref_table": "areas",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "product_id"
+          ],
+          "ref_table": "crm_products",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "CASCADE",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "project_id"
+          ],
+          "ref_table": "projects",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "tariff_id"
+          ],
+          "ref_table": "crm_product_tariffs",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "version_id"
+          ],
+          "ref_table": "crm_product_versions",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "web_user_id"
+          ],
+          "ref_table": "users_web",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "CASCADE",
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
+      "indexes": [],
+      "checks": []
+    },
+    "crm_touchpoints": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "account_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "channel",
+          "type": "crm_touchpoint_channel",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "created_by",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "deal_id",
+          "type": "BIGINT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "direction",
+          "type": "crm_touchpoint_direction",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "emotion_score",
+          "type": "NUMERIC(5, 2)",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "BIGINT",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "occurred_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "payload",
+          "type": "JSON",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "summary",
+          "type": "TEXT",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [
+        {
+          "name": null,
+          "columns": [
+            "account_id"
+          ],
+          "ref_table": "crm_accounts",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "CASCADE",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "created_by"
+          ],
+          "ref_table": "users_web",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "SET NULL",
+          "onupdate": null
+        },
+        {
+          "name": null,
+          "columns": [
+            "deal_id"
+          ],
+          "ref_table": "crm_deals",
+          "ref_columns": [
+            "id"
+          ],
+          "ondelete": "CASCADE",
+          "onupdate": null
+        }
+      ],
+      "unique_constraints": [],
       "indexes": [],
       "checks": []
     },
@@ -6636,7 +8444,7 @@
         {
           "name": "username",
           "type": "VARCHAR(64)",
-          "nullable": false,
+          "nullable": true,
           "primary_key": false,
           "autoincrement": true,
           "default": null,
@@ -6665,7 +8473,12 @@
           "unique": true
         }
       ],
-      "checks": []
+      "checks": [
+        {
+          "name": "users_web_contact_present",
+          "sql": "username IS NOT NULL OR email IS NOT NULL OR phone IS NOT NULL"
+        }
+      ]
     },
     "users_web_tg": {
       "comment": "",

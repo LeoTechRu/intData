@@ -143,6 +143,38 @@ const COMPARISON = {
   ],
 };
 
+type IdentifierKind = 'username' | 'email' | 'phone';
+
+const IDENTIFIER_LABELS: Record<IdentifierKind, string> = {
+  username: 'Логин',
+  email: 'Email',
+  phone: 'Телефон',
+};
+
+const IDENTIFIER_PLACEHOLDERS: Record<IdentifierKind, string> = {
+  username: 'Введите логин',
+  email: 'name@example.com',
+  phone: '+71234567890',
+};
+
+const IDENTIFIER_AUTOCOMPLETE: Record<IdentifierKind, string> = {
+  username: 'username',
+  email: 'email',
+  phone: 'tel',
+};
+
+function guessIdentifierKind(value: string): IdentifierKind {
+  const trimmed = value.trim();
+  if (trimmed.includes('@')) {
+    return 'email';
+  }
+  const digits = trimmed.replace(/[^0-9]/g, '');
+  if ((trimmed.startsWith('+') && digits.length >= 7) || (digits === trimmed && digits.length >= 5)) {
+    return 'phone';
+  }
+  return 'username';
+}
+
 function isAuthTab(value: string | null | undefined): value is AuthTab {
   return value === 'login' || value === 'signup' || value === 'restore';
 }
@@ -231,13 +263,15 @@ export default function AuthLanding({
   const [flash, setFlash] = useState<string | null>(flashSource ?? null);
   const [errors, setErrors] = useState<Record<string, string>>(errorsSource ?? {});
   const [loginValues, setLoginValues] = useState(() => ({
-    username: valuesSource?.username ?? '',
+    identifier: valuesSource?.username ?? '',
     password: '',
   }));
   const [magicEmail, setMagicEmail] = useState(() => valuesSource?.email ?? valuesSource?.username ?? '');
   const [configWarnings, setConfigWarnings] = useState<AuthConfigWarning[]>([]);
   const [magicSuccess, setMagicSuccess] = useState<string | null>(null);
   const formRef = useRef<HTMLDivElement | null>(null);
+
+  const identifierKind = useMemo(() => guessIdentifierKind(loginValues.identifier), [loginValues.identifier]);
 
   const nextValue = useMemo(() => nextSource ?? redirectSource ?? '', [nextSource, redirectSource]);
 
@@ -382,11 +416,11 @@ export default function AuthLanding({
   };
 
   const handleRemind = () => {
-    if (!loginValues.username) {
+    if (!loginValues.identifier) {
       setFlash('Напишите логин, чтобы отправить напоминание.');
       return;
     }
-    restoreMutation.mutate(loginValues.username);
+    restoreMutation.mutate(loginValues.identifier);
   };
 
   const scrollToForm = () => {
@@ -646,21 +680,24 @@ export default function AuthLanding({
             ) : (
               <form className="space-y-4" onSubmit={handleLoginSubmit}>
                 <label className="flex flex-col gap-2 text-sm">
-                  <span className="font-semibold text-[var(--text-primary)]">Логин или email</span>
+                  <span className="font-semibold text-[var(--text-primary)]">
+                    {IDENTIFIER_LABELS[identifierKind]}
+                    <span className="ml-2 text-xs text-muted">автоопределение по вводу</span>
+                  </span>
                   <input
                     type="text"
                     name="username"
                     required
-                    value={loginValues.username}
+                    value={loginValues.identifier}
                     onChange={(event) => {
-                      setLoginValues((prev) => ({ ...prev, username: event.target.value }));
+                      setLoginValues((prev) => ({ ...prev, identifier: event.target.value }));
                     }}
                     className={cn(
                       'h-12 rounded-xl border border-subtle px-4 text-sm text-[var(--text-primary)] focus:border-[var(--accent-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)]/40',
                       errors.username && 'border-[var(--accent-danger)] focus:border-[var(--accent-danger)] focus:ring-[var(--accent-danger)]/30',
                     )}
-                    placeholder="Введите логин"
-                    autoComplete="username"
+                    placeholder={IDENTIFIER_PLACEHOLDERS[identifierKind]}
+                    autoComplete={IDENTIFIER_AUTOCOMPLETE[identifierKind]}
                   />
                   {errors.username ? <span className="text-xs text-[var(--accent-danger)]">{errors.username}</span> : null}
                 </label>
