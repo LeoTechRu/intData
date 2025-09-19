@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 
 from base import Base
 import core.db as db
-from core.models import TgUser
+from core.models import Area, TgUser
 
 try:
     from main import app  # type: ignore
@@ -118,3 +118,42 @@ async def test_notes_crud(client: AsyncClient):
     resp = await client.get("/api/v1/notes", cookies=cookies)
     assert len(resp.json()) == 1
     assert resp.json()[0]["area"]["id"] == inbox_area_id
+
+
+@pytest.mark.asyncio
+async def test_assign_note_returns_eager_loaded_relations(client: AsyncClient):
+    telegram_id = await _create_tg_user(telegram_id=11)
+    cookies = {"telegram_id": str(telegram_id)}
+
+    async with db.async_session() as session:  # type: ignore
+        async with session.begin():
+            area = Area(
+                owner_id=telegram_id,
+                name="Research",
+                title="Research",
+                slug="research",
+                mp_path="research.",
+                depth=0,
+                color="#112233",
+            )
+            session.add(area)
+        target_area_id = area.id
+
+    note_resp = await client.post(
+        "/api/v1/notes", json={"content": "Inbox item"}, cookies=cookies
+    )
+    assert note_resp.status_code == 201
+    note_id = note_resp.json()["id"]
+
+    assign_resp = await client.post(
+        f"/api/v1/notes/{note_id}/assign",
+        json={"container_type": "area", "container_id": target_area_id},
+        cookies=cookies,
+    )
+
+    assert assign_resp.status_code == 200
+    payload = assign_resp.json()
+    assert payload["id"] == note_id
+    assert payload["area"]["id"] is not None
+    assert payload["area"]["name"]
+    assert payload["color"] == (payload["area"].get("color") or "#F1F5F9")
