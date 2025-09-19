@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import React, { ReactNode, useEffect, useMemo, useState } from 'react';
+import React, { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { apiFetch, ApiError } from '../lib/api';
 import { fetchSidebarNav, updateGlobalSidebarLayout, updateUserSidebarLayout } from '../lib/navigation';
@@ -311,6 +311,8 @@ export default function AppShell({
   const [isDesktop, setIsDesktop] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [isNavEditorOpen, setIsNavEditorOpen] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<string[]>([]);
+  const [expandedHiddenSections, setExpandedHiddenSections] = useState<string[]>([]);
   const headingId = titleId ?? 'app-shell-title';
   const headingDescriptionId = subtitle ? `${headingId}-description` : undefined;
   const queryClient = useQueryClient();
@@ -348,6 +350,17 @@ export default function AppShell({
     if (persisted === '1') {
       setIsSidebarCollapsed(true);
     }
+    const collapsedRaw = window.localStorage.getItem('appShell.collapsedSections');
+    if (collapsedRaw) {
+      try {
+        const parsed = JSON.parse(collapsedRaw);
+        if (Array.isArray(parsed)) {
+          setCollapsedSections(parsed.filter((entry): entry is string => typeof entry === 'string'));
+        }
+      } catch (error) {
+        console.warn('Не удалось прочитать сохранённые секции меню', error);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -356,6 +369,13 @@ export default function AppShell({
     }
     window.localStorage.setItem('appShell.sidebarCollapsed', isSidebarCollapsed ? '1' : '0');
   }, [isSidebarCollapsed, isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated || typeof window === 'undefined') {
+      return;
+    }
+    window.localStorage.setItem('appShell.collapsedSections', JSON.stringify(collapsedSections));
+  }, [collapsedSections, isHydrated]);
 
   const viewerQuery = useQuery<ViewerProfileSummary | null>({
     queryKey: ['viewer-profile-summary'],
@@ -412,6 +432,18 @@ export default function AppShell({
     setIsMobileNavOpen((prev) => !prev);
   };
 
+  const toggleSectionCollapsed = useCallback((moduleId: string) => {
+    setCollapsedSections((prev) =>
+      prev.includes(moduleId) ? prev.filter((id) => id !== moduleId) : [...prev, moduleId],
+    );
+  }, []);
+
+  const toggleHiddenSection = useCallback((moduleId: string) => {
+    setExpandedHiddenSections((prev) =>
+      prev.includes(moduleId) ? prev.filter((id) => id !== moduleId) : [...prev, moduleId],
+    );
+  }, []);
+
   const navItems: SidebarNavItem[] = navQuery.data?.items ?? STATIC_NAV_FALLBACK;
   const navModules = useMemo(() => {
     const payload = navQuery.data?.modules;
@@ -420,13 +452,13 @@ export default function AppShell({
   }, [navQuery.data?.modules]);
   const moduleMap = useMemo(() => new Map(navModules.map((section) => [section.id, section])), [navModules]);
   const navSections = useMemo(() => {
-    const buckets = new Map<
-      string,
-      { module: SidebarModuleDefinition; items: { item: SidebarNavItem; active: boolean }[] }
-    >();
-    const ensureBucket = (
-      moduleId: string,
-    ): { module: SidebarModuleDefinition; items: { item: SidebarNavItem; active: boolean }[] } => {
+    type SectionEntry = {
+      module: SidebarModuleDefinition;
+      visible: { item: SidebarNavItem; active: boolean }[];
+      hidden: SidebarNavItem[];
+    };
+    const buckets = new Map<string, SectionEntry>();
+    const ensureBucket = (moduleId: string): SectionEntry => {
       const existing = buckets.get(moduleId);
       if (existing) {
         return existing;
@@ -435,24 +467,43 @@ export default function AppShell({
       const moduleOrder = moduleFromPayload?.order ?? 9000;
       const moduleDef: SidebarModuleDefinition =
         moduleFromPayload ?? { id: moduleId, label: moduleId, order: moduleOrder };
-      const bucket = { module: moduleDef, items: [] as { item: SidebarNavItem; active: boolean }[] };
+      const bucket: SectionEntry = { module: moduleDef, visible: [], hidden: [] };
       buckets.set(moduleId, bucket);
       return bucket;
     };
     navItems.forEach((item) => {
+      const moduleId = item.module ?? 'general';
+      const bucket = ensureBucket(moduleId);
       if (item.hidden) {
+        bucket.hidden.push(item);
         return;
       }
       const href = item.href;
       const active = href && pathname ? pathname === href || pathname.startsWith(`${href}/`) : false;
-      const moduleId = item.module ?? 'general';
-      ensureBucket(moduleId).items.push({ item, active });
+      bucket.visible.push({ item, active });
     });
-    const sections: { module: SidebarModuleDefinition; items: { item: SidebarNavItem; active: boolean }[] }[] = [];
+    const sections: SectionEntry[] = [];
     navModules
       .filter((module) => buckets.has(module.id))
       .forEach((module) => {
-        sections.push(buckets.get(module.id)!);
+        const bucket = buckets.get(module.id)!;
+        bucket.visible.sort((a, b) => {
+          const orderA = a.item.section_order ?? 0;
+          const orderB = b.item.section_order ?? 0;
+          if (orderA !== orderB) {
+            return orderA - orderB;
+          }
+          return a.item.position - b.item.position;
+        });
+        bucket.hidden.sort((a, b) => {
+          const orderA = a.section_order ?? 0;
+          const orderB = b.section_order ?? 0;
+          if (orderA !== orderB) {
+            return orderA - orderB;
+          }
+          return a.position - b.position;
+        });
+        sections.push(bucket);
         buckets.delete(module.id);
       });
     Array.from(buckets.values())
@@ -462,7 +513,25 @@ export default function AppShell({
         }
         return a.module.id.localeCompare(b.module.id);
       })
-      .forEach((section) => sections.push(section));
+      .forEach((section) => {
+        section.visible.sort((a, b) => {
+          const orderA = a.item.section_order ?? 0;
+          const orderB = b.item.section_order ?? 0;
+          if (orderA !== orderB) {
+            return orderA - orderB;
+          }
+          return a.item.position - b.item.position;
+        });
+        section.hidden.sort((a, b) => {
+          const orderA = a.section_order ?? 0;
+          const orderB = b.section_order ?? 0;
+          if (orderA !== orderB) {
+            return orderA - orderB;
+          }
+          return a.position - b.position;
+        });
+        sections.push(section);
+      });
     return sections;
   }, [navItems, navModules, moduleMap, pathname]);
 
@@ -669,59 +738,80 @@ export default function AppShell({
   const globalSaving = saveGlobalLayoutMutation.isPending || resetGlobalLayoutMutation.isPending;
   const canOpenEditor = Boolean(navQuery.data);
 
+  const handleToggleNavItemVisibility = async (target: SidebarNavItem, nextHidden: boolean) => {
+    if (userSaving) {
+      return;
+    }
+    if (!viewer) {
+      router.push('/auth');
+      return;
+    }
+    const layout: SidebarLayoutSettings = {
+      v: navVersion,
+      items: navItems.map((item, index) => ({
+        key: item.key,
+        position: index + 1,
+        hidden: item.key === target.key ? nextHidden : item.hidden,
+      })),
+    };
+    try {
+      await handleSaveUserLayout(layout);
+    } catch (error) {
+      console.error('Failed to toggle navigation item visibility', error);
+    }
+  };
+
   const moduleTabsBar = activeModuleTabs.length > 1 ? (
-    <div className="border-t border-subtle/70 bg-[var(--surface-0)]/95 px-4 py-2 md:px-6" data-module-tabs>
-      <nav
-        className="flex gap-2 overflow-x-auto pb-1"
-        aria-label={`Навигация модуля ${activeModule.label}`}
-      >
-        {activeModuleTabs.map(({ item, active, hidden }) => {
-          const baseClass =
-            'inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]';
-          const variant = active
-            ? 'bg-[var(--accent-primary)] text-[var(--accent-on-primary)] shadow-soft'
-            : hidden
-            ? 'border border-dashed border-subtle text-muted hover:text-[var(--text-primary)]'
-            : 'bg-surface-soft text-muted hover:text-[var(--text-primary)]';
-          const className = clsx(baseClass, variant);
-          if (!item.href) {
-            return (
-              <span key={item.key} className={className} aria-disabled>
-                {item.label}
-              </span>
-            );
-          }
-          if (item.external) {
-            return (
-              <a key={item.key} href={item.href} target="_blank" rel="noreferrer" className={className}>
-                <span>{item.label}</span>
-                {hidden ? (
-                  <span className="text-[10px] uppercase tracking-wide text-muted">Скрыто</span>
-                ) : null}
-              </a>
-            );
-          }
+    <nav
+      className="flex gap-2 overflow-x-auto pb-1"
+      aria-label={`Навигация модуля ${activeModule.label}`}
+    >
+      {activeModuleTabs.map(({ item, active, hidden }) => {
+        const baseClass =
+          'inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]';
+        const variant = active
+          ? 'bg-[var(--accent-primary)] text-[var(--accent-on-primary)] shadow-soft'
+          : hidden
+          ? 'border border-dashed border-subtle text-muted hover:text-[var(--text-primary)]'
+          : 'bg-surface-soft text-muted hover:text-[var(--text-primary)]';
+        const className = clsx(baseClass, variant);
+        if (!item.href) {
           return (
-            <Link
-              key={item.key}
-              href={item.href}
-              className={className}
-              aria-current={active ? 'page' : undefined}
-              prefetch={false}
-            >
+            <span key={item.key} className={className} aria-disabled>
+              {item.label}
+            </span>
+          );
+        }
+        if (item.external) {
+          return (
+            <a key={item.key} href={item.href} target="_blank" rel="noreferrer" className={className}>
               <span>{item.label}</span>
               {hidden ? (
                 <span className="text-[10px] uppercase tracking-wide text-muted">Скрыто</span>
               ) : null}
-            </Link>
+            </a>
           );
-        })}
-      </nav>
-    </div>
+        }
+        return (
+          <Link
+            key={item.key}
+            href={item.href}
+            className={className}
+            aria-current={active ? 'page' : undefined}
+            prefetch={false}
+          >
+            <span>{item.label}</span>
+            {hidden ? (
+              <span className="text-[10px] uppercase tracking-wide text-muted">Скрыто</span>
+            ) : null}
+          </Link>
+        );
+      })}
+    </nav>
   ) : null;
 
   const sidebarClassName = clsx(
-    'fixed inset-y-0 left-0 z-50 w-72 transform border-r border-subtle bg-[var(--surface-0)] px-4 py-6 transition-transform duration-200 ease-out md:static md:px-5 md:py-8',
+    'fixed inset-y-0 left-0 z-50 w-72 transform overflow-y-auto border-r border-subtle bg-[var(--surface-0)] px-4 py-6 transition-transform duration-200 ease-out md:static md:h-full md:overflow-y-auto md:px-5 md:py-8',
     isMobileNavOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
     isSidebarCollapsed
       ? 'md:-translate-x-full md:w-0 md:px-0 md:py-0 md:opacity-0 md:pointer-events-none'
@@ -730,9 +820,10 @@ export default function AppShell({
 
   const computedMaxWidth = maxWidthClassName ?? 'max-w-[1400px]';
   const headerClasses = clsx(
-    'grid w-full grid-cols-[auto,1fr] grid-rows-[auto,auto] items-center gap-x-3 gap-y-3 px-4 py-4',
-    'sm:gap-x-4',
-    'md:grid-cols-[auto,1fr,auto] md:grid-rows-1 md:gap-x-4 md:px-6',
+    'grid w-full grid-cols-[auto,minmax(0,1fr),auto] grid-rows-[auto,auto] items-center gap-x-3 gap-y-2 px-3 py-3',
+    'sm:px-4 sm:gap-x-4',
+    'md:grid-rows-1 md:px-6',
+    'lg:py-4',
   );
   const mainClasses = clsx(
     'relative z-10 flex w-full flex-col gap-6 px-4 py-6 md:px-8 md:py-10',
@@ -746,7 +837,7 @@ export default function AppShell({
       <div className="flex min-h-screen flex-col bg-surface" data-app-shell>
         <header className="sticky top-0 z-40 border-b border-subtle bg-[var(--surface-0)]/95 backdrop-blur">
           <div className={headerClasses}>
-            <div className="col-span-1 order-1 flex items-center gap-2 md:order-1 md:gap-3">
+            <div className="col-span-1 order-1 flex items-center gap-2 md:gap-3">
             <button
               type="button"
               className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-surface-soft text-muted transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] md:h-10 md:w-10"
@@ -799,7 +890,7 @@ export default function AppShell({
               </span>
             </Link>
           </div>
-          <div className="col-span-2 order-3 flex min-w-0 flex-col items-center gap-0.5 text-center md:order-2 md:col-span-1">
+          <div className="col-span-1 order-2 flex min-w-0 flex-col items-center gap-0.5 text-center md:col-span-1 md:justify-self-center">
             <div className="flex items-center gap-2">
               <h1
                 id={headingId}
@@ -839,22 +930,20 @@ export default function AppShell({
               </p>
             ) : null}
           </div>
-          <div className="col-span-1 order-2 flex min-w-0 items-center justify-end gap-3 md:order-3 md:flex-nowrap md:justify-self-end">
+          <div className="col-span-3 order-3 flex min-w-0 items-center justify-center gap-3 md:order-3 md:col-span-1 md:flex-nowrap md:justify-self-end md:justify-end">
             {actions ? <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-right md:flex-nowrap">{actions}</div> : null}
             <UserSummary viewer={viewer} isLoading={viewerLoading} personaBundle={personaBundle} />
           </div>
         </div>
       </header>
-      {moduleTabsBar}
-      <div className="relative flex flex-1">
+      <div className="relative flex flex-1 overflow-hidden">
         <aside
           className={sidebarClassName}
           aria-label="Главное меню"
           aria-hidden={isSidebarCollapsed && !isMobileNavOpen}
         >
-          <div className="flex h-full flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wide text-muted">Навигация</span>
+          <div className="flex min-h-full flex-col gap-4">
+            <div className="flex items-center justify-end">
               <button
                 type="button"
                 onClick={() => setIsNavEditorOpen(true)}
@@ -867,84 +956,176 @@ export default function AppShell({
                 </svg>
               </button>
             </div>
-            <nav className="flex flex-col gap-4" aria-label="Основное меню">
-              {navSections.map(({ module, items }) => {
-                if (items.length === 0) {
+            <nav className="flex flex-col gap-3" aria-label="Основное меню">
+              {navSections.map(({ module, visible, hidden }) => {
+                if (visible.length === 0 && hidden.length === 0) {
                   return null;
                 }
+                const isCollapsed = collapsedSections.includes(module.id);
+                const hiddenOpen = expandedHiddenSections.includes(module.id);
+                const hiddenCount = hidden.length;
                 return (
-                  <section key={module.id} className="flex flex-col gap-1">
-                    <h3 className="px-4 text-xs font-semibold uppercase tracking-wide text-muted">{module.label}</h3>
-                    {items.map(({ item, active }) => {
-                      const baseClass =
-                        'flex items-center justify-between rounded-lg px-4 py-2 text-sm font-medium transition-base';
-                      const interactiveFocus =
-                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]';
-                      const stateClass = item.disabled
-                        ? 'cursor-not-allowed text-muted opacity-70'
-                        : active
-                        ? 'bg-[var(--accent-primary)] text-[var(--accent-on-primary)] shadow-soft'
-                        : 'text-muted hover:bg-surface-soft hover:text-[var(--text-primary)]';
-                      const className = `${baseClass} ${stateClass} ${item.disabled ? '' : interactiveFocus}`;
-                      const status = item.status;
-                      let statusNode: React.ReactNode = null;
-                      if (status) {
-                        const tooltip = NAV_STATUS_TOOLTIPS[status.kind as StatusIndicatorKind] ?? '';
-                        if (status.link) {
-                          const link = status.link;
-                          statusNode = (
-                            <span
-                              className="ml-2 inline-flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
-                              role="link"
-                              tabIndex={0}
-                              onClick={(event) => handleStatusNavigate(status, event)}
-                              onKeyDown={(event) => {
-                                if (event.key === 'Enter' || event.key === ' ') {
-                                  event.preventDefault();
-                                  event.stopPropagation();
-                                  router.push(link);
-                                }
-                              }}
-                            >
-                              <StatusIndicator kind={status.kind as StatusIndicatorKind} tooltip={tooltip} />
-                            </span>
-                          );
-                        } else {
-                          statusNode = <StatusIndicator kind={status.kind as StatusIndicatorKind} tooltip={tooltip} />;
-                        }
-                      }
-                      const content = (
-                        <>
-                          <span className="truncate">{item.label}</span>
-                          {statusNode}
-                        </>
-                      );
-                      if (item.disabled || !item.href) {
-                        return (
-                          <span key={item.key} className={className} aria-disabled>
-                            {content}
+                  <section key={module.id} className="flex flex-col gap-2 rounded-2xl border border-transparent px-2 py-1">
+                    <button
+                      type="button"
+                      onClick={() => toggleSectionCollapsed(module.id)}
+                      className="flex w-full items-center justify-between rounded-xl px-2 py-1 text-xs font-semibold uppercase tracking-wide text-muted transition-base hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
+                      aria-expanded={!isCollapsed}
+                    >
+                      <span className="flex items-center gap-2">
+                        {module.label}
+                        {hiddenCount > 0 ? (
+                          <span className="rounded-full bg-surface-soft px-2 py-0.5 text-[10px] font-semibold text-muted">
+                            {hiddenCount}
                           </span>
+                        ) : null}
+                      </span>
+                      <svg
+                        aria-hidden
+                        className={clsx('h-3.5 w-3.5 transition-transform duration-150', isCollapsed ? '-rotate-90' : 'rotate-0')}
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={1.6}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 10l4 4 4-4" />
+                      </svg>
+                    </button>
+                    <div className={clsx('flex flex-col gap-1', isCollapsed && 'hidden')}>
+                      {visible.map(({ item, active }) => {
+                        const status = item.status;
+                        let statusNode: React.ReactNode = null;
+                        if (status?.kind) {
+                          const statusLink = status.link;
+                          const tooltip = statusLink ? NAV_STATUS_TOOLTIPS[status.kind as StatusIndicatorKind] : undefined;
+                          if (statusLink) {
+                            statusNode = (
+                              <span
+                                role="button"
+                                tabIndex={0}
+                                className="ml-2 inline-flex items-center"
+                                onClick={(event) => handleStatusNavigate(status, event)}
+                                onKeyDown={(event) => {
+                                  if (event.key === 'Enter' || event.key === ' ') {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    router.push(statusLink);
+                                  }
+                                }}
+                              >
+                                <StatusIndicator kind={status.kind as StatusIndicatorKind} tooltip={tooltip} />
+                              </span>
+                            );
+                          } else {
+                            statusNode = <StatusIndicator kind={status.kind as StatusIndicatorKind} tooltip={tooltip} />;
+                          }
+                        }
+                        const linkContent = (
+                          <>
+                            <span className="truncate">{item.label}</span>
+                            {statusNode}
+                          </>
                         );
-                      }
-                      if (item.external) {
-                        return (
-                          <a key={item.key} href={item.href} target="_blank" rel="noreferrer" className={className}>
-                            {content}
+                        const baseLinkClass = clsx(
+                          'flex flex-1 items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-base',
+                          item.disabled
+                            ? 'cursor-not-allowed text-muted opacity-70'
+                            : active
+                            ? 'bg-[var(--accent-primary)] text-[var(--accent-on-primary)] shadow-soft'
+                            : 'text-muted hover:bg-surface-soft hover:text-[var(--text-primary)]',
+                          !item.disabled &&
+                            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]',
+                        );
+                        const removeDisabled = item.disabled || userSaving;
+                        const removeLabel = `Убрать «${item.label}» из меню`;
+                        const linkNode = item.disabled || !item.href ? (
+                          <span className={baseLinkClass} aria-disabled>
+                            {linkContent}
+                          </span>
+                        ) : item.external ? (
+                          <a href={item.href} target="_blank" rel="noreferrer" className={baseLinkClass}>
+                            {linkContent}
                           </a>
+                        ) : (
+                          <Link
+                            href={item.href}
+                            className={baseLinkClass}
+                            aria-current={active ? 'page' : undefined}
+                            prefetch={false}
+                          >
+                            {linkContent}
+                          </Link>
                         );
-                      }
-                      return (
-                        <Link
-                          key={item.key}
-                          href={item.href}
-                          className={className}
-                          aria-current={active ? 'page' : undefined}
-                          prefetch={false}
-                        >
-                          {content}
-                        </Link>
-                      );
-                    })}
+                        return (
+                          <div key={item.key} className="group flex items-center gap-2">
+                            {linkNode}
+                            <button
+                              type="button"
+                              onClick={() => handleToggleNavItemVisibility(item, true)}
+                              disabled={removeDisabled}
+                              className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-full text-muted transition-base hover:bg-surface-soft hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:opacity-40"
+                              aria-label={removeLabel}
+                              title={removeLabel}
+                            >
+                              <svg aria-hidden className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 12h12" />
+                              </svg>
+                            </button>
+                          </div>
+                        );
+                      })}
+                      {hiddenCount > 0 ? (
+                        <div className="mt-2 rounded-xl border border-dashed border-subtle bg-surface-soft/60 p-3">
+                          <button
+                            type="button"
+                            onClick={() => toggleHiddenSection(module.id)}
+                            className="flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wide text-muted transition-base hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
+                            aria-expanded={hiddenOpen}
+                          >
+                            <span>Скрытые страницы</span>
+                            <svg
+                              aria-hidden
+                              className={clsx('h-3 w-3 transition-transform duration-150', hiddenOpen ? 'rotate-180' : 'rotate-0')}
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth={1.6}
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8 10l4 4 4-4" />
+                            </svg>
+                          </button>
+                          <div className={clsx('mt-2 flex flex-col gap-1', !hiddenOpen && 'hidden')}>
+                            {hidden.map((item) => {
+                              const addDisabled = userSaving;
+                              const addLabel = `Вернуть «${item.label}» в меню`;
+                              return (
+                                <button
+                                  key={item.key}
+                                  type="button"
+                                  onClick={() => handleToggleNavItemVisibility(item, false)}
+                                  disabled={addDisabled}
+                                  className="flex items-center justify-between rounded-lg border border-dashed border-subtle bg-[var(--surface-0)] px-3 py-2 text-sm font-medium text-muted transition-base hover:border-[var(--accent-primary)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:opacity-40"
+                                  aria-label={addLabel}
+                                  title={addLabel}
+                                >
+                                  <span className="truncate">{item.label}</span>
+                                  <svg
+                                    aria-hidden
+                                    className="h-4 w-4"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth={1.6}
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+                                  </svg>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
                   </section>
                 );
               })}
@@ -1004,18 +1185,25 @@ export default function AppShell({
             onClick={() => setIsMobileNavOpen(false)}
           />
         ) : null}
-        <div className="flex min-h-full flex-1 justify-center bg-surface">
-          <main className={mainClasses}>
-            {contentVariant === 'card' ? (
-              <div className="rounded-2xl border border-subtle bg-[var(--surface-0)] p-0 shadow-soft">
-                {children}
-              </div>
-            ) : (
-              <div className="w-full" data-app-shell-surface>
-                {children}
-              </div>
-            )}
-          </main>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-surface">
+          {moduleTabsBar ? (
+            <div className="flex justify-center border-b border-subtle/70 bg-[var(--surface-0)]/95 px-3 py-2 sm:px-4 md:px-6" data-module-tabs>
+              <div className={clsx('w-full', computedMaxWidth)}>{moduleTabsBar}</div>
+            </div>
+          ) : null}
+          <div className="flex min-h-0 flex-1 justify-center overflow-y-auto">
+            <main className={mainClasses}>
+              {contentVariant === 'card' ? (
+                <div className="rounded-2xl border border-subtle bg-[var(--surface-0)] p-0 shadow-soft">
+                  {children}
+                </div>
+              ) : (
+                <div className="w-full" data-app-shell-surface>
+                  {children}
+                </div>
+              )}
+            </main>
+          </div>
         </div>
       </div>
       <SidebarEditor
