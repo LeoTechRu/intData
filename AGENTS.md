@@ -12,34 +12,79 @@
 
 ## Communication Rules
 - Все ответы codex-cli пользователям формулируем на русском языке независимо от контекста задачи.
+- В каждом сообщении агент явно указывает текущую роль и говорит от лица этой роли (пример: «Агент Frontend Codex …»).
+- Общение с владельцем продукта координирует Team Lead; остальные роли подключаются только после handoff.
 
 ## Multi-Session Workflow (codex-cli)
-- Перед запуском новой сессии обязательно проверьте таблицу Agent Sync в этом файле и закрепите задачу: укажите позывной, ветку `feature/<epic>/<scope>-<agent>`, список файлов и время в UTC. Без брони правки запрещены.
+- Перед запуском новой сессии обязательно проверьте Agent Sync и закрепите задачу: укажите позывной, ветку `feature/<epic>/<scope>-<agent>`, список файлов и время в UTC. Без брони правки запрещены.
 - Используйте lock-файлы или записи в Agent Sync для файлов: пока замок не снят, другие сессии не редактируют перечисленные пути. При завершении работы очистите запись, чтобы исключить конфликтную правку.
-- Работайте строго в своей ветке; общие изменения мерджим через стандартный git-flow. Каждая сессия обязана завершаться `git push` в собственную ветку и обновлением Agent Sync.
+- Работайте строго в своей ветке; общие изменения мерджим через стандартный git-flow. Каждая сессия завершается `git push` в собственную ветку и обновлением Agent Sync.
 - После завершения фичи codex-cli обязан сам провести merge своей ветки в `main`, выполнить повторный деплой, перезапустить соответствующие сервисы, проверить логи/мониторинг, оперативно исправить выявленные ошибки и убедиться, что продукт доступен для пользователей.
 - В начале работы перечитайте разделы README.md «Workflow Playbook», «Idea Log», «Vision Deck», «Conventions Catalog» и «Tasklist»: синхронизация → анализ → планирование через `update_plan` → исполнение → документация. Все временные договорённости фиксируйте в соответствующих разделах README.
 - Перед коммитом убедитесь, что список задач в README.md (секция «Tasklist») обновлён: отметьте выполненные пункты и добавьте ссылки на PR/коммиты. Это поддерживает прозрачность и снижает риск дублирования работы.
+- Все прямые коммуникации с владельцем ведём строго на русском языке, независимо от роли.
+- `README.md` поддерживаем только на русском языке для полной совместимости с владельцем.
+
+## Stage-Gate Playbook (IntData)
+> Этот раздел **нельзя удалять или сокращать**. Любой merge/pull-request, в котором отсутствуют пункты Stage-Gate Playbook, отклоняем без обсуждений.
+
+- TL остаётся единым входом для владельца: intake, разбор противоречий, декомпозиция, финальное ревью и merge.
+- Вся команда поддерживает **воронку README**: «idea → vision → conventions → tasklist → workflow». Любое изменение кода сопровождается обновлением нужных секций и ссылкой в Changelog.
+- Stage-Gate конвейер codex-cli фиксируется GateRecord (UTC-время, риски, решение TL) и хранится в `docs/reports/`.
+
+### Этапы
+0. **Funnel upkeep (постоянно)** — README, Agent Sync, GateRecord синхронизированы.
+1. **Intake / TL-Gate-0** — TL оформляет TaskCard: цель, ограничения, AC, ветка, роли.
+2. **Architecture / TL-Gate-1** — Architect подтверждает инварианты, обновляет ADR/Conventions без кода.
+3. **Decomposition & Routing / TL-Gate-2** — TL раздаёт TaskCards, фиксирует handoff и блокировки.
+4. **Implementation / TL-Gate-3** — роли работают в своих ветках, ведут Agent Sync, готовят отчёты и тесты.
+5. **Merge to `test` → QA стартует** — только TL мержит feature-ветки в `test`, QA запускает проверки.
+6. **InfoSec Advisory** — автоматические анализаторы (semgrep/bandit/trivy) выдаются в отчёте, дефекты заводятся задачами.
+7. **Release / TL-Gate-4** — DevOps готовит runbook, TL делает fast-forward `test→main`, проверяет мониторинг.
+8. **Documentation / TL-Gate-5** — Tech Writer обновляет README/Changelog/Workflow, закрывает итерацию и архивирует GateRecord.
+
+### Agent Sync & Handoff в Stage-Gate
+- Agent Sync является официальным GateLog: каждая запись содержит `when_utc`, ветку, TTL, статус, список замков и ссылку на TaskCard.
+- Статусы обновляем не реже чем раз в 60 минут; просроченные записи снимает TL.
+- После handoff или merge строку переводим в `Done` и удаляем.
+- Любое изменение в Stage-Gate Playbook, Agent Sync или Funnel фиксируем коммитом `docs(agents)` и ссылкой на GateRecord.
 
 ## Agent Sync
-> Таблица броней обновляется агентами codex-cli. Время фиксируем в UTC. После merge или отмены работы строку удаляем.
+> Agent Sync ведём в YAML-формате GateLog. Время фиксируем в UTC, `ttl_minutes` указывает, когда запись должна быть обновлена или снята.
 
-| Start (UTC) | Agent | Branch | Epic / Scope | Ключевые файлы | Статус |
-|-------------|-------|--------|--------------|----------------|--------|
-| 2025-09-19 16:10 | codex | feature/E9/test-postgres-env-codex | E9 / pytest: Postgres окружение + ветка test | tests/conftest.py, tests/web/*, docs/reports/2025-09-19-pytest-postgres-migration.md | на паузе (фикс/seed и web-тесты на Postgres готовы; возобновить после устранения зависания teardown `tests/test_habit_service.py`) |
-| 2025-09-19 10:22 | codex | feature/E9/test-postgres-env-codex | E9 / pytest: Postgres окружение | tests/conftest.py, .env*, docs/* | завершено 2025-09-19 10:33 |
-| 2025-09-19 08:43 | codex | main | Ops / синхронизация main + рестарт сервисов | git (main), systemctl, logs/* | завершено 2025-09-19 08:47 |
-| 2025-09-19 07:55 | codex | feature/E3/notes-assign-detached-codex | E3 / починка POST /api/v1/notes/{id}/assign (DetachedInstanceError) | core/services/notes.py, web/routes/notes.py, tests/test_notes_assign.py | завершено 2025-09-19 08:09 |
-| 2025-09-19 07:48 | codex | feature/E17/appshell-nav-tuning-codex | E17 / модульная навигация AppShell — адаптация UX | web/components/AppShell.tsx, web/components/layout/PublicHeader.tsx, web/components/navigation/*, docs/* | завершено 2025-09-19 08:28 |
-| 2025-09-19 00:32 | codex | feature/E18/crm-skeleton-codex | E18 / CRM Knowledge Hub — исследование и каркас | docs/reports/*crm*, docs/vision.md, docs/tasklist.md, web/app/crm/*, core/services/crm/* | завершено 2025-09-19 01:00 |
-| 2025-09-18 23:05 | codex | feature/E17/menu-grouping-codex | E17 / группировка меню AppShell | web/components/AppShell.tsx, web/lib/publicNav.ts, docs/* | в работе |
-| 2025-09-18 22:34 | codex | feature/E17/mobile-responsive-ui-codex | E17 / мобильная адаптация AppShell и обзора | web/components/AppShell.tsx, web/components/layout/PublicHeader.tsx, web/components/dashboard/OverviewDashboard.tsx | завершено 2025-09-18 22:44 |
-| 2025-09-18 21:41 | codex | feature/E17/public-header-codex | E17 / унификация публичных лендингов | web/app/(auth|tariffs|bot|docs)/*, web/components/*, docs/BACKLOG.md | завершено 2025-09-18 22:01 |
-| 2025-09-18 20:37 | codex | feature/E17/legacy-migration-codex | E17 / миграция легаси-страниц на новый UI | web/app/*, web/templates/*, web/components/*, docs/* | завершено 2025-09-18 21:03 |
-| 2025-09-18 19:30 | codex | feature/E17/groups-products-ui-codex | E17 / тарифы, кнопки поддержки | web/components/marketing, web/components/AppShell.tsx, docs/* | завершено 2025-09-18 19:46 |
-| 2025-09-18 18:44 | codex | feature/E17/groups-products-ui-codex | E17 / модернизация groups & products, тултипы терминов | web/app/groups, web/app/products, web/components, docs/* | завершено 2025-09-18 19:18 |
-| 2025-09-18 17:45 | codex | feature/E17/profile-widget-codex | E17 / виджет профиля, меню тарифов | web/app, web/components, docs/* | завершено 2025-09-18 17:58 |
-| 2025-09-18 17:18 | codex | feature/E17/bot-landing-codex | E17 / фронт + веб-сервер | web/app, web/routes, docs/* | завершено 2025-09-18 17:28 |
+| Start (UTC) | Agent | Role | Branch | Task | Epic / Scope | Ключевые файлы | PR | AC link | Статус |
+|-------------|-------|------|--------|------|--------------|----------------|----|---------|--------|
+| 2025-09-20 17:50 | codex | tl | test | TL-2025-09-20-release-gate | Release / test ветка | git (test), pytest smoke | — | [AC](README.md#-workflow-playbook) | завершено 2025-09-20 17:52 (merge feature/E2,E3,E17 → test; `pytest tests/test_para_invariants.py tests/web/test_calendar_feed_ics.py tests/web/test_alarms_api.py tests/test_diagnostics_service.py`, push origin/test) |
+| 2025-09-20 17:44 | codex | fe | feature/E17/runtime-fix-codex | TL-2025-09-20-navigation-cleanup | E17 / Frontend runtime | web/components/AppShell.tsx, web/components/navigation/*, web/lib/navigation-helpers.ts, tests/test_navigation_api.py | — | [AC](README.md#e17-frontend-modernization) | завершено 2025-09-20 17:44 (ModuleTabs/FavoriteToggle; `npm run lint`, `npm test`, `npm run build`) |
+| 2025-09-20 17:42 | codex | qa | feature/E3/calendar-alarms-tests-codex | TL-2025-09-20-calendar-alarms-tests | E3 / Calendar alarms API | tests/web/test_alarms_api.py | — | [AC](README.md#e3-api-calendar-calendaritems-calendaragenda-calendarfeedics-projectsidnotifications) | завершено 2025-09-20 17:42 (`pytest tests/web/test_alarms_api.py`) |
+| 2025-09-20 17:41 | codex | be | feature/E3/calendar-feed-valarm-codex | TL-2025-09-20-calendar-feed-valarm | E3 / Calendar alarms API | web/routes/calendar.py, core/services/para_repository.py, tests/web/test_calendar_feed_ics.py | — | [AC](README.md#e3-api-calendar-calendaritems-calendaragenda-calendarfeedics-projectsidnotifications) | завершено 2025-09-20 17:41 (VALARM в feed.ics, `pytest tests/web/test_calendar_feed_ics.py`) |
+| 2025-09-20 17:40 | codex | be | feature/E3/diagnostics-auth-cleanup-codex | TL-2025-09-20-diagnostics-auth | E3 / diagnostics API auth | web/routes/api/diagnostics.py, core/services/diagnostics_service.py, docs/README.md, tests/test_diagnostics_service.py | — | [AC](README.md#e3-api-calendar-calendaritems-calendaragenda-calendarfeedics-projectsidnotifications) | завершено 2025-09-20 17:40 (Basic Auth удалён, `pytest tests/test_diagnostics_service.py`) |
+| 2025-09-20 17:34 | codex | be | feature/E2/check-para-invariant-codex | TL-2025-09-20-check-para-invariant | E2 / миграции БД и индексы | core/models.py, core/db/ddl/20250920_para_check.sql, core/db/SCHEMA.*, tests/test_para_invariants.py | — | [AC](README.md#e2-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B8-%D0%B1%D0%B4-%D0%B8-%D0%B8%D0%BD%D0%B4%D0%B5%D0%BA%D1%81%D1%8B) | завершено 2025-09-20 17:34 (`python -m core.db.schema_export generate`, `pytest tests/test_para_invariants.py`) |
+| 2025-09-20 06:31 | codex | devops | feature/E9/test-branch-deploy-codex | TL-2025-09-19-test-secrets | E9 / pytest: Postgres окружение + ветка test | .github/workflows/tests.yml, .github/workflows/deploy-test.yml, .env.example | — | [AC](README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D1%8D%D1%84%D0%BB%D0%B0%D0%B3) | завершено 2025-09-20 06:39 (обновлены workflows/tests, deploy-test; merge feature → test → main локально) |
+| 2025-09-20 06:31 | codex | tw | feature/E9/test-branch-deploy-codex | TL-2025-09-19-test-runbook | E9 / pytest: Postgres окружение + ветка test | README.md, docs/reports/2025-09-19-env-split.md, docs/runbooks/test-to-main.md | — | [AC](README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D1%8D%D1%84%D0%BB%D0%B0%D0%B3) | завершено 2025-09-20 06:37 (README Tasklist/Changelog обновлены, runbook подготовлен) |
+| 2025-09-20 06:34 | codex | qa | feature/E9/test-branch-deploy-codex | TL-2025-09-19-test-branch-deploy | E9 / pytest: Postgres окружение + ветка test | pytest (part1/part2 splits), postgres logs | — | [AC](README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3) | завершено 2025-09-20 06:36 (pytest part1/part2 локально, warnings задокументированы) |
+| 2025-09-20 06:24 | codex | tl | feature/E9/test-branch-deploy-codex | TL-2025-09-19-test-branch-deploy | E9 / pytest: Postgres окружение + ветка test | .github/workflows/deploy.yml, docs/reports/2025-09-19-env-split.md, README.md | — | [AC](README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3) | завершено 2025-09-20 06:29 (workflow `.github/workflows/deploy-test.yml`, README Tasklist/Changelog обновлены) |
+| 2025-09-20 05:33 | codex | tl | feature/E9/test-postgres-env-codex | TL-2025-09-19-pytest-postgres-env | E9 / pytest: Postgres окружение + ветка test | README.md, docs/reports/*, git (test/main) | — | [AC](README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3) | завершено 2025-09-20 05:38 (merge 4cefd9a → test; GateRecord `docs/reports/2025-09-20-gaterecord-e9-test-postgres.md`) |
+| 2025-09-19 22:40 | codex | qa | feature/E9/test-postgres-env-codex | TL-2025-09-19-pytest-postgres-qa | E9 / pytest: Postgres окружение + ветка test | tests/**, docs/reports/2025-09-20-pytest-postgres-qa.md | — | [AC](README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3) | завершено 2025-09-19 22:58 (весь набор зелёный партиями, полный `pytest -q` >10 мин — см. отчёт) |
+| 2025-09-19 22:59 | codex | devops | feature/E9/test-postgres-env-codex | TL-2025-09-19-ci-timeouts | E9 / pytest: Postgres окружение + ветка test | .github/workflows/tests.yml, docs/reports/2025-09-20-ci-timeouts-analysis.md | — | [AC](README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3) | завершено 2025-09-19 23:05 (workflow разбит на два шага, артефакты pytest) |
+| 2025-09-19 20:42 | codex | fe | feature/E10/notes-restore-frontend | TL-2025-09-19-notes-restore | E10 / восстановление Next.js `/notes` | web/app/notes/page.tsx, web/components/notes/*, web/lib/types.ts, tests/web/test_notes_page.py | — | [AC](README.md#e10-capture-%D0%B1%D0%BE%D1%82%D0%B2%D0%B5%D0%B1-inbox) | на паузе (см. docs/reports/2025-09-19-notes-restore-wip.md) |
+| 2025-09-19 18:26 | codex | be | feature/E9/test-postgres-env-codex | TL-2025-09-19-pytest-postgres-migration | E9 / pytest: Postgres окружение + ветка test | tests/conftest.py, tests/web/*, web/routes/index.py, web/routes/settings.py | — | [AC](README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3) | завершено 2025-09-19 21:40 (диагностика и web на Postgres; полный `pytest -q` требует увеличения таймаута) |
+| 2025-09-19 10:22 | codex | be | feature/E9/test-postgres-env-codex | TL-2025-09-19-pytest-postgres-env | E9 / pytest: Postgres окружение | tests/conftest.py, .env*, docs/* | — | — | завершено 2025-09-19 10:33 |
+| 2025-09-19 08:43 | codex | ops | main | — | Ops / синхронизация main + рестарт сервисов | git (main), systemctl, logs/* | — | — | завершено 2025-09-19 08:47 |
+| 2025-09-19 07:55 | codex | be | feature/E3/notes-assign-detached-codex | TL-2025-09-19-notes-assign-detached | E3 / починка POST /api/v1/notes/{id}/assign (DetachedInstanceError) | core/services/notes.py, web/routes/notes.py, tests/test_notes_assign.py | — | — | завершено 2025-09-19 08:09 |
+| 2025-09-19 07:48 | codex | fe | feature/E17/appshell-nav-tuning-codex | TL-2025-09-19-appshell-nav-tuning | E17 / модульная навигация AppShell — адаптация UX | web/components/AppShell.tsx, web/components/layout/PublicHeader.tsx, web/components/navigation/*, docs/* | — | — | завершено 2025-09-19 08:28 |
+| 2025-09-19 00:32 | codex | arch | feature/E18/crm-skeleton-codex | TL-2025-09-18-crm-blueprint | E18 / CRM Knowledge Hub — исследование и каркас | docs/reports/*crm*, docs/vision.md, docs/tasklist.md, web/app/crm/*, core/services/crm/* | — | — | завершено 2025-09-19 01:00 |
+| 2025-09-18 23:05 | codex | fe | feature/E17/menu-grouping-codex | TL-2025-09-18-nav-blueprint | E17 / группировка меню AppShell | web/components/AppShell.tsx, web/lib/publicNav.ts, docs/* | — | — | в работе |
+| 2025-09-18 22:34 | codex | fe | feature/E17/mobile-responsive-ui-codex | TL-2025-09-18-mobile-ui | E17 / мобильная адаптация AppShell и обзора | web/components/AppShell.tsx, web/components/layout/PublicHeader.tsx, web/components/dashboard/OverviewDashboard.tsx | — | — | завершено 2025-09-18 22:44 |
+| 2025-09-18 21:41 | codex | fe | feature/E17/public-header-codex | TL-2025-09-18-public-header | E17 / унификация публичных лендингов | web/app/(auth|tariffs|bot|docs)/*, web/components/*, docs/BACKLOG.md | — | — | завершено 2025-09-18 22:01 |
+| 2025-09-18 20:37 | codex | fe | feature/E17/legacy-migration-codex | TL-2025-09-18-legacy-final | E17 / миграция легаси-страниц на новый UI | web/app/*, web/templates/*, web/components/*, docs/* | — | — | завершено 2025-09-18 21:03 |
+| 2025-09-18 19:30 | codex | fe | feature/E17/groups-products-ui-codex | TL-2025-09-18-support | E17 / тарифы, кнопки поддержки | web/components/marketing, web/components/AppShell.tsx, docs/* | — | — | завершено 2025-09-18 19:46 |
+| 2025-09-18 18:44 | codex | fe | feature/E17/groups-products-ui-codex | TL-2025-09-18-groups | E17 / модернизация groups & products, тултипы терминов | web/app/groups, web/app/products, web/components, docs/* | — | — | завершено 2025-09-18 19:18 |
+| 2025-09-18 17:45 | codex | fe | feature/E17/profile-widget-codex | TL-2025-09-18-profile-widget | E17 / виджет профиля, меню тарифов | web/app, web/components, docs/* | — | — | завершено 2025-09-18 17:58 |
+| 2025-09-18 17:18 | codex | fe | feature/E17/bot-landing-codex | TL-2025-09-18-bot | E17 / фронт + веб-сервер | web/app, web/routes, docs/* | — | — | завершено 2025-09-18 17:28 |
+
+
+Поля Role/Task/PR/AC обязательны. Role = tl|arch|be|fe|qa|tw|ops. Task = ID из Tasklist (формат `TL-YYYY-MM-DD-<slug>`).
 
 ## Documentation Workflow (idea → vision → conventions → tasklist → workflow)
 - Разделы README.md «Idea Log», «Vision Deck», «Conventions Catalog», «Tasklist» и «Workflow Playbook» образуют единый конвейер документации. Обновляйте их по мере работы.
@@ -206,6 +251,100 @@ SCHEMA.json является единой «точкой истины» стру
 - Secrets и `.env` для тестового контура используют префиксы `TEST_` (БД, URL, токены бота). Прод окружение держит значения без префикса.
 - Любое изменение инфраструктуры должно обновлять оба контура (terraform/ansible роли, CI/CD jobs) и описываться в `docs/reports/*` + README.md (раздел «Operations & Infrastructure»).
 
+## Roles Charter & Auto-Switch (AGX/1.0)
+
+**Общее правило.** Любая сессия codex-cli стартует в роли **Team Lead**. Тимлид читает контекст (README/AGENTS, Agent Sync, Tasklist), принимает задачу, дробит на подзадачи и выдаёт их ролям. Роли переключаются директивой:
+
+```
+<<ROLE: teamlead|architect|backend|frontend|qa|techwriter|devops>>
+```
+
+**Единый конверт задачи (обязателен):**
+
+```yaml
+# AGX/1.0 TaskCard
+id: TL-YYYY-MM-DD-<slug>     # Task ID (из Tasklist)
+epic: E<NN>                   # ссылка на эпик из README
+scope: "<краткое описание>"
+role: backend|frontend|qa|techwriter|architect|devops
+branch: "feature/<epic>/<scope>-<role>"
+files:
+  - path/to/file.ext
+  - ...
+constraints:
+  - краткий список ограничений (границы роли)
+acceptance_criteria:
+  - измеримые AC (ссылка на README Roadmap & Epics)
+artifacts_expected:
+  - что именно должно появиться (код/тесты/документация/DDL/OpenAPI)
+handoff_to: teamlead|<role>|none   # кому передать после завершения
+notes: |
+  важные детали/риски
+```
+
+Правила автопереключения (TL-router):
+
+- Если в задаче затронуты только `core/**`, `core/db/**`, `web/api/**` → `<<ROLE: backend>>`.
+- Если затронуты `web/app/**`, `web/components/**`, `web/lib/**`, `frontend/**` → `<<ROLE: frontend>>`.
+- Если меняются `tests/**` без модификации `core/**|web/**` → `<<ROLE: qa>>`.
+- Если меняются `docs/**`, `README.md`, `AGENTS.md`, `api/openapi.json` (export) без кода → `<<ROLE: techwriter>>`.
+- Если меняются `infra/**|utils/deploy/**|CI/**` → `<<ROLE: devops>>`.
+- Если затрагивается архитектура (схема БД, инварианты, границы модулей) → `<<ROLE: architect>>`.
+- Любая роль, упираясь в границу ответственности, обязана сделать `handoff_to: teamlead` с пояснением.
+
+Ниже — системные промпты для каждой роли (используйте в codex-cli как системные/Developer prompts):
+
+#### [ROLE=teamlead]
+Mission: принять бизнес-задачу, нарезать работу на подзадачи, выдать TaskCard’ы, собрать результаты и смёржить по процессу test→main.
+You MUST:
+- читать README/AGENTS (Vision/Tasklist/Agent Sync) перед планированием
+- формировать AGX/1.0 TaskCard с AC и файлами
+- назначать role и ветки `feature/<epic>/<scope>-<role>`
+- проверять чек-листы, линтеры, тесты и сборку (`npm run build` для фронта)
+- мерджить только через PR в `test`, затем fast-forward `test→main`
+You MUST NOT: писать код или тесты.
+Handoffs: возвращайся к себе (TL) после любой роли; эскалируй к Architect при изменении инвариантов.
+Exit: ссылки на PR, обновлённые Tasklist/Changelog, чистый Agent Sync.
+
+#### [ROLE=architect]
+Mission: держать архитектурный план и инварианты (PARA/Calendar/DB), давать решения без реализации.
+Do: ADR/решения в `docs/reports/*` + ссылки в README (Vision/Conventions). Схемы/DDL-планы.
+Don't: код руками.
+Exit: краткое ADR, список инвариантов, влияние на API/DDL.
+Escalate: TL при коллизиях.
+
+#### [ROLE=backend]
+Mission: реализовать серверную логику в `core/**` и API `/api/v1/*`, соблюдая PARA-инварианты.
+Do: код, миграции DDL (идемпотентно), SCHEMA экспорт, OpenAPI экспорт, юнит/интеграционные тесты.
+Don't: фронтенд/деплой/документацию (кроме docstrings).
+Boundaries: не изменяй `web/app/**` и `web/components/**`.
+Exit: PR, зелёные `pytest -q`, обновлённые `core/db/SCHEMA.*` и `api/openapi.json` (экспорт), handoff TL.
+
+#### [ROLE=frontend]
+Mission: Next.js/TS/Tailwind UI без бизнес-логики.
+Do: `web/app/**`, `web/components/**`, `web/lib/**`, React Query, `npm run build|lint|test`.
+Don't: backend/DDL.
+Boundaries: единый `<h1>` в AppShell, соответствие UI-правилам из AGENTS/README.
+Exit: PR со скриншотами, зелёная сборка, handoff TL.
+
+#### [ROLE=qa]
+Mission: тестами доказать, что AC выполнены, иначе зафейлить.
+Do: `tests/**`, фикстуры Postgres, OpenAPI snapshot, e2e сценарии.
+Don't: менять приложение.
+Exit: отчёт (пройдено/не пройдено), баг-тикеты (handoff TL/соответствующей роли).
+
+#### [ROLE=techwriter]
+Mission: привести документацию к текущей реальности; писать понятно и коротко.
+Do: README/AGENTS, `docs/**`, Changelog, OpenAPI экспорт.
+Don't: код, тесты, деплой.
+Exit: PR с разделами, ссылки на эпики/AC, handoff TL.
+
+#### [ROLE=devops]
+Mission: CI/CD, окружения test/main, секреты, наблюдаемость.
+Do: пайплайны, ранбуки, алерты, охрана секретов.
+Don't: фичекод.
+Exit: PR с пайплайнами/конфигами, обновлённый runbook, handoff TL.
+
 ### Multi-agent Coordination (codex-cli)
 - Каждый экземпляр codex-cli работает в собственной рабочей копии: отдельный `git clone` или `git worktree add ../<agent-branch>`. Запрещено вести параллельную работу из одного каталога.
 - Перед стартом сессии: `git fetch --all`, `git status`, убедись, что нет чужих незакоммиченных правок. При обнаружении — синхронизируйся с владельцем задачи.
@@ -239,6 +378,7 @@ SCHEMA.json является единой «точкой истины» стру
 - [ ] Локальные тесты зелёные (`pytest -q`)?
 
 ## Do Not Do
+- Не удалять и не сокращать раздел «Stage-Gate Playbook (IntData)» и связанные инструкции.
 - Не создавать дубли напоминаний вне календаря.
 - Не материализовать ежедневки в `calendar_items` — только виртуальная интеграция (agenda/ICS).
 - Не класть бизнес-логику в `/web` или `/bot`.
