@@ -1,0 +1,91 @@
+name: Deploy (test)
+
+on:
+  push:
+    branches: [test]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-test
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: test
+    steps:
+      - name: Проверка секретов тестового контура
+        id: check
+        env:
+          TEST_VPS_HOST: ${{ secrets.TEST_VPS_HOST }}
+          TEST_VPS_USER: ${{ secrets.TEST_VPS_USER }}
+          TEST_VPS_KEY: ${{ secrets.TEST_VPS_KEY }}
+          TEST_DEPLOY_PATH: ${{ secrets.TEST_DEPLOY_PATH }}
+          TEST_DEPLOY_USER: ${{ secrets.TEST_DEPLOY_USER }}
+          TEST_WEB_SERVICE: ${{ secrets.TEST_WEB_SERVICE }}
+          TEST_BOT_SERVICE: ${{ secrets.TEST_BOT_SERVICE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=()
+          for var in TEST_VPS_HOST TEST_VPS_USER TEST_VPS_KEY; do
+            if [ -z "${!var}" ]; then
+              missing+=("$var")
+            fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            printf '::notice ::Пропущенные секреты: %s. Деплой тестового контура пропущен.\\n' "${missing[*]}"
+            echo "has_secrets=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "has_secrets=true" >> "$GITHUB_OUTPUT"
+
+      - name: Add server host key
+        if: steps.check.outputs.has_secrets == 'true'
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${{ secrets.TEST_VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: "SSH: pull & restart (test)"
+        if: steps.check.outputs.has_secrets == 'true'
+        env:
+          TEST_DEPLOY_PATH: ${{ secrets.TEST_DEPLOY_PATH }}
+          TEST_DEPLOY_USER: ${{ secrets.TEST_DEPLOY_USER }}
+          TEST_WEB_SERVICE: ${{ secrets.TEST_WEB_SERVICE }}
+          TEST_BOT_SERVICE: ${{ secrets.TEST_BOT_SERVICE }}
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.TEST_VPS_HOST }}
+          username: ${{ secrets.TEST_VPS_USER }}
+          key: ${{ secrets.TEST_VPS_KEY }}
+          script_stop: true
+          envs: TEST_DEPLOY_PATH,TEST_DEPLOY_USER,TEST_WEB_SERVICE,TEST_BOT_SERVICE
+          script: |
+            set -euo pipefail
+            DEPLOY_PATH="${TEST_DEPLOY_PATH:-/sd/intdata-test}"
+            DEPLOY_USER="${TEST_DEPLOY_USER:-deploy}"
+            WEB_SERVICE="${TEST_WEB_SERVICE:-intdata-test-web}"
+            BOT_SERVICE="${TEST_BOT_SERVICE:-intdata-test-bot}"
+
+            sudo -u "$DEPLOY_USER" bash -lc '
+              set -euo pipefail
+              cd '"$DEPLOY_PATH"'
+              mkdir -p ~/.ssh && ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+              if git remote get-url origin | grep -q "^https://"; then
+                git remote set-url origin git@github.com:LeoTechRu/intData.git
+              fi
+              git config --global --add safe.directory '"$DEPLOY_PATH"' || true
+              git stash push -u -m "ci-autostash $(date -Iseconds)" || true
+              git fetch --prune origin
+              git reset --hard origin/test
+            '
+
+            if [ -n "$WEB_SERVICE" ]; then
+              sudo -n systemctl restart "$WEB_SERVICE"
+              systemctl is-active --quiet "$WEB_SERVICE"
+            fi
+            if [ -n "$BOT_SERVICE" ]; then
+              sudo -n systemctl restart "$BOT_SERVICE"
+              systemctl is-active --quiet "$BOT_SERVICE"
+            fi
