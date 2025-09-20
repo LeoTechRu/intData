@@ -30,8 +30,12 @@ async def test_habits_auth_web_only(client: AsyncClient):
             session.add(WebUser(id=10, username="u"))
     resp = await client.get("/habits", cookies={"web_user_id": "10"})
     assert resp.status_code == 200
-    assert "Свяжите Telegram для наград" in resp.text
-    resp = await client.post("/api/v1/habits/1/up", cookies={"web_user_id": "10"})
-    assert resp.status_code == 403
-    data = resp.json().get("detail", {})
-    assert data.get("error") == "tg_link_required"
+
+    api_resp = await client.get("/api/v1/habits", cookies={"web_user_id": "10"})
+    assert api_resp.status_code == 200
+    assert api_resp.json() == []
+
+    up_resp = await client.post("/api/v1/habits/1/up", cookies={"web_user_id": "10"})
+    assert up_resp.status_code == 403
+    up_detail = up_resp.json().get("detail", {})
+    assert up_detail.get("error") == "tg_link_required"

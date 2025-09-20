@@ -1,12 +1,10 @@
-from pathlib import Path
-
 import json
 from pathlib import Path
 
 import pytest
 import sqlalchemy as sa
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
@@ -76,7 +74,7 @@ def test_repair_migrates_favorites(postgres_sync_engine):
 
 
 @pytest.mark.asyncio
-async def test_api_defaults_and_put(postgres_db):
+async def test_api_defaults_and_put(postgres_db, monkeypatch):
     engine, session_factory = postgres_db
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -84,6 +82,7 @@ async def test_api_defaults_and_put(postgres_db):
     async with session_factory() as session:
         wsvc = WebUserService(session)
         user = await wsvc.register(username="u_api", password="pw")
+        await session.commit()
 
     app = FastAPI()
     app.include_router(settings_router, prefix="/api/v1")
@@ -97,7 +96,7 @@ async def test_api_defaults_and_put(postgres_db):
             return True
 
         def has_role(self, _role: str) -> bool:
-            return True
+            return False
 
     async def fake_permissions(request, current_user=None):
         return FakeEffective()
@@ -106,46 +105,45 @@ async def test_api_defaults_and_put(postgres_db):
         "web.routes.api_user_settings.get_effective_permissions",
         fake_permissions,
     )
-    client = TestClient(app)
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        res = await client.get("/api/v1/user/settings")
+        assert res.status_code == 200
+        body = res.json()
+        assert "dashboard_layout" in body and body["favorites"]["items"]
 
-    res = client.get("/api/v1/user/settings")
-    assert res.status_code == 200
-    body = res.json()
-    assert "dashboard_layout" in body and body["favorites"]["items"]
+        legacy_payload = {
+            "v": 1,
+            "items": [
+                {"label": "Areas", "path": "/settings#areas", "position": 1},
+                {"label": "Legacy", "path": "https://intdata.pro/admin", "position": 2},
+            ],
+        }
+        res = await client.put(
+            "/api/v1/user/settings/favorites",
+            json={"value": legacy_payload},
+        )
+        assert res.status_code == 200
+        sanitized = res.json()["value"]
+        assert sanitized["items"] == [
+            {"label": "Areas", "path": "/settings#areas", "position": 1}
+        ]
 
-    legacy_payload = {
-        "v": 1,
-        "items": [
-            {"label": "Areas", "path": "/settings#areas", "position": 1},
-            {"label": "Legacy", "path": "https://intdata.pro/admin", "position": 2},
-        ],
-    }
-    res = client.put(
-        "/api/v1/user/settings/favorites",
-        json={"value": legacy_payload},
-    )
-    assert res.status_code == 200
-    sanitized = res.json()["value"]
-    assert sanitized["items"] == [
-        {"label": "Areas", "path": "/settings#areas", "position": 1}
-    ]
-
-    # repeated PUT should overwrite the value with another allowed link
-    new_val2 = {
-        "v": 1,
-        "items": [
-            {"label": "Tasks", "path": "/tasks", "position": 1},
-        ],
-    }
-    res = client.put(
-        "/api/v1/user/settings/favorites",
-        json={"value": new_val2},
-    )
-    assert res.status_code == 200
-    persisted = client.get("/api/v1/user/settings/favorites").json()["value"]
-    assert persisted["items"] == [
-        {"label": "Tasks", "path": "/tasks", "position": 1}
-    ]
+        # repeated PUT should overwrite the value with another allowed link
+        new_val2 = {
+            "v": 1,
+            "items": [
+                {"label": "Tasks", "path": "/tasks", "position": 1},
+            ],
+        }
+        res = await client.put(
+            "/api/v1/user/settings/favorites",
+            json={"value": new_val2},
+        )
+        assert res.status_code == 200
+        persisted = (await client.get("/api/v1/user/settings/favorites")).json()["value"]
+        assert persisted["items"] == [
+            {"label": "Tasks", "path": "/tasks", "position": 1}
+        ]
 
 
 def test_no_runtime_utils_imports():

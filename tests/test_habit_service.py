@@ -63,7 +63,13 @@ async def test_antifarm_decay_and_limit(session_factory, monkeypatch):
     async with HabitsService() as svc:
         owner_id = 5
         await ensure_tg_user(svc.session, owner_id, first_name="Farm")
-        await ensure_web_user(svc.session, user_id=owner_id, username="farm", password_hash="x", role="single")
+        await ensure_web_user(
+            svc.session,
+            user_id=owner_id,
+            username="farm",
+            password_hash="x",
+            role="single",
+        )
         area = Area(owner_id=owner_id, name="A", title="A")
         svc.session.add(area)
         await svc.session.flush()
@@ -79,10 +85,11 @@ async def test_antifarm_decay_and_limit(session_factory, monkeypatch):
             .where(habits.c.id == hid)
             .values(cooldown_sec=0, daily_limit=2)
         )
-    rewards = []
-    for _ in range(4):
-        res = await svc.up(hid, owner_id=owner_id)
-        rewards.append((res["xp"], res["gold"]))
+
+        rewards = []
+        for _ in range(4):
+            res = await svc.up(hid, owner_id=owner_id)
+            rewards.append((res["xp"], res["gold"]))
     assert rewards[0][0] >= rewards[1][0] >= rewards[2][0] >= rewards[3][0]
     assert rewards[0][1] >= rewards[1][1] >= rewards[2][1] >= rewards[3][1]
 

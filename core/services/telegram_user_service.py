@@ -256,7 +256,7 @@ class TelegramUserService:
             "telegram_id": telegram_id,
             "title": kwargs.get("title", f"Group_{telegram_id}"),
             "type": kwargs.get("type", GroupType.private),
-            "owner_id": kwargs.get("owner_id", telegram_id),
+            "owner_id": kwargs.get("owner_id"),
         }
         group = await self.create_group(**required_fields)
         return group, True
@@ -376,6 +376,14 @@ class TelegramUserService:
             except ValueError:
                 logger.debug("Unknown group type %s when syncing", chat_type)
         if extra_users:
+            for user_obj in extra_users:
+                await self.update_from_telegram(
+                    telegram_id=user_obj.id,
+                    username=getattr(user_obj, "username", None),
+                    first_name=getattr(user_obj, "first_name", None),
+                    last_name=getattr(user_obj, "last_name", None),
+                    language_code=getattr(user_obj, "language_code", None),
+                )
             group_kwargs.setdefault("owner_id", extra_users[0].id)
 
         group, created = await self.get_or_create_group(chat_id, **group_kwargs)

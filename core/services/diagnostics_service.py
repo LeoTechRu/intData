@@ -272,7 +272,13 @@ class DiagnosticsService:
             raise ValueError("specialist not found or inactive")
 
         client_user = await self._resolve_client_user(payload)
-        client_profile = client_user.diagnostic_profile
+        profile_query = (
+            select(DiagnosticClient)
+            .where(DiagnosticClient.user_id == client_user.id)
+            .options(selectinload(DiagnosticClient.user))
+        )
+        existing_profile = await self.session.execute(profile_query)
+        client_profile = existing_profile.scalar_one_or_none()
         if client_profile is None:
             client_profile = DiagnosticClient(
                 user=client_user,

@@ -33,8 +33,29 @@ jobs:
       - name: Check DB schema up-to-date
         run: python -m core.db.schema_export check
 
-      - name: Run tests
+      - name: Run web & diagnostics tests
+        timeout-minutes: 20
         env:
           TG_BOT_TOKEN: "testtoken"
           TG_BOT_USERNAME: "testbot"
-        run: pytest -q
+        run: |
+          set -e
+          pytest tests/web tests/test_diagnostics_service.py -q | tee pytest-part1.log
+
+      - name: Run remaining tests
+        timeout-minutes: 30
+        env:
+          TG_BOT_TOKEN: "testtoken"
+          TG_BOT_USERNAME: "testbot"
+        run: |
+          set -e
+          pytest -q --ignore=tests/web --ignore=tests/test_diagnostics_service.py --maxfail=1 | tee pytest-part2.log
+
+      - name: Upload pytest logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-logs
+          path: |
+            pytest-part1.log
+            pytest-part2.log

@@ -6,6 +6,7 @@ import uuid
 
 import sqlalchemy as sa
 from sqlalchemy import insert
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.engine import Connection
 
 logger = logging.getLogger(__name__)
@@ -656,11 +657,14 @@ def _migrate_favorites(conn: Connection) -> None:
     )
     for user_id, items in by_user.items():
         value = {"v": 1, "items": items}
-        stmt = insert(user_settings).values(
-            user_id=user_id, key="favorites", value=value
-        )
         if conn.dialect.name == "postgresql":
-            stmt = stmt.on_conflict_do_nothing(index_elements=["user_id", "key"])
+            stmt = pg_insert(user_settings).values(
+                user_id=user_id, key="favorites", value=value
+            ).on_conflict_do_nothing(index_elements=["user_id", "key"])
+        else:
+            stmt = insert(user_settings).values(
+                user_id=user_id, key="favorites", value=value
+            )
         try:
             conn.execute(stmt)
         except Exception as exc:  # pragma: no cover - log and continue

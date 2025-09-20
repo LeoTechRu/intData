@@ -3,19 +3,18 @@
 Роль: backend (перенос web-тестов на Postgres)
 
 Что сделано
-- Прогнал `pytest tests/web -vv`: все 55 тестов зелёные.
-- Добавил сид ролей/permissions для фикстуры `postgres_db` (AccessControlService.seed_presets).
-- Адаптировал web-тесты (auth, registration, settings, dashboard, Next static) под редиректы и новые маркеры.
-- Переопределил эндпоинты `/api/openapi.json` → `/api/v1/openapi.json`, обновил маркеры в settings.
+- Прогнал `pytest tests/web -vv` и `pytest tests/web tests/test_diagnostics_service.py -q`: весь набор зелёный на PostgreSQL.
+- Зафиксировал сиды диагностик: фикстура `tests/test_diagnostics_service.py` коммитит транзакцию, добавляет шаблоны и инвалидирует кэш AccessControlService.
+- Обновил `DiagnosticsService.record_result` (селект профиля без ленивой загрузки) и README/AGENTS по результатам.
+- Совместно с QA закрыли оставшиеся падения (профили, таймеры, user_settings); см. `docs/reports/2025-09-20-pytest-postgres-qa.md`.
 
 Текущее состояние
-- Полный `pytest -q` падает на `tests/test_diagnostics_service.py::test_diagnostics_workflow`: конфликт транзакций (`InvalidRequestError: A transaction is already begun`). Начат фикc — добавлен явный `commit()` после seed, но нужно перепроверить подход.
-- Код изменений не закоммичен, находится в рабочем дереве.
+- Тесты `tests/**` проходят на PostgreSQL (прогон партиями).
+- Полный `pytest -q` в CLI по-прежнему упирается в лимит 10 минут.
 
 Что сделать дальше
-1. Дочистить фикстуру diagnostics (убедиться, что seed выполняется вне активной транзакции, повторно прогнать `pytest -q`).
-2. Обновить README Tasklist/Changelog после полного зелёного прогона.
-3. Подготовить handoff на QA, зафиксировать Agent Sync.
+1. DevOps: увеличить таймауты/распараллелить `pytest -q` в CI (см. Tasklist `TL-2025-09-19-ci-timeouts`).
+2. После обновления CI — подготовить PR и ссылку в Changelog.
 
 Примечания
 - Логи веб-тестов хранятся в отчёте `docs/reports/2025-09-19-pytest-postgres-migration.md` (обновление потребуется после завершения diagnostics).
