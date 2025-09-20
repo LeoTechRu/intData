@@ -82,6 +82,7 @@ def _resolve_html_path(page: str) -> Path | None:
     return None
 
 
+@lru_cache(maxsize=None)
 def _load_next_html(page: str) -> str:
     html_path = _resolve_html_path(page)
     if html_path is None:

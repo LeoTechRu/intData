@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from base import Base
-from core.models import Task, TaskStatus, Area
+from core.models import Task, TaskStatus, Area, TgUser
 from core.services.time_service import TimeService
 from core.services.task_service import TaskService
 from core.utils import utcnow
@@ -22,11 +22,18 @@ async def session(postgres_engine):
         yield sess
 
 
+async def ensure_tg_user(session: AsyncSession, telegram_id: int) -> None:
+    if await session.get(TgUser, telegram_id) is None:
+        session.add(TgUser(telegram_id=telegram_id, first_name=f"tg{telegram_id}"))
+        await session.flush()
+
+
 @pytest.mark.asyncio
 async def test_time_entry_links_to_task_and_updates_status(session):
     # start timer without task_id -> auto create task
     tsvc = TaskService(session)
     time_svc = TimeService(session)
+    await ensure_tg_user(session, 1)
     entry = await time_svc.start_timer(owner_id=1, description="Demo work")
     # task auto-created
     assert entry.task_id is not None
@@ -51,6 +58,7 @@ async def test_time_entry_links_to_task_and_updates_status(session):
 async def test_resume_accumulates_time(session):
     time_svc = TimeService(session)
     # start new task via timer
+    await ensure_tg_user(session, 1)
     e1 = await time_svc.start_timer(owner_id=1, description="Task A")
     task_id = e1.task_id
     assert task_id
@@ -69,6 +77,8 @@ async def test_resume_accumulates_time(session):
 async def test_cannot_link_task_of_another_owner(session):
     # Task belongs to owner 1
     tsvc = TaskService(session)
+    await ensure_tg_user(session, 1)
+    await ensure_tg_user(session, 2)
     area = Area(owner_id=1, name="A1")
     session.add(area)
     await session.flush()

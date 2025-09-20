@@ -20,7 +20,7 @@ async def session(postgres_engine):
         async with AccessControlService(sess) as access:
             await access.seed_presets()
             from sqlalchemy import select
-            from core.models import AuthPermission, Role
+            from core.models import AuthPermission, DiagnosticTemplate, Role
 
             perm_defs = [
                 {
@@ -105,6 +105,30 @@ async def session(postgres_engine):
                     existing.grants_all = definition["grants_all"]
             await sess.flush()
             AccessControlService.invalidate_cache()
+
+            template_ids = {0, 2, 15}
+            existing_templates = await sess.execute(
+                select(DiagnosticTemplate).where(
+                    DiagnosticTemplate.id.in_(template_ids)
+                )
+            )
+            templates_map = {template.id: template for template in existing_templates.scalars()}
+            for template_id in template_ids:
+                if template_id in templates_map:
+                    continue
+                sess.add(
+                    DiagnosticTemplate(
+                        id=template_id,
+                        slug=f"diagnostic-{template_id}",
+                        title=f"Diagnostic {template_id}",
+                        form_path=f"forms/diagnostic-{template_id}.json",
+                        sort_order=template_id,
+                    )
+                )
+
+        # Зафиксируем сиды до передачи сессии тесту, чтобы не оставлять
+        # незавершённую транзакцию и не блокировать дальнейшие begin()
+        await sess.commit()
 
         yield sess
 

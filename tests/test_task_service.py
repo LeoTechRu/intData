@@ -105,6 +105,7 @@ async def test_requires_area_or_project(session):
 async def test_add_and_leave_watcher(session):
     service = TaskService(session)
     await ensure_tg_user(session, 1)
+    await ensure_tg_user(session, 99)
     area = Area(owner_id=1, name="A1")
     session.add(area)
     await session.flush()

@@ -19,6 +19,7 @@ from base import Base  # noqa: E402
 import core.db as db  # noqa: E402
 from core.models import TgUser  # noqa: E402
 from core.services.habits import metadata as habits_metadata  # noqa: E402
+from core.services.access_control import AccessControlService  # noqa: E402
 from tests.utils import db as db_utils
 from sqlalchemy import event, text
 
@@ -63,6 +64,12 @@ async def postgres_db(postgres_engine):
                 "FROM generate_series(1, 256) AS gs"
             )
         )
+
+    AccessControlService.invalidate_cache()
+    async with session_factory() as session:
+        async with session.begin():
+            access = AccessControlService(session)
+            await access.seed_presets()
 
     had_engine = hasattr(db, 'engine')
     original_engine = getattr(db, 'engine', None)

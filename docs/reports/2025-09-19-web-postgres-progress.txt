@@ -1,0 +1,21 @@
+Дата: 2025-09-19
+Ветка: feature/E9/test-postgres-env-codex
+Роль: backend (перенос web-тестов на Postgres)
+
+Что сделано
+- Прогнал `pytest tests/web -vv` и `pytest tests/web tests/test_diagnostics_service.py -q`: весь набор зелёный на PostgreSQL.
+- Зафиксировал сиды диагностик: фикстура `tests/test_diagnostics_service.py` коммитит транзакцию, добавляет шаблоны и инвалидирует кэш AccessControlService.
+- Обновил `DiagnosticsService.record_result` (селект профиля без ленивой загрузки) и README/AGENTS по результатам.
+- Совместно с QA закрыли оставшиеся падения (профили, таймеры, user_settings); см. `docs/reports/2025-09-20-pytest-postgres-qa.md`.
+
+Текущее состояние
+- Тесты `tests/**` проходят на PostgreSQL (прогон партиями).
+- Полный `pytest -q` в CLI по-прежнему упирается в лимит 10 минут.
+
+Что сделать дальше
+1. DevOps: увеличить таймауты/распараллелить `pytest -q` в CI (см. Tasklist `TL-2025-09-19-ci-timeouts`).
+2. После обновления CI — подготовить PR и ссылку в Changelog.
+
+Примечания
+- Логи веб-тестов хранятся в отчёте `docs/reports/2025-09-19-pytest-postgres-migration.md` (обновление потребуется после завершения diagnostics).
+- Маркеры для настроек: `data-role="admin|user"`, `data-global="true|false"` — используются в веб-тестах вместо поиска русских строк.

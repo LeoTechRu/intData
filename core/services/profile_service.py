@@ -484,7 +484,7 @@ class ProfileService:
         search: Optional[str] = None,
     ) -> list[ProfileAccess]:
         context = await self._load_viewer_context(viewer)
-        stmt = await self._base_query(entity_type)
+        stmt = (await self._base_query(entity_type)).execution_options(populate_existing=True)
         if search:
             pattern = f"%{search.lower()}%"
             stmt = stmt.where(
@@ -499,6 +499,7 @@ class ProfileService:
         profiles = result.scalars().all()
         response: list[ProfileAccess] = []
         for profile in profiles:
+            await self.session.refresh(profile, attribute_names=["grants"])
             owner_access = self._owned_by_viewer(profile, context)
             admin_access = context.is_admin
             grants = [] if (owner_access or admin_access) else self._grants_for_viewer(profile, context)
@@ -535,12 +536,15 @@ class ProfileService:
         viewer: Optional[WebUser],
         with_sections: bool = True,
     ) -> ProfileAccess:
-        stmt = await self._base_query(entity_type)
+        stmt = (await self._base_query(entity_type)).execution_options(populate_existing=True)
         stmt = stmt.where(func.lower(EntityProfile.slug) == slug.lower())
         result = await self.session.execute(stmt)
         profile = result.scalars().first()
+        if not profile and entity_type == "user":
+            profile = await self._auto_create_user_profile_from_slug(slug)
         if not profile:
             raise ValueError("profile not found")
+        await self.session.refresh(profile, attribute_names=["grants"])
         context = await self._load_viewer_context(viewer)
         owner_access = self._owned_by_viewer(profile, context)
         admin_access = context.is_admin

@@ -1,11 +1,12 @@
 import pytest
 import pytest_asyncio
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 import core.db as db
+from base import Base
 from core.models import UserSettings, WebUser
 from core.settings_store import metadata as settings_metadata
 from web.routes.api.navigation import router as navigation_api
@@ -17,6 +18,7 @@ async def async_session(monkeypatch, postgres_engine):
     engine = postgres_engine
     async_sessionmaker = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
     async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
         await conn.run_sync(lambda sync_conn: UserSettings.__table__.create(sync_conn, checkfirst=True))
         await conn.run_sync(lambda sync_conn: settings_metadata.create_all(sync_conn))
     had_engine = hasattr(db, "engine")
@@ -75,38 +77,41 @@ async def test_navigation_user_layout(monkeypatch, async_session):
         fake_permissions,
     )
 
-    client = TestClient(app)
+    async with async_session() as session:
+        async with session.begin():
+            session.add(WebUser(id=1, username="nav_user", role="single"))
 
-    res = client.get("/api/v1/navigation/sidebar")
-    assert res.status_code == 200
-    body = res.json()
-    keys = [item["key"] for item in body["items"]]
-    assert keys[0] == "overview"
-    assert "admin" not in keys
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        res = await client.get("/api/v1/navigation/sidebar")
+        assert res.status_code == 200
+        body = res.json()
+        keys = [item["key"] for item in body["items"]]
+        assert keys[0] == "overview"
+        assert "admin" not in keys
 
-    payload = {
-        "layout": {
-            "v": 1,
-            "items": [
-                {"key": "projects", "position": 1, "hidden": False},
-                {"key": "overview", "position": 2, "hidden": False},
-                {"key": "habits", "position": 3, "hidden": True},
-            ],
+        payload = {
+            "layout": {
+                "v": 1,
+                "items": [
+                    {"key": "projects", "position": 1, "hidden": False},
+                    {"key": "overview", "position": 2, "hidden": False},
+                    {"key": "habits", "position": 3, "hidden": True},
+                ],
+            }
         }
-    }
-    res = client.put("/api/v1/navigation/sidebar/user", json=payload)
-    assert res.status_code == 200
-    updated = res.json()["payload"]
-    assert updated["items"][0]["key"] == "projects"
-    hidden_map = {item["key"]: item["hidden"] for item in updated["items"]}
-    assert hidden_map["habits"] is True
+        res = await client.put("/api/v1/navigation/sidebar/user", json=payload)
+        assert res.status_code == 200
+        updated = res.json()["payload"]
+        assert updated["items"][0]["key"] == "projects"
+        hidden_map = {item["key"]: item["hidden"] for item in updated["items"]}
+        assert hidden_map["habits"] is True
 
-    res = client.put("/api/v1/navigation/sidebar/user", json={"reset": True})
-    assert res.status_code == 200
-    reset_payload = res.json()["payload"]
-    assert reset_payload["items"][0]["key"] == "overview"
-    hidden_map = {item["key"]: item["hidden"] for item in reset_payload["items"]}
-    assert hidden_map.get("habits") is False
+        res = await client.put("/api/v1/navigation/sidebar/user", json={"reset": True})
+        assert res.status_code == 200
+        reset_payload = res.json()["payload"]
+        assert reset_payload["items"][0]["key"] == "overview"
+        hidden_map = {item["key"]: item["hidden"] for item in reset_payload["items"]}
+        assert hidden_map.get("habits") is False
 
 
 @pytest.mark.asyncio
@@ -131,30 +136,34 @@ async def test_navigation_global_requires_permission(monkeypatch, async_session)
         fake_permissions,
     )
 
-    client = TestClient(app)
-    # Without settings permission, even admin role must be true to pass
-    perms_state.update({"admin": False, "allow_settings": False})
-    res = client.put(
-        "/api/v1/navigation/sidebar/global",
-        json={"layout": {"v": 1, "items": []}},
-    )
-    assert res.status_code == 403
+    async with async_session() as session:
+        async with session.begin():
+            session.add(WebUser(id=2, username="nav_admin", role="admin"))
 
-    # Allow settings permission
-    perms_state.update({"admin": False, "allow_settings": True})
-    payload = {
-        "layout": {
-            "v": 1,
-            "items": [
-                {"key": "tasks", "position": 1, "hidden": False},
-                {"key": "overview", "position": 2, "hidden": False},
-            ],
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        # Without settings permission, even admin role must be true to pass
+        perms_state.update({"admin": False, "allow_settings": False})
+        res = await client.put(
+            "/api/v1/navigation/sidebar/global",
+            json={"layout": {"v": 1, "items": []}},
+        )
+        assert res.status_code == 403
+
+        # Allow settings permission
+        perms_state.update({"admin": False, "allow_settings": True})
+        payload = {
+            "layout": {
+                "v": 1,
+                "items": [
+                    {"key": "tasks", "position": 1, "hidden": False},
+                    {"key": "overview", "position": 2, "hidden": False},
+                ],
+            }
         }
-    }
-    res = client.put("/api/v1/navigation/sidebar/global", json=payload)
-    assert res.status_code == 200
+        res = await client.put("/api/v1/navigation/sidebar/global", json=payload)
+        assert res.status_code == 200
 
-    res = client.get("/api/v1/navigation/sidebar")
-    assert res.status_code == 200
-    keys = [item["key"] for item in res.json()["items"]]
-    assert keys[0] == "tasks"
+        res = await client.get("/api/v1/navigation/sidebar")
+        assert res.status_code == 200
+        keys = [item["key"] for item in res.json()["items"]]
+        assert keys[0] == "tasks"
