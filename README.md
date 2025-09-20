@@ -214,6 +214,11 @@ Intelligent Data Pro — приватный продуктовый репози�
 
 #### E3: API / Calendar & Notes
 - [x] TL-2025-09-19-notes-assign-detached — Исправить DetachedInstanceError при `POST /api/v1/notes/{id}/assign`, убедиться что ответ содержит `area`/`project` без ленивых загрузок (owner: codex, ветка `feature/E3/notes-assign-detached-codex`, PR [#102](https://github.com/LeoTechRu/intData/pull/102), см. [E3](#e3-api-calendar-calendaritems-calendaragenda-calendarfeedics-projectsidnotifications)).
+- [x] TL-2025-09-20-calendar-feed-valarm — Добавить генерацию `VALARM` в `/calendar/feed.ics` на основе связанных напоминаний Alarm, обновить тест `tests/web/test_calendar_feed_ics.py` и документацию (owner: codex, ветка `feature/E3/calendar-feed-valarm-codex`, локально: `pytest tests/web/test_calendar_feed_ics.py`, см. [E3](#e3-api-calendar-calendaritems-calendaragenda-calendarfeedics-projectsidnotifications)).
+- [x] TL-2025-09-20-calendar-alarms-tests — Покрыть `/calendar/items/{id}/alarms` (листинг/создание/валидации) API-тестами, зафиксировать ошибки авторизации и валидации (owner: codex, ветка `feature/E3/calendar-alarms-tests-codex`, локально: `pytest tests/web/test_alarms_api.py`, см. [E3](#e3-api-calendar-calendaritems-calendaragenda-calendarfeedics-projectsidnotifications)).
+- [x] TL-2025-09-20-diagnostics-auth — Убрать HTTP Basic Auth из `/api/v1/diagnostics/*`, оставить авторизацию через веб-сессию, обновить OpenAPI/тесты (owner: codex, ветка `feature/E3/diagnostics-auth-cleanup-codex`, локально: `pytest tests/test_diagnostics_service.py`, см. [E3](#e3-api-calendar-calendaritems-calendaragenda-calendarfeedics-projectsidnotifications)).
+- [x] TL-2025-09-20-owner-indexes — Добавить индексы `(owner_id, project_id)` и `(owner_id, area_id)` в основные таблицы (CalendarItem, Task, TimeEntry, Notes, Habits) для быстрых фильтров include_sub (owner: codex, ветка `feature/E2/owner-indexes-codex`, локально: `python3 -m core.db.schema_export generate`, `pytest tests/test_openapi_ssot.py`, см. [E2](#e2-миграции-бд-и-индексы)).
+- [x] TL-2025-09-20-check-para-invariant — Добавить CHECK ограничение `project_id IS NULL XOR area_id IS NULL` для `calendar_items`, `tasks`, `time_entries`, `habits`, `dailies`, `rewards`, `notes`, обновить DDL/SCHEMA и тесты (owner: codex, ветка `feature/E2/check-para-invariant-codex`, локально: `pytest tests/test_para_invariants.py` + `python -m core.db.schema_export generate`, см. [E2](#e2-миграции-бд-и-индексы)).
 
 #### E9: Тесты и документация
 - [x] TL-2025-09-19-roles-charter — Обновить AGENTS.md и README.md: Roles Charter, auto-switch, раздел для владельца (owner: codex, ветка `feature/Ops/roles-charter-tw`, см. [E9](#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3)).
@@ -229,10 +234,11 @@ Intelligent Data Pro — приватный продуктовый репози�
 - [x] TL-2025-09-19-notes-restore — Переработать страницу `/notes`: безопасное архивирование карточек с восстановлением, отдельный просмотр архива, синхронизация drag-n-drop и фильтров (owner: codex, ветка `feature/E10/notes-restore-frontend`, merge 4934acc в `test→main`).
 
 #### E17: Frontend Modernization
-- [ ] TL-2025-09-18-nav-blueprint — Расширить NAV_BLUEPRINT и API `/api/v1/navigation/sidebar*` полями модулей и секций (owner: codex, ветка `feature/E17/menu-grouping-codex`, см. [E17](#e17-frontend-modernization)).
-- [ ] TL-2025-09-18-appshell-modules — Перестроить AppShell и SidebarEditor: секции + collapsible, единый список избранных страниц без дублей (owner: codex, ветка `feature/E17/menu-grouping-codex`).
-- [ ] TL-2025-09-18-module-tabs — Добавить верхние вкладки модулей и компонент FavoriteToggle, управляющий видимостью страниц в меню (owner: codex, ветка `feature/E17/menu-grouping-codex`).
-- [ ] TL-2025-09-19-appshell-nav-tuning — AppShell: компактный header на мобайле, независимый скролл, вкладки модулей справа от сайдбара и сворачиваемые секции меню с управлением страницами (owner: codex, ветка `feature/E17/appshell-nav-tuning-codex`).
+- [x] TL-2025-09-18-nav-blueprint — Расширить NAV_BLUEPRINT и API `/api/v1/navigation/sidebar*` полями модулей и секций (owner: codex, ветка `feature/E17/menu-grouping-codex`, покрытие `tests/test_navigation_api.py`, вспомогательные утилиты `web/lib/navigation-helpers.ts`, см. [E17](#e17-frontend-modernization)).
+- [x] TL-2025-09-18-appshell-modules — Перестроить AppShell и SidebarEditor: секции + collapsible, единый список избранных страниц без дублей (owner: codex, ветка `feature/E17/menu-grouping-codex`, новые компоненты `ModuleTabs`, `FavoriteToggle`, консистентная сортировка навигации).
+- [x] TL-2025-09-18-module-tabs — Добавить верхние вкладки модулей и компонент FavoriteToggle, управляющий видимостью страниц в меню (owner: codex, ветка `feature/E17/menu-grouping-codex`, Vitest `ModuleTabs.test.tsx`/`FavoriteToggle.test.tsx`).
+- [x] TL-2025-09-19-appshell-nav-tuning — AppShell: компактный header на мобайле, независимый скролл, вкладки модулей справа от сайдбара и сворачиваемые секции меню с управлением страницами (owner: codex, ветка `feature/E17/appshell-nav-tuning-codex`, обновления `AppShell.tsx`, `SidebarEditor.tsx`, мок `vitest.setup.ts`).
+- [x] TL-2025-09-20-navigation-cleanup — Упорядочить модульные вкладки и избранное: вынести логику группировки в `web/lib/navigation-helpers.ts`, добавить компоненты `ModuleTabs`/`FavoriteToggle`, покрыть Vitest и Next build (`npm run lint`, `npm test`, `npm run build`) (owner: codex, ветка `feature/E17/menu-grouping-codex`).
 - [x] TL-2025-09-18-bot — Восстановить публичный лендинг `/bot` на Next.js (agent: codex, ветка `feature/E17/bot-landing-codex`).
 - [x] TL-2025-09-18-groups — Перенести `/groups`, `/groups/manage/{id}` и `/products` на Next.js, добавить тултипы `TermHint`, удалить legacy-шаблоны и `ui_router` (agent: codex, ветка `feature/E17/groups-products-ui-codex`).
 - [x] TL-2025-09-18-support — Обновить лендинг `/tariffs` (кликабельное сообщество, упоминания поддержки) и добавить условные кнопки поддержки в AppShell (agent: codex, ветка `feature/E17/groups-products-ui-codex`).
@@ -346,8 +352,8 @@ Intelligent Data Pro — приватный продуктовый репози�
 - [x] P0•S — Машиночитаемая схема БД и автопроверка (`python -m core.db.schema_export`, CI‑check).
 - [x] P0•M — Перевод миграций на простой раннер `core/db/migrate.py` + DDL `core/db/ddl/*.sql` (без Alembic).
 - [x] P0•S — `projects.area_id` сделать `NOT NULL` и проиндексировать.
-- [ ] P0•M — CHECK‑инвариант: у сущностей (`calendar_items`, `tasks`, `time_entries`, `habits/dailies/rewards`) должен быть ровно один из `project_id`/`area_id`.
-- [ ] P0•S — Индексы `(owner_id, project_id)` и `(owner_id, area_id)` на основные таблицы для фильтрации и include_sub.
+- [x] P0•M — CHECK‑инвариант: у сущностей (`calendar_items`, `tasks`, `time_entries`, `habits/dailies/rewards`) должен быть ровно один из `project_id`/`area_id`.
+- [x] P0•S — Индексы `(owner_id, project_id)` и `(owner_id, area_id)` на основные таблицы для фильтрации и include_sub.
 - [ ] P0•M — Подготовить baseline (pg_dump) и инициализировать Alembic, зафиксировать стартовую ревизию.
 - [ ] P0•L — Вынести диагностические таблицы/колонки в Alembic и описать сценарий отката.
 - [ ] P0•L — Решить стратегию идентификаторов (INTEGER ↔ UUID) и подготовить детальный план миграции.
@@ -434,7 +440,7 @@ Intelligent Data Pro — приватный продуктовый репози�
 2. Как пользователь, я вижу `VALARM` для элементов с напоминанием.
 
 **Tasks**
-- [ ] P0•S — Генерировать `VALARM` в `feed.ics` на основе связанных `alarms`.
+- [x] P0•S — Генерировать `VALARM` в `feed.ics` на основе связанных `alarms`.
 
 **Acceptance Criteria**
 - Скачанный фид содержит VEVENT для событий и VTODO для задач.
@@ -587,7 +593,7 @@ Intelligent Data Pro — приватный продуктовый репози�
 **Acceptance Criteria**
 - [x] старт «голого» таймера создаёт задачу в «Входящие».
 - [x] задача требует `project_id` или `area_id`; при указании проекта наследует `area_id`.
-- [ ] напоминания к задаче через `/calendar/items/{id}/alarms`.
+- [x] напоминания к задаче через `/calendar/items/{id}/alarms`.
 - [ ] флажок календаря `include_tasks/only_scheduled` работает.
 - [x] `/time/summary` даёт срезы по `project/area/day/user`.
 - [x] Таймер поддерживает паузу/возобновление без создания новой записи; API предоставляет `/api/v1/time/{id}/pause|resume`.
@@ -764,6 +770,7 @@ Reference: см. архивный отчёт `docs/archive/report_frontend_moder
 - [x] P0•S — FastAPI-роут `/bot` отдаёт статическую Next.js страницу и остаётся в списке публичных маршрутов без редиректа на `/auth`.
 - [x] P1•S — Завершить аудит оставшихся legacy-шаблонов и зафиксировать план миграции после переноса ЦУП/админки.
 - [x] P1•M — Левая панель нового UI поддерживает drag-n-drop редактор меню: порядок и видимость пунктов сохраняются в `user_settings.nav_sidebar` и глобальном пресете.
+- [x] TL-2025-09-20-runtime-fix — Восстановить AppShell и модульную навигацию после продакшен-инцидента (owner: codex, ветка `feature/E17/runtime-fix-codex`, проверки: `npm run lint`, `npm test`, `npm run build`, см. [E17](#e17-frontend-modernization)) — обновлено 2025-09-20 12:16 UTC: добавлены безопасные обращения к `localStorage`, фильтрация навигационных данных, проверки `npm run lint`, `npm test`, `npm run build`.
 
 **User Stories**
 1. Как разработчик, я хочу единый современный фронтенд‑стек, чтобы страницы собирались одним тулчейном.
@@ -858,7 +865,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Бэкенд CRM foundation: DDL `20250919_crm_foundation.sql`, новые модели SQLAlchemy, сервисные методы и API `/api/v1/crm/products`, `/api/v1/crm/subscriptions/transition` с поддержкой upgrade/downgrade потоков.
 - Next.js-модуль `/crm` (страницы `/crm/products`, `/crm/deals`, `/crm/accounts`, `/crm/analytics`) с новым UI каталога продуктов, тарифов, потоков и формой переходов между тарифами.
 - Автоопределение идентификатора в форме авторизации: единое поле переключается между логином, email и телефоном, синхронно обновляя placeholder и `autoComplete`.
-- AppShell: модульные секции бокового меню, вкладки модуля и звёздочка «закрепить» для управления видимостью страниц без дублирования пунктов.
+- AppShell: модульные секции бокового меню, выделенные компоненты `ModuleTabs`/`FavoriteToggle`, утилита сортировки `web/lib/navigation-helpers.ts` и API/Вitest покрытие для управления вкладками без дублирования пунктов.
+- Diagnostics: API `/api/v1/diagnostics/*` теперь принимает только сессию веб-пользователя (`diagnostics_enabled`), Basic Auth удалён; `/metrics` больше не требует Basic токена.
+- Tests: покрыт `/api/v1/calendar/items/{id}/alarms` (создание, листинг, авторизация, валидации).
+- DB: добавлены составные индексы `(owner_id, project_id)` и `(owner_id, area_id)` для `calendar_items`, `tasks`, `time_entries`, `notes`, `habits`, `dailies`, `rewards`.
+- DB: введены CHECK-инварианты `project_id XOR area_id` для `calendar_items`, `tasks`, `time_entries`, `notes`, `habits`, `dailies`, `rewards`.
+- Frontend: компоненты `ModuleTabs` и `FavoriteToggle`, вынос сортировки навигации в `navigation-helpers`, Vitest покрытие и Next build для нового AppShell.
 - Next.js-панель `/groups` и `/groups/manage/{id}` с CRM-дашбордом: цифровая воронка, участники, массовые операции, React Query; удалены Jinja-шаблоны и FastAPI `ui_router`.
 - Next.js-каталог `/products` и профили `/products/{slug}` с карточками продуктов, поиском и загрузкой данных через `/api/v1/profiles/products`.
 - Компонент `TermHint` для тултипов по непонятным терминам (slug, Telegram ID, CRM-метрики) и его внедрение на страницах Next.js.
@@ -927,6 +939,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Тайм‑трекер: модель `TimeEntry`, `TimeService`, веб‑API `/time`, страница UI, команды бота `/time_start`, `/time_stop`, `/time_list`.
 - Каркас календаря: модель `CalendarEvent`, `CalendarService`.
 - Базовые эндпоинты календаря `/api/v1/calendar/items` и генерация `feed.ics` (заглушки).
+- `/calendar/feed.ics` теперь формирует блоки `VALARM` на основе связанных напоминаний `Alarm`.
 - Административные утилиты перенесены на главную страницу «ЦУП» (доступны только роли admin) с якорем `#cup-admin-tools`.
 - Таблицы `calendar_items`, `alarms`, `notification_channels`, `project_notifications`,
   `notification_triggers` и `notifications`.

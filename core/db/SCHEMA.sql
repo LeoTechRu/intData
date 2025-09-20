@@ -95,6 +95,7 @@ CREATE TABLE calendar_items (
 	created_at TIMESTAMP WITH TIME ZONE, 
 	updated_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 
+	CONSTRAINT ck_calendar_items_single_container CHECK ((project_id IS NOT NULL) <> (area_id IS NOT NULL)), 
 	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id), 
 	FOREIGN KEY(project_id) REFERENCES projects (id), 
 	FOREIGN KEY(area_id) REFERENCES areas (id)
@@ -325,6 +326,7 @@ CREATE TABLE dailies (
 	archived_at TIMESTAMP WITH TIME ZONE, 
 	created_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 
+	CONSTRAINT ck_dailies_single_container CHECK ((project_id IS NOT NULL) <> (area_id IS NOT NULL)), 
 	FOREIGN KEY(owner_id) REFERENCES users_web (id), 
 	FOREIGN KEY(area_id) REFERENCES areas (id), 
 	FOREIGN KEY(project_id) REFERENCES projects (id)
@@ -517,6 +519,7 @@ CREATE TABLE habits (
 	archived_at TIMESTAMP WITH TIME ZONE, 
 	created_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 
+	CONSTRAINT ck_habits_single_container CHECK ((project_id IS NOT NULL) <> (area_id IS NOT NULL)), 
 	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id), 
 	FOREIGN KEY(area_id) REFERENCES areas (id), 
 	FOREIGN KEY(project_id) REFERENCES projects (id)
@@ -595,6 +598,7 @@ CREATE TABLE notes (
 	created_at TIMESTAMP WITH TIME ZONE, 
 	updated_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 
+	CONSTRAINT ck_notes_single_container CHECK ((project_id IS NOT NULL) <> (area_id IS NOT NULL)), 
 	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id), 
 	FOREIGN KEY(area_id) REFERENCES areas (id), 
 	FOREIGN KEY(project_id) REFERENCES projects (id)
@@ -720,6 +724,7 @@ CREATE TABLE rewards (
 	archived_at TIMESTAMP WITH TIME ZONE, 
 	created_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 
+	CONSTRAINT ck_rewards_single_container CHECK ((project_id IS NOT NULL) <> (area_id IS NOT NULL)), 
 	FOREIGN KEY(owner_id) REFERENCES users_web (id), 
 	FOREIGN KEY(area_id) REFERENCES areas (id), 
 	FOREIGN KEY(project_id) REFERENCES projects (id)
@@ -819,6 +824,7 @@ CREATE TABLE tasks (
 	created_at TIMESTAMP WITH TIME ZONE, 
 	updated_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 
+	CONSTRAINT ck_tasks_single_container CHECK ((project_id IS NOT NULL) <> (area_id IS NOT NULL)), 
 	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id), 
 	FOREIGN KEY(project_id) REFERENCES projects (id), 
 	FOREIGN KEY(area_id) REFERENCES areas (id)
@@ -842,6 +848,7 @@ CREATE TABLE time_entries (
 	created_at TIMESTAMP WITH TIME ZONE, 
 	updated_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 
+	CONSTRAINT ck_time_entries_single_container CHECK ((project_id IS NOT NULL) <> (area_id IS NOT NULL)), 
 	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id), 
 	FOREIGN KEY(task_id) REFERENCES tasks (id), 
 	FOREIGN KEY(project_id) REFERENCES projects (id), 
@@ -980,13 +987,41 @@ CREATE TABLE users_web_tg (
 	FOREIGN KEY(tg_user_id) REFERENCES users_tg (id)
 );
 
+CREATE INDEX idx_calendar_items_owner_area ON calendar_items (owner_id, area_id);
+
+CREATE INDEX idx_calendar_items_owner_project ON calendar_items (owner_id, project_id);
+
+CREATE INDEX idx_dailies_owner_area ON dailies (owner_id, area_id);
+
+CREATE INDEX idx_dailies_owner_project ON dailies (owner_id, project_id);
+
 CREATE INDEX ix_group_removal_group_created ON group_removal_log (group_id, created_at);
 
 CREATE INDEX ix_group_removal_product ON group_removal_log (product_id);
 
+CREATE INDEX idx_habits_owner_area ON habits (owner_id, area_id);
+
+CREATE INDEX idx_habits_owner_project ON habits (owner_id, project_id);
+
+CREATE INDEX idx_notes_owner_area ON notes (owner_id, area_id);
+
+CREATE INDEX idx_notes_owner_project ON notes (owner_id, project_id);
+
+CREATE INDEX idx_rewards_owner_area ON rewards (owner_id, area_id);
+
+CREATE INDEX idx_rewards_owner_project ON rewards (owner_id, project_id);
+
 CREATE INDEX ix_task_reminders_active ON task_reminders (task_id, trigger_at);
 
 CREATE UNIQUE INDEX ux_task_watchers_active ON task_watchers (task_id, watcher_id) WHERE state = 'active';
+
+CREATE INDEX idx_tasks_owner_area ON tasks (owner_id, area_id);
+
+CREATE INDEX idx_tasks_owner_project ON tasks (owner_id, project_id);
+
+CREATE INDEX idx_time_entries_owner_area ON time_entries (owner_id, area_id);
+
+CREATE INDEX idx_time_entries_owner_project ON time_entries (owner_id, project_id);
 
 CREATE INDEX ix_users_favorites_owner_position ON users_favorites (owner_id, position);
 
