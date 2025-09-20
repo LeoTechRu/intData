@@ -22,6 +22,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { Button, Checkbox, StatusIndicator } from '../ui';
 import type { SidebarLayoutSettings, SidebarModuleDefinition, SidebarNavItem } from '../../lib/types';
+import { sortSidebarItems } from '../../lib/navigation-helpers';
 import { Modal } from '../../ui/uikit/Modal';
 
 interface EditableNavItem {
@@ -31,6 +32,8 @@ interface EditableNavItem {
   statusKind?: string;
   statusLink?: string;
   moduleId?: string;
+  section_order?: number;
+  position: number;
 }
 
 interface SidebarEditorProps {
@@ -76,6 +79,8 @@ function toEditable(
         statusKind: base.status?.kind,
         statusLink: base.status?.link,
         moduleId: base.module,
+        section_order: base.section_order,
+        position: typeof entry.position === 'number' ? entry.position : base.position,
       });
       seen.add(entry.key);
     });
@@ -88,6 +93,8 @@ function toEditable(
         statusKind: item.status?.kind,
         statusLink: item.status?.link,
         moduleId: item.module,
+        section_order: item.section_order,
+        position: item.position,
       });
     }
   });
@@ -157,16 +164,24 @@ export function SidebarEditor({
     modules.forEach((module) => {
       const itemsForModule = bucket.get(module.id);
       if (itemsForModule && itemsForModule.length > 0) {
-        ordered.push({ module, items: itemsForModule });
+        ordered.push({ module, items: sortSidebarItems(itemsForModule) });
         bucket.delete(module.id);
       }
     });
     Array.from(bucket.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .forEach(([moduleId, itemsForModule]) => {
-        ordered.push({ module: { id: moduleId, label: moduleId, order: 9000 }, items: itemsForModule });
+        ordered.push({
+          module: { id: moduleId, label: moduleId, order: 9000 },
+          items: sortSidebarItems(itemsForModule),
+        });
       });
-    return ordered;
+    return ordered.sort((a, b) => {
+      if (a.module.order !== b.module.order) {
+        return a.module.order - b.module.order;
+      }
+      return a.module.id.localeCompare(b.module.id);
+    });
   }, [activeDraft, modules]);
 
   const handleDragEnd = (event: DragEndEvent) => {
