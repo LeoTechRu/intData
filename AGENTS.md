@@ -52,37 +52,407 @@
 ## Agent Sync
 > Agent Sync ведём в YAML-формате GateLog. Время фиксируем в UTC, `ttl_minutes` указывает, когда запись должна быть обновлена или снята.
 
-| Start (UTC) | Agent | Role | Branch | Task | Epic / Scope | Ключевые файлы | PR | AC link | Статус |
-|-------------|-------|------|--------|------|--------------|----------------|----|---------|--------|
-| 2025-09-20 17:50 | codex | tl | test | TL-2025-09-20-release-gate | Release / test ветка | git (test), pytest smoke | — | [AC](README.md#-workflow-playbook) | завершено 2025-09-20 17:52 (merge feature/E2,E3,E17 → test; `pytest tests/test_para_invariants.py tests/web/test_calendar_feed_ics.py tests/web/test_alarms_api.py tests/test_diagnostics_service.py`, push origin/test) |
-| 2025-09-20 17:44 | codex | fe | feature/E17/runtime-fix-codex | TL-2025-09-20-navigation-cleanup | E17 / Frontend runtime | web/components/AppShell.tsx, web/components/navigation/*, web/lib/navigation-helpers.ts, tests/test_navigation_api.py | — | [AC](README.md#e17-frontend-modernization) | завершено 2025-09-20 17:44 (ModuleTabs/FavoriteToggle; `npm run lint`, `npm test`, `npm run build`) |
-| 2025-09-20 17:42 | codex | qa | feature/E3/calendar-alarms-tests-codex | TL-2025-09-20-calendar-alarms-tests | E3 / Calendar alarms API | tests/web/test_alarms_api.py | — | [AC](README.md#e3-api-calendar-calendaritems-calendaragenda-calendarfeedics-projectsidnotifications) | завершено 2025-09-20 17:42 (`pytest tests/web/test_alarms_api.py`) |
-| 2025-09-20 17:41 | codex | be | feature/E3/calendar-feed-valarm-codex | TL-2025-09-20-calendar-feed-valarm | E3 / Calendar alarms API | web/routes/calendar.py, core/services/para_repository.py, tests/web/test_calendar_feed_ics.py | — | [AC](README.md#e3-api-calendar-calendaritems-calendaragenda-calendarfeedics-projectsidnotifications) | завершено 2025-09-20 17:41 (VALARM в feed.ics, `pytest tests/web/test_calendar_feed_ics.py`) |
-| 2025-09-20 17:40 | codex | be | feature/E3/diagnostics-auth-cleanup-codex | TL-2025-09-20-diagnostics-auth | E3 / diagnostics API auth | web/routes/api/diagnostics.py, core/services/diagnostics_service.py, docs/README.md, tests/test_diagnostics_service.py | — | [AC](README.md#e3-api-calendar-calendaritems-calendaragenda-calendarfeedics-projectsidnotifications) | завершено 2025-09-20 17:40 (Basic Auth удалён, `pytest tests/test_diagnostics_service.py`) |
-| 2025-09-20 17:34 | codex | be | feature/E2/check-para-invariant-codex | TL-2025-09-20-check-para-invariant | E2 / миграции БД и индексы | core/models.py, core/db/ddl/20250920_para_check.sql, core/db/SCHEMA.*, tests/test_para_invariants.py | — | [AC](README.md#e2-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B8-%D0%B1%D0%B4-%D0%B8-%D0%B8%D0%BD%D0%B4%D0%B5%D0%BA%D1%81%D1%8B) | завершено 2025-09-20 17:34 (`python -m core.db.schema_export generate`, `pytest tests/test_para_invariants.py`) |
-| 2025-09-20 06:31 | codex | devops | feature/E9/test-branch-deploy-codex | TL-2025-09-19-test-secrets | E9 / pytest: Postgres окружение + ветка test | .github/workflows/tests.yml, .github/workflows/deploy-test.yml, .env.example | — | [AC](README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D1%8D%D1%84%D0%BB%D0%B0%D0%B3) | завершено 2025-09-20 06:39 (обновлены workflows/tests, deploy-test; merge feature → test → main локально) |
-| 2025-09-20 06:31 | codex | tw | feature/E9/test-branch-deploy-codex | TL-2025-09-19-test-runbook | E9 / pytest: Postgres окружение + ветка test | README.md, docs/reports/2025-09-19-env-split.md, docs/runbooks/test-to-main.md | — | [AC](README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D1%8D%D1%84%D0%BB%D0%B0%D0%B3) | завершено 2025-09-20 06:37 (README Tasklist/Changelog обновлены, runbook подготовлен) |
-| 2025-09-20 06:34 | codex | qa | feature/E9/test-branch-deploy-codex | TL-2025-09-19-test-branch-deploy | E9 / pytest: Postgres окружение + ветка test | pytest (part1/part2 splits), postgres logs | — | [AC](README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3) | завершено 2025-09-20 06:36 (pytest part1/part2 локально, warnings задокументированы) |
-| 2025-09-20 06:24 | codex | tl | feature/E9/test-branch-deploy-codex | TL-2025-09-19-test-branch-deploy | E9 / pytest: Postgres окружение + ветка test | .github/workflows/deploy.yml, docs/reports/2025-09-19-env-split.md, README.md | — | [AC](README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3) | завершено 2025-09-20 06:29 (workflow `.github/workflows/deploy-test.yml`, README Tasklist/Changelog обновлены) |
-| 2025-09-20 05:33 | codex | tl | feature/E9/test-postgres-env-codex | TL-2025-09-19-pytest-postgres-env | E9 / pytest: Postgres окружение + ветка test | README.md, docs/reports/*, git (test/main) | — | [AC](README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3) | завершено 2025-09-20 05:38 (merge 4cefd9a → test; GateRecord `docs/reports/2025-09-20-gaterecord-e9-test-postgres.md`) |
-| 2025-09-19 22:40 | codex | qa | feature/E9/test-postgres-env-codex | TL-2025-09-19-pytest-postgres-qa | E9 / pytest: Postgres окружение + ветка test | tests/**, docs/reports/2025-09-20-pytest-postgres-qa.md | — | [AC](README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3) | завершено 2025-09-19 22:58 (весь набор зелёный партиями, полный `pytest -q` >10 мин — см. отчёт) |
-| 2025-09-19 22:59 | codex | devops | feature/E9/test-postgres-env-codex | TL-2025-09-19-ci-timeouts | E9 / pytest: Postgres окружение + ветка test | .github/workflows/tests.yml, docs/reports/2025-09-20-ci-timeouts-analysis.md | — | [AC](README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3) | завершено 2025-09-19 23:05 (workflow разбит на два шага, артефакты pytest) |
-| 2025-09-19 20:42 | codex | fe | feature/E10/notes-restore-frontend | TL-2025-09-19-notes-restore | E10 / восстановление Next.js `/notes` | web/app/notes/page.tsx, web/components/notes/*, web/lib/types.ts, tests/web/test_notes_page.py | — | [AC](README.md#e10-capture-%D0%B1%D0%BE%D1%82%D0%B2%D0%B5%D0%B1-inbox) | на паузе (см. docs/reports/2025-09-19-notes-restore-wip.md) |
-| 2025-09-19 18:26 | codex | be | feature/E9/test-postgres-env-codex | TL-2025-09-19-pytest-postgres-migration | E9 / pytest: Postgres окружение + ветка test | tests/conftest.py, tests/web/*, web/routes/index.py, web/routes/settings.py | — | [AC](README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3) | завершено 2025-09-19 21:40 (диагностика и web на Postgres; полный `pytest -q` требует увеличения таймаута) |
-| 2025-09-19 10:22 | codex | be | feature/E9/test-postgres-env-codex | TL-2025-09-19-pytest-postgres-env | E9 / pytest: Postgres окружение | tests/conftest.py, .env*, docs/* | — | — | завершено 2025-09-19 10:33 |
-| 2025-09-19 08:43 | codex | ops | main | — | Ops / синхронизация main + рестарт сервисов | git (main), systemctl, logs/* | — | — | завершено 2025-09-19 08:47 |
-| 2025-09-19 07:55 | codex | be | feature/E3/notes-assign-detached-codex | TL-2025-09-19-notes-assign-detached | E3 / починка POST /api/v1/notes/{id}/assign (DetachedInstanceError) | core/services/notes.py, web/routes/notes.py, tests/test_notes_assign.py | — | — | завершено 2025-09-19 08:09 |
-| 2025-09-19 07:48 | codex | fe | feature/E17/appshell-nav-tuning-codex | TL-2025-09-19-appshell-nav-tuning | E17 / модульная навигация AppShell — адаптация UX | web/components/AppShell.tsx, web/components/layout/PublicHeader.tsx, web/components/navigation/*, docs/* | — | — | завершено 2025-09-19 08:28 |
-| 2025-09-19 00:32 | codex | arch | feature/E18/crm-skeleton-codex | TL-2025-09-18-crm-blueprint | E18 / CRM Knowledge Hub — исследование и каркас | docs/reports/*crm*, docs/vision.md, docs/tasklist.md, web/app/crm/*, core/services/crm/* | — | — | завершено 2025-09-19 01:00 |
-| 2025-09-18 23:05 | codex | fe | feature/E17/menu-grouping-codex | TL-2025-09-18-nav-blueprint | E17 / группировка меню AppShell | web/components/AppShell.tsx, web/lib/publicNav.ts, docs/* | — | — | завершено 2025-09-20 18:42 (merge runtime-fix; ModuleTabs/FavoriteToggle; `npm run lint`, `npm test`, `npm run build`) |
-| 2025-09-18 22:34 | codex | fe | feature/E17/mobile-responsive-ui-codex | TL-2025-09-18-mobile-ui | E17 / мобильная адаптация AppShell и обзора | web/components/AppShell.tsx, web/components/layout/PublicHeader.tsx, web/components/dashboard/OverviewDashboard.tsx | — | — | завершено 2025-09-18 22:44 |
-| 2025-09-18 21:41 | codex | fe | feature/E17/public-header-codex | TL-2025-09-18-public-header | E17 / унификация публичных лендингов | web/app/(auth|tariffs|bot|docs)/*, web/components/*, docs/BACKLOG.md | — | — | завершено 2025-09-18 22:01 |
-| 2025-09-18 20:37 | codex | fe | feature/E17/legacy-migration-codex | TL-2025-09-18-legacy-final | E17 / миграция легаси-страниц на новый UI | web/app/*, web/templates/*, web/components/*, docs/* | — | — | завершено 2025-09-18 21:03 |
-| 2025-09-18 19:30 | codex | fe | feature/E17/groups-products-ui-codex | TL-2025-09-18-support | E17 / тарифы, кнопки поддержки | web/components/marketing, web/components/AppShell.tsx, docs/* | — | — | завершено 2025-09-18 19:46 |
-| 2025-09-18 18:44 | codex | fe | feature/E17/groups-products-ui-codex | TL-2025-09-18-groups | E17 / модернизация groups & products, тултипы терминов | web/app/groups, web/app/products, web/components, docs/* | — | — | завершено 2025-09-18 19:18 |
-| 2025-09-18 17:45 | codex | fe | feature/E17/profile-widget-codex | TL-2025-09-18-profile-widget | E17 / виджет профиля, меню тарифов | web/app, web/components, docs/* | — | — | завершено 2025-09-18 17:58 |
-| 2025-09-18 17:18 | codex | fe | feature/E17/bot-landing-codex | TL-2025-09-18-bot | E17 / фронт + веб-сервер | web/app, web/routes, docs/* | — | — | завершено 2025-09-18 17:28 |
+```yaml
+agent_sync:
+  - when_utc: "2025-09-20T18:52:00Z"
+    agent: "codex"
+    role: "tl"
+    branch: "feature/E10/notes-restore-frontend"
+    task: "TL-2025-09-19-notes-restore"
+    epic_scope: "E10 / Capture"
+    files:
+      - "web/app/notes/page.tsx"
+      - "web/components/notes/*"
+      - "docs/reports/PR_feature_E10_notes_restore_frontend.txt"
+    pr: null
+    ac_link: "README.md#e10-capture-ботвеб-inbox"
+    ttl_minutes: 0
+    status: "завершено 2025-09-20 19:11 (rebase на `test`, `npm run lint`, `npm run test`, `npm run build`)"
+  - when_utc: "2025-09-20T17:50:00Z"
+    agent: "codex"
+    role: "tl"
+    branch: "test"
+    task: "TL-2025-09-20-release-gate"
+    epic_scope: "Release / test ветка"
+    files:
+      - "git (test)"
+      - "pytest smoke"
+    pr: null
+    ac_link: "README.md#-workflow-playbook"
+    ttl_minutes: 0
+    status: "завершено 2025-09-20 17:52 (merge feature/E2,E3,E17 → test; `pytest tests/test_para_invariants.py tests/web/test_calendar_feed_ics.py tests/web/test_alarms_api.py tests/test_diagnostics_service.py`, push origin/test)"
+  - when_utc: "2025-09-20T17:44:00Z"
+    agent: "codex"
+    role: "fe"
+    branch: "feature/E17/runtime-fix-codex"
+    task: "TL-2025-09-20-navigation-cleanup"
+    epic_scope: "E17 / Frontend runtime"
+    files:
+      - "web/components/AppShell.tsx"
+      - "web/components/navigation/*"
+      - "web/lib/navigation-helpers.ts"
+      - "tests/test_navigation_api.py"
+    pr: null
+    ac_link: "README.md#e17-frontend-modernization"
+    ttl_minutes: 0
+    status: "завершено 2025-09-20 17:44 (ModuleTabs/FavoriteToggle; `npm run lint`, `npm test`, `npm run build`)"
+  - when_utc: "2025-09-20T17:42:00Z"
+    agent: "codex"
+    role: "qa"
+    branch: "feature/E3/calendar-alarms-tests-codex"
+    task: "TL-2025-09-20-calendar-alarms-tests"
+    epic_scope: "E3 / Calendar alarms API"
+    files:
+      - "tests/web/test_alarms_api.py"
+    pr: null
+    ac_link: "README.md#e3-api-calendar-calendaritems-calendaragenda-calendarfeedics-projectsidnotifications"
+    ttl_minutes: 0
+    status: "завершено 2025-09-20 17:42 (`pytest tests/web/test_alarms_api.py`)"
+  - when_utc: "2025-09-20T17:41:00Z"
+    agent: "codex"
+    role: "be"
+    branch: "feature/E3/calendar-feed-valarm-codex"
+    task: "TL-2025-09-20-calendar-feed-valarm"
+    epic_scope: "E3 / Calendar alarms API"
+    files:
+      - "web/routes/calendar.py"
+      - "core/services/para_repository.py"
+      - "tests/web/test_calendar_feed_ics.py"
+    pr: null
+    ac_link: "README.md#e3-api-calendar-calendaritems-calendaragenda-calendarfeedics-projectsidnotifications"
+    ttl_minutes: 0
+    status: "завершено 2025-09-20 17:41 (VALARM в feed.ics, `pytest tests/web/test_calendar_feed_ics.py`)"
+  - when_utc: "2025-09-20T17:40:00Z"
+    agent: "codex"
+    role: "be"
+    branch: "feature/E3/diagnostics-auth-cleanup-codex"
+    task: "TL-2025-09-20-diagnostics-auth"
+    epic_scope: "E3 / diagnostics API auth"
+    files:
+      - "web/routes/api/diagnostics.py"
+      - "core/services/diagnostics_service.py"
+      - "docs/README.md"
+      - "tests/test_diagnostics_service.py"
+    pr: null
+    ac_link: "README.md#e3-api-calendar-calendaritems-calendaragenda-calendarfeedics-projectsidnotifications"
+    ttl_minutes: 0
+    status: "завершено 2025-09-20 17:40 (Basic Auth удалён, `pytest tests/test_diagnostics_service.py`)"
+  - when_utc: "2025-09-20T17:34:00Z"
+    agent: "codex"
+    role: "be"
+    branch: "feature/E2/check-para-invariant-codex"
+    task: "TL-2025-09-20-check-para-invariant"
+    epic_scope: "E2 / миграции БД и индексы"
+    files:
+      - "core/models.py"
+      - "core/db/ddl/20250920_para_check.sql"
+      - "core/db/SCHEMA.*"
+      - "tests/test_para_invariants.py"
+    pr: null
+    ac_link: "README.md#e2-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B8-%D0%B1%D0%B4-%D0%B8-%D0%B8%D0%BD%D0%B4%D0%B5%D0%BA%D1%81%D1%8B"
+    ttl_minutes: 0
+    status: "завершено 2025-09-20 17:34 (`python -m core.db.schema_export generate`, `pytest tests/test_para_invariants.py`)"
+  - when_utc: "2025-09-20T06:31:00Z"
+    agent: "codex"
+    role: "devops"
+    branch: "feature/E9/test-branch-deploy-codex"
+    task: "TL-2025-09-19-test-secrets"
+    epic_scope: "E9 / pytest: Postgres окружение + ветка test"
+    files:
+      - ".github/workflows/tests.yml"
+      - ".github/workflows/deploy-test.yml"
+      - ".env.example"
+    pr: null
+    ac_link: "README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D1%8D%D1%84%D0%BB%D0%B0%D0%B3"
+    ttl_minutes: 0
+    status: "завершено 2025-09-20 06:39 (обновлены workflows/tests, deploy-test; merge feature → test → main локально)"
+  - when_utc: "2025-09-20T06:31:00Z"
+    agent: "codex"
+    role: "tw"
+    branch: "feature/E9/test-branch-deploy-codex"
+    task: "TL-2025-09-19-test-runbook"
+    epic_scope: "E9 / pytest: Postgres окружение + ветка test"
+    files:
+      - "README.md"
+      - "docs/reports/2025-09-19-env-split.md"
+      - "docs/runbooks/test-to-main.md"
+    pr: null
+    ac_link: "README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D1%8D%D1%84%D0%BB%D0%B0%D0%B3"
+    ttl_minutes: 0
+    status: "завершено 2025-09-20 06:37 (README Tasklist/Changelog обновлены, runbook подготовлен)"
+  - when_utc: "2025-09-20T06:34:00Z"
+    agent: "codex"
+    role: "qa"
+    branch: "feature/E9/test-branch-deploy-codex"
+    task: "TL-2025-09-19-test-branch-deploy"
+    epic_scope: "E9 / pytest: Postgres окружение + ветка test"
+    files:
+      - "pytest (part1/part2 splits)"
+      - "postgres logs"
+    pr: null
+    ac_link: "README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3"
+    ttl_minutes: 0
+    status: "завершено 2025-09-20 06:36 (pytest part1/part2 локально, warnings задокументированы)"
+  - when_utc: "2025-09-20T06:24:00Z"
+    agent: "codex"
+    role: "tl"
+    branch: "feature/E9/test-branch-deploy-codex"
+    task: "TL-2025-09-19-test-branch-deploy"
+    epic_scope: "E9 / pytest: Postgres окружение + ветка test"
+    files:
+      - ".github/workflows/deploy.yml"
+      - "docs/reports/2025-09-19-env-split.md"
+      - "README.md"
+    pr: null
+    ac_link: "README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3"
+    ttl_minutes: 0
+    status: "завершено 2025-09-20 06:29 (workflow `.github/workflows/deploy-test.yml`, README Tasklist/Changelog обновлены)"
+  - when_utc: "2025-09-20T05:33:00Z"
+    agent: "codex"
+    role: "tl"
+    branch: "feature/E9/test-postgres-env-codex"
+    task: "TL-2025-09-19-pytest-postgres-env"
+    epic_scope: "E9 / pytest: Postgres окружение + ветка test"
+    files:
+      - "README.md"
+      - "docs/reports/*"
+      - "git (test/main)"
+    pr: null
+    ac_link: "README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3"
+    ttl_minutes: 0
+    status: "завершено 2025-09-20 05:38 (merge 4cefd9a → test; GateRecord `docs/reports/2025-09-20-gaterecord-e9-test-postgres.md`)"
+  - when_utc: "2025-09-19T22:40:00Z"
+    agent: "codex"
+    role: "qa"
+    branch: "feature/E9/test-postgres-env-codex"
+    task: "TL-2025-09-19-pytest-postgres-qa"
+    epic_scope: "E9 / pytest: Postgres окружение + ветка test"
+    files:
+      - "tests/**"
+      - "docs/reports/2025-09-20-pytest-postgres-qa.md"
+    pr: null
+    ac_link: "README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3"
+    ttl_minutes: 0
+    status: "завершено 2025-09-19 22:58 (весь набор зелёный партиями, полный `pytest -q` >10 мин — см. отчёт)"
+  - when_utc: "2025-09-19T22:59:00Z"
+    agent: "codex"
+    role: "devops"
+    branch: "feature/E9/test-postgres-env-codex"
+    task: "TL-2025-09-19-ci-timeouts"
+    epic_scope: "E9 / pytest: Postgres окружение + ветка test"
+    files:
+      - ".github/workflows/tests.yml"
+      - "docs/reports/2025-09-20-ci-timeouts-analysis.md"
+    pr: null
+    ac_link: "README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3"
+    ttl_minutes: 0
+    status: "завершено 2025-09-19 23:05 (workflow разбит на два шага, артефакты pytest)"
+  - when_utc: "2025-09-19T20:42:00Z"
+    agent: "codex"
+    role: "fe"
+    branch: "feature/E10/notes-restore-frontend"
+    task: "TL-2025-09-19-notes-restore"
+    epic_scope: "E10 / восстановление Next.js `/notes`"
+    files:
+      - "web/app/notes/page.tsx"
+      - "web/components/notes/*"
+      - "web/lib/types.ts"
+      - "tests/web/test_notes_page.py"
+    pr: null
+    ac_link: "README.md#e10-capture-%D0%B1%D0%BE%D1%82%D0%B2%D0%B5%D0%B1-inbox"
+    ttl_minutes: 60
+    status: "на паузе (см. docs/reports/2025-09-19-notes-restore-wip.md)"
+  - when_utc: "2025-09-19T18:26:00Z"
+    agent: "codex"
+    role: "be"
+    branch: "feature/E9/test-postgres-env-codex"
+    task: "TL-2025-09-19-pytest-postgres-migration"
+    epic_scope: "E9 / pytest: Postgres окружение + ветка test"
+    files:
+      - "tests/conftest.py"
+      - "tests/web/*"
+      - "web/routes/index.py"
+      - "web/routes/settings.py"
+    pr: null
+    ac_link: "README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3"
+    ttl_minutes: 0
+    status: "завершено 2025-09-19 21:40 (диагностика и web на Postgres; полный `pytest -q` требует увеличения таймаута)"
+  - when_utc: "2025-09-19T10:22:00Z"
+    agent: "codex"
+    role: "be"
+    branch: "feature/E9/test-postgres-env-codex"
+    task: "TL-2025-09-19-pytest-postgres-env"
+    epic_scope: "E9 / pytest: Postgres окружение"
+    files:
+      - "tests/conftest.py"
+      - ".env*"
+      - "docs/*"
+    pr: null
+    ac_link: null
+    ttl_minutes: 0
+    status: "завершено 2025-09-19 10:33"
+  - when_utc: "2025-09-19T08:43:00Z"
+    agent: "codex"
+    role: "ops"
+    branch: "main"
+    task: null
+    epic_scope: "Ops / синхронизация main + рестарт сервисов"
+    files:
+      - "git (main)"
+      - "systemctl"
+      - "logs/*"
+    pr: null
+    ac_link: null
+    ttl_minutes: 0
+    status: "завершено 2025-09-19 08:47"
+  - when_utc: "2025-09-19T07:55:00Z"
+    agent: "codex"
+    role: "be"
+    branch: "feature/E3/notes-assign-detached-codex"
+    task: "TL-2025-09-19-notes-assign-detached"
+    epic_scope: "E3 / починка POST /api/v1/notes/{id}/assign (DetachedInstanceError)"
+    files:
+      - "core/services/notes.py"
+      - "web/routes/notes.py"
+      - "tests/test_notes_assign.py"
+    pr: null
+    ac_link: null
+    ttl_minutes: 0
+    status: "завершено 2025-09-19 08:09"
+  - when_utc: "2025-09-19T07:48:00Z"
+    agent: "codex"
+    role: "fe"
+    branch: "feature/E17/appshell-nav-tuning-codex"
+    task: "TL-2025-09-19-appshell-nav-tuning"
+    epic_scope: "E17 / модульная навигация AppShell — адаптация UX"
+    files:
+      - "web/components/AppShell.tsx"
+      - "web/components/layout/PublicHeader.tsx"
+      - "web/components/navigation/*"
+      - "docs/*"
+    pr: null
+    ac_link: null
+    ttl_minutes: 0
+    status: "завершено 2025-09-19 08:28"
+  - when_utc: "2025-09-19T00:32:00Z"
+    agent: "codex"
+    role: "arch"
+    branch: "feature/E18/crm-skeleton-codex"
+    task: "TL-2025-09-18-crm-blueprint"
+    epic_scope: "E18 / CRM Knowledge Hub — исследование и каркас"
+    files:
+      - "docs/reports/*crm*"
+      - "docs/vision.md"
+      - "docs/tasklist.md"
+      - "web/app/crm/*"
+      - "core/services/crm/*"
+    pr: null
+    ac_link: null
+    ttl_minutes: 0
+    status: "завершено 2025-09-19 01:00"
+  - when_utc: "2025-09-18T23:05:00Z"
+    agent: "codex"
+    role: "fe"
+    branch: "feature/E17/menu-grouping-codex"
+    task: "TL-2025-09-18-nav-blueprint"
+    epic_scope: "E17 / группировка меню AppShell"
+    files:
+      - "web/components/AppShell.tsx"
+      - "web/lib/publicNav.ts"
+      - "docs/*"
+    pr: null
+    ac_link: null
+    ttl_minutes: 0
+    status: "завершено 2025-09-20 18:42 (merge runtime-fix; ModuleTabs/FavoriteToggle; `npm run lint`, `npm test`, `npm run build`)"
+  - when_utc: "2025-09-18T22:34:00Z"
+    agent: "codex"
+    role: "fe"
+    branch: "feature/E17/mobile-responsive-ui-codex"
+    task: "TL-2025-09-18-mobile-ui"
+    epic_scope: "E17 / мобильная адаптация AppShell и обзора"
+    files:
+      - "web/components/AppShell.tsx"
+      - "web/components/layout/PublicHeader.tsx"
+      - "web/components/dashboard/OverviewDashboard.tsx"
+    pr: null
+    ac_link: null
+    ttl_minutes: 0
+    status: "завершено 2025-09-18 22:44"
+  - when_utc: "2025-09-18T20:37:00Z"
+    agent: "codex"
+    role: "fe"
+    branch: "feature/E17/legacy-migration-codex"
+    task: "TL-2025-09-18-legacy-final"
+    epic_scope: "E17 / миграция легаси-страниц на новый UI"
+    files:
+      - "web/app/*"
+      - "web/templates/*"
+      - "web/components/*"
+      - "docs/*"
+    pr: null
+    ac_link: null
+    ttl_minutes: 0
+    status: "завершено 2025-09-18 21:03"
+  - when_utc: "2025-09-18T19:30:00Z"
+    agent: "codex"
+    role: "fe"
+    branch: "feature/E17/groups-products-ui-codex"
+    task: "TL-2025-09-18-support"
+    epic_scope: "E17 / тарифы, кнопки поддержки"
+    files:
+      - "web/components/marketing"
+      - "web/components/AppShell.tsx"
+      - "docs/*"
+    pr: null
+    ac_link: null
+    ttl_minutes: 0
+    status: "завершено 2025-09-18 19:46"
+  - when_utc: "2025-09-18T18:44:00Z"
+    agent: "codex"
+    role: "fe"
+    branch: "feature/E17/groups-products-ui-codex"
+    task: "TL-2025-09-18-groups"
+    epic_scope: "E17 / модернизация groups & products, тултипы терминов"
+    files:
+      - "web/app/groups"
+      - "web/app/products"
+      - "web/components"
+      - "docs/*"
+    pr: null
+    ac_link: null
+    ttl_minutes: 0
+    status: "завершено 2025-09-18 19:18"
+  - when_utc: "2025-09-18T17:45:00Z"
+    agent: "codex"
+    role: "fe"
+    branch: "feature/E17/profile-widget-codex"
+    task: "TL-2025-09-18-profile-widget"
+    epic_scope: "E17 / виджет профиля, меню тарифов"
+    files:
+      - "web/app"
+      - "web/components"
+      - "docs/*"
+    pr: null
+    ac_link: null
+    ttl_minutes: 0
+    status: "завершено 2025-09-18 17:58"
+  - when_utc: "2025-09-18T17:18:00Z"
+    agent: "codex"
+    role: "fe"
+    branch: "feature/E17/bot-landing-codex"
+    task: "TL-2025-09-18-bot"
+    epic_scope: "E17 / фронт + веб-сервер"
+    files:
+      - "web/app"
+      - "web/routes"
+      - "docs/*"
+    pr: null
+    ac_link: null
+    ttl_minutes: 0
+    status: "завершено 2025-09-18 17:28"
+```
 
+Добавляйте новые записи в начало списка `agent_sync`, актуализируйте `ttl_minutes` при продлении брони и удаляйте запись сразу после handoff или merge.
 
 Поля Role/Task/PR/AC обязательны. Role = tl|arch|be|fe|qa|tw|ops. Task = ID из Tasklist (формат `TL-YYYY-MM-DD-<slug>`).
 
