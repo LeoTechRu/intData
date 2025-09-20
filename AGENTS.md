@@ -1,7 +1,7 @@
 # AGENTS - Stage-Gate Playbook IntData
 
 ## TL;DR
-- Stage-gate конвейер: Intake (TL) -> Архитектура -> Реализация -> PR в `test` -> QA на `test` -> InfoSec advisory -> DevOps release (fast-forward `test->main`) -> Tech Writer.
+- AGENTS Spec v1.2 (2025-09-19): Intake (TL) -> Архитектура -> Реализация -> PR в `test` (merge делает TL) -> QA на `test` (PR с path-guard) -> InfoSec advisory (неблокирующий) -> DevOps release (TL fast-forward `test->main`) -> Tech Writer.
 - Лучшие практики IntBridge (router, handoff, role-boundary-check, YAML `agent_sync` с TTL) совмещаем с git-потоком IntData (`feature/*` -> PR -> `test` -> fast-forward -> `main`).
 - QA работает только в общей ветке `test`; InfoSec выдаёт неблокирующие рекомендации between QA и DevOps; на каждом gate присутствует двойной контроль TL.
 - Все роли поддерживают README-вортонку (idea -> vision -> conventions -> tasklist -> workflow), фиксируют handoff и GateRecord, обновляют `agent_sync`.
@@ -77,12 +77,12 @@
 ### Tech Writer
 - **Зона:** `README.md`, `docs/**`, `reports/**` (кроме infosec), Changelog.
 - **Промпт:**
-> Вы - Tech Writer IntData. Ты закрываешь стадию Documentation stage-gate и говоришь от имени технического писателя codex-cli. Перед началом сверяй README funnel, GateRecord и agent_sync. Во время работы:
-> - обновляй README (Vision/Conventions/Tasklist/Workflow) и Changelog с ссылками на PR/коммиты в единой терминологии;
-> - оформляй и структурируй docs/** и reports/** (runbook, QA/InfoSec summaries), добавляй ссылки в handoff и GateRecord;
-> - проверяй, что AC, выводы QA/InfoSec и follow-ups отражены в backlog, добавляй новые пункты в funnel;
-> - документируй изменения AGENTS.md и agent_sync, синхронизируй системные промпты и инструкции для других ролей codex-cli.
-> Заверши работу только когда TL принял GateRecord docs и все ссылки/TTL актуальны.
+> Вы - Tech Writer IntData. Закрываете стадию Documentation stage-gate от лица технического писателя codex-cli. Перед началом сверяете README funnel, GateRecord и agent_sync. Во время работы:
+> - обновляете README (Vision/Conventions/Tasklist/Workflow) и Changelog, приводите единые ссылки на PR/коммиты и выдерживаете терминологию;
+> - структурируете docs/** и reports/** (runbook, QA/InfoSec summaries), добавляете ссылки в handoff, GateRecord и agent_sync;
+> - убеждаетесь, что AC, рекомендации QA/InfoSec и договорённости DevOps отражены, а follow-ups заведены в funnel;
+> - синхронизируете изменения `AGENTS.md`, системных промптов и agent_sync между ролями codex-cli.
+> Завершаете работу после того, как TL принял GateRecord `docs`, а ссылки и TTL/locks проверены.
 - **DoD:** документация актуальна, ссылки добавлены, GateRecord `docs` подписан.
 
 ## Форматы для codex-cli
@@ -143,7 +143,7 @@ agent_sync_entry:
   branch: "feature/E9/test-postgres-env-be"
   locks:
     - path: "core/services/*"
-  status: "In Progress|Review|Blocked|Done"
+  status: "In Progress | Review | Blocked | Handoff | Done"
   ttl_minutes: 120
   note: "краткое описание работ"
 ```
@@ -167,17 +167,26 @@ gate:
 - CI цепочка включает: `role-boundary-check`, lint/test/build, OpenAPI/SCHEMA sync, `infosec-advisory` (semgrep/bandit/trivy) и release-runbook smoke.
 - CODEOWNERS: `tests/** -> @qa`, `backend/** -> @backend`, `web/** -> @frontend`, `config/** -> @devops`, `docs/** -> @techwriter`, `AGENTS.md -> @teamlead`.
 - Правки `AGENTS.md`/`agent_sync.yaml` сразу распространяем во все активные ветки (`feature/*`, `test`, `main`). TL отклоняет PR, если файлы расходятся.
+- Любой PR, затрагивающий `AGENTS.md`, обязан содержать байтово идентичную копию файла из `main`; пайплайн завершается ошибкой при расхождении.
 
-## Agent Sync & Multi-session правила
-- Agent Sync - единый GateLog. Перед стартом сессии бронируйте ветку/пути, указывайте TTL (UTC). Если TTL истёк и запись не обновлена, TL снимает бронь.
-- Locks обязательны: пока путь в списке, другие агенты не редактируют его даже в других ветках.
-- Завершая работу: пушите ветку, обновляйте запись (статус `Done` или `Handoff`) и добавляйте GateRecord.
-- Правки `AGENTS.md`/`agent_sync.yaml` считаются действительными только после синхронизации со всеми ветками (используйте служебный workflow или ручной cherry-pick).
+
+## Sync Policy (AGENTS.md + agent_sync.yaml)
+- Источник истины: `AGENTS.md` в `main`. Любые правки считаются действительными только после попадания в `main`.
+- Немедленная зеркализация: сразу после обновления `AGENTS.md` в `main` файл должен быть синхронно перенесён в `test` и все существующие ветки `feature/*` (fast-forward или отдельный sync-коммит). Содержимое обязано быть побайтно одинаковым.
+- Проверка при старте: перед началом новой сессии агент сравнивает локальный `AGENTS.md` с `main`. При расхождении — остановиться и выполнить sync (или оформить REASSIGN на TL).
+- `agent_sync.yaml` хранится в корне репозитория и действует глобально. Любой lock распространяется межветочно. Попытка редактировать залоченный путь — нарушение процесса; если без файла нельзя работать, оформляйте handoff/отклонение через TL с указанием причин.
+
+## Agent Sync & Multi-session
+- Agent Sync — единый межветочный GateLog. Перед стартом бронируйте ветку и список путей, указывайте TTL (UTC). Используем фиксированные статусы: `In Progress | Review | Blocked | Handoff | Done`.
+- Locks обязательны: пока путь указан в locks, никакая роль не редактирует его ни в одной ветке. Для разблокировки обновите запись (`Handoff` или `Done`) либо оформите REASSIGN через TL.
+- Если TTL истёк и запись не обновлена, TL вправе снять бронь и перераспределить работу.
+- Завершая этап, выполняйте push, обновляйте статус, добавляйте GateRecord/hand-off и отражайте изменения в README/Changelog.
+- Все sync-операции с `AGENTS.md` и `agent_sync.yaml` проводим централизованно согласно Sync Policy.
 
 ## Session continuity & recovery
-- Запускайте codex-cli внутри `tmux`/`screen` **и** сохраняйте состояние сессии в `.codex_sessions/<session-id>.json` (роль, ветка, план, инструкции).
-- В случае обрыва SSH ищите `Shutting down Codex instance` в `~/.codex/log/codex-tui.log`, поднимайте последнюю запись `session_meta`, восстанавливайте план через `update_plan` и Agent Sync.
-- Незавершённые сессии должны быть помечены в Agent Sync (статус `Blocked`/`Review`), чтобы TL видел их при ревью gate.
+- Работайте через `tmux`/`screen` и сохраняйте `.codex_sessions/<session-id>.json` (роль, ветка, план, инструкции); обновляйте файл после каждого gate.
+- При обрыве SSH найдите в `~/.codex/log/codex-tui.log` последнюю запись `session_meta`, восстановите план через `update_plan`, затем перепроверьте Sync Policy, locks и только после этого продолжайте либо оформите REASSIGN.
+- Незавершённые сессии обязаны иметь статус `Blocked` или `Review` в agent_sync, чтобы TL видел их при gate-контроле.
 
 ## Метрики и контроль процесса
 - Lead time от Intake до merge в `main`.
@@ -190,6 +199,20 @@ gate:
 
 ```yaml
 agent_sync:
+  - when_utc: "2025-09-20T23:55:00Z"
+    agent: "codex-cli::teamlead"
+    role: "tl"
+    branch: "main"
+    task: "TL-2025-09-20-agents-sync"
+    epic_scope: "Ops / Stage-Gate Playbook"
+    files:
+      - "AGENTS.md"
+      - "scripts/sync-agents.sh"
+    pr: null
+    ac_link: "AGENTS.md#sync-policy-agentsmd-agent_syncyaml"
+    ttl_minutes: 0
+    status: "Done"
+    note: "2025-09-20 23:55Z — Stage-Gate spec v1.2 синхронизирован во всех ветках"
   - when_utc: "2025-09-20T18:52:00Z"
     agent: "codex"
     role: "tl"
@@ -203,7 +226,8 @@ agent_sync:
     pr: null
     ac_link: "README.md#e10-capture-ботвеб-inbox"
     ttl_minutes: 0
-    status: "завершено 2025-09-20 19:11 (rebase на `test`, `npm run lint`, `npm run test`, `npm run build`)"
+    status: "Done"
+    note: "2025-09-20 19:11Z — rebase на test, npm run lint/test/build"
   - when_utc: "2025-09-20T17:50:00Z"
     agent: "codex"
     role: "tl"
@@ -216,7 +240,8 @@ agent_sync:
     pr: null
     ac_link: "README.md#-workflow-playbook"
     ttl_minutes: 0
-    status: "завершено 2025-09-20 17:52 (merge feature/E2,E3,E17 -> test; `pytest tests/test_para_invariants.py tests/web/test_calendar_feed_ics.py tests/web/test_alarms_api.py tests/test_diagnostics_service.py`, push origin/test)"
+    status: "Done"
+    note: "2025-09-20 17:52Z — merge feature/E2,E3,E17 -> test; pytest suites; push origin/test"
   - when_utc: "2025-09-20T17:44:00Z"
     agent: "codex"
     role: "fe"
@@ -397,7 +422,8 @@ agent_sync:
     pr: null
     ac_link: "README.md#e10-capture-%D0%B1%D0%BE%D1%82%D0%B2%D0%B5%D0%B1-inbox"
     ttl_minutes: 60
-    status: "на паузе (см. docs/reports/2025-09-19-notes-restore-wip.md)"
+    status: "Blocked"
+    note: "docs/reports/2025-09-19-notes-restore-wip.md"
   - when_utc: "2025-09-19T18:26:00Z"
     agent: "codex"
     role: "be"
@@ -854,7 +880,7 @@ Exit: PR с пайплайнами/конфигами, обновлённый ru
 ### Multi-agent Coordination (codex-cli)
 - Каждый экземпляр codex-cli работает в собственной рабочей копии: отдельный `git clone` или `git worktree add ../<agent-branch>`. Запрещено вести параллельную работу из одного каталога.
 - Перед стартом сессии: `git fetch --all`, `git status`, убедись, что нет чужих незакоммиченных правок. При обнаружении - синхронизируйся с владельцем задачи.
-- Для каждой задачи обязательно создавай персональную ветку формата `feature/<epic>/<scope>-<agent>` до внесения изменений. codex-cli сам коммитит в эту ветку, затем выполняет `git fetch`, решает конфликты (`rebase`/`merge`) и вливает её в `main` без привлечения других агентов.
+- Для каждой задачи заводите ветку `feature/<epic>/<scope>-<role>` и коммитите туда. Дальнейший merge выполняет только Team Lead: сначала через PR в `test`, затем TL делает fast-forward `test->main` после прохождения gate.
 - Резервируй задачи и файлы в [Agent Sync](#agent-sync): укажи позывной, дату/время (UTC), ветку и ключевые файлы. После merge/отмены работы снимай бронь.
 - Если требуются правки в файлах, занятых другим агентом, договорись через Agent Sync о порядке работ; одновременное редактирование одного файла запрещено.
 - Для крупных фич раскладывай изменения на подзадачи в README.md (секция «Roadmap & Epics») и, по возможности, включай фичефлаги, чтобы ограничить зону конфликта.
