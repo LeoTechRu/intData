@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import parse_qsl
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 from core.models import DiagnosticClient, DiagnosticResult, WebUser
 from core.services.diagnostics_service import DiagnosticsService
@@ -13,26 +12,22 @@ from web.dependencies import get_current_web_user
 
 router = APIRouter(tags=["diagnostics"])
 
-basic_scheme = HTTPBasic(auto_error=False)
-
-
 async def _get_actor(
-    request: Request,
-    credentials: Optional[HTTPBasicCredentials] = Depends(basic_scheme),
     current_user: Optional[WebUser] = Depends(get_current_web_user),
 ) -> WebUser:
-    if current_user and current_user.diagnostics_enabled:
-        return current_user
-    if credentials:
-        async with DiagnosticsService() as service:
-            user = await service.authenticate_basic(
-                login=credentials.username,
-                password=credentials.password,
-            )
-            if user:
-                request.state.diagnostics_user = user
-                return user
-    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+    if not current_user.diagnostics_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Diagnostics access is disabled",
+        )
+    if not current_user.diagnostics_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Diagnostics access is inactive",
+        )
+    return current_user
 
 
 def _split_name(full_name: Optional[str]) -> tuple[str, str]:

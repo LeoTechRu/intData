@@ -51,30 +51,6 @@ class DiagnosticsService:
     # Specialist helpers
     # ------------------------------------------------------------------
 
-    async def authenticate_basic(
-        self, *, login: str, password: str
-    ) -> Optional[WebUser]:
-        """Authenticate diagnostics specialist using Basic Auth credentials."""
-
-        login = login.strip()
-        if not login:
-            return None
-        wsvc = WebUserService(self.session)
-        user = await wsvc.authenticate(login, password)
-        if not user:
-            # Fallback to email lookup when username differs from login
-            result = await self.session.execute(
-                select(WebUser).where(func.lower(WebUser.email) == login.lower())
-            )
-            candidate = result.scalar_one_or_none()
-            if candidate and candidate.password_hash and candidate.check_password(password):
-                user = candidate
-        if not user:
-            return None
-        if not user.diagnostics_enabled or not user.diagnostics_active:
-            return None
-        return user
-
     async def list_specialists(self) -> list[WebUser]:
         stmt = (
             select(WebUser)

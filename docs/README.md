@@ -99,9 +99,9 @@ RUN_SLOW=1 pytest -q
 Enable metrics locally:
 
 ```bash
-export METRICS_ENABLED=1 METRICS_BASIC_AUTH_USER=user METRICS_BASIC_AUTH_PASS=pass
+export METRICS_ENABLED=1
 python -m web.main
-curl -u user:pass http://localhost:8000/metrics
+curl http://localhost:8000/metrics
 ```
 
 ## Security toggles
