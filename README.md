@@ -859,6 +859,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Database: CHECK-ограничение «ровно один контейнер (project_id XOR area_id)» и индексы `(owner_id, project_id|area_id)` для PARA-сущностей; экспорт схемы и тест `tests/test_para_invariants.py` следят за инвариантом.
+- Calendar ICS: генератор `/api/v1/calendar/feed.ics` включает связанный VALARM (`BEGIN:VALARM`) с нормализацией времени в UTC.
 - CI/CD: workflow `.github/workflows/deploy-test.yml` автоматически деплоит ветку `test` в тестовый контур (skip, если не настроены `TEST_VPS_*`).
 - Документация: runbook `docs/runbooks/test-to-main.md`, секция Infra README и обновлённый список `TEST_*` секретов.
 - CRM Knowledge Hub исследование: `docs/reports/2025-09-19-crm-competitive-research.md` (Bitrix24, Kommo, HubSpot, monday.com, Salesforce, Pipedrive) и обновлённый раздел vision E18.
@@ -973,6 +975,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bare timers auto-create tasks in Inbox.
 
 ### Changed
+- Diagnostics: HTTP Basic Auth удалён из `/api/v1/diagnostics/*`; авторизация опирается на сессию, документация обновлена для локального `/metrics` без basic-auth.
 - Pytest использует переменные `TEST_DATABASE_URL`/`TEST_DB_*` из `.env`, поэтому тесты подключаются к отдельной PostgreSQL-базе без затрагивания runtime.
 - AGENTS.md закрепил ветку `test`, отдельный деплой тестового контура и требования к секретам `TEST_*`.
 - AppShell: мобильная шапка стала компактнее, вкладки модулей располагаются справа от сайдбара на десктопе, а левое меню получило независимый скролл и сворачиваемые секции с быстрым добавлением/удалением страниц.

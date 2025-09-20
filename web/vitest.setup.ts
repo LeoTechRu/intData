@@ -1,4 +1,6 @@
+import React from 'react';
 import { vi } from 'vitest';
+import '@testing-library/jest-dom/vitest';
 
 const mockRouter = {
   push: vi.fn(),
@@ -12,4 +14,9 @@ const mockRouter = {
 vi.mock('next/navigation', () => ({
   useRouter: () => mockRouter,
   usePathname: () => '/',
+}));
+
+vi.mock('next/link', () => ({
+  default: ({ children, prefetch, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) =>
+    React.createElement('a', props, children),
 }));

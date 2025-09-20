@@ -88,6 +88,9 @@ async def test_navigation_user_layout(monkeypatch, async_session):
         keys = [item["key"] for item in body["items"]]
         assert keys[0] == "overview"
         assert "admin" not in keys
+        modules = body["modules"]
+        assert any(module["id"] == "control" for module in modules)
+        assert all("module" in item and "section_order" in item for item in body["items"])
 
         payload = {
             "layout": {
@@ -105,6 +108,7 @@ async def test_navigation_user_layout(monkeypatch, async_session):
         assert updated["items"][0]["key"] == "projects"
         hidden_map = {item["key"]: item["hidden"] for item in updated["items"]}
         assert hidden_map["habits"] is True
+        assert updated["modules"][0]["id"] == modules[0]["id"]
 
         res = await client.put("/api/v1/navigation/sidebar/user", json={"reset": True})
         assert res.status_code == 200
@@ -112,6 +116,7 @@ async def test_navigation_user_layout(monkeypatch, async_session):
         assert reset_payload["items"][0]["key"] == "overview"
         hidden_map = {item["key"]: item["hidden"] for item in reset_payload["items"]}
         assert hidden_map.get("habits") is False
+        assert reset_payload["modules"][0]["label"] == modules[0]["label"]
 
 
 @pytest.mark.asyncio

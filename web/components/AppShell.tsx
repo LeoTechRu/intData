@@ -5,10 +5,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import React, { ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { apiFetch, ApiError } from '../lib/api';
 import { fetchSidebarNav, updateGlobalSidebarLayout, updateUserSidebarLayout } from '../lib/navigation';
+import { groupSidebarItemsByModule, sortSidebarItems } from '../lib/navigation-helpers';
 import {
   fetchPersonaBundle,
   getPersonaInfo,
@@ -28,6 +29,8 @@ import { formatClock, formatDateTime, normalizeTimerDescription, parseDateToUtc 
 import { TimezoneProvider, useTimezone } from '../lib/timezone';
 import { Button, Card, StatusIndicator, type StatusIndicatorKind } from './ui';
 import { SidebarEditor } from './navigation/SidebarEditor';
+import { ModuleTabs, type ModuleTabItem } from './navigation/ModuleTabs';
+import { FavoriteToggle } from './navigation/FavoriteToggle';
 
 interface AppShellProps {
   title: string;
@@ -313,6 +316,7 @@ export default function AppShell({
   const [isNavEditorOpen, setIsNavEditorOpen] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<string[]>([]);
   const [expandedHiddenSections, setExpandedHiddenSections] = useState<string[]>([]);
+  const sidebarStorageRef = useRef<Storage | null>(null);
   const headingId = titleId ?? 'app-shell-title';
   const headingDescriptionId = subtitle ? `${headingId}-description` : undefined;
   const queryClient = useQueryClient();
@@ -346,35 +350,68 @@ export default function AppShell({
       return;
     }
     setIsHydrated(true);
-    const persisted = window.localStorage.getItem('appShell.sidebarCollapsed');
-    if (persisted === '1') {
-      setIsSidebarCollapsed(true);
+    try {
+      sidebarStorageRef.current = window.localStorage;
+    } catch (error) {
+      sidebarStorageRef.current = null;
+      console.warn('Локальное хранилище меню недоступно, пропускаем восстановление состояния', error);
+      return;
     }
-    const collapsedRaw = window.localStorage.getItem('appShell.collapsedSections');
-    if (collapsedRaw) {
-      try {
+    const storage = sidebarStorageRef.current;
+    if (!storage) {
+      return;
+    }
+    try {
+      const persisted = storage.getItem('appShell.sidebarCollapsed');
+      if (persisted === '1') {
+        setIsSidebarCollapsed(true);
+      }
+    } catch (error) {
+      console.warn('Не удалось прочитать флаг свернутого меню', error);
+    }
+    try {
+      const collapsedRaw = storage.getItem('appShell.collapsedSections');
+      if (collapsedRaw) {
         const parsed = JSON.parse(collapsedRaw);
         if (Array.isArray(parsed)) {
           setCollapsedSections(parsed.filter((entry): entry is string => typeof entry === 'string'));
         }
-      } catch (error) {
-        console.warn('Не удалось прочитать сохранённые секции меню', error);
       }
+    } catch (error) {
+      console.warn('Не удалось прочитать сохранённые секции меню', error);
     }
   }, []);
 
   useEffect(() => {
-    if (!isHydrated || typeof window === 'undefined') {
+    if (!isHydrated) {
       return;
     }
-    window.localStorage.setItem('appShell.sidebarCollapsed', isSidebarCollapsed ? '1' : '0');
+    const storage = sidebarStorageRef.current;
+    if (!storage) {
+      return;
+    }
+    try {
+      storage.setItem('appShell.sidebarCollapsed', isSidebarCollapsed ? '1' : '0');
+    } catch (error) {
+      sidebarStorageRef.current = null;
+      console.warn('Не удалось сохранить состояние бокового меню', error);
+    }
   }, [isSidebarCollapsed, isHydrated]);
 
   useEffect(() => {
-    if (!isHydrated || typeof window === 'undefined') {
+    if (!isHydrated) {
       return;
     }
-    window.localStorage.setItem('appShell.collapsedSections', JSON.stringify(collapsedSections));
+    const storage = sidebarStorageRef.current;
+    if (!storage) {
+      return;
+    }
+    try {
+      storage.setItem('appShell.collapsedSections', JSON.stringify(collapsedSections));
+    } catch (error) {
+      sidebarStorageRef.current = null;
+      console.warn('Не удалось сохранить список скрытых секций меню', error);
+    }
   }, [collapsedSections, isHydrated]);
 
   const viewerQuery = useQuery<ViewerProfileSummary | null>({
@@ -451,89 +488,24 @@ export default function AppShell({
     return [...source].sort((a, b) => a.order - b.order);
   }, [navQuery.data?.modules]);
   const moduleMap = useMemo(() => new Map(navModules.map((section) => [section.id, section])), [navModules]);
+  const moduleGroups = useMemo(
+    () => groupSidebarItemsByModule(navItems, navModules),
+    [navItems, navModules],
+  );
   const navSections = useMemo(() => {
-    type SectionEntry = {
-      module: SidebarModuleDefinition;
-      visible: { item: SidebarNavItem; active: boolean }[];
-      hidden: SidebarNavItem[];
-    };
-    const buckets = new Map<string, SectionEntry>();
-    const ensureBucket = (moduleId: string): SectionEntry => {
-      const existing = buckets.get(moduleId);
-      if (existing) {
-        return existing;
-      }
-      const moduleFromPayload = moduleMap.get(moduleId);
-      const moduleOrder = moduleFromPayload?.order ?? 9000;
-      const moduleDef: SidebarModuleDefinition =
-        moduleFromPayload ?? { id: moduleId, label: moduleId, order: moduleOrder };
-      const bucket: SectionEntry = { module: moduleDef, visible: [], hidden: [] };
-      buckets.set(moduleId, bucket);
-      return bucket;
-    };
-    navItems.forEach((item) => {
-      const moduleId = item.module ?? 'general';
-      const bucket = ensureBucket(moduleId);
-      if (item.hidden) {
-        bucket.hidden.push(item);
-        return;
-      }
-      const href = item.href;
-      const active = href && pathname ? pathname === href || pathname.startsWith(`${href}/`) : false;
-      bucket.visible.push({ item, active });
+    return moduleGroups.map((group) => {
+      const visible = group.items
+        .filter((item) => !item.hidden)
+        .map((item) => {
+          const href = item.href;
+          const active =
+            href && pathname ? pathname === href || pathname.startsWith(`${href}/`) : false;
+          return { item, active };
+        });
+      const hidden = group.items.filter((item) => item.hidden);
+      return { module: group.module, visible, hidden };
     });
-    const sections: SectionEntry[] = [];
-    navModules
-      .filter((module) => buckets.has(module.id))
-      .forEach((module) => {
-        const bucket = buckets.get(module.id)!;
-        bucket.visible.sort((a, b) => {
-          const orderA = a.item.section_order ?? 0;
-          const orderB = b.item.section_order ?? 0;
-          if (orderA !== orderB) {
-            return orderA - orderB;
-          }
-          return a.item.position - b.item.position;
-        });
-        bucket.hidden.sort((a, b) => {
-          const orderA = a.section_order ?? 0;
-          const orderB = b.section_order ?? 0;
-          if (orderA !== orderB) {
-            return orderA - orderB;
-          }
-          return a.position - b.position;
-        });
-        sections.push(bucket);
-        buckets.delete(module.id);
-      });
-    Array.from(buckets.values())
-      .sort((a, b) => {
-        if (a.module.order !== b.module.order) {
-          return a.module.order - b.module.order;
-        }
-        return a.module.id.localeCompare(b.module.id);
-      })
-      .forEach((section) => {
-        section.visible.sort((a, b) => {
-          const orderA = a.item.section_order ?? 0;
-          const orderB = b.item.section_order ?? 0;
-          if (orderA !== orderB) {
-            return orderA - orderB;
-          }
-          return a.item.position - b.item.position;
-        });
-        section.hidden.sort((a, b) => {
-          const orderA = a.section_order ?? 0;
-          const orderB = b.section_order ?? 0;
-          if (orderA !== orderB) {
-            return orderA - orderB;
-          }
-          return a.position - b.position;
-        });
-        sections.push(section);
-      });
-    return sections;
-  }, [navItems, navModules, moduleMap, pathname]);
+  }, [moduleGroups, pathname]);
 
   const viewerRole = viewer?.role?.toLowerCase() ?? null;
   const hasPaidSupport = Boolean(viewer) && viewerRole !== 'single' && viewerRole !== 'suspended';
@@ -597,62 +569,38 @@ export default function AppShell({
 
   const canToggleFavorite = Boolean(viewer && currentNavEntry);
   const isFavorite = currentNavEntry ? !currentNavEntry.hidden : false;
+  const favoriteLabelAdd = currentNavEntry
+    ? `Закрепить страницу «${currentNavEntry.label}» в меню`
+    : 'Закрепить страницу в меню';
+  const favoriteLabelRemove = currentNavEntry
+    ? `Убрать страницу «${currentNavEntry.label}» из меню`
+    : 'Убрать страницу из меню';
 
   const moduleTabsData = useMemo(() => {
-    type ModuleBucket = { module: SidebarModuleDefinition; items: SidebarNavItem[] };
-    const buckets = new Map<string, ModuleBucket>();
-    const ensureBucket = (moduleId: string): ModuleBucket => {
-      const existing = buckets.get(moduleId);
-      if (existing) {
-        return existing;
-      }
-      const moduleFromPayload = moduleMap.get(moduleId);
-      const moduleOrder = moduleFromPayload?.order ?? 9000;
-      const moduleDef: SidebarModuleDefinition =
-        moduleFromPayload ?? { id: moduleId, label: moduleId, order: moduleOrder };
-      const bucket: ModuleBucket = { module: moduleDef, items: [] };
-      buckets.set(moduleId, bucket);
-      return bucket;
-    };
-    navItems.forEach((item) => {
-      if (!item.href || item.disabled) {
-        return;
-      }
-      const moduleId = item.module ?? 'general';
-      const bucket = ensureBucket(moduleId);
-      bucket.items.push(item);
-    });
-    const sections = Array.from(buckets.values()).map((section) => {
-      const items = [...section.items].sort((a, b) => {
-        const orderA = a.section_order ?? 0;
-        const orderB = b.section_order ?? 0;
-        if (orderA !== orderB) {
-          return orderA - orderB;
-        }
-        return a.position - b.position;
-      });
-      return { module: section.module, items };
-    });
-    sections.sort((a, b) => {
-      if (a.module.order !== b.module.order) {
-        return a.module.order - b.module.order;
-      }
-      return a.module.id.localeCompare(b.module.id);
-    });
-    return sections;
-  }, [moduleMap, navItems]);
+    const navigable = navItems.filter((item) => item.href && !item.disabled);
+    return groupSidebarItemsByModule(navigable, navModules);
+  }, [navItems, navModules]);
 
-  const activeModuleId = currentNavEntry?.module ?? moduleTabsData[0]?.module.id ?? navModules[0]?.id ?? 'general';
-  const activeModule = moduleMap.get(activeModuleId) ?? { id: activeModuleId, label: activeModuleId, order: 9000 };
-  const activeModuleTabs = useMemo(() => {
+  const activeModuleId =
+    currentNavEntry?.module ??
+    moduleTabsData[0]?.module.id ??
+    moduleGroups[0]?.module.id ??
+    navModules[0]?.id ??
+    'general';
+  const activeModule =
+    moduleMap.get(activeModuleId) ?? { id: activeModuleId, label: activeModuleId, order: 9000 };
+  const activeModuleTabs = useMemo<ModuleTabItem[]>(() => {
     const section = moduleTabsData.find((candidate) => candidate.module.id === activeModuleId);
     if (!section) {
-      return [] as Array<{ item: SidebarNavItem; active: boolean; hidden: boolean }>;
+      return [];
     }
     return section.items.map((item) => ({
-      item,
-      active: currentNavEntry ? item.key === currentNavEntry.key : false,
+      key: item.key,
+      label: item.label,
+      href: item.href,
+      external: Boolean(item.external),
       hidden: Boolean(item.hidden),
+      active: currentNavEntry ? item.key === currentNavEntry.key : false,
     }));
   }, [activeModuleId, currentNavEntry, moduleTabsData]);
 
@@ -761,54 +709,14 @@ export default function AppShell({
     }
   };
 
-  const moduleTabsBar = activeModuleTabs.length > 1 ? (
-    <nav
-      className="flex gap-2 overflow-x-auto pb-1"
-      aria-label={`Навигация модуля ${activeModule.label}`}
-    >
-      {activeModuleTabs.map(({ item, active, hidden }) => {
-        const baseClass =
-          'inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]';
-        const variant = active
-          ? 'bg-[var(--accent-primary)] text-[var(--accent-on-primary)] shadow-soft'
-          : hidden
-          ? 'border border-dashed border-subtle text-muted hover:text-[var(--text-primary)]'
-          : 'bg-surface-soft text-muted hover:text-[var(--text-primary)]';
-        const className = clsx(baseClass, variant);
-        if (!item.href) {
-          return (
-            <span key={item.key} className={className} aria-disabled>
-              {item.label}
-            </span>
-          );
-        }
-        if (item.external) {
-          return (
-            <a key={item.key} href={item.href} target="_blank" rel="noreferrer" className={className}>
-              <span>{item.label}</span>
-              {hidden ? (
-                <span className="text-[10px] uppercase tracking-wide text-muted">Скрыто</span>
-              ) : null}
-            </a>
-          );
-        }
-        return (
-          <Link
-            key={item.key}
-            href={item.href}
-            className={className}
-            aria-current={active ? 'page' : undefined}
-            prefetch={false}
-          >
-            <span>{item.label}</span>
-            {hidden ? (
-              <span className="text-[10px] uppercase tracking-wide text-muted">Скрыто</span>
-            ) : null}
-          </Link>
-        );
-      })}
-    </nav>
-  ) : null;
+  const moduleTabsBar =
+    activeModuleTabs.length > 1 ? (
+      <ModuleTabs
+        moduleLabel={activeModule.label}
+        items={activeModuleTabs}
+        className="flex gap-2 overflow-x-auto pb-1"
+      />
+    ) : null;
 
   const sidebarClassName = clsx(
     'fixed inset-y-0 left-0 z-50 w-72 transform overflow-y-auto border-r border-subtle bg-[var(--surface-0)] px-4 py-6 transition-transform duration-200 ease-out md:static md:h-full md:overflow-y-auto md:px-5 md:py-8',
@@ -900,29 +808,13 @@ export default function AppShell({
               >
                 {title}
               </h1>
-              <button
-                type="button"
-                onClick={handleToggleFavorite}
+              <FavoriteToggle
+                active={isFavorite}
                 disabled={!canToggleFavorite || saveUserLayoutMutation.isPending}
-                aria-pressed={isFavorite}
-                aria-label={isFavorite ? 'Убрать страницу из меню' : 'Закрепить страницу в меню'}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted transition-base hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:opacity-40"
-              >
-                <svg
-                  aria-hidden
-                  className="h-5 w-5"
-                  viewBox="0 0 24 24"
-                  fill={isFavorite ? 'currentColor' : 'none'}
-                  stroke="currentColor"
-                  strokeWidth={isFavorite ? 0 : 1.6}
-                >
-                  <path
-                    d="M12 3.25l2.317 4.695 5.182.753-3.75 3.655.886 5.168L12 15.986l-4.635 2.53.886-5.168-3.75-3.655 5.182-.753L12 3.25z"
-                    fillRule="evenodd"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
+                onToggle={handleToggleFavorite}
+                labelAdd={favoriteLabelAdd}
+                labelRemove={favoriteLabelRemove}
+              />
             </div>
             {subtitle ? (
               <p id={headingDescriptionId} className="sr-only">
