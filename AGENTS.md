@@ -199,6 +199,21 @@ gate:
 
 ```yaml
 agent_sync:
+  - when_utc: "2025-09-20T22:49:00Z"
+    agent: "codex"
+    role: "qa"
+    branch: "test"
+    task: "TL-2025-09-20-release-qa"
+    epic_scope: "E2/E3/E17 release prep"
+    files:
+      - "tests/**"
+      - "reports/2025-09-20-release-qa.md"
+      - "reports/2025-09-20-release-e2-e3-e17.md"
+    pr: null
+    ac_link: "README.md#-tasklist"
+    ttl_minutes: 180
+    status: "In Progress"
+    note: "Регрессия ветки test (f34a994) перед Gate-4/5."
   - when_utc: "2025-09-20T18:52:00Z"
     agent: "codex"
     role: "tl"
