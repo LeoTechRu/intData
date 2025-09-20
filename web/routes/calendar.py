@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import List, Optional
 import hashlib
 import os
@@ -313,29 +313,62 @@ async def agenda(
     return [CalendarItemResponse.from_model(i) for i in items]
 
 
+def _to_utc(dt: datetime) -> datetime:
+    """Normalize datetime to UTC with tzinfo."""
+
+    if dt.tzinfo is not None:
+        return dt.astimezone(UTC)
+    return dt.replace(tzinfo=UTC)
+
+
+def _format_ics_datetime(dt: datetime) -> str:
+    """Return iCalendar-compatible UTC timestamp."""
+
+    return _to_utc(dt).strftime("%Y%m%dT%H%M%SZ")
+
+
+def _append_valarms(lines: list[str], item: CalendarItem) -> None:
+    """Append VALARM blocks derived from item's alarms."""
+
+    alarms = [
+        alarm
+        for alarm in getattr(item, "alarms", [])
+        if getattr(alarm, "trigger_at", None) is not None
+    ]
+    for alarm in sorted(alarms, key=lambda a: _to_utc(a.trigger_at)):
+        trigger = _format_ics_datetime(alarm.trigger_at)
+        lines.append("BEGIN:VALARM")
+        lines.append(f"TRIGGER;VALUE=DATE-TIME:{trigger}")
+        lines.append("ACTION:DISPLAY")
+        lines.append(f"DESCRIPTION:{item.title}")
+        lines.append("END:VALARM")
+
+
 def _generate_ics(items: list[CalendarItem]) -> str:
     """Create a minimal iCalendar feed for events and tasks."""
 
     from core.utils import utcnow
 
-    now = utcnow().strftime("%Y%m%dT%H%M%SZ")
+    now = _format_ics_datetime(utcnow())
     lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//intData//EN"]
     for e in items:
         if e.end_at:
             lines.append("BEGIN:VEVENT")
             lines.append(f"UID:{e.id}@intData")
             lines.append(f"DTSTAMP:{now}")
-            lines.append(f"DTSTART:{e.start_at.strftime('%Y%m%dT%H%M%SZ')}")
-            lines.append(f"DTEND:{e.end_at.strftime('%Y%m%dT%H%M%SZ')}")
+            lines.append(f"DTSTART:{_format_ics_datetime(e.start_at)}")
+            lines.append(f"DTEND:{_format_ics_datetime(e.end_at)}")
             lines.append(f"SUMMARY:{e.title}")
+            _append_valarms(lines, e)
             lines.append("END:VEVENT")
         else:
             lines.append("BEGIN:VTODO")
             lines.append(f"UID:{e.id}@intData")
             lines.append(f"DTSTAMP:{now}")
-            lines.append(f"DUE:{e.start_at.strftime('%Y%m%dT%H%M%SZ')}")
+            lines.append(f"DUE:{_format_ics_datetime(e.start_at)}")
             lines.append(f"SUMMARY:{e.title}")
             lines.append(f"STATUS:{e.status.value.upper()}")
+            _append_valarms(lines, e)
             lines.append("END:VTODO")
     lines.append("END:VCALENDAR")
     return "\r\n".join(lines)

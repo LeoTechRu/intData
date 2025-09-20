@@ -7,6 +7,7 @@ from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from core.models import (
     Area,
@@ -104,7 +105,7 @@ class CalendarItemRepository(CRUDService[CalendarItem]):
         start_to: Optional[datetime] = None,
         status: Optional[CalendarItemStatus] = None,
     ) -> list[CalendarItem]:
-        stmt = select(CalendarItem)
+        stmt = select(CalendarItem).options(selectinload(CalendarItem.alarms))
         if owner_id is not None:
             stmt = stmt.where(CalendarItem.owner_id == owner_id)
         if project_id is not None:
