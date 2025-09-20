@@ -6,6 +6,7 @@ from httpx import AsyncClient
 from base import Base
 import core.db as db
 from core.models import Area, CalendarItem
+from core.services.alarm_service import AlarmService
 from core.utils import utcnow_aware
 from tests.utils.seeds import ensure_tg_user
 
@@ -93,3 +94,49 @@ async def test_create_alarm_item_without_owner(client: AsyncClient):
         cookies=cookies,
     )
     assert resp.status_code == 201
+
+
+@pytest.mark.asyncio
+async def test_list_alarms_returns_sorted(client: AsyncClient):
+    item_id, _ = await _prepare_item()
+    cookies = {"telegram_id": "1"}
+    now = utcnow_aware()
+    async with db.async_session() as session:  # type: ignore
+        async with session.begin():
+            service = AlarmService(session)
+            await service.create_alarm(
+                item_id=item_id, trigger_at=now + timedelta(minutes=90)
+            )
+            await service.create_alarm(
+                item_id=item_id, trigger_at=now + timedelta(minutes=30)
+            )
+    resp = await client.get(
+        f"/api/v1/calendar/items/{item_id}/alarms",
+        cookies=cookies,
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data) == 2
+    assert data[0]["trigger_at"] < data[1]["trigger_at"]
+
+
+@pytest.mark.asyncio
+async def test_list_alarms_requires_auth(client: AsyncClient):
+    item_id, _ = await _prepare_item()
+    resp = await client.get(f"/api/v1/calendar/items/{item_id}/alarms")
+    assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_list_alarms_other_owner_empty(client: AsyncClient):
+    item_id, _ = await _prepare_item()
+    async with db.async_session() as session:  # type: ignore
+        async with session.begin():
+            await ensure_tg_user(session, 2, first_name="other")
+    cookies = {"telegram_id": "2"}
+    resp = await client.get(
+        f"/api/v1/calendar/items/{item_id}/alarms",
+        cookies=cookies,
+    )
+    assert resp.status_code == 200
+    assert resp.json() == []
