@@ -627,7 +627,11 @@ export default function HabitsModule() {
               <p className="text-sm text-muted">
                 Добавим отдельные карточки для dailies и rewards (AC E16) после расширения API: потребуется список ежедневок и витрина наград.
               </p>
-              <Button variant="secondary" size="sm" onClick={() => router.push('/docs/BACKLOG.md#e16-habits')}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => window.open('https://github.com/LeoTechRu/intData/blob/main/README.md#e16-habits', '_blank', 'noopener')}
+              >
                 Критерии E16
               </Button>
             </Card>

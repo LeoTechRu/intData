@@ -33,7 +33,7 @@
 
 ## 4. Предлагаемый план
 1. **Инвентаризация**
-   - Сделать `pg_dump --schema-only` и сохранить как baseline (`docs/schema_baseline_legacy.sql`).
+   - Сделать `pg_dump --schema-only` и сохранить как baseline (`reports/archive/schema_baseline_legacy.sql`).
    - Сравнить с моделями (`core/models.py`) и DDL, перечислить отличия (тип PK, отсутствующие колонки, индексы).
 2. **Инициализация Alembic**
    - Создать конфигурацию `alembic/`, настроить подключение через `core.db.engine`.
@@ -49,7 +49,7 @@
    - Обновить pytest фикстуры (использовать асинхронный Postgres через testcontainers или `pytest-postgresql`).
 
 ## 5. Механизм отката / fallback
-- Хранить текущие ручные SQL-патчи в `docs/manual_db_patch.sql`, их можно повторно применить при аварийном восстановлении.
+- Хранить текущие ручные SQL-патчи в `reports/archive/manual_db_patch.sql`, их можно повторно применить при аварийном восстановлении.
 - До полной миграции оставляем `.env` флаги `DB_BOOTSTRAP=0`, `DB_REPAIR=0`; включение возможно после появления корректных Alembic-миграций.
 - Перед каждым `upgrade` выполнять `pg_dump -Fc` и документировать процедуру восстановления.
 

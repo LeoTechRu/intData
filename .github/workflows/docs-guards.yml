@@ -1,0 +1,40 @@
+name: docs-guards
+
+on:
+  pull_request:
+    paths:
+      - '**'
+
+jobs:
+  docs_folder_guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail if docs/ exists or touched
+        run: |
+          if [ -d docs ] || git diff --name-only origin/${{ github.base_ref }}... | grep -E '^docs/'; then
+            echo "The docs/ folder is forbidden. Use README.md and reports/ instead."
+            exit 1
+          fi
+
+  readme_ru_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check README is Russian-facing
+        run: |
+          if ! grep -qP "[А-Яа-яЁё]" README.md; then
+            echo "README.md must be maintained in Russian for the owner."
+            exit 1
+          fi
+
+  links_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject legacy docs/ links
+        run: |
+          if grep -RIn "docs/" --include="*.md" .; then
+            echo "Legacy links to docs/ detected. Replace with reports/ or README sections."
+            exit 1
+          fi
