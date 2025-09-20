@@ -97,13 +97,14 @@ def ensure_default_areas(conn: Connection) -> int:
     """Ensure each owner has a default 'Входящие' area."""
     owners: set[uuid.UUID | int] = set()
     tables = ["areas", "projects", "calendar_items", "resources", "tasks", "time_entries"]
-    for table in tables:
-        if not _table_exists(conn, table):
+    for table_name in tables:
+        if not _table_exists(conn, table_name):
             continue
         try:
-            rows = conn.execute(
-                sa.text(f"SELECT DISTINCT owner_id FROM {table}")
-            ).fetchall()
+            owner_column = sa.column("owner_id")
+            pseudo_table = sa.table(table_name, owner_column)
+            stmt = sa.select(sa.distinct(pseudo_table.c.owner_id))
+            rows = conn.execute(stmt).fetchall()
             owners.update(r[0] for r in rows if r[0] is not None)
         except Exception:
             continue

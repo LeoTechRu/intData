@@ -210,6 +210,20 @@ gate:
 
 ```yaml
 agent_sync:
+  - when_utc: "2025-09-20T23:48:00Z"
+    agent: "codex"
+    role: "be"
+    branch: "feature/E2/sql-repair-param"
+    task: "TL-2025-09-20-sql-repair-param"
+    epic_scope: "E2 / миграции БД и индексы"
+    files:
+      - "core/db/repair.py"
+      - "tests/test_repair_habits.py"
+    pr: null
+    ac_link: "README.md#e2-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B8-%D0%B1%D0%B4-%D0%B8-%D0%B8%D0%BD%D0%B4%D0%B5%D0%BA%D1%81%D1%8B"
+    ttl_minutes: 0
+    status: "Done"
+    note: "2025-09-20 23:48Z — owner lookup через SQLAlchemy table/select; pytest tests/test_repair_habits.py."
   - when_utc: "2025-09-20T23:59:00Z"
     agent: "codex-cli::techwriter"
     role: "tw"
