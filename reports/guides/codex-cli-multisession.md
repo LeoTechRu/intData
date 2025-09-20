@@ -10,7 +10,7 @@
 2. Убедитесь, что рабочее дерево чистое (`git status`). Если есть чужие незакоммиченные файлы — свяжитесь с владельцем.
 
 ## Как запускать новую сессию codex-cli
-1. Откройте `docs/BACKLOG.md` и раздел *Agent Sync*.
+1. Откройте `reports/archive/BACKLOG.md` и раздел *Agent Sync*.
 2. Если ваша задача свободна:
    - Зарезервируйте её в таблице Agent Sync (укажите позывной, ветку, ключевые файлы, UTC-время).
    - Создайте рабочую ветку: `git checkout -b feature/<epic>/<scope>-<прозвище>`.
@@ -23,7 +23,7 @@
 Ты работаешь в ветке feature/<...>. Прочитай AGENTS.md и следуй разделу Multi-Session Workflow. 
 1. Обнови Agent Sync (если ещё не обновлено).
 2. Не изменяй файлы, которых нет в моей броне.
-3. Прежде чем писать код, посмотри docs/idea.md → vision.md → tasklist.md → workflow.md → conventions.md.
+3. Прежде чем писать код, посмотри reports/archive/idea.md → vision.md → tasklist.md → workflow.md → conventions.md.
 4. По завершении создай коммит и push, обнови Agent Sync и tasklist.
 ```
 Дополнительно перечислите конкретные файлы и задачи из `tasklist.md`, чтобы ограничить контекст.
@@ -31,7 +31,7 @@
 ## Завершение работы
 1. Выполните обязательные проверки (lint/build/tests согласно AGENTS.md).
 2. Зафиксируйте изменения (`git commit`, `git push`).
-3. Обновите Agent Sync и `docs/tasklist.md`/`docs/CHANGELOG.md` при необходимости.
+3. Обновите Agent Sync и `reports/archive/tasklist.md`/`reports/archive/CHANGELOG.md` при необходимости.
 4. Снимите замок/бронь.
 
 ## Полезные ссылки
