@@ -1,56 +1,187 @@
-# AGENTS — операционное руководство IntData
+# AGENTS - Stage-Gate Playbook IntData
 
-## Источники истины
-- **AGENTS.md** — операционные правила codex-cli, таблица Agent Sync, процессы и инварианты, которые обязаны выполнять агенты.
-- **README.md** — синхронизация с владельцем продукта: видение, дорожная карта, чек-листы, история изменений и публичная документация.
-- Экспортируемые артефакты (`core/db/SCHEMA.*`, `core/db/ddl/*.sql`, `api/openapi.json`) остаются техническими источниками данных; следите за их актуальностью через чек-листы в этом файле.
+## TL;DR
+- Stage-gate конвейер: Intake (TL) -> Архитектура -> Реализация -> PR в `test` -> QA на `test` -> InfoSec advisory -> DevOps release (fast-forward `test->main`) -> Tech Writer.
+- Лучшие практики IntBridge (router, handoff, role-boundary-check, YAML `agent_sync` с TTL) совмещаем с git-потоком IntData (`feature/*` -> PR -> `test` -> fast-forward -> `main`).
+- QA работает только в общей ветке `test`; InfoSec выдаёт неблокирующие рекомендации between QA и DevOps; на каждом gate присутствует двойной контроль TL.
+- Все роли поддерживают README-вортонку (idea -> vision -> conventions -> tasklist -> workflow), фиксируют handoff и GateRecord, обновляют `agent_sync`.
 
-## Как пользоваться документом
-- Перед началом сессии прочитайте разделы «Communication Rules», «Agent Sync» и «Мультисессионный цикл».
-- В процессе работы возвращайтесь к тематическим разделам (архитектура, Habits, User Settings, API) и сверяйте свои действия.
-- После завершения задачи обновляйте Agent Sync в этом файле и соответствующие секции README.md (Roadmap, Tasklist, Changelog).
+## Почему stage-gate и что объединено
+1. **Router + handoff (IntBridge)** - TL маршрутизирует задачи, выдаёт карточки, контролирует lock-и и TTL.
+2. **Git-дисциплина (IntData)** - разработка живёт в `feature/*`, merge в `test`/`main` делает только TL, релизы = fast-forward.
+3. **QA в `test`** - единая ветка даёт общий контекст, QA не трогает продуктивный код, работает через path-ограниченные PR.
+4. **InfoSec advisory** - security-analyzers не блокируют релиз, но формируют обязательные follow-ups.
+5. **GateRecord и двойной контроль** - на каждом переходе TL проверяет AC, границы ролей и обновление funnel.
+6. **Глобальный `agent_sync`** - одна таблица броней, TTL и locks; правки `AGENTS.md` и `agent_sync.yaml` синхронизируются во всех ветках сразу.
 
-## Communication Rules
-- Все ответы codex-cli пользователям формулируем на русском языке независимо от контекста задачи.
-- В каждом сообщении агент явно указывает текущую роль и говорит от лица этой роли (пример: «Агент Frontend Codex …»).
-- Общение с владельцем продукта координирует Team Lead; остальные роли подключаются только после handoff.
+## Stage-Gate pipeline (обязательно соблюдаем)
+0. **Funnel upkeep** - постоянная синхронизация README/Agent Sync, фиксация идеи -> vision -> conventions -> tasklist -> workflow.
+1. **Intake / TL-Gate-0** - TL принимает запрос владельца, формирует intake, проверяет артефакты, записывает в Agent Sync.
+2. **Architecture / TL-Gate-1** - Architect подтверждает инварианты, обновляет ADR/Conventions, описывает технические рамки.
+3. **Decomposition & Routing / TL-Gate-2** - TL делит работу на TaskCards, назначает роли и ветки `feature/<epic>/<task>-<role>`.
+4. **Implementation / TL-Gate-3** - BE/FE работают в своих путях, покрывают тестами, создают PR в `feature/*`, TL делает code review.
+5. **Merge to test & QA** - TL мержит одобренные PR в `test`; QA работает через PR в `test` с лейблом `qa:test-only` (path-guard `tests/**`, `docs/reports/test/**`).
+6. **InfoSec Advisory / TL-Gate-4** - InfoSec запускает SAST/SCA/Secrets/DAST, публикует отчёт и рекомендации.
+7. **DevOps Release / TL-Gate-5** - DevOps готовит runbook, миграции, smoke; TL fast-forward `test->main`.
+8. **Documentation / TL-Gate-6** - Tech Writer обновляет README/Changelog/Workflow, фиксирует ссылки и заключает итерацию.
 
-## Multi-Session Workflow (codex-cli)
-- Перед запуском новой сессии обязательно проверьте Agent Sync и закрепите задачу: укажите позывной, ветку `feature/<epic>/<scope>-<agent>`, список файлов и время в UTC. Без брони правки запрещены.
-- Используйте lock-файлы или записи в Agent Sync для файлов: пока замок не снят, другие сессии не редактируют перечисленные пути. При завершении работы очистите запись, чтобы исключить конфликтную правку.
-- Работайте строго в своей ветке; общие изменения мерджим через стандартный git-flow. Каждая сессия завершается `git push` в собственную ветку и обновлением Agent Sync.
-- После завершения фичи codex-cli обязан сам провести merge своей ветки в `main`, выполнить повторный деплой, перезапустить соответствующие сервисы, проверить логи/мониторинг, оперативно исправить выявленные ошибки и убедиться, что продукт доступен для пользователей.
-- В начале работы перечитайте разделы README.md «Workflow Playbook», «Idea Log», «Vision Deck», «Conventions Catalog» и «Tasklist»: синхронизация → анализ → планирование через `update_plan` → исполнение → документация. Все временные договорённости фиксируйте в соответствующих разделах README.
-- Перед коммитом убедитесь, что список задач в README.md (секция «Tasklist») обновлён: отметьте выполненные пункты и добавьте ссылки на PR/коммиты. Это поддерживает прозрачность и снижает риск дублирования работы.
-- Все прямые коммуникации с владельцем ведём строго на русском языке, независимо от роли.
-- `README.md` поддерживаем только на русском языке для полной совместимости с владельцем.
+## Ролевые каталоги и системные промпты
+Каждая роль работает по TaskCard, ведёт handoff и обновляет Agent Sync. TL подписывает GateRecord только после проверки AC/границ роли.
 
-## Stage-Gate Playbook (IntData)
-> Этот раздел **нельзя удалять или сокращать**. Любой merge/pull-request, в котором отсутствуют пункты Stage-Gate Playbook, отклоняем без обсуждений.
+### Team Lead / Router
+- **Зона ответственности:** intake, декомпозиция, ревью, merge, funnel upkeep, контроль Agent Sync.
+- **Запреты:** продуктивный код (кроме аварий). Все обращения к владельцу идут через TL.
+- **Промпт:**
+> Вы - Team Lead/Router IntData. Работаете по stage-gate: Intake -> Архитектура -> Реализация -> PR в `test` -> QA -> InfoSec -> Release -> Documentation. Назначаете роли по путям, контролируете Agent Sync и GateRecord, единолично мержите в `test` и `main`.
+- **Definition of Done:** intake/TaskCards готовы, GateRecord оформлен на каждом этапе, релиз `test->main` закрыт, README/Agent Sync синхронизированы, follow-ups заведены.
 
-- TL остаётся единым входом для владельца: intake, разбор противоречий, декомпозиция, финальное ревью и merge.
-- Вся команда поддерживает **воронку README**: «idea → vision → conventions → tasklist → workflow». Любое изменение кода сопровождается обновлением нужных секций и ссылкой в Changelog.
-- Stage-Gate конвейер codex-cli фиксируется GateRecord (UTC-время, риски, решение TL) и хранится в `docs/reports/`.
+### Architect
+- **Зона:** `docs/arch/**`, ADR, схемы интеграций, conventions.
+- **Запреты:** продуктивный код.
+- **Промпт:**
+> Вы - Architect IntData. Уточняете инварианты, обновляете ADR/Conventions, фиксируете требования для BE/FE, риски и зависимые сервисы. При необходимости реализации - handoff TL.
+- **DoD:** ADR/Conventions обновлены, инженерные решения и риски описаны, handoff разработке оформлен.
 
-### Этапы
-0. **Funnel upkeep (постоянно)** — README, Agent Sync, GateRecord синхронизированы.
-1. **Intake / TL-Gate-0** — TL оформляет TaskCard: цель, ограничения, AC, ветка, роли.
-2. **Architecture / TL-Gate-1** — Architect подтверждает инварианты, обновляет ADR/Conventions без кода.
-3. **Decomposition & Routing / TL-Gate-2** — TL раздаёт TaskCards, фиксирует handoff и блокировки.
-4. **Implementation / TL-Gate-3** — роли работают в своих ветках, ведут Agent Sync, готовят отчёты и тесты.
-5. **Merge to `test` → QA стартует** — только TL мержит feature-ветки в `test`, QA запускает проверки.
-6. **InfoSec Advisory** — автоматические анализаторы (semgrep/bandit/trivy) выдаются в отчёте, дефекты заводятся задачами.
-7. **Release / TL-Gate-4** — DevOps готовит runbook, TL делает fast-forward `test→main`, проверяет мониторинг.
-8. **Documentation / TL-Gate-5** — Tech Writer обновляет README/Changelog/Workflow, закрывает итерацию и архивирует GateRecord.
+### Backend Developer
+- **Зона:** `backend/**`, `core/**`, миграции БД, OpenAPI, scripts.
+- **Запреты:** UI, инфраструктура.
+- **Промпт:**
+> Вы - Backend IntData. Работаете только в `backend/**` и `core/**`, обновляете OpenAPI/SCHEMA, покрываете тестами, готовите handoff QA/TW.
+- **DoD:** тесты зелёные, OpenAPI/SCHEMA экспортированы, handoff QA/TW заполнен, GateRecord подписан.
 
-### Agent Sync & Handoff в Stage-Gate
-- Agent Sync является официальным GateLog: каждая запись содержит `when_utc`, ветку, TTL, статус, список замков и ссылку на TaskCard.
-- Статусы обновляем не реже чем раз в 60 минут; просроченные записи снимает TL.
-- После handoff или merge строку переводим в `Done` и удаляем.
-- Любое изменение в Stage-Gate Playbook, Agent Sync или Funnel фиксируем коммитом `docs(agents)` и ссылкой на GateRecord.
+### Frontend Developer
+- **Зона:** `web/**` (Next.js UI, Tailwind, витрина).
+- **Запреты:** backend, инфраструктура.
+- **Промпт:**
+> Вы - Frontend IntData. Меняете только `web/**`, соблюдаете UI-guidelines, фиксируете скриншоты и сторибуки, handoff QA/TW.
+- **DoD:** сборка/линт зелёные, UI адаптивен, скриншоты приложены, GateRecord подписан.
 
-## Agent Sync
-> Agent Sync ведём в YAML-формате GateLog. Время фиксируем в UTC, `ttl_minutes` указывает, когда запись должна быть обновлена или снята.
+### QA
+- **Зона:** `tests/**`, `docs/reports/test/**`.
+- **Промпт:**
+> Вы - QA IntData. Работаете через PR в `test` (path-guard на `tests/**`, `docs/reports/test/**`). Подтверждаете AC, оформляете отчёт и handoff TL/TW.
+- **DoD:** тест-кейсы и фикстуры актуальны, отчёт приложен, дефекты заведены через TL, GateRecord `qa` подписан.
+
+### InfoSec Advisory
+- **Зона:** `reports/infosec/**`, конфиги сканеров.
+- **Промпт:**
+> Вы - InfoSec Advisory IntData. Запускаете SAST/SCA/Secrets/DAST, публикуете неблокирующий отчёт (must/should/could), уведомляете TL о follow-ups.
+- **DoD:** отчёт загружен, риски классифицированы, GateRecord `infosec` подписан TL.
+
+### DevOps/SRE
+- **Зона:** `.github/**`, `config/**`, docker/compose, scripts/deploy, observability.
+- **Промпт:**
+> Вы - DevOps/SRE IntData. Настраиваете CI/CD, окружения, runbook, готовите выпуск `test->main`, обеспечиваете бэкапы и мониторинг.
+- **DoD:** пайплайны зелёные, runbook и smoke-checklist заполнены, миграции idempotent, GateRecord `release` подписан.
+
+### Tech Writer
+- **Зона:** `README.md`, `docs/**`, `reports/**` (кроме infosec), Changelog.
+- **Промпт:**
+> Вы - Tech Writer IntData. Обновляете README/Changelog/Workflow/Tasklist, фиксируете ссылки на MR/коммиты, закрываете funnel.
+- **DoD:** документация актуальна, ссылки добавлены, GateRecord `docs` подписан.
+
+## Форматы для codex-cli
+Используем унифицированные шаблоны (YAML):
+
+### Intake
+```yaml
+intake:
+  source: owner
+  initiative: "E?/IB-??"
+  task: "TL-YYYY-MM-DD-..."
+  goal: "что меняется для пользователей"
+  acceptance:
+    - измеримый критерий
+  constraints:
+    - срок / совместимость / риск
+  artifacts_expected:
+    - path: path/to/*
+      type: code|test|doc|config
+```
+
+### Handoff между ролями
+```yaml
+handoff:
+  from: teamlead|architect|backend|frontend|qa|infosec|devops|writer
+  to:   <роль-получатель>
+  initiative: E?/IB-??
+  task: TL-YYYY-MM-DD-...
+  context: |
+    фабула, риски, ссылки
+  artifacts:
+    - path: ...
+      note: зачем адресату
+  acceptance:
+    - критерий #1
+  blockers:
+    - если есть препятствия
+```
+
+### Gate check (TL двойной контроль)
+```yaml
+gate_check:
+  gate: 1|2|3|4|5|6
+  role_owner: <роль, завершившая этап>
+  tl_checklist:
+    - AC закрыты
+    - границы роли соблюдены (role-boundary-check)
+    - README/agent_sync обновлены
+  status: pass|fail
+  notes: "если fail - что исправить"
+```
+
+### Agent Sync entry
+```yaml
+agent_sync_entry:
+  when_utc: "2025-09-19T21:50:00Z"
+  agent: "codex-cli::<call-sign>"
+  branch: "feature/E9/test-postgres-env-be"
+  locks:
+    - path: "core/services/*"
+  status: "In Progress|Review|Blocked|Done"
+  ttl_minutes: 120
+  note: "краткое описание работ"
+```
+
+### GateRecord
+```yaml
+gate:
+  stage: qa|infosec|release|docs
+  tl_check:
+    approved: true
+    by: "@teamlead"
+    when_utc: "2025-09-20T07:45:00Z"
+  notes: |
+    решения, риски, follow-ups
+```
+
+## Branch & CI Guardrails
+- Все реализации живут в `feature/<epic>/<task>-<role>`.
+- Merge в `test` и `main` выполняет только TL (fast-forward, без merge-commit).
+- QA создаёт PR в `test` с path-guard на `tests/**` и `docs/reports/test/**` + лейбл `qa:test-only`; GitHub Action `qa-tests-only-check` блокирует любые другие пути.
+- CI цепочка включает: `role-boundary-check`, lint/test/build, OpenAPI/SCHEMA sync, `infosec-advisory` (semgrep/bandit/trivy) и release-runbook smoke.
+- CODEOWNERS: `tests/** -> @qa`, `backend/** -> @backend`, `web/** -> @frontend`, `config/** -> @devops`, `docs/** -> @techwriter`, `AGENTS.md -> @teamlead`.
+- Правки `AGENTS.md`/`agent_sync.yaml` сразу распространяем во все активные ветки (`feature/*`, `test`, `main`). TL отклоняет PR, если файлы расходятся.
+
+## Agent Sync & Multi-session правила
+- Agent Sync - единый GateLog. Перед стартом сессии бронируйте ветку/пути, указывайте TTL (UTC). Если TTL истёк и запись не обновлена, TL снимает бронь.
+- Locks обязательны: пока путь в списке, другие агенты не редактируют его даже в других ветках.
+- Завершая работу: пушите ветку, обновляйте запись (статус `Done` или `Handoff`) и добавляйте GateRecord.
+- Правки `AGENTS.md`/`agent_sync.yaml` считаются действительными только после синхронизации со всеми ветками (используйте служебный workflow или ручной cherry-pick).
+
+## Session continuity & recovery
+- Запускайте codex-cli внутри `tmux`/`screen` **и** сохраняйте состояние сессии в `.codex_sessions/<session-id>.json` (роль, ветка, план, инструкции).
+- В случае обрыва SSH ищите `Shutting down Codex instance` в `~/.codex/log/codex-tui.log`, поднимайте последнюю запись `session_meta`, восстанавливайте план через `update_plan` и Agent Sync.
+- Незавершённые сессии должны быть помечены в Agent Sync (статус `Blocked`/`Review`), чтобы TL видел их при ревью gate.
+
+## Метрики и контроль процесса
+- Lead time от Intake до merge в `main`.
+- Defect escape rate (дефекты после релиза).
+- Rework ratio (gate-fail -> доработка).
+- Change failure rate и MTTR.
+- Time-in-stage по каждому gate (Intake/Arch/Dev/QA/InfoSec/Release/Docs).
+
+## GateLog / Agent Sync history
 
 ```yaml
 agent_sync:
@@ -80,7 +211,7 @@ agent_sync:
     pr: null
     ac_link: "README.md#-workflow-playbook"
     ttl_minutes: 0
-    status: "завершено 2025-09-20 17:52 (merge feature/E2,E3,E17 → test; `pytest tests/test_para_invariants.py tests/web/test_calendar_feed_ics.py tests/web/test_alarms_api.py tests/test_diagnostics_service.py`, push origin/test)"
+    status: "завершено 2025-09-20 17:52 (merge feature/E2,E3,E17 -> test; `pytest tests/test_para_invariants.py tests/web/test_calendar_feed_ics.py tests/web/test_alarms_api.py tests/test_diagnostics_service.py`, push origin/test)"
   - when_utc: "2025-09-20T17:44:00Z"
     agent: "codex"
     role: "fe"
@@ -165,7 +296,7 @@ agent_sync:
     pr: null
     ac_link: "README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D1%8D%D1%84%D0%BB%D0%B0%D0%B3"
     ttl_minutes: 0
-    status: "завершено 2025-09-20 06:39 (обновлены workflows/tests, deploy-test; merge feature → test → main локально)"
+    status: "завершено 2025-09-20 06:39 (обновлены workflows/tests, deploy-test; merge feature -> test -> main локально)"
   - when_utc: "2025-09-20T06:31:00Z"
     agent: "codex"
     role: "tw"
@@ -220,7 +351,7 @@ agent_sync:
     pr: null
     ac_link: "README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3"
     ttl_minutes: 0
-    status: "завершено 2025-09-20 05:38 (merge 4cefd9a → test; GateRecord `docs/reports/2025-09-20-gaterecord-e9-test-postgres.md`)"
+    status: "завершено 2025-09-20 05:38 (merge 4cefd9a -> test; GateRecord `docs/reports/2025-09-20-gaterecord-e9-test-postgres.md`)"
   - when_utc: "2025-09-19T22:40:00Z"
     agent: "codex"
     role: "qa"
@@ -233,7 +364,7 @@ agent_sync:
     pr: null
     ac_link: "README.md#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3"
     ttl_minutes: 0
-    status: "завершено 2025-09-19 22:58 (весь набор зелёный партиями, полный `pytest -q` >10 мин — см. отчёт)"
+    status: "завершено 2025-09-19 22:58 (весь набор зелёный партиями, полный `pytest -q` >10 мин - см. отчёт)"
   - when_utc: "2025-09-19T22:59:00Z"
     agent: "codex"
     role: "devops"
@@ -324,7 +455,7 @@ agent_sync:
     role: "fe"
     branch: "feature/E17/appshell-nav-tuning-codex"
     task: "TL-2025-09-19-appshell-nav-tuning"
-    epic_scope: "E17 / модульная навигация AppShell — адаптация UX"
+    epic_scope: "E17 / модульная навигация AppShell - адаптация UX"
     files:
       - "web/components/AppShell.tsx"
       - "web/components/layout/PublicHeader.tsx"
@@ -339,7 +470,7 @@ agent_sync:
     role: "arch"
     branch: "feature/E18/crm-skeleton-codex"
     task: "TL-2025-09-18-crm-blueprint"
-    epic_scope: "E18 / CRM Knowledge Hub — исследование и каркас"
+    epic_scope: "E18 / CRM Knowledge Hub - исследование и каркас"
     files:
       - "docs/reports/*crm*"
       - "docs/vision.md"
@@ -456,12 +587,12 @@ agent_sync:
 
 Поля Role/Task/PR/AC обязательны. Role = tl|arch|be|fe|qa|tw|ops. Task = ID из Tasklist (формат `TL-YYYY-MM-DD-<slug>`).
 
-## Documentation Workflow (idea → vision → conventions → tasklist → workflow)
+## Documentation Workflow (idea -> vision -> conventions -> tasklist -> workflow)
 - Разделы README.md «Idea Log», «Vision Deck», «Conventions Catalog», «Tasklist» и «Workflow Playbook» образуют единый конвейер документации. Обновляйте их по мере работы.
 - Исследования и длинные отчёты складывайте в `docs/reports/*` и добавляйте ссылки в соответствующие разделы README.
 - Гайд для владельцев/людей по работе с codex-cli остаётся в `docs/guides/codex-cli-multisession.md`; при необходимости давайте на него ссылку в README.
 
-## Strategic Plan (E1–E16) — как агенты выбирают и оформляют работу
+## Strategic Plan (E1-E16) - как агенты выбирают и оформляют работу
 - Любой MR должен ссылаться на эпик из README.md (секция «Roadmap & Epics») и соответствующие Acceptance Criteria.
 - Для новых подзадач добавляйте элементы в секцию «Roadmap & Epics» README перед реализацией и синхронизируйте «Tasklist».
 - Особое внимание: E1 (PARA), E12 (единый «Сегодня»), E13 (Tasks & Time), E16 (Habits).
@@ -475,10 +606,10 @@ agent_sync:
 - /web - директория (модуль) фронтенда приложений независимый от логики Telegram-бота, который можно запустить отдельно от Telegram-бота.
 - `tests/`: end-to-end and unit tests across subsystems.
 - /tests - Директория для тестов приложения без прямого влияния на функциональность приложения.
-- `utils/` — единственная директория для вспомогательных утилит, которые не влияют на запуск рантайма (линтеры, проверки окружения, скрипты деплоя, дампы и т. п.). Удаление `utils/` не должно ломать приложение.
+- `utils/` - единственная директория для вспомогательных утилит, которые не влияют на запуск рантайма (линтеры, проверки окружения, скрипты деплоя, дампы и т. п.). Удаление `utils/` не должно ломать приложение.
 - Runtime boundaries (жёстко):
   - Всё, что обязательно для работы на рантайме, живёт в **/core** (модели, сервисы, валидаторы, резолверы, инициализация БД).
-  - `utils/` — только опциональные скрипты (линтеры, проверки, дампы). Удаление `utils/` не должно ломать приложение. Директории `tools/` в проекте не используется.
+  - `utils/` - только опциональные скрипты (линтеры, проверки, дампы). Удаление `utils/` не должно ломать приложение. Директории `tools/` в проекте не используется.
   - `web/` и `bot/` импортируют бизнес-логику только из `core/services`.
 
 ### Frontend Guidelines
@@ -495,8 +626,8 @@ agent_sync:
 
 ## Инициализация БД (без Alembic)
 - Источник правды по схеме: идемпотентные DDL в **`core/db/ddl/*.sql`** (только `CREATE/ALTER/INDEX IF NOT EXISTS`).
-- Единый фасад: **`core/db/init_app.py:init_app_once(env)`** — вызывается и в `web`, и в `bot` до регистрации роутов/старта бота.
-- Порядок внутри `init_app_once`: `run_bootstrap_sql()` → `run_repair()` → *(опционально)* `create_models_for_dev()` (только при `DEV_INIT_MODELS=1` и если не шёл bootstrap).
+- Единый фасад: **`core/db/init_app.py:init_app_once(env)`** - вызывается и в `web`, и в `bot` до регистрации роутов/старта бота.
+- Порядок внутри `init_app_once`: `run_bootstrap_sql()` -> `run_repair()` -> *(опционально)* `create_models_for_dev()` (только при `DEV_INIT_MODELS=1` и если не шёл bootstrap).
 - Защита от гонок: PostgreSQL advisory-lock.
 - ENV-флаги:
   ```
@@ -506,13 +637,13 @@ agent_sync:
   ```
 
 ## PARA-first Invariants (Must Not Break)
-- Любая сущность: `project_id` ИЛИ `area_id` (оба NULL — ошибка). При указании `project_id` — `area_id` наследуется.
-- Alarm — часть `CalendarItem` (VALARM эквивалент).
-- Время — UTC + `tzid`, повторы через `RRULE`, без материализации бесконечных рядов.
+- Любая сущность: `project_id` ИЛИ `area_id` (оба NULL - ошибка). При указании `project_id` - `area_id` наследуется.
+- Alarm - часть `CalendarItem` (VALARM эквивалент).
+- Время - UTC + `tzid`, повторы через `RRULE`, без материализации бесконечных рядов.
 - Один активный таймер на пользователя (UNIQUE WHERE `stopped_at IS NULL`).
 - Для `Habits/Dailies/Rewards` обязателен `area_id`; при `project_id` наследуем `area_id` проекта.
 - Project обязан иметь **Area**.
-- Task/Resource обязаны иметь **Project ИЛИ Area**; при наличии Project → **area наследуется** от проекта.
+- Task/Resource обязаны иметь **Project ИЛИ Area**; при наличии Project -> **area наследуется** от проекта.
 - Любая сущность базы данных обязана иметь **Area**; во всех таблицах поле `area_id` обязательно (`NOT NULL`, по умолчанию системная область «Входящие»).
 - Tasks = `CalendarItem(kind='task')`; **напоминания** живут внутри календаря (аналог `VALARM`); дублирующих напоминаний в задачах нет.
 - Быстрый ввод: всё без контейнера падает в системную **Area «Входящие»**, потом можно перекинуть.
@@ -520,7 +651,7 @@ agent_sync:
 - **Subjective overrides**: персонифицированные привязки Project/Task/Resource к другой Area/Project для конкретного пользователя без дублирования сущностей.
 - В тестах: запрет на runtime-импорты из `utils/*`; проверка, что entrypoints зовут только `init_app_once()`.
 
-## Habits Module (Habitica-like) — правила реализации
+## Habits Module (Habitica-like) - правила реализации
 - Модель: `habits`, `habit_logs`, `dailies`, `daily_logs`, `rewards`, `user_stats` (см. README.md, секция «E16: Habits»).
 - Экономика: XP/Gold/HP/Level/KP; экспоненциальное затухание награды для частых «плюсов»; штрафы HP за «минусы»; idempotent cron по локальному дню.
 - API: `/api/v1/habits*`, `/api/v1/dailies*`, `/api/v1/rewards*`. Dailies интегрируются в календарь **виртуально** (agenda/ICS), без дублей в `calendar_items`.
@@ -529,9 +660,9 @@ agent_sync:
 
 ## User-Settings (кастомизация дашборда)
 - Одна расширяемая таблица **`user_settings`** (K/V JSONB): ключи `dashboard_layout`, `favorites` и др. в будущем.
-- Перенос `users_favorites` → `user_settings` (`key='favorites'`) выполняется в **`core/db/repair.py`** (идемпотентно).
+- Перенос `users_favorites` -> `user_settings` (`key='favorites'`) выполняется в **`core/db/repair.py`** (идемпотентно).
 - API: `GET /api/v1/user/settings`, `GET/PUT /api/v1/user/settings/{key}`.
-- UI: кнопка «Настроить дашборд» в Обзоре включает drag-n-drop (через DnD-kit) и скрытие/возврат виджетов. `layout.widgets` хранит порядок видимых карточек, `layout.hidden` — скрытые. Дефолт — все виджеты в порядке `web/components/dashboard/OverviewDashboard.tsx`.
+- UI: кнопка «Настроить дашборд» в Обзоре включает drag-n-drop (через DnD-kit) и скрытие/возврат виджетов. `layout.widgets` хранит порядок видимых карточек, `layout.hidden` - скрытые. Дефолт - все виджеты в порядке `web/components/dashboard/OverviewDashboard.tsx`.
 - `theme_preferences` хранит персональный пресет темы (`mode`, `primary`, `accent`, `surface`, `gradient{from,to}`) и применяется через `theme-utils.js` (CSS-переменные). Пустой объект = используем глобальный пресет.
 - Глобальный брендовый пресет (`theme.global.*`) живёт в `app_settings`; UI `/settings` синхронно обновляет его и показывает только администраторам.
 
@@ -601,12 +732,12 @@ SCHEMA.json является единой «точкой истины» стру
 - PR чек-лист: скриншоты UI при изменениях; ссылки на README.md («Roadmap & Epics», «Changelog»).
 
 ## Work Protocol for Agents
-- К каждому изменению — ссылка на эпик и Acceptance Criteria в README.md (секция «Roadmap & Epics»); при необходимости актуализируй соответствующие записи и Tasklist.
-- Бизнес-логика — только в `/core/services/*`. `/web` и `/bot` — тонкие слои.
+- К каждому изменению - ссылка на эпик и Acceptance Criteria в README.md (секция «Roadmap & Epics»); при необходимости актуализируй соответствующие записи и Tasklist.
+- Бизнес-логика - только в `/core/services/*`. `/web` и `/bot` - тонкие слои.
 - При любых изменениях в `/bot` обязательно актуализируй динамическую справку `/start`, чтобы она отражала доступные команды и уровни доступа.
 - Миграции БД: idempotent DDL в `/core/db/ddl/*.sql` + `repair`; если в проекте уже используется другая технология, следуем действующей и фиксируем это здесь, НЕ меняя платформу миграций в рамках правки AGENTS.
 - Экспорт схемы (`core.db.schema_export`) обновлять при изменении моделей.
-- Все API — под `/api/v1/*`; обновить `/api/openapi.json`.
+- Все API - под `/api/v1/*`; обновить `/api/openapi.json`.
 - Фичефлаги: `CALENDAR_V2_ENABLED`, `HABITS_V1_ENABLED`, `HABITS_RPG_ENABLED` (и `.env.example` при необходимости).
 - Тесты (pytest): наследование PARA; один активный таймер; cron ежедневок (идемпотентность); `habits up/down`, `dailies done/undo`, виртуальные записи в agenda; срезы `/time/summary`.
 - Коммиты/PR: императивный заголовок, почему+что; обновление `.env.example`, README.md (секции «Roadmap & Epics», «Changelog»); скриншоты UI.
@@ -615,7 +746,7 @@ SCHEMA.json является единой «точкой истины» стру
 - Changes to note models or endpoints require updating `core/db/SCHEMA.*` via `python -m core.db.schema_export generate`; OpenAPI is served at `/api/openapi.json` and used in tests.
 
 ### Контуры Prod/Test
-- Базовая ветка разработки — `test`; все фиче-ветки создаются от неё и мерджатся обратно через PR с зелёным `pytest -q` и фронтовыми проверками.
+- Базовая ветка разработки - `test`; все фиче-ветки создаются от неё и мерджатся обратно через PR с зелёным `pytest -q` и фронтовыми проверками.
 - Ветка `test` деплоится в изолированный контур (`test.intdata.pro`, бот `@intDataTestBot`, БД `intdatadb_test`). Автоудаление ветки после merge отключаем в GitHub.
 - Ветка `main` принимает только fast-forward из `test` после ручной проверки тестового контура. Прямые PR в `main` запрещены.
 - Secrets и `.env` для тестового контура используют префиксы `TEST_` (БД, URL, токены бота). Прод окружение держит значения без префикса.
@@ -654,24 +785,24 @@ notes: |
 
 Правила автопереключения (TL-router):
 
-- Если в задаче затронуты только `core/**`, `core/db/**`, `web/api/**` → `<<ROLE: backend>>`.
-- Если затронуты `web/app/**`, `web/components/**`, `web/lib/**`, `frontend/**` → `<<ROLE: frontend>>`.
-- Если меняются `tests/**` без модификации `core/**|web/**` → `<<ROLE: qa>>`.
-- Если меняются `docs/**`, `README.md`, `AGENTS.md`, `api/openapi.json` (export) без кода → `<<ROLE: techwriter>>`.
-- Если меняются `infra/**|utils/deploy/**|CI/**` → `<<ROLE: devops>>`.
-- Если затрагивается архитектура (схема БД, инварианты, границы модулей) → `<<ROLE: architect>>`.
+- Если в задаче затронуты только `core/**`, `core/db/**`, `web/api/**` -> `<<ROLE: backend>>`.
+- Если затронуты `web/app/**`, `web/components/**`, `web/lib/**`, `frontend/**` -> `<<ROLE: frontend>>`.
+- Если меняются `tests/**` без модификации `core/**|web/**` -> `<<ROLE: qa>>`.
+- Если меняются `docs/**`, `README.md`, `AGENTS.md`, `api/openapi.json` (export) без кода -> `<<ROLE: techwriter>>`.
+- Если меняются `infra/**|utils/deploy/**|CI/**` -> `<<ROLE: devops>>`.
+- Если затрагивается архитектура (схема БД, инварианты, границы модулей) -> `<<ROLE: architect>>`.
 - Любая роль, упираясь в границу ответственности, обязана сделать `handoff_to: teamlead` с пояснением.
 
-Ниже — системные промпты для каждой роли (используйте в codex-cli как системные/Developer prompts):
+Ниже - системные промпты для каждой роли (используйте в codex-cli как системные/Developer prompts):
 
 #### [ROLE=teamlead]
-Mission: принять бизнес-задачу, нарезать работу на подзадачи, выдать TaskCard’ы, собрать результаты и смёржить по процессу test→main.
+Mission: принять бизнес-задачу, нарезать работу на подзадачи, выдать TaskCard’ы, собрать результаты и смёржить по процессу test->main.
 You MUST:
 - читать README/AGENTS (Vision/Tasklist/Agent Sync) перед планированием
 - формировать AGX/1.0 TaskCard с AC и файлами
 - назначать role и ветки `feature/<epic>/<scope>-<role>`
 - проверять чек-листы, линтеры, тесты и сборку (`npm run build` для фронта)
-- мерджить только через PR в `test`, затем fast-forward `test→main`
+- мерджить только через PR в `test`, затем fast-forward `test->main`
 You MUST NOT: писать код или тесты.
 Handoffs: возвращайся к себе (TL) после любой роли; эскалируй к Architect при изменении инвариантов.
 Exit: ссылки на PR, обновлённые Tasklist/Changelog, чистый Agent Sync.
@@ -717,7 +848,7 @@ Exit: PR с пайплайнами/конфигами, обновлённый ru
 
 ### Multi-agent Coordination (codex-cli)
 - Каждый экземпляр codex-cli работает в собственной рабочей копии: отдельный `git clone` или `git worktree add ../<agent-branch>`. Запрещено вести параллельную работу из одного каталога.
-- Перед стартом сессии: `git fetch --all`, `git status`, убедись, что нет чужих незакоммиченных правок. При обнаружении — синхронизируйся с владельцем задачи.
+- Перед стартом сессии: `git fetch --all`, `git status`, убедись, что нет чужих незакоммиченных правок. При обнаружении - синхронизируйся с владельцем задачи.
 - Для каждой задачи обязательно создавай персональную ветку формата `feature/<epic>/<scope>-<agent>` до внесения изменений. codex-cli сам коммитит в эту ветку, затем выполняет `git fetch`, решает конфликты (`rebase`/`merge`) и вливает её в `main` без привлечения других агентов.
 - Резервируй задачи и файлы в [Agent Sync](#agent-sync): укажи позывной, дату/время (UTC), ветку и ключевые файлы. После merge/отмены работы снимай бронь.
 - Если требуются правки в файлах, занятых другим агентом, договорись через Agent Sync о порядке работ; одновременное редактирование одного файла запрещено.
@@ -726,12 +857,12 @@ Exit: PR с пайплайнами/конфигами, обновлённый ru
 
 ## Жёсткие архитектурные правила (не нарушать)
 - Вся логика и зависимости, без которых бэкенд не стартует, живут в `core/`.
-- Всё, что нужно только веб‑интерфейсу — в `web/` (тонкий слой UI и HTTP‑маршрутов, бизнес‑логика импортируется из `core/services`).
-- Всё, что нужно только Telegram‑боту — в `bot/` (обработчики, FSM, роутеры, бизнес‑логика из `core/services`).
+- Всё, что нужно только веб‑интерфейсу - в `web/` (тонкий слой UI и HTTP‑маршрутов, бизнес‑логика импортируется из `core/services`).
+- Всё, что нужно только Telegram‑боту - в `bot/` (обработчики, FSM, роутеры, бизнес‑логика из `core/services`).
 - Вспомогательные утилиты хранятся только в `utils/` и не используются рантаймом напрямую (никаких импортов из `utils/` внутри `core/`, `web/`, `bot/`).
 - В `tests/` находятся только тесты; тесты не импортируют код из `utils/` на рантайме.
-- В `docs/` — архивная документация, отчёты и гайды; актуальные правила и планы находятся в README.md.
-- В `logs/` — только логи. Содержимое каталога не коммитим, каталог игнорируется в VCS.
+- В `docs/` - архивная документация, отчёты и гайды; актуальные правила и планы находятся в README.md.
+- В `logs/` - только логи. Содержимое каталога не коммитим, каталог игнорируется в VCS.
 
 ## When updating API
 - [ ] Измени код и тесты.
@@ -750,22 +881,23 @@ Exit: PR с пайплайнами/конфигами, обновлённый ru
 ## Do Not Do
 - Не удалять и не сокращать раздел «Stage-Gate Playbook (IntData)» и связанные инструкции.
 - Не создавать дубли напоминаний вне календаря.
-- Не материализовать ежедневки в `calendar_items` — только виртуальная интеграция (agenda/ICS).
+- Не материализовать ежедневки в `calendar_items` - только виртуальная интеграция (agenda/ICS).
 - Не класть бизнес-логику в `/web` или `/bot`.
 - Не ломать префикс `/api/v1/*` и совместимость.
 
 # AGENTS: работа с едиными источниками
 
 ## Где хранится бэклог и стратегия
-- Основной источник правды: README.md, секция «Roadmap & Epics» (включает Roadmap, эпики E1–E18, MR-план, Definition of Done, Appendix).
+- Основной источник правды: README.md, секция «Roadmap & Epics» (включает Roadmap, эпики E1-E18, MR-план, Definition of Done, Appendix).
 - Исторические записи в `docs/BACKLOG.md` переведены в архивный режим; поддерживать актуальность нужно только в README.md.
 
 ## Где хранится история изменений
 - Раздел «Changelog» в README.md ведём по формату *Keep a Changelog* и SemVer.
 - После мержа PR добавляйте записи под `### [Unreleased]` с тегами `Added/Changed/Fixed/Removed` и ссылками на коммиты.
-- При релизе переносите блок `Unreleased` под новую версию `X.Y.Z — YYYY-MM-DD` в README.md.
+- При релизе переносите блок `Unreleased` под новую версию `X.Y.Z - YYYY-MM-DD` в README.md.
 
 ## README.md
 - README теперь совмещает маркетинг, product vision, roadmap, tasklist, workflow и changelog.
 - Ссылки на дополнительные материалы (`docs/reports/*`, гайды) приводите из соответствующих разделов README.
 - Поддерживайте актуальность оглавления README и внутренних якорей: агенты и владелец ориентируются именно по этому документу.
+```
