@@ -149,12 +149,6 @@ async def test_diagnostics_workflow(session):
     assert specialist.diagnostics_active
     assert specialist.diagnostics_available == [0, 2, 15]
 
-    async with session.begin():
-        authenticated = await service.authenticate_basic(
-            login="coach@example.com", password="secret123"
-        )
-    assert authenticated and authenticated.id == specialist.id
-
     timestamp = int(time.time() * 1000)
     payload = {
         "manager_id": specialist.id,

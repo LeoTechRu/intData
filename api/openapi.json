@@ -3644,12 +3644,6 @@
         "title": "ValidationError",
         "type": "object"
       }
-    },
-    "securitySchemes": {
-      "HTTPBasic": {
-        "scheme": "basic",
-        "type": "http"
-      }
     }
   },
   "info": {
@@ -4902,11 +4896,6 @@
             "description": "Successful Response"
           }
         },
-        "security": [
-          {
-            "HTTPBasic": []
-          }
-        ],
         "summary": "Toggle Client Archive",
         "tags": [
           "diagnostics"
@@ -4930,11 +4919,6 @@
             "description": "Successful Response"
           }
         },
-        "security": [
-          {
-            "HTTPBasic": []
-          }
-        ],
         "summary": "Mark Client Checked",
         "tags": [
           "diagnostics"
@@ -5002,11 +4986,6 @@
             "description": "Validation Error"
           }
         },
-        "security": [
-          {
-            "HTTPBasic": []
-          }
-        ],
         "summary": "Get Client",
         "tags": [
           "diagnostics"
@@ -5028,11 +5007,6 @@
             "description": "Successful Response"
           }
         },
-        "security": [
-          {
-            "HTTPBasic": []
-          }
-        ],
         "summary": "List Clients",
         "tags": [
           "diagnostics"
@@ -6194,11 +6168,6 @@
             "description": "Successful Response"
           }
         },
-        "security": [
-          {
-            "HTTPBasic": []
-          }
-        ],
         "summary": "Diagnostics Login",
         "tags": [
           "diagnostics"
@@ -6222,11 +6191,6 @@
             "description": "Successful Response"
           }
         },
-        "security": [
-          {
-            "HTTPBasic": []
-          }
-        ],
         "summary": "Get Manager",
         "tags": [
           "diagnostics"
@@ -6248,11 +6212,6 @@
             "description": "Successful Response"
           }
         },
-        "security": [
-          {
-            "HTTPBasic": []
-          }
-        ],
         "summary": "Update Manager",
         "tags": [
           "diagnostics"
@@ -6276,11 +6235,6 @@
             "description": "Successful Response"
           }
         },
-        "security": [
-          {
-            "HTTPBasic": []
-          }
-        ],
         "summary": "Add Manager",
         "tags": [
           "diagnostics"
@@ -6325,11 +6279,6 @@
             "description": "Validation Error"
           }
         },
-        "security": [
-          {
-            "HTTPBasic": []
-          }
-        ],
         "summary": "Toggle Manager Active",
         "tags": [
           "diagnostics"
@@ -6353,11 +6302,6 @@
             "description": "Successful Response"
           }
         },
-        "security": [
-          {
-            "HTTPBasic": []
-          }
-        ],
         "summary": "List Managers",
         "tags": [
           "diagnostics"
