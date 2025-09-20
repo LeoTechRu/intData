@@ -3,14 +3,34 @@ name: Tests
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master", "test" ]
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master", "test" ]
   workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: intdata_test
+          POSTGRES_PASSWORD: intdata_test
+          POSTGRES_DB: intdatadb_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U intdata_test" --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      TEST_DATABASE_URL: postgresql://intdata_test:intdata_test@localhost:5432/intdatadb_test
+      TEST_DB_HOST: localhost
+      TEST_DB_PORT: "5432"
+      TEST_DB_USER: intdata_test
+      TEST_DB_PASSWORD: intdata_test
+      TEST_DB_NAME: intdatadb_test
+      PGUSER: intdata_test
+      PGPASSWORD: intdata_test
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,10 +40,10 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install system deps (ripgrep)
+      - name: Install system deps (ripgrep, libpq)
         run: |
           sudo apt-get update
-          sudo apt-get install -y ripgrep
+          sudo apt-get install -y ripgrep libpq-dev
 
       - name: Install dependencies
         run: |
