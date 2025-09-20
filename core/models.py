@@ -857,6 +857,15 @@ class Task(Base):
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
 
+    __table_args__ = (
+        CheckConstraint(
+            "(project_id IS NOT NULL) <> (area_id IS NOT NULL)",
+            name="ck_tasks_single_container",
+        ),
+        Index("idx_tasks_owner_project", owner_id, project_id),
+        Index("idx_tasks_owner_area", owner_id, area_id),
+    )
+
 
 class TaskReminder(Base):
     """Reminder schedule records for tasks."""
@@ -1007,6 +1016,15 @@ class TimeEntry(Base):
     def is_paused(self) -> bool:
         return self.end_time is None and self.last_started_at is None and self.paused_at is not None
 
+    __table_args__ = (
+        CheckConstraint(
+            "(project_id IS NOT NULL) <> (area_id IS NOT NULL)",
+            name="ck_time_entries_single_container",
+        ),
+        Index("idx_time_entries_owner_project", owner_id, project_id),
+        Index("idx_time_entries_owner_area", owner_id, area_id),
+    )
+
 
 # ---------------------------------------------------------------------------
 # Extended NexusCore-inspired models (сохранены целиком)
@@ -1090,6 +1108,15 @@ class Habit(Base):
     area = relationship("Area")
     project = relationship("Project")
 
+    __table_args__ = (
+        CheckConstraint(
+            "(project_id IS NOT NULL) <> (area_id IS NOT NULL)",
+            name="ck_habits_single_container",
+        ),
+        Index("idx_habits_owner_project", owner_id, project_id),
+        Index("idx_habits_owner_area", owner_id, area_id),
+    )
+
     @property
     def name(self) -> str:
         return self.title
@@ -1147,6 +1174,15 @@ class Daily(Base):
     area = relationship("Area")
     project = relationship("Project")
 
+    __table_args__ = (
+        CheckConstraint(
+            "(project_id IS NOT NULL) <> (area_id IS NOT NULL)",
+            name="ck_dailies_single_container",
+        ),
+        Index("idx_dailies_owner_project", owner_id, project_id),
+        Index("idx_dailies_owner_area", owner_id, area_id),
+    )
+
 
 class DailyLog(Base):
     __tablename__ = "daily_logs"
@@ -1176,6 +1212,15 @@ class Reward(Base):
 
     area = relationship("Area")
     project = relationship("Project")
+
+    __table_args__ = (
+        CheckConstraint(
+            "(project_id IS NOT NULL) <> (area_id IS NOT NULL)",
+            name="ck_rewards_single_container",
+        ),
+        Index("idx_rewards_owner_project", owner_id, project_id),
+        Index("idx_rewards_owner_area", owner_id, area_id),
+    )
 
 
 class UserStats(Base):
@@ -1235,6 +1280,15 @@ class Note(Base):
 
     area = relationship("Area")
     project = relationship("Project")
+
+    __table_args__ = (
+        CheckConstraint(
+            "(project_id IS NOT NULL) <> (area_id IS NOT NULL)",
+            name="ck_notes_single_container",
+        ),
+        Index("idx_notes_owner_project", owner_id, project_id),
+        Index("idx_notes_owner_area", owner_id, area_id),
+    )
 
 
 class Archive(Base):
@@ -1614,6 +1668,15 @@ class CalendarItem(Base):
     updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
     alarms = relationship(
         "Alarm", backref="item", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "(project_id IS NOT NULL) <> (area_id IS NOT NULL)",
+            name="ck_calendar_items_single_container",
+        ),
+        Index("idx_calendar_items_owner_project", owner_id, project_id),
+        Index("idx_calendar_items_owner_area", owner_id, area_id),
     )
 
 

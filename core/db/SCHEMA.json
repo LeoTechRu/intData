@@ -1,8 +1,8 @@
 {
   "version": 1,
   "dialect": "postgresql",
-  "generated_at": "2025-09-19T00:46:52Z",
-  "metadata_hash": "332f089acaaaeb42f05f7a06cbb7b9940bd89eae03c033b67faa864b3fd89b83",
+  "generated_at": "2025-09-20T17:24:02Z",
+  "metadata_hash": "2709bb8e4e7939f7fd5d06d1db336caad24db633ce9705922bfcd19516e8bb4f",
   "enums": [
     {
       "name": "activitytype",
@@ -1071,8 +1071,30 @@
         }
       ],
       "unique_constraints": [],
-      "indexes": [],
-      "checks": []
+      "indexes": [
+        {
+          "name": "idx_calendar_items_owner_area",
+          "columns": [
+            "owner_id",
+            "area_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_calendar_items_owner_project",
+          "columns": [
+            "owner_id",
+            "project_id"
+          ],
+          "unique": false
+        }
+      ],
+      "checks": [
+        {
+          "name": "ck_calendar_items_single_container",
+          "sql": "(project_id IS NOT NULL) <> (area_id IS NOT NULL)"
+        }
+      ]
     },
     "channels": {
       "comment": "",
@@ -3114,8 +3136,30 @@
         }
       ],
       "unique_constraints": [],
-      "indexes": [],
-      "checks": []
+      "indexes": [
+        {
+          "name": "idx_dailies_owner_area",
+          "columns": [
+            "owner_id",
+            "area_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_dailies_owner_project",
+          "columns": [
+            "owner_id",
+            "project_id"
+          ],
+          "unique": false
+        }
+      ],
+      "checks": [
+        {
+          "name": "ck_dailies_single_container",
+          "sql": "(project_id IS NOT NULL) <> (area_id IS NOT NULL)"
+        }
+      ]
     },
     "daily_logs": {
       "comment": "",
@@ -4750,8 +4794,30 @@
         }
       ],
       "unique_constraints": [],
-      "indexes": [],
-      "checks": []
+      "indexes": [
+        {
+          "name": "idx_habits_owner_area",
+          "columns": [
+            "owner_id",
+            "area_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_habits_owner_project",
+          "columns": [
+            "owner_id",
+            "project_id"
+          ],
+          "unique": false
+        }
+      ],
+      "checks": [
+        {
+          "name": "ck_habits_single_container",
+          "sql": "(project_id IS NOT NULL) <> (area_id IS NOT NULL)"
+        }
+      ]
     },
     "interfaces": {
       "comment": "",
@@ -5378,8 +5444,30 @@
         }
       ],
       "unique_constraints": [],
-      "indexes": [],
-      "checks": []
+      "indexes": [
+        {
+          "name": "idx_notes_owner_area",
+          "columns": [
+            "owner_id",
+            "area_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_notes_owner_project",
+          "columns": [
+            "owner_id",
+            "project_id"
+          ],
+          "unique": false
+        }
+      ],
+      "checks": [
+        {
+          "name": "ck_notes_single_container",
+          "sql": "(project_id IS NOT NULL) <> (area_id IS NOT NULL)"
+        }
+      ]
     },
     "notification_channels": {
       "comment": "",
@@ -6396,8 +6484,30 @@
         }
       ],
       "unique_constraints": [],
-      "indexes": [],
-      "checks": []
+      "indexes": [
+        {
+          "name": "idx_rewards_owner_area",
+          "columns": [
+            "owner_id",
+            "area_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_rewards_owner_project",
+          "columns": [
+            "owner_id",
+            "project_id"
+          ],
+          "unique": false
+        }
+      ],
+      "checks": [
+        {
+          "name": "ck_rewards_single_container",
+          "sql": "(project_id IS NOT NULL) <> (area_id IS NOT NULL)"
+        }
+      ]
     },
     "roles": {
       "comment": "",
@@ -7254,8 +7364,30 @@
         }
       ],
       "unique_constraints": [],
-      "indexes": [],
-      "checks": []
+      "indexes": [
+        {
+          "name": "idx_tasks_owner_area",
+          "columns": [
+            "owner_id",
+            "area_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_tasks_owner_project",
+          "columns": [
+            "owner_id",
+            "project_id"
+          ],
+          "unique": false
+        }
+      ],
+      "checks": [
+        {
+          "name": "ck_tasks_single_container",
+          "sql": "(project_id IS NOT NULL) <> (area_id IS NOT NULL)"
+        }
+      ]
     },
     "time_entries": {
       "comment": "",
@@ -7475,8 +7607,30 @@
         }
       ],
       "unique_constraints": [],
-      "indexes": [],
-      "checks": []
+      "indexes": [
+        {
+          "name": "idx_time_entries_owner_area",
+          "columns": [
+            "owner_id",
+            "area_id"
+          ],
+          "unique": false
+        },
+        {
+          "name": "idx_time_entries_owner_project",
+          "columns": [
+            "owner_id",
+            "project_id"
+          ],
+          "unique": false
+        }
+      ],
+      "checks": [
+        {
+          "name": "ck_time_entries_single_container",
+          "sql": "(project_id IS NOT NULL) <> (area_id IS NOT NULL)"
+        }
+      ]
     },
     "user_group": {
       "comment": "",
