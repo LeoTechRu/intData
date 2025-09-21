@@ -210,20 +210,24 @@ gate:
 
 ```yaml
 agent_sync:
-  - when_utc: "2025-09-20T23:48:00Z"
+  - when_utc: "2025-09-20T23:55:00Z"
     agent: "codex"
-    role: "be"
-    branch: "feature/E2/sql-repair-param"
-    task: "TL-2025-09-20-sql-repair-param"
-    epic_scope: "E2 / миграции БД и индексы"
+    role: "tw"
+    branch: "feature/E2/release-docs-tw"
+    task: "TL-2025-09-20-release-docs"
+    epic_scope: "E2/E3/E17 release prep"
     files:
-      - "core/db/repair.py"
-      - "tests/test_repair_habits.py"
+      - "README.md"
+      - "reports/2025-09-20-release-qa.md"
+      - "reports/infosec/2025-09-20-e2-e3-e17.md"
+      - "reports/runbooks/test-to-main.md"
+      - "reports/2025-09-20-release-e2-e3-e17.md"
+      - "reports/2025-09-20-gaterecord-e2-e3-e17-release.md"
     pr: null
-    ac_link: "README.md#e2-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B8-%D0%B1%D0%B4-%D0%B8-%D0%B8%D0%BD%D0%B4%D0%B5%D0%BA%D1%81%D1%8B"
+    ac_link: "README.md#-workflow-playbook"
     ttl_minutes: 0
     status: "Done"
-    note: "2025-09-20 23:48Z — owner lookup через SQLAlchemy table/select; pytest tests/test_repair_habits.py."
+    note: "README обновлён, отчёты QA/InfoSec/Runbook/ GateRecord собраны; готово к Gate-6 TL."
   - when_utc: "2025-09-20T23:59:00Z"
     agent: "codex-cli::techwriter"
     role: "tw"
