@@ -1,0 +1,61 @@
+name: Security Scan (Trivy)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - test
+      - main
+  pull_request:
+    branches:
+      - main
+      - test
+
+env:
+  TRIVY_VERSION: "0.52.2"
+  TRIVY_CACHE_DIR: .trivy-cache
+
+jobs:
+  trivy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python (for consistency)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Trivy
+        uses: aquasecurity/trivy-action@0.22.0
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          cache-dir: ${{ env.TRIVY_CACHE_DIR }}
+
+      - name: Run Trivy filesystem scan
+        id: trivy
+        run: |
+          trivy fs \
+            --exit-code 1 \
+            --severity CRITICAL,HIGH \
+            --scanners vuln,secret,config \
+            --skip-dirs '.git,.venv,node_modules' \
+            --no-progress \
+            --format json . > trivy-report.json
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: trivy-report.json
+
+      - name: Gate on findings
+        if: ${{ steps.trivy.outcome == 'failure' }}
+        run: |
+          echo "Trivy обнаружил CRITICAL/HIGH уязвимости. См. артефакт trivy-report." >&2
+          exit 1
+
+      - name: Summary
+        if: ${{ steps.trivy.outcome == 'success' }}
+        run: echo "Trivy scan passed (no CRITICAL/HIGH findings)."

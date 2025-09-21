@@ -210,6 +210,21 @@ gate:
 
 ```yaml
 agent_sync:
+  - when_utc: "2025-09-21T00:10:00Z"
+    agent: "codex"
+    role: "devops"
+    branch: "feature/E2/trivy-ci"
+    task: "TL-2025-09-21-trivy-scan"
+    epic_scope: "E2/E3/E17 release prep"
+    files:
+      - ".github/workflows/trivy.yml"
+      - "README.md"
+      - "reports/runbooks/test-to-main.md"
+    pr: null
+    ac_link: "README.md#-workflow-playbook"
+    ttl_minutes: 0
+    status: "Done"
+    note: "Добавлен CI workflow Trivy; запускать на push/PR/dispatch."
   - when_utc: "2025-09-20T23:48:00Z"
     agent: "codex"
     role: "be"
