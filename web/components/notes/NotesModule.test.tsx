@@ -240,7 +240,17 @@ describe('NotesModule', () => {
         return Promise.resolve(jsonResponse({}));
       }
       if (url.includes('/api/v1/navigation/sidebar')) {
-        return Promise.resolve(jsonResponse({ items: [] }));
+        return Promise.resolve(
+          jsonResponse({
+            v: 1,
+            items: [],
+            modules: [],
+            categories: [],
+            widgets: [],
+            layout: { user: { v: 1, items: [] }, global: null },
+            can_edit_global: false,
+          }),
+        );
       }
       if (url.includes('/api/v1/notes') && (!init || init.method === undefined)) {
         notesRequestCount += 1;

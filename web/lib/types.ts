@@ -390,6 +390,7 @@ export interface SidebarNavItem {
   status?: SidebarNavStatus;
   module?: string;
   section_order?: number;
+  category?: string;
 }
 
 export interface SidebarWidgetItem {
@@ -407,10 +408,18 @@ export interface SidebarModuleDefinition {
   order: number;
 }
 
+export interface SidebarCategoryDefinition {
+  id: string;
+  module_id: string;
+  label: string;
+  order: number;
+}
+
 export interface SidebarNavPayload {
   v: number;
   items: SidebarNavItem[];
   modules: SidebarModuleDefinition[];
+  categories: SidebarCategoryDefinition[];
   widgets: SidebarWidgetItem[];
   layout: {
     user: SidebarLayoutSettings;

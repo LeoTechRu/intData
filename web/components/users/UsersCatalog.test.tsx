@@ -61,11 +61,16 @@ const navResponse = {
       position: 1,
       module: 'control',
       section_order: 100,
+      category: 'overview',
     },
   ],
   modules: [
     { id: 'control', label: 'Пульт', order: 1000 },
   ],
+  categories: [
+    { id: 'overview', module_id: 'control', label: 'Обзор', order: 100 },
+  ],
+  widgets: [],
   layout: {
     user: { v: 1, items: [{ key: 'overview', position: 1, hidden: false }] },
     global: null,

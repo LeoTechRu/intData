@@ -21,7 +21,12 @@ import { CSS } from '@dnd-kit/utilities';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Button, Checkbox, StatusIndicator } from '../ui';
-import type { SidebarLayoutSettings, SidebarModuleDefinition, SidebarNavItem } from '../../lib/types';
+import type {
+  SidebarCategoryDefinition,
+  SidebarLayoutSettings,
+  SidebarModuleDefinition,
+  SidebarNavItem,
+} from '../../lib/types';
 import { sortSidebarItems } from '../../lib/navigation-helpers';
 import { Modal } from '../../ui/uikit/Modal';
 
@@ -32,6 +37,7 @@ interface EditableNavItem {
   statusKind?: string;
   statusLink?: string;
   moduleId?: string;
+  categoryId?: string;
   section_order?: number;
   position: number;
 }
@@ -41,6 +47,7 @@ interface SidebarEditorProps {
   version: number;
   items: SidebarNavItem[];
   modules: SidebarModuleDefinition[];
+  categories: SidebarCategoryDefinition[];
   userLayout: SidebarLayoutSettings;
   globalLayout?: SidebarLayoutSettings | null;
   canEditGlobal: boolean;
@@ -79,6 +86,7 @@ function toEditable(
         statusKind: base.status?.kind,
         statusLink: base.status?.link,
         moduleId: base.module,
+        categoryId: base.category,
         section_order: base.section_order,
         position: typeof entry.position === 'number' ? entry.position : base.position,
       });
@@ -93,6 +101,7 @@ function toEditable(
         statusKind: item.status?.kind,
         statusLink: item.status?.link,
         moduleId: item.module,
+        categoryId: item.category,
         section_order: item.section_order,
         position: item.position,
       });
@@ -117,6 +126,7 @@ export function SidebarEditor({
   version,
   items,
   modules,
+  categories,
   userLayout,
   globalLayout,
   canEditGlobal,
@@ -152,37 +162,111 @@ export function SidebarEditor({
   const activeDraft = activeTab === 'personal' ? personalDraft : globalDraft;
 
   const moduleSections = useMemo(() => {
-    const bucket = new Map<string, EditableNavItem[]>();
+    const moduleBuckets = new Map<string, Map<string, EditableNavItem[]>>();
     activeDraft.forEach((item) => {
       const moduleId = item.moduleId ?? 'general';
-      if (!bucket.has(moduleId)) {
-        bucket.set(moduleId, []);
+      const categoryId = item.categoryId ?? 'general';
+      if (!moduleBuckets.has(moduleId)) {
+        moduleBuckets.set(moduleId, new Map());
       }
-      bucket.get(moduleId)!.push(item);
-    });
-    const ordered: Array<{ module: SidebarModuleDefinition; items: EditableNavItem[] }> = [];
-    modules.forEach((module) => {
-      const itemsForModule = bucket.get(module.id);
-      if (itemsForModule && itemsForModule.length > 0) {
-        ordered.push({ module, items: sortSidebarItems(itemsForModule) });
-        bucket.delete(module.id);
+      const categoryBucket = moduleBuckets.get(moduleId)!;
+      if (!categoryBucket.has(categoryId)) {
+        categoryBucket.set(categoryId, []);
       }
+      categoryBucket.get(categoryId)!.push(item);
     });
-    Array.from(bucket.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .forEach(([moduleId, itemsForModule]) => {
-        ordered.push({
-          module: { id: moduleId, label: moduleId, order: 9000 },
-          items: sortSidebarItems(itemsForModule),
-        });
+
+    const categoriesByModule = new Map<string, SidebarCategoryDefinition[]>();
+    categories.forEach((definition) => {
+      if (!categoriesByModule.has(definition.module_id)) {
+        categoriesByModule.set(definition.module_id, []);
+      }
+      categoriesByModule.get(definition.module_id)!.push(definition);
+    });
+
+    const moduleOrder = new Map<string, SidebarModuleDefinition>();
+    modules.forEach((module) => moduleOrder.set(module.id, module));
+
+    const normalizeModule = (moduleId: string): SidebarModuleDefinition => {
+      const module = moduleOrder.get(moduleId);
+      if (module) {
+        return module;
+      }
+      return { id: moduleId, label: moduleId, order: 9000 };
+    };
+
+    const normalizeCategory = (
+      moduleId: string,
+      categoryId: string,
+    ): SidebarCategoryDefinition => {
+      const defs = categoriesByModule.get(moduleId) ?? [];
+      const match = defs.find((definition) => definition.id === categoryId);
+      if (match) {
+        return match;
+      }
+      return { id: categoryId, module_id: moduleId, label: categoryId, order: 9000 };
+    };
+
+    const result: Array<{
+      module: SidebarModuleDefinition;
+      categories: Array<{ category: SidebarCategoryDefinition; items: EditableNavItem[] }>;
+    }> = [];
+
+    const pushModule = (moduleId: string, bucket: Map<string, EditableNavItem[]>) => {
+      const moduleDef = normalizeModule(moduleId);
+      const categoryDefs = [...(categoriesByModule.get(moduleDef.id) ?? [])].sort(
+        (a, b) => a.order - b.order || a.id.localeCompare(b.id, 'ru'),
+      );
+      const categoryGroups: Array<{ category: SidebarCategoryDefinition; items: EditableNavItem[] }> = [];
+
+      categoryDefs.forEach((definition) => {
+        const itemsForCategory = bucket.get(definition.id);
+        if (itemsForCategory && itemsForCategory.length > 0) {
+          categoryGroups.push({
+            category: definition,
+            items: sortSidebarItems(itemsForCategory),
+          });
+          bucket.delete(definition.id);
+        }
       });
-    return ordered.sort((a, b) => {
+
+      Array.from(bucket.entries())
+        .sort(([a], [b]) => a.localeCompare(b, 'ru'))
+        .forEach(([categoryId, itemsForCategory]) => {
+          categoryGroups.push({
+            category: normalizeCategory(moduleDef.id, categoryId),
+            items: sortSidebarItems(itemsForCategory),
+          });
+        });
+
+      if (categoryGroups.length === 0) {
+        return;
+      }
+
+      result.push({ module: moduleDef, categories: categoryGroups });
+    };
+
+    modules.forEach((module) => {
+      const bucket = moduleBuckets.get(module.id);
+      if (bucket) {
+        pushModule(module.id, bucket);
+        moduleBuckets.delete(module.id);
+      }
+    });
+
+    Array.from(moduleBuckets.entries())
+      .sort(([a], [b]) => a.localeCompare(b, 'ru'))
+      .forEach(([moduleId, bucket]) => {
+        pushModule(moduleId, bucket);
+      });
+
+    return result.sort((a, b) => {
       if (a.module.order !== b.module.order) {
         return a.module.order - b.module.order;
       }
-      return a.module.id.localeCompare(b.module.id);
+      return a.module.id.localeCompare(b.module.id, 'ru');
     });
-  }, [activeDraft, modules]);
+  }, [activeDraft, modules, categories]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -312,13 +396,20 @@ export function SidebarEditor({
           >
             <SortableContext items={activeDraft.map((item) => item.key)} strategy={verticalListSortingStrategy}>
               <ul className="flex max-h-96 flex-col gap-2 overflow-y-auto pr-2" aria-live="polite">
-                {moduleSections.map(({ module, items }) => (
+                {moduleSections.map(({ module, categories }) => (
                   <React.Fragment key={module.id}>
                     <li className="px-2 text-xs font-semibold uppercase tracking-wide text-muted" aria-hidden>
                       {module.label}
                     </li>
-                    {items.map((item) => (
-                      <SortableNavRow key={item.key} item={item} onToggle={toggleVisibility} />
+                    {categories.map(({ category, items }) => (
+                      <React.Fragment key={`${module.id}-${category.id}`}>
+                        <li className="pl-4 text-[11px] font-semibold uppercase tracking-wide text-muted" aria-hidden>
+                          {category.label}
+                        </li>
+                        {items.map((item) => (
+                          <SortableNavRow key={item.key} item={item} onToggle={toggleVisibility} />
+                        ))}
+                      </React.Fragment>
                     ))}
                   </React.Fragment>
                 ))}
