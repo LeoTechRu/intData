@@ -29,6 +29,24 @@ MODULE_DEFINITIONS: Tuple[Tuple[str, str, int], ...] = (
 
 MODULE_MAP = {module_id: (label, order) for module_id, label, order in MODULE_DEFINITIONS}
 
+CATEGORY_DEFINITIONS: Tuple[Tuple[str, str, str, int], ...] = (
+    ("control", "overview", "Обзор", 100),
+    ("control", "inbox", "Входящие", 110),
+    ("calendar", "calendar_core", "Календарь", 200),
+    ("tasks", "planning", "Планирование", 300),
+    ("tasks", "resources", "Ресурсы", 320),
+    ("knowledge", "knowledge", "Знания", 400),
+    ("team", "people", "Команда", 500),
+    ("team", "habits", "Привычки", 520),
+    ("admin", "settings", "Настройки", 600),
+    ("admin", "admin_tools", "Администрирование", 610),
+)
+
+CATEGORY_MAP: Dict[Tuple[str, str], Tuple[str, int]] = {
+    (module, category): (label, order)
+    for module, category, label, order in CATEGORY_DEFINITIONS
+}
+
 
 @dataclass(frozen=True)
 class NavStatus:
@@ -53,6 +71,7 @@ class NavBlueprintItem:
     roles: Tuple[str, ...] = ()
     module: str = 'general'
     section_order: int = 0
+    category: str = 'general'
 
 
 NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
@@ -64,6 +83,7 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         permissions=("app.dashboard.view",),
         module="control",
         section_order=100,
+        category="overview",
     ),
     NavBlueprintItem(
         key="inbox",
@@ -72,6 +92,7 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         permissions=("app.tasks.manage",),
         module="control",
         section_order=110,
+        category="inbox",
     ),
     NavBlueprintItem(
         key="calendar",
@@ -81,6 +102,7 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         permissions=("app.calendar.manage",),
         module="calendar",
         section_order=200,
+        category="calendar_core",
     ),
     NavBlueprintItem(
         key="time",
@@ -90,6 +112,7 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         permissions=("app.tasks.manage",),
         module="calendar",
         section_order=210,
+        category="calendar_core",
     ),
     NavBlueprintItem(
         key="tasks",
@@ -99,6 +122,7 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         permissions=("app.tasks.manage",),
         module="tasks",
         section_order=300,
+        category="planning",
     ),
     NavBlueprintItem(
         key="projects",
@@ -108,6 +132,7 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         permissions=("app.projects.manage",),
         module="tasks",
         section_order=310,
+        category="planning",
     ),
     NavBlueprintItem(
         key="areas",
@@ -117,6 +142,7 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         permissions=("app.areas.manage",),
         module="tasks",
         section_order=320,
+        category="planning",
     ),
     NavBlueprintItem(
         key="resources",
@@ -126,6 +152,7 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         permissions=("app.projects.manage",),
         module="tasks",
         section_order=330,
+        category="resources",
     ),
     NavBlueprintItem(
         key="notes",
@@ -135,6 +162,7 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         permissions=("app.tasks.manage",),
         module="knowledge",
         section_order=400,
+        category="knowledge",
     ),
     NavBlueprintItem(
         key="products",
@@ -143,6 +171,7 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         status=NavStatus("new"),
         module="knowledge",
         section_order=410,
+        category="knowledge",
     ),
     NavBlueprintItem(
         key="habits",
@@ -152,6 +181,7 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         permissions=("app.habits.manage",),
         module="team",
         section_order=500,
+        category="habits",
     ),
     NavBlueprintItem(
         key="team",
@@ -161,6 +191,7 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         permissions=("app.users.invite",),
         module="team",
         section_order=510,
+        category="people",
     ),
     NavBlueprintItem(
         key="groups",
@@ -170,6 +201,7 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         roles=("admin",),
         module="team",
         section_order=520,
+        category="people",
     ),
     NavBlueprintItem(
         key="settings",
@@ -178,6 +210,7 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         status=NavStatus("new"),
         module="admin",
         section_order=600,
+        category="settings",
     ),
     NavBlueprintItem(
         key="admin",
@@ -187,6 +220,7 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         roles=("admin",),
         module="admin",
         section_order=610,
+        category="admin_tools",
     ),
 )
 
@@ -221,6 +255,16 @@ def _default_layout(keys: Sequence[str]) -> Dict:
             {"key": key, "hidden": False, "position": index + 1}
             for index, key in enumerate(keys)
         ],
+    }
+
+
+def _category_definition(module_id: str, category_id: str) -> Dict[str, object]:
+    label, order = CATEGORY_MAP.get((module_id, category_id), (category_id.title(), 9000))
+    return {
+        "id": category_id,
+        "module_id": module_id,
+        "label": label,
+        "order": order,
     }
 
 
@@ -408,6 +452,7 @@ async def build_navigation_payload(
             "disabled": disabled,
             "module": module_id,
             "section_order": item.section_order,
+            "category": item.category,
         }
         if href and not disabled:
             payload_entry["href"] = href
@@ -415,12 +460,24 @@ async def build_navigation_payload(
             payload_entry["status"] = item.status.as_dict()
         items_payload.append(payload_entry)
 
+    categories_present: Dict[Tuple[str, str], Dict[str, object]] = {}
+    for entry in items_payload:
+        module_id = entry.get("module")
+        category_id = entry.get("category")
+        if isinstance(module_id, str) and isinstance(category_id, str):
+            categories_present.setdefault((module_id, category_id), _category_definition(module_id, category_id))
+
     modules_payload = sorted(modules_present.values(), key=lambda data: (data["order"], data["id"]))
+    categories_payload = sorted(
+        categories_present.values(),
+        key=lambda data: (data["order"], str(data["module_id"]), str(data["id"]))
+    )
 
     result: Dict[str, object] = {
         "v": NAV_VERSION,
         "items": items_payload,
         "modules": modules_payload,
+        "categories": categories_payload,
         "layout": {
             "user": user_layout,
             "global": global_layout if expose_global else None,

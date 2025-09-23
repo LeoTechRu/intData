@@ -90,7 +90,10 @@ async def test_navigation_user_layout(monkeypatch, async_session):
         assert "admin" not in keys
         modules = body["modules"]
         assert any(module["id"] == "control" for module in modules)
+        categories = body["categories"]
+        assert any(category["id"] == "overview" for category in categories)
         assert all("module" in item and "section_order" in item for item in body["items"])
+        assert all("category" in item for item in body["items"])
 
         payload = {
             "layout": {
@@ -109,6 +112,7 @@ async def test_navigation_user_layout(monkeypatch, async_session):
         hidden_map = {item["key"]: item["hidden"] for item in updated["items"]}
         assert hidden_map["habits"] is True
         assert updated["modules"][0]["id"] == modules[0]["id"]
+        assert updated["categories"][0]["module_id"] == modules[0]["id"]
 
         res = await client.put("/api/v1/navigation/sidebar/user", json={"reset": True})
         assert res.status_code == 200
