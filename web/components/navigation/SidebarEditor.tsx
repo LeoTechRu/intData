@@ -185,12 +185,12 @@ export function SidebarEditor({
     });
 
     const moduleOrder = new Map<string, SidebarModuleDefinition>();
-    modules.forEach((module) => moduleOrder.set(module.id, module));
+    modules.forEach((moduleDef) => moduleOrder.set(moduleDef.id, moduleDef));
 
     const normalizeModule = (moduleId: string): SidebarModuleDefinition => {
-      const module = moduleOrder.get(moduleId);
-      if (module) {
-        return module;
+      const existing = moduleOrder.get(moduleId);
+      if (existing) {
+        return existing;
       }
       return { id: moduleId, label: moduleId, order: 9000 };
     };
