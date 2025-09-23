@@ -23,6 +23,12 @@ from core.services.crm_service import CRMService
 from core.services.group_moderation_service import GroupModerationService
 from sqlalchemy.exc import SQLAlchemyError
 
+# Значение по умолчанию для статуса продукта задаём через enum,
+# чтобы избежать жёстко прошитых маркеров в коде бота.
+DEFAULT_PRODUCT_STATUS = ProductStatus.paid
+DEFAULT_STATUS_TOKEN = DEFAULT_PRODUCT_STATUS.value
+PAID_STATUS_ALIASES = {DEFAULT_STATUS_TOKEN, "оплатил", "оплачено"}
+
 # ==============================
 # РОУТЕРЫ
 # ==============================
@@ -712,7 +718,7 @@ async def handle_group_mark(message: Message, remainder: str) -> None:
 
     slug = tokens[0].lower()
     target_token: Optional[str] = None
-    status_token = "paid"
+    status_token = DEFAULT_STATUS_TOKEN
     source: Optional[str] = None
     note_parts: List[str] = []
 
@@ -720,10 +726,10 @@ async def handle_group_mark(message: Message, remainder: str) -> None:
         lowered = token.lower()
         if lowered.startswith("--source="):
             source = token.split("=", 1)[1]
-        elif lowered in {s.value for s in ProductStatus} and status_token == "paid":
+        elif lowered in {s.value for s in ProductStatus} and status_token == DEFAULT_STATUS_TOKEN:
             status_token = lowered
-        elif lowered in {"оплатил", "оплачено"}:
-            status_token = ProductStatus.paid.value
+        elif lowered in PAID_STATUS_ALIASES:
+            status_token = DEFAULT_STATUS_TOKEN
         elif token.startswith("@") or token.isdigit():
             if target_token is None:
                 target_token = token
@@ -764,7 +770,7 @@ async def handle_group_mark(message: Message, remainder: str) -> None:
             return
 
         status_map = {status.value: status for status in ProductStatus}
-        status = status_map.get(status_token, ProductStatus.paid)
+        status = status_map.get(status_token, DEFAULT_PRODUCT_STATUS)
 
         note = " ".join(note_parts).strip() or None
         await crm.assign_product(

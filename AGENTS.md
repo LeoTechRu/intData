@@ -210,6 +210,19 @@ gate:
 
 ```yaml
 agent_sync:
+  - when_utc: "2025-09-23T14:34:51Z"
+    agent: "codex"
+    role: "be"
+    branch: "feature/release/bot-status-default-be"
+    task: "TL-2025-09-21-paid-marker-removal"
+    epic_scope: "Release / InfoSec follow-ups"
+    files:
+      - "bot/handlers/telegram.py"
+    pr: null
+    ac_link: "README.md#release-gating"
+    ttl_minutes: 0
+    status: "Review"
+    note: "Бот переключён на enum ProductStatus (без строкового paid); проверка python3 -m compileall bot/handlers/telegram.py."
   - when_utc: "2025-09-20T23:55:00Z"
     agent: "codex"
     role: "tw"
