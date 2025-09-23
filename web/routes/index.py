@@ -4,6 +4,7 @@ from functools import lru_cache
 from pathlib import Path
 import logging
 import os
+import shutil
 import subprocess
 
 from fastapi import APIRouter, Request, Depends, status, HTTPException
@@ -82,6 +83,29 @@ def _resolve_html_path(page: str) -> Path | None:
     return None
 
 
+@lru_cache(maxsize=1)
+def _npm_bin() -> str:
+    path = shutil.which("npm")
+    if path is None:
+        raise RuntimeError("npm executable not found")
+    return path
+
+
+def _run_npm_command(*args: str) -> subprocess.CompletedProcess:
+    allowed = {("ci",), ("run", "build")}
+    if args not in allowed:
+        raise ValueError(f"Unsupported npm command: {' '.join(args)}")
+    timeout = int(os.getenv("NEXT_BUILD_TIMEOUT", "600"))
+    return subprocess.run(
+        [_npm_bin(), *args],
+        cwd=str(NEXT_SOURCE_DIR),
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=timeout,
+    )
+
+
 @lru_cache(maxsize=None)
 def _load_next_html(page: str) -> str:
     html_path = _resolve_html_path(page)
@@ -92,22 +116,10 @@ def _load_next_html(page: str) -> str:
                 node_modules_dir = NEXT_SOURCE_DIR / "node_modules"
                 if not node_modules_dir.exists():
                     logger.info("Node modules отсутствуют — запускаем npm ci")
-                    ci_completed = subprocess.run(
-                        ["npm", "ci"],
-                        cwd=str(NEXT_SOURCE_DIR),
-                        check=True,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                    )
+                    ci_completed = _run_npm_command("ci")
                     logger.info("npm ci завершён (эмиссия %s байт)", len(ci_completed.stdout))
                 logger.info("Next.js page '%s' отсутствует — запускаем npm run build", page)
-                completed = subprocess.run(
-                    ["npm", "run", "build"],
-                    cwd=str(NEXT_SOURCE_DIR),
-                    check=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
+                completed = _run_npm_command("run", "build")
                 logger.info("Next.js build завершён (эмиссия %s байт)", len(completed.stdout))
             except Exception as exc:  # pragma: no cover - build failures reported as HTTP error
                 logger.error("Не удалось собрать Next.js: %s", exc)

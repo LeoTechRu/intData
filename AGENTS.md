@@ -210,6 +210,21 @@ gate:
 
 ```yaml
 agent_sync:
+  - when_utc: "2025-09-23T14:40:52Z"
+    agent: "codex"
+    role: "devops"
+    branch: "feature/release/subprocess-hardening-devops"
+    task: "TL-2025-09-21-subprocess-hardening"
+    epic_scope: "Release / InfoSec follow-ups"
+    files:
+      - "core/scripts/db_dump.py"
+      - "web/routes/index.py"
+      - "web/routes/system.py"
+    pr: null
+    ac_link: "reports/infosec/2025-09-20-e2-e3-e17.md"
+    ttl_minutes: 0
+    status: "Review"
+    note: "Хардениг subprocess (git/npm/pg_dump); проверка python3 -m compileall core/scripts/db_dump.py web/routes/index.py web/routes/system.py."
   - when_utc: "2025-09-23T14:34:51Z"
     agent: "codex"
     role: "be"

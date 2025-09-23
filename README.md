@@ -245,7 +245,7 @@ Intelligent Data Pro — приватный продуктовый репози�
 - [x] TL-2025-09-19-pytest-postgres-migration — Перевести диагностические и web-тесты на PostgreSQL, устранить `MissingGreenlet` и FK-конфликты (owner: codex, ветка `feature/E9/test-postgres-env-codex`; отчёт `reports/2025-09-19-web-postgres-progress.txt`, follow-up: увеличить таймаут полного `pytest -q`).
 - [x] TL-2025-09-19-pytest-postgres-qa — Подтвердить зелёный прогон тестов на PostgreSQL (owner: qa, отчёт `reports/2025-09-20-pytest-postgres-qa.md`; результат: все группы пройдены партиями, полный `pytest -q` требует >10 мин).
 - [x] TL-2025-09-19-ci-timeouts —
-- [ ] TL-2025-09-21-subprocess-hardening — Перепроверить вызовы `subprocess` в `web/routes/index.py`, `web/routes/system.py`, `core/scripts/db_dump.py`, добавить валидацию/логирование (owner: devops/ops, см. InfoSec отчёт).
+- [x] TL-2025-09-21-subprocess-hardening — Перепроверить вызовы `subprocess` в `web/routes/index.py`, `web/routes/system.py`, `core/scripts/db_dump.py`, добавить валидацию/логирование (owner: codex, ветка `feature/release/subprocess-hardening-devops`, таймауты и absolute-path через `shutil.which`, см. InfoSec отчёт).
  Разбить `pytest` на два шага в CI и выгружать логи (owner: devops, см. записку `reports/2025-09-20-ci-timeouts-analysis.md`).
 
 #### E10: Capture (бот/веб, Inbox)
