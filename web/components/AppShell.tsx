@@ -759,7 +759,18 @@ export default function AppShell({
     }
   };
 
-  const moduleTabsBar =
+  const moduleTabsDesktop =
+    activeModuleTabs.length > 1 ? (
+      <div className="hidden w-full items-center justify-end gap-3 md:flex" data-module-tabs-desktop>
+        <ModuleTabs
+          moduleLabel={activeModule.label}
+          items={activeModuleTabs}
+          className="flex flex-wrap justify-end gap-2"
+        />
+      </div>
+    ) : null;
+
+  const moduleTabsMobile =
     activeModuleTabs.length > 1 ? (
       <ModuleTabs
         moduleLabel={activeModule.label}
@@ -767,7 +778,6 @@ export default function AppShell({
         className="flex gap-2 overflow-x-auto pb-1"
       />
     ) : null;
-
   const sidebarClassName = clsx(
     'fixed inset-y-0 left-0 z-50 w-72 transform overflow-y-auto border-r border-subtle bg-[var(--surface-0)] px-4 py-6 transition-transform duration-200 ease-out md:static md:h-full md:overflow-y-auto md:px-5 md:py-8',
     isMobileNavOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
@@ -778,10 +788,10 @@ export default function AppShell({
 
   const computedMaxWidth = maxWidthClassName ?? 'max-w-[1400px]';
   const headerClasses = clsx(
-    'grid w-full grid-cols-[auto,minmax(0,1fr),auto] grid-rows-[auto,auto] items-center gap-x-3 gap-y-2 px-3 py-3',
-    'sm:px-4 sm:gap-x-4',
-    'md:grid-rows-1 md:px-6',
-    'lg:py-4',
+    'grid w-full grid-cols-[auto,minmax(0,1fr),auto] items-center gap-x-3 gap-y-2 px-3 py-2',
+    'sm:px-4 sm:py-2.5',
+    'md:px-6 md:py-3',
+    'lg:py-3.5',
   );
   const mainClasses = clsx(
     'relative z-10 flex w-full flex-col gap-6 px-4 py-6 md:px-8 md:py-10',
@@ -795,7 +805,7 @@ export default function AppShell({
       <div className="flex min-h-screen flex-col bg-surface" data-app-shell>
         <header className="sticky top-0 z-40 border-b border-subtle bg-[var(--surface-0)]/95 backdrop-blur">
           <div className={headerClasses}>
-            <div className="col-span-1 order-1 flex items-center gap-2 md:gap-3">
+          <div className="col-span-1 order-1 flex items-center gap-2 md:gap-3">
             <button
               type="button"
               className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-surface-soft text-muted transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] md:h-10 md:w-10"
@@ -858,13 +868,15 @@ export default function AppShell({
               >
                 {title}
               </h1>
-              <FavoriteToggle
-                active={isFavorite}
-                disabled={!canToggleFavorite || saveUserLayoutMutation.isPending}
-                onToggle={handleToggleFavorite}
-                labelAdd={favoriteLabelAdd}
-                labelRemove={favoriteLabelRemove}
-              />
+              <div className="hidden sm:block">
+                <FavoriteToggle
+                  active={isFavorite}
+                  disabled={!canToggleFavorite || saveUserLayoutMutation.isPending}
+                  onToggle={handleToggleFavorite}
+                  labelAdd={favoriteLabelAdd}
+                  labelRemove={favoriteLabelRemove}
+                />
+              </div>
             </div>
             {subtitle ? (
               <p id={headingDescriptionId} className="sr-only">
@@ -872,9 +884,23 @@ export default function AppShell({
               </p>
             ) : null}
           </div>
-          <div className="col-span-3 order-3 flex min-w-0 items-center justify-center gap-3 md:order-3 md:col-span-1 md:flex-nowrap md:justify-self-end md:justify-end">
-            {actions ? <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-right md:flex-nowrap">{actions}</div> : null}
-            <UserSummary viewer={viewer} isLoading={viewerLoading} personaBundle={personaBundle} />
+          <div className="col-span-3 order-3 flex min-w-0 flex-col items-center gap-2 md:order-3 md:col-span-1 md:items-end">
+            {moduleTabsDesktop}
+            <div className="flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 text-right sm:justify-end md:w-auto md:flex-nowrap">
+              {actions ? <div className="flex flex-wrap items-center gap-x-2 gap-y-1 md:flex-nowrap">{actions}</div> : null}
+              {canToggleFavorite ? (
+                <div className="sm:hidden">
+                  <FavoriteToggle
+                    active={isFavorite}
+                    disabled={!canToggleFavorite || saveUserLayoutMutation.isPending}
+                    onToggle={handleToggleFavorite}
+                    labelAdd={favoriteLabelAdd}
+                    labelRemove={favoriteLabelRemove}
+                  />
+                </div>
+              ) : null}
+              <UserSummary viewer={viewer} isLoading={viewerLoading} personaBundle={personaBundle} />
+            </div>
           </div>
         </div>
       </header>
@@ -1146,9 +1172,12 @@ export default function AppShell({
           />
         ) : null}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-surface">
-          {moduleTabsBar ? (
-            <div className="flex justify-center border-b border-subtle/70 bg-[var(--surface-0)]/95 px-3 py-2 sm:px-4 md:px-6" data-module-tabs>
-              <div className={clsx('w-full', computedMaxWidth)}>{moduleTabsBar}</div>
+          {moduleTabsMobile ? (
+            <div
+              className="flex justify-center border-b border-subtle/70 bg-[var(--surface-0)]/95 px-3 py-2 sm:px-4 md:hidden"
+              data-module-tabs
+            >
+              <div className={clsx('w-full', computedMaxWidth)}>{moduleTabsMobile}</div>
             </div>
           ) : null}
           <div className="flex min-h-0 flex-1 justify-center overflow-y-auto">
