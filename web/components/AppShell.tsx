@@ -679,26 +679,24 @@ export default function AppShell({
     if (!section) {
       return [];
     }
-    return section.categories
-      .map(({ category, items }) => {
-        const firstVisible = items.find((item) => item.href && !item.disabled);
-        if (!firstVisible) {
-          return null;
-        }
-        const isActive = currentNavEntry
-          ? items.some((item) => item.key === currentNavEntry.key)
-          : false;
-        const allHidden = items.every((item) => item.hidden);
-        return {
-          key: category.id,
-          label: category.label,
-          href: firstVisible.href,
-          external: Boolean(firstVisible.external),
-          hidden: allHidden,
-          active: isActive,
-        } satisfies ModuleTabItem;
-      })
-      .filter((tab): tab is ModuleTabItem => Boolean(tab));
+    const tabs: ModuleTabItem[] = [];
+    section.categories.forEach(({ category, items }) => {
+      const firstVisible = items.find((item) => item.href && !item.disabled);
+      if (!firstVisible) {
+        return;
+      }
+      const isActive = currentNavEntry ? items.some((item) => item.key === currentNavEntry.key) : false;
+      const allHidden = items.every((item) => item.hidden);
+      tabs.push({
+        key: category.id,
+        label: category.label,
+        href: firstVisible.href,
+        external: Boolean(firstVisible.external),
+        hidden: allHidden,
+        active: isActive,
+      });
+    });
+    return tabs;
   }, [activeModuleId, currentNavEntry, moduleTabsData]);
 
   const handleToggleFavorite = async () => {
@@ -1158,7 +1156,7 @@ export default function AppShell({
                           <StatusIndicator
                             kind={statusKind}
                             className="ml-1 h-1.5 w-1.5"
-                            title={statusTooltip}
+                            tooltip={statusTooltip}
                           />
                         )
                       ) : null}

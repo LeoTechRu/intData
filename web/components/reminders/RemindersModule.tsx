@@ -40,9 +40,12 @@ export default function RemindersModule() {
               Управляйте уведомлениями по проектам, задачам и клиентам — всё в одном расписании Control Hub.
             </p>
           </div>
-          <Button asChild size="sm" variant="primary">
-            <Link href="/tasks/new">Создать напоминание</Link>
-          </Button>
+          <Link
+            href="/tasks/new"
+            className="inline-flex h-9 items-center justify-center gap-2 rounded-xl bg-[var(--accent-primary)] px-3 text-xs font-medium text-[var(--accent-on-primary)] transition-base hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+          >
+            Создать напоминание
+          </Link>
         </header>
         <ul className="flex flex-col divide-y divide-subtle" role="list">
           {SAMPLE_REMINDERS.map((reminder) => (
@@ -56,9 +59,12 @@ export default function RemindersModule() {
               </div>
               <div className="flex items-center gap-3 text-xs text-muted md:text-sm">
                 <span className="font-medium text-[var(--text-primary)]">{reminder.due}</span>
-                <Button asChild size="xs" variant="ghost">
-                  <Link href="/tasks">Открыть</Link>
-                </Button>
+                <Link
+                  href="/tasks"
+                  className="inline-flex h-8 items-center justify-center rounded-xl px-3 text-xs font-medium text-[var(--text-primary)] transition-base hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+                >
+                  Открыть
+                </Link>
               </div>
             </li>
           ))}
