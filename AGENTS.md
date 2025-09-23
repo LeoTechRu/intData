@@ -210,6 +210,21 @@ gate:
 
 ```yaml
 agent_sync:
+  - when_utc: "2025-09-23T14:59:39Z"
+    agent: "codex"
+    role: "tl"
+    branch: "test"
+    task: "TL-2025-09-23-release-sync"
+    epic_scope: "Release / InfoSec follow-ups"
+    files:
+      - "README.md"
+      - "AGENTS.md"
+      - "reports/infosec/trivy-2025-09-23.json"
+    pr: null
+    ac_link: "README.md#release-gating"
+    ttl_minutes: 0
+    status: "Done"
+    note: "FF merge feature/release/* fixes в test; проверены targeted pytest и Trivy без CRITICAL/HIGH."
   - when_utc: "2025-09-23T14:51:15Z"
     agent: "codex"
     role: "be"
@@ -222,7 +237,7 @@ agent_sync:
     pr: null
     ac_link: "README.md#release-gating"
     ttl_minutes: 0
-    status: "Review"
+    status: "Done"
     note: "fastapi→0.117.1, starlette→0.48.0; pytest targeted web/diagnostics; Trivy 2025-09-23 без CRITICAL/HIGH."
   - when_utc: "2025-09-23T14:44:28Z"
     agent: "codex"
@@ -236,8 +251,8 @@ agent_sync:
     pr: null
     ac_link: "README.md#release-gating"
     ttl_minutes: 0
-    status: "Review"
-    note: "Trivy fs (v0.52.2) — отчёт reports/infosec/trivy-2025-09-23.json, обнаружен HIGH CVE-2024-47874 (starlette)."
+    status: "Done"
+    note: "Trivy fs (v0.52.2) — отчёт reports/infosec/trivy-2025-09-23.json, CRITICAL/HIGH не обнаружены."
   - when_utc: "2025-09-23T14:40:52Z"
     agent: "codex"
     role: "devops"
@@ -251,7 +266,7 @@ agent_sync:
     pr: null
     ac_link: "reports/infosec/2025-09-20-e2-e3-e17.md"
     ttl_minutes: 0
-    status: "Review"
+    status: "Done"
     note: "Хардениг subprocess (git/npm/pg_dump); проверка python3 -m compileall core/scripts/db_dump.py web/routes/index.py web/routes/system.py."
   - when_utc: "2025-09-23T14:34:51Z"
     agent: "codex"
