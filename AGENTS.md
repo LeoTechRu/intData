@@ -210,6 +210,21 @@ gate:
 
 ```yaml
 agent_sync:
+  - when_utc: "2025-09-23T22:36:23Z"
+    agent: "codex"
+    role: "tl"
+    branch: "main"
+    task: "TL-2025-09-23-bitrix-menu"
+    epic_scope: "E17 / Frontend navigation"
+    files:
+      - "git (test/main fast-forward)"
+      - "web/components/AppShell.tsx"
+      - "README.md"
+    pr: null
+    ac_link: "README.md#e17-frontend-modernization"
+    ttl_minutes: 0
+    status: "Done"
+    note: "FF feature/E17/bitrix-leftnav -> test -> main, npm lint/test/build, systemctl restart intdata-web; логи без ошибок."
   - when_utc: "2025-09-23T21:12:15Z"
     agent: "codex"
     role: "fe"
@@ -220,11 +235,12 @@ agent_sync:
       - "web/components/AppShell.tsx"
       - "web/components/navigation/*"
       - "web/lib/navigation-helpers.ts"
+      - "README.md"
     pr: null
     ac_link: "README.md#e17-frontend-modernization"
-    ttl_minutes: 180
-    status: "In Progress"
-    note: "Рефакторим AppShell: убираем общий header, модульные вкладки внутри левого меню, Bitrix-подобный рейл."
+    ttl_minutes: 0
+    status: "Done"
+    note: "AppShell без глобального хедера: модульные панели внутри рейла, обновлён README, lint/test/build зелёные."
   - when_utc: "2025-09-23T20:52:50Z"
     agent: "codex"
     role: "tl"
