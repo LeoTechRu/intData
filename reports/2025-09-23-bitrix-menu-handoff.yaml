@@ -1,0 +1,34 @@
+handoff:
+  from: frontend
+  to: teamlead
+  initiative: E17 / Frontend navigation
+  task: TL-2025-09-23-bitrix-menu
+  context: |
+    Перестроена AppShell навигация под паттерн Bitrix24: модульный рейл с коллапсом до иконок, горизонтальные вкладки
+    внутри активного модуля и персональные пины страниц. Добавлен модуль Control Hub с новой страницей «Напоминания».
+    Бэкенд `navigation_service` расширен иконками и флагами по умолчанию, чтобы по дефолту показывать только модули.
+  artifacts:
+    - path: web/components/AppShell.tsx
+      note: Модульный рейл, коллапс, подсекция «Скрытые страницы», интеграция NavIcon
+    - path: web/components/navigation/NavIcon.tsx
+      note: Сет иконок для модулей и страниц навигации
+    - path: web/components/navigation/ModuleTabs.tsx
+      note: Актуализированы стили и убран бейдж «Скрыто»
+    - path: web/components/reminders/RemindersModule.tsx
+      note: Контент Control Hub для страницы напоминаний
+    - path: web/app/reminders/page.tsx
+      note: Маршрут новой страницы `/reminders`
+    - path: core/services/navigation_service.py
+      note: Иконки модулей/страниц, default_hidden, модуль Control Hub
+    - path: web/lib/types.ts
+      note: Поля `icon` в `SidebarNavItem` и `SidebarModuleDefinition`
+    - path: README.md
+      note: Обновлено описание модульной навигации
+  acceptance:
+    - Левый рейл показывает только модули, при клике переходит на первую доступную страницу модуля
+    - Страницы можно закрепить/скрыть через звёздочку или редактор; скрытые отображаются в разделе «Скрытые страницы»
+    - Режим «коллапс до иконок» сохраняется в localStorage и работает на десктопе
+    - Вкладки модуля дублируют страницы независимо от их пинов; бейдж «Скрыто» убран
+    - Страница `/reminders` доступна в модуле Control Hub и проходит lint/test
+  blockers:
+    - нет

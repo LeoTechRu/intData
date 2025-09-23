@@ -70,8 +70,7 @@ async def put_sidebar_user(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     effective = await get_effective_permissions(request, current_user=current_user)
     blueprint = allowed_blueprint(effective, current_user.role)
-    allowed_keys = [item.key for item in blueprint]
-    sanitized = sanitize_layout(payload.layout, allowed_keys)
+    sanitized = sanitize_layout(payload.layout, blueprint)
     if payload.reset or payload.layout is None:
         await delete_user_layout(current_user.id)
     else:
@@ -99,10 +98,10 @@ async def put_sidebar_global(
     effective = await get_effective_permissions(request, current_user=current_user)
     if not _can_edit_global(effective):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
-    allowed_keys = [item.key for item in NAV_BLUEPRINT]
+    allowed_items = NAV_BLUEPRINT
     if payload.reset:
         await reset_global_layout()
     else:
-        sanitized = sanitize_layout(payload.layout, allowed_keys)
+        sanitized = sanitize_layout(payload.layout, allowed_items)
         await save_global_layout(sanitized)
     return {"ok": True}

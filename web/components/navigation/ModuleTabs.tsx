@@ -31,8 +31,6 @@ export function ModuleTabs({ moduleLabel, items, className }: ModuleTabsProps) {
           'inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]';
         const variant = item.active
           ? 'bg-[var(--accent-primary)] text-[var(--accent-on-primary)] shadow-soft'
-          : item.hidden
-          ? 'border border-dashed border-subtle text-muted hover:text-[var(--text-primary)]'
           : 'bg-surface-soft text-muted hover:text-[var(--text-primary)]';
         const tabClassName = clsx(baseClass, variant);
 
@@ -40,21 +38,15 @@ export function ModuleTabs({ moduleLabel, items, className }: ModuleTabsProps) {
           return (
             <span key={item.key} className={tabClassName} aria-disabled>
               {item.label}
-              {item.hidden ? (
-                <span className="text-[10px] uppercase tracking-wide text-muted">Скрыто</span>
-              ) : null}
             </span>
           );
         }
 
         if (item.external) {
           return (
-            <a key={item.key} href={item.href} target="_blank" rel="noreferrer" className={tabClassName}>
-              <span>{item.label}</span>
-              {item.hidden ? (
-                <span className="text-[10px] uppercase tracking-wide text-muted">Скрыто</span>
-              ) : null}
-            </a>
+          <a key={item.key} href={item.href} target="_blank" rel="noreferrer" className={tabClassName}>
+            <span>{item.label}</span>
+          </a>
           );
         }
 
@@ -67,9 +59,6 @@ export function ModuleTabs({ moduleLabel, items, className }: ModuleTabsProps) {
             aria-current={item.active ? 'page' : undefined}
           >
             <span>{item.label}</span>
-            {item.hidden ? (
-              <span className="text-[10px] uppercase tracking-wide text-muted">Скрыто</span>
-            ) : null}
           </Link>
         );
       })}

@@ -18,24 +18,30 @@ GLOBAL_LAYOUT_KEY = "ui.nav.sidebar.layout"
 GLOBAL_PREFIX = "ui.nav.sidebar."
 PAYWALL_ROUTE = "/tariffs"
 
-MODULE_DEFINITIONS: Tuple[Tuple[str, str, int], ...] = (
-    ("control", "Пульт", 1000),
-    ("calendar", "Календарь", 2000),
-    ("tasks", "Задачи", 3000),
-    ("knowledge", "Знания", 4000),
-    ("team", "Команда", 5000),
-    ("admin", "Администрирование", 6000),
+MODULE_DEFINITIONS: Tuple[Tuple[str, str, str, int], ...] = (
+    ("control", "Control Hub", "module-control-hub", 1000),
+    ("tasks", "Задачи и проекты", "module-tasks-projects", 2000),
+    ("knowledge", "База знаний", "module-knowledge", 3000),
+    ("team", "Команда", "module-team", 4000),
+    ("admin", "Администрирование", "module-admin", 5000),
 )
 
-MODULE_MAP = {module_id: (label, order) for module_id, label, order in MODULE_DEFINITIONS}
+MODULE_MAP: Dict[str, Tuple[str, str, int]] = {
+    module_id: (label, icon, order)
+    for module_id, label, icon, order in MODULE_DEFINITIONS
+}
 
 CATEGORY_DEFINITIONS: Tuple[Tuple[str, str, str, int], ...] = (
     ("control", "overview", "Обзор", 100),
     ("control", "inbox", "Входящие", 110),
-    ("calendar", "calendar_core", "Календарь", 200),
-    ("tasks", "planning", "Планирование", 300),
-    ("tasks", "resources", "Ресурсы", 320),
-    ("knowledge", "knowledge", "Знания", 400),
+    ("control", "calendar", "Календарь", 120),
+    ("control", "time", "Время", 130),
+    ("control", "reminders", "Напоминания", 140),
+    ("tasks", "tasks", "Задачи", 300),
+    ("tasks", "projects", "Проекты", 310),
+    ("tasks", "areas", "Области", 320),
+    ("tasks", "resources", "Ресурсы", 330),
+    ("knowledge", "knowledge", "База знаний", 400),
     ("team", "people", "Команда", 500),
     ("team", "habits", "Привычки", 520),
     ("admin", "settings", "Настройки", 600),
@@ -72,6 +78,8 @@ class NavBlueprintItem:
     module: str = 'general'
     section_order: int = 0
     category: str = 'general'
+    icon: str = 'nav-generic'
+    default_hidden: bool = False
 
 
 NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
@@ -84,6 +92,8 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         module="control",
         section_order=100,
         category="overview",
+        icon="overview",
+        default_hidden=True,
     ),
     NavBlueprintItem(
         key="inbox",
@@ -93,6 +103,8 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         module="control",
         section_order=110,
         category="inbox",
+        icon="inbox",
+        default_hidden=True,
     ),
     NavBlueprintItem(
         key="calendar",
@@ -100,9 +112,11 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         route="/calendar",
         status=NavStatus("new"),
         permissions=("app.calendar.manage",),
-        module="calendar",
-        section_order=200,
-        category="calendar_core",
+        module="control",
+        section_order=120,
+        category="calendar",
+        icon="calendar",
+        default_hidden=True,
     ),
     NavBlueprintItem(
         key="time",
@@ -110,9 +124,23 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         route="/time",
         status=NavStatus("new"),
         permissions=("app.tasks.manage",),
-        module="calendar",
-        section_order=210,
-        category="calendar_core",
+        module="control",
+        section_order=130,
+        category="time",
+        icon="time",
+        default_hidden=True,
+    ),
+    NavBlueprintItem(
+        key="reminders",
+        label="Напоминания",
+        route="/reminders",
+        status=NavStatus("new"),
+        permissions=("app.tasks.manage",),
+        module="control",
+        section_order=140,
+        category="reminders",
+        icon="reminders",
+        default_hidden=True,
     ),
     NavBlueprintItem(
         key="tasks",
@@ -122,7 +150,9 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         permissions=("app.tasks.manage",),
         module="tasks",
         section_order=300,
-        category="planning",
+        category="tasks",
+        icon="tasks",
+        default_hidden=True,
     ),
     NavBlueprintItem(
         key="projects",
@@ -132,7 +162,9 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         permissions=("app.projects.manage",),
         module="tasks",
         section_order=310,
-        category="planning",
+        category="projects",
+        icon="projects",
+        default_hidden=True,
     ),
     NavBlueprintItem(
         key="areas",
@@ -142,7 +174,9 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         permissions=("app.areas.manage",),
         module="tasks",
         section_order=320,
-        category="planning",
+        category="areas",
+        icon="areas",
+        default_hidden=True,
     ),
     NavBlueprintItem(
         key="resources",
@@ -153,6 +187,8 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         module="tasks",
         section_order=330,
         category="resources",
+        icon="resources",
+        default_hidden=True,
     ),
     NavBlueprintItem(
         key="notes",
@@ -163,6 +199,8 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         module="knowledge",
         section_order=400,
         category="knowledge",
+        icon="notes",
+        default_hidden=True,
     ),
     NavBlueprintItem(
         key="products",
@@ -172,6 +210,8 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         module="knowledge",
         section_order=410,
         category="knowledge",
+        icon="products",
+        default_hidden=True,
     ),
     NavBlueprintItem(
         key="habits",
@@ -182,6 +222,8 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         module="team",
         section_order=500,
         category="habits",
+        icon="habits",
+        default_hidden=True,
     ),
     NavBlueprintItem(
         key="team",
@@ -192,6 +234,8 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         module="team",
         section_order=510,
         category="people",
+        icon="team",
+        default_hidden=True,
     ),
     NavBlueprintItem(
         key="groups",
@@ -202,6 +246,8 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         module="team",
         section_order=520,
         category="people",
+        icon="groups",
+        default_hidden=True,
     ),
     NavBlueprintItem(
         key="settings",
@@ -211,6 +257,8 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         module="admin",
         section_order=600,
         category="settings",
+        icon="settings",
+        default_hidden=True,
     ),
     NavBlueprintItem(
         key="admin",
@@ -221,6 +269,8 @@ NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
         module="admin",
         section_order=610,
         category="admin_tools",
+        icon="admin",
+        default_hidden=True,
     ),
 )
 
@@ -248,12 +298,16 @@ def allowed_blueprint(
     return allowed
 
 
-def _default_layout(keys: Sequence[str]) -> Dict:
+def _default_layout(items: Sequence[NavBlueprintItem]) -> Dict:
     return {
         "v": NAV_VERSION,
         "items": [
-            {"key": key, "hidden": False, "position": index + 1}
-            for index, key in enumerate(keys)
+            {
+                "key": item.key,
+                "hidden": item.default_hidden,
+                "position": index + 1,
+            }
+            for index, item in enumerate(items)
         ],
     }
 
@@ -268,7 +322,11 @@ def _category_definition(module_id: str, category_id: str) -> Dict[str, object]:
     }
 
 
-def _sanitize_layout(raw: Optional[Dict], allowed_keys: Sequence[str]) -> Dict:
+def _sanitize_layout(
+    raw: Optional[Dict],
+    allowed_keys: Sequence[str],
+    default_hidden: Dict[str, bool],
+) -> Dict:
     order_map = {key: idx for idx, key in enumerate(allowed_keys)}
     seen: set[str] = set()
     items: List[Dict[str, object]] = []
@@ -285,7 +343,8 @@ def _sanitize_layout(raw: Optional[Dict], allowed_keys: Sequence[str]) -> Dict:
                 key = entry.get("key")
                 if not isinstance(key, str) or key not in order_map or key in seen:
                     continue
-                hidden = bool(entry.get("hidden", False))
+                hidden_default = default_hidden.get(key, False)
+                hidden = bool(entry.get("hidden", hidden_default))
                 position = entry.get("position")
                 if not isinstance(position, int) or position < 1:
                     position = len(items) + 1
@@ -293,7 +352,11 @@ def _sanitize_layout(raw: Optional[Dict], allowed_keys: Sequence[str]) -> Dict:
                 seen.add(key)
     for key in allowed_keys:
         if key not in seen:
-            items.append({"key": key, "hidden": False, "position": len(items) + 1})
+            items.append({
+                "key": key,
+                "hidden": default_hidden.get(key, False),
+                "position": len(items) + 1,
+            })
     items.sort(key=lambda entry: (int(entry["position"]), order_map[entry["key"]]))
     for index, entry in enumerate(items, start=1):
         entry["position"] = index
@@ -352,7 +415,9 @@ def _merge_layouts(
     return merged
 
 
-async def load_global_layout(allowed_keys: Sequence[str]) -> Dict:
+async def load_global_layout(allowed_items: Sequence[NavBlueprintItem]) -> Dict:
+    allowed_keys = [item.key for item in allowed_items]
+    defaults = {item.key: item.default_hidden for item in allowed_items}
     stored = await get_settings_by_prefix(GLOBAL_PREFIX)
     raw_value = stored.get(GLOBAL_LAYOUT_KEY)
     data = None
@@ -361,7 +426,7 @@ async def load_global_layout(allowed_keys: Sequence[str]) -> Dict:
             data = json.loads(raw_value)
         except json.JSONDecodeError:
             logger.warning("navigation: invalid JSON in global layout, reverting to default")
-    return _sanitize_layout(data, allowed_keys)
+    return _sanitize_layout(data, allowed_keys, defaults)
 
 
 async def save_global_layout(layout: Dict) -> None:
@@ -373,10 +438,15 @@ async def reset_global_layout() -> None:
     await delete_settings_by_prefix(GLOBAL_PREFIX)
 
 
-async def load_user_layout(user_id: int, allowed_keys: Sequence[str]) -> Tuple[Dict, bool]:
+async def load_user_layout(
+    user_id: int,
+    allowed_items: Sequence[NavBlueprintItem],
+) -> Tuple[Dict, bool]:
+    allowed_keys = [item.key for item in allowed_items]
+    defaults = {item.key: item.default_hidden for item in allowed_items}
     async with UserSettingsService() as svc:
         raw = await svc.get(user_id, "nav_sidebar")
-    return _sanitize_layout(raw, allowed_keys), raw is not None
+    return _sanitize_layout(raw, allowed_keys, defaults), raw is not None
 
 
 async def save_user_layout(user_id: int, layout: Dict) -> None:
@@ -389,8 +459,10 @@ async def delete_user_layout(user_id: int) -> None:
         await svc.delete(user_id, "nav_sidebar")
 
 
-def sanitize_layout(raw: Optional[Dict], allowed_keys: Sequence[str]) -> Dict:
-    return _sanitize_layout(raw, allowed_keys)
+def sanitize_layout(raw: Optional[Dict], allowed_items: Sequence[NavBlueprintItem]) -> Dict:
+    allowed_keys = [item.key for item in allowed_items]
+    defaults = {item.key: item.default_hidden for item in allowed_items}
+    return _sanitize_layout(raw, allowed_keys, defaults)
 
 
 async def build_navigation_payload(
@@ -403,12 +475,12 @@ async def build_navigation_payload(
 ) -> Dict:
     allowed_items = allowed_blueprint(effective, viewer_role)
     allowed_keys = [item.key for item in allowed_items]
-    default_layout = _default_layout(allowed_keys)
-    global_layout = await load_global_layout(allowed_keys)
+    default_layout = _default_layout(allowed_items)
+    global_layout = await load_global_layout(allowed_items)
     if user_id is not None:
-        user_layout, user_has_custom = await load_user_layout(user_id, allowed_keys)
+        user_layout, user_has_custom = await load_user_layout(user_id, allowed_items)
     else:
-        user_layout, user_has_custom = _default_layout(allowed_keys), False
+        user_layout, user_has_custom = _default_layout(allowed_items), False
     merged_items = _merge_layouts(
         default_layout,
         global_layout,
@@ -437,10 +509,14 @@ async def build_navigation_payload(
                 disabled = True
         module_id = item.module
         if module_id:
-            label, order = MODULE_MAP.get(module_id, (module_id.title(), 9000))
+            label, icon, order = MODULE_MAP.get(
+                module_id,
+                (module_id.title(), "module-generic", 9000),
+            )
             modules_present.setdefault(module_id, {
                 "id": module_id,
                 "label": label,
+                "icon": icon,
                 "order": order,
             })
         payload_entry: Dict[str, object] = {
@@ -453,6 +529,7 @@ async def build_navigation_payload(
             "module": module_id,
             "section_order": item.section_order,
             "category": item.category,
+            "icon": item.icon,
         }
         if href and not disabled:
             payload_entry["href"] = href

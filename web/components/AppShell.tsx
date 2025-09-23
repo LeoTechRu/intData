@@ -32,6 +32,7 @@ import { Button, Card, StatusIndicator, type StatusIndicatorKind } from './ui';
 import { SidebarEditor } from './navigation/SidebarEditor';
 import { ModuleTabs, type ModuleTabItem } from './navigation/ModuleTabs';
 import { FavoriteToggle } from './navigation/FavoriteToggle';
+import { NavIcon } from './navigation/NavIcon';
 
 interface AppShellProps {
   title: string;
@@ -55,23 +56,26 @@ const SUPPORT_CHANNEL_URL = 'https://t.me/HELPintData';
 const DEVELOPER_CONTACT_URL = 'https://t.me/leotechru';
 
 const STATIC_MODULES: SidebarModuleDefinition[] = [
-  { id: 'control', label: 'Пульт', order: 1000 },
-  { id: 'calendar', label: 'Календарь', order: 2000 },
-  { id: 'tasks', label: 'Задачи', order: 3000 },
-  { id: 'knowledge', label: 'Знания', order: 4000 },
-  { id: 'team', label: 'Команда', order: 5000 },
-  { id: 'admin', label: 'Администрирование', order: 6000 },
+  { id: 'control', label: 'Control Hub', order: 1000, icon: 'module-control-hub' },
+  { id: 'tasks', label: 'Задачи и проекты', order: 2000, icon: 'module-tasks-projects' },
+  { id: 'knowledge', label: 'База знаний', order: 3000, icon: 'module-knowledge' },
+  { id: 'team', label: 'Команда', order: 4000, icon: 'module-team' },
+  { id: 'admin', label: 'Администрирование', order: 5000, icon: 'module-admin' },
 ];
 
 const STATIC_CATEGORIES: SidebarCategoryDefinition[] = [
   { id: 'overview', module_id: 'control', label: 'Обзор', order: 100 },
   { id: 'inbox', module_id: 'control', label: 'Входящие', order: 110 },
-  { id: 'calendar_core', module_id: 'calendar', label: 'Календарь', order: 200 },
-  { id: 'planning', module_id: 'tasks', label: 'Планирование', order: 300 },
-  { id: 'resources', module_id: 'tasks', label: 'Ресурсы', order: 320 },
-  { id: 'knowledge', module_id: 'knowledge', label: 'Знания', order: 400 },
-  { id: 'habits', module_id: 'team', label: 'Привычки', order: 520 },
+  { id: 'calendar', module_id: 'control', label: 'Календарь', order: 120 },
+  { id: 'time', module_id: 'control', label: 'Время', order: 130 },
+  { id: 'reminders', module_id: 'control', label: 'Напоминания', order: 140 },
+  { id: 'tasks', module_id: 'tasks', label: 'Задачи', order: 300 },
+  { id: 'projects', module_id: 'tasks', label: 'Проекты', order: 310 },
+  { id: 'areas', module_id: 'tasks', label: 'Области', order: 320 },
+  { id: 'resources', module_id: 'tasks', label: 'Ресурсы', order: 330 },
+  { id: 'knowledge', module_id: 'knowledge', label: 'База знаний', order: 400 },
   { id: 'people', module_id: 'team', label: 'Команда', order: 500 },
+  { id: 'habits', module_id: 'team', label: 'Привычки', order: 520 },
   { id: 'settings', module_id: 'admin', label: 'Настройки', order: 600 },
   { id: 'admin_tools', module_id: 'admin', label: 'Администрирование', order: 610 },
 ];
@@ -81,165 +85,192 @@ const STATIC_NAV_FALLBACK: SidebarNavItem[] = [
     key: 'overview',
     label: 'Обзор',
     href: '/',
-    hidden: false,
+    hidden: true,
     position: 1,
     status: { kind: 'new' },
     module: 'control',
     section_order: 100,
     category: 'overview',
+    icon: 'overview',
   },
   {
     key: 'inbox',
     label: 'Входящие',
     href: '/inbox',
-    hidden: false,
+    hidden: true,
     position: 2,
     module: 'control',
     section_order: 110,
     category: 'inbox',
+    icon: 'inbox',
   },
   {
     key: 'calendar',
     label: 'Календарь',
     href: '/calendar',
-    hidden: false,
+    hidden: true,
     position: 3,
     status: { kind: 'new' },
-    module: 'calendar',
-    section_order: 200,
-    category: 'calendar_core',
+    module: 'control',
+    section_order: 120,
+    category: 'calendar',
+    icon: 'calendar',
   },
   {
     key: 'time',
     label: 'Время',
     href: '/time',
-    hidden: false,
+    hidden: true,
     position: 4,
     status: { kind: 'new' },
-    module: 'calendar',
-    section_order: 210,
-    category: 'calendar_core',
+    module: 'control',
+    section_order: 130,
+    category: 'time',
+    icon: 'time',
+  },
+  {
+    key: 'reminders',
+    label: 'Напоминания',
+    href: '/reminders',
+    hidden: true,
+    position: 5,
+    status: { kind: 'new' },
+    module: 'control',
+    section_order: 140,
+    category: 'reminders',
+    icon: 'reminders',
   },
   {
     key: 'tasks',
     label: 'Задачи',
     href: '/tasks',
-    hidden: false,
-    position: 5,
+    hidden: true,
+    position: 6,
     status: { kind: 'wip' },
     module: 'tasks',
     section_order: 300,
-    category: 'planning',
+    category: 'tasks',
+    icon: 'tasks',
   },
   {
     key: 'projects',
     label: 'Проекты',
     href: '/projects',
-    hidden: false,
-    position: 6,
+    hidden: true,
+    position: 7,
     status: { kind: 'new' },
     module: 'tasks',
     section_order: 310,
-    category: 'planning',
+    category: 'projects',
+    icon: 'projects',
   },
   {
     key: 'areas',
     label: 'Области',
     href: '/areas',
-    hidden: false,
-    position: 7,
+    hidden: true,
+    position: 8,
     status: { kind: 'new' },
     module: 'tasks',
     section_order: 320,
-    category: 'planning',
+    category: 'areas',
+    icon: 'areas',
   },
   {
     key: 'resources',
     label: 'Ресурсы',
     href: '/resources',
-    hidden: false,
-    position: 8,
+    hidden: true,
+    position: 9,
     status: { kind: 'wip' },
     module: 'tasks',
     section_order: 330,
     category: 'resources',
+    icon: 'resources',
   },
   {
     key: 'notes',
     label: 'Заметки',
     href: '/notes',
-    hidden: false,
-    position: 9,
+    hidden: true,
+    position: 10,
     status: { kind: 'new' },
     module: 'knowledge',
     section_order: 400,
     category: 'knowledge',
+    icon: 'notes',
   },
   {
     key: 'products',
     label: 'Продукты',
     href: '/products',
-    hidden: false,
-    position: 10,
+    hidden: true,
+    position: 11,
     status: { kind: 'new' },
     module: 'knowledge',
     section_order: 410,
     category: 'knowledge',
+    icon: 'products',
   },
   {
     key: 'habits',
     label: 'Привычки',
     href: '/habits',
-    hidden: false,
-    position: 11,
+    hidden: true,
+    position: 12,
     status: { kind: 'locked', link: '/tariffs' },
     module: 'team',
     section_order: 500,
     category: 'habits',
+    icon: 'habits',
   },
   {
     key: 'team',
     label: 'Команда',
     href: '/users',
-    hidden: false,
-    position: 12,
+    hidden: true,
+    position: 13,
     status: { kind: 'new' },
     module: 'team',
     section_order: 510,
     category: 'people',
+    icon: 'team',
   },
   {
     key: 'groups',
     label: 'Группы',
     href: '/groups',
-    hidden: false,
-    position: 13,
+    hidden: true,
+    position: 14,
     status: { kind: 'new' },
     module: 'team',
     section_order: 520,
     category: 'people',
+    icon: 'groups',
   },
   {
     key: 'settings',
     label: 'Настройки',
     href: '/settings',
-    hidden: false,
-    position: 14,
+    hidden: true,
+    position: 15,
     status: { kind: 'new' },
     module: 'admin',
     section_order: 600,
     category: 'settings',
+    icon: 'settings',
   },
   {
     key: 'admin',
     label: 'ЛК Админа',
     href: '/admin',
     hidden: true,
-    position: 15,
+    position: 16,
     status: { kind: 'new' },
     module: 'admin',
     section_order: 610,
     category: 'admin_tools',
+    icon: 'admin',
   },
 ];
 
@@ -343,11 +374,21 @@ export default function AppShell({
   const [isDesktop, setIsDesktop] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [isNavEditorOpen, setIsNavEditorOpen] = useState(false);
-  const [collapsedSections, setCollapsedSections] = useState<string[]>([]);
   const [expandedHiddenSections, setExpandedHiddenSections] = useState<string[]>([]);
   const sidebarStorageRef = useRef<Storage | null>(null);
   const headingId = titleId ?? 'app-shell-title';
   const headingDescriptionId = subtitle ? `${headingId}-description` : undefined;
+  const headingPageId = title ? `${headingId}-page` : undefined;
+  const headingAriaDescribedBy = useMemo(() => {
+    const parts: string[] = [];
+    if (headingDescriptionId) {
+      parts.push(headingDescriptionId);
+    }
+    if (headingPageId) {
+      parts.push(headingPageId);
+    }
+    return parts.length > 0 ? parts.join(' ') : undefined;
+  }, [headingDescriptionId, headingPageId]);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -398,17 +439,6 @@ export default function AppShell({
     } catch (error) {
       console.warn('Не удалось прочитать флаг свернутого меню', error);
     }
-    try {
-      const collapsedRaw = storage.getItem('appShell.collapsedSections');
-      if (collapsedRaw) {
-        const parsed = JSON.parse(collapsedRaw);
-        if (Array.isArray(parsed)) {
-          setCollapsedSections(parsed.filter((entry): entry is string => typeof entry === 'string'));
-        }
-      }
-    } catch (error) {
-      console.warn('Не удалось прочитать сохранённые секции меню', error);
-    }
   }, []);
 
   useEffect(() => {
@@ -426,22 +456,6 @@ export default function AppShell({
       console.warn('Не удалось сохранить состояние бокового меню', error);
     }
   }, [isSidebarCollapsed, isHydrated]);
-
-  useEffect(() => {
-    if (!isHydrated) {
-      return;
-    }
-    const storage = sidebarStorageRef.current;
-    if (!storage) {
-      return;
-    }
-    try {
-      storage.setItem('appShell.collapsedSections', JSON.stringify(collapsedSections));
-    } catch (error) {
-      sidebarStorageRef.current = null;
-      console.warn('Не удалось сохранить список скрытых секций меню', error);
-    }
-  }, [collapsedSections, isHydrated]);
 
   const viewerQuery = useQuery<ViewerProfileSummary | null>({
     queryKey: ['viewer-profile-summary'],
@@ -498,12 +512,6 @@ export default function AppShell({
     setIsMobileNavOpen((prev) => !prev);
   };
 
-  const toggleSectionCollapsed = useCallback((moduleId: string) => {
-    setCollapsedSections((prev) =>
-      prev.includes(moduleId) ? prev.filter((id) => id !== moduleId) : [...prev, moduleId],
-    );
-  }, []);
-
   const toggleHiddenSection = useCallback((moduleId: string) => {
     setExpandedHiddenSections((prev) =>
       prev.includes(moduleId) ? prev.filter((id) => id !== moduleId) : [...prev, moduleId],
@@ -528,22 +536,61 @@ export default function AppShell({
   );
   const navSections = useMemo(() => {
     return moduleGroups.map((group) => {
-      const categorySections = group.categories.map(({ category, items }) => {
-        const visible = items
-          .filter((item) => !item.hidden)
-          .map((item) => {
-            const href = item.href;
-            const active =
-              href && pathname ? pathname === href || pathname.startsWith(`${href}/`) : false;
-            return { item, active };
-          });
-        const hidden = items.filter((item) => item.hidden);
-        return { category, visible, hidden };
+      const pinned: {
+        item: SidebarNavItem;
+        active: boolean;
+        category: SidebarCategoryDefinition;
+      }[] = [];
+      const hidden: { item: SidebarNavItem; category: SidebarCategoryDefinition }[] = [];
+      const allItems: SidebarNavItem[] = [];
+
+      group.categories.forEach(({ category, items }) => {
+        items.forEach((item) => {
+          const href = item.href;
+          const active = href && pathname ? pathname === href || pathname.startsWith(`${href}/`) : false;
+          allItems.push(item);
+          if (item.hidden) {
+            hidden.push({ item, category });
+          } else {
+            pinned.push({ item, active, category });
+          }
+        });
       });
-      const hidden = categorySections.flatMap((section) => section.hidden);
-      return { module: { id: group.id, label: group.label, order: group.order }, categories: categorySections, hidden };
+
+      return {
+        module: group,
+        pinned,
+        hidden,
+        allItems,
+      };
     });
   }, [moduleGroups, pathname]);
+
+  const moduleDefaultTargets = useMemo(() => {
+    const map = new Map<string, string>();
+    navSections.forEach((section) => {
+      const pinnedTarget = section.pinned.find((entry) => entry.item.href && !entry.item.disabled)?.item.href;
+      const fallbackTarget = section.allItems.find((item) => item.href && !item.disabled)?.href;
+      const target = pinnedTarget ?? fallbackTarget;
+      if (target) {
+        map.set(section.module.id, target);
+      }
+    });
+    return map;
+  }, [navSections]);
+
+  const handleModuleNavigate = useCallback(
+    (moduleId: string) => {
+      const target = moduleDefaultTargets.get(moduleId);
+      if (target) {
+        router.push(target);
+        if (!isDesktop) {
+          setIsMobileNavOpen(false);
+        }
+      }
+    },
+    [isDesktop, moduleDefaultTargets, router],
+  );
 
   const viewerRole = viewer?.role?.toLowerCase() ?? null;
   const hasPaidSupport = Boolean(viewer) && viewerRole !== 'single' && viewerRole !== 'suspended';
@@ -779,11 +826,9 @@ export default function AppShell({
       />
     ) : null;
   const sidebarClassName = clsx(
-    'fixed inset-y-0 left-0 z-50 w-72 transform overflow-y-auto border-r border-subtle bg-[var(--surface-0)] px-4 py-6 transition-transform duration-200 ease-out md:static md:h-full md:overflow-y-auto md:px-5 md:py-8',
+    'fixed inset-y-0 left-0 z-50 flex w-72 transform border-r border-subtle bg-[var(--surface-0)] transition-transform duration-200 ease-out md:static md:h-full',
     isMobileNavOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
-    isSidebarCollapsed
-      ? 'md:-translate-x-full md:w-0 md:px-0 md:py-0 md:opacity-0 md:pointer-events-none'
-      : 'md:w-64 md:translate-x-0',
+    isSidebarCollapsed ? 'md:w-[88px]' : 'md:w-72',
   );
 
   const computedMaxWidth = maxWidthClassName ?? 'max-w-[1400px]';
@@ -805,7 +850,7 @@ export default function AppShell({
       <div className="flex min-h-screen flex-col bg-surface" data-app-shell>
         <header className="sticky top-0 z-40 border-b border-subtle bg-[var(--surface-0)]/95 backdrop-blur">
           <div className={headerClasses}>
-          <div className="col-span-1 order-1 flex items-center gap-2 md:gap-3">
+          <div className="col-span-1 order-1 flex items-center gap-2 md:hidden">
             <button
               type="button"
               className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-surface-soft text-muted transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] md:h-10 md:w-10"
@@ -850,7 +895,7 @@ export default function AppShell({
                   unoptimized
                 />
               </span>
-              <span className="hidden sm:flex flex-col leading-tight">
+              <span className="flex flex-col leading-tight">
                 <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
                   Intelligent Data Pro
                 </span>
@@ -863,11 +908,16 @@ export default function AppShell({
               <h1
                 id={headingId}
                 className="truncate text-lg font-semibold leading-tight text-[var(--text-primary)] md:text-xl"
-                title={subtitle ?? undefined}
-                aria-describedby={headingDescriptionId}
+                title={activeModule.label}
+                aria-describedby={headingAriaDescribedBy}
               >
-                {title}
+                {activeModule.label}
               </h1>
+              {title ? (
+                <span id={headingPageId} className="sr-only">
+                  {title}
+                </span>
+              ) : null}
               <div className="hidden sm:block">
                 <FavoriteToggle
                   active={isFavorite}
@@ -905,265 +955,373 @@ export default function AppShell({
         </div>
       </header>
       <div className="relative flex flex-1 overflow-hidden">
-        <aside
-          className={sidebarClassName}
-          aria-label="Главное меню"
-          aria-hidden={isSidebarCollapsed && !isMobileNavOpen}
+
+<aside
+  className={sidebarClassName}
+  aria-label="Главное меню"
+  aria-hidden={isSidebarCollapsed && !isMobileNavOpen}
+>
+  <div
+    className={clsx(
+      'flex h-full w-full flex-col gap-4',
+      isSidebarCollapsed ? 'px-2 py-4 md:px-3 md:py-6' : 'px-4 py-6 md:px-5 md:py-8',
+    )}
+  >
+    <div
+      className={clsx(
+        'sticky top-0 z-10 flex flex-col gap-3 border-b border-subtle/60 pb-3 backdrop-blur',
+        isSidebarCollapsed ? 'items-center' : 'items-start',
+      )}
+    >
+      <div
+        className={clsx(
+          'flex w-full items-center gap-2',
+          isSidebarCollapsed ? 'justify-center' : 'justify-start',
+        )}
+      >
+        <button
+          type="button"
+          onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+          className={clsx(
+            'hidden md:inline-flex h-9 w-9 items-center justify-center rounded-full text-muted transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]',
+            isSidebarCollapsed ? 'bg-surface-soft/70' : 'bg-surface-soft',
+          )}
+          aria-label={isSidebarCollapsed ? 'Развернуть меню' : 'Свернуть меню'}
         >
-          <div className="flex min-h-full flex-col gap-4">
-            <div className="flex items-center justify-end">
-              <button
-                type="button"
-                onClick={() => setIsNavEditorOpen(true)}
-                disabled={!canOpenEditor}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted transition-base hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:opacity-50"
-                aria-label="Настроить меню"
-              >
-                <svg aria-hidden className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M6 12h12M10 17h4" />
-                </svg>
-              </button>
-            </div>
-            <nav className="flex flex-col gap-3" aria-label="Основное меню">
-              {navSections.map(({ module, categories, hidden }) => {
-                const hasVisible = categories.some((category) => category.visible.length > 0);
-                const hasHidden = hidden.length > 0;
-                if (!hasVisible && !hasHidden) {
-                  return null;
-                }
-                const isCollapsed = collapsedSections.includes(module.id);
-                const hiddenOpen = expandedHiddenSections.includes(module.id);
-                const hiddenCount = hidden.length;
-                return (
-                  <section key={module.id} className="flex flex-col gap-2 rounded-2xl border border-transparent px-2 py-1">
-                    <button
-                      type="button"
-                      onClick={() => toggleSectionCollapsed(module.id)}
-                      className="flex w-full items-center justify-between rounded-xl px-2 py-1 text-xs font-semibold uppercase tracking-wide text-muted transition-base hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
-                      aria-expanded={!isCollapsed}
-                    >
-                      <span className="flex items-center gap-2">
-                        {module.label}
-                        {hiddenCount > 0 ? (
-                          <span className="rounded-full bg-surface-soft px-2 py-0.5 text-[10px] font-semibold text-muted">
-                            {hiddenCount}
-                          </span>
-                        ) : null}
-                      </span>
-                      <svg
-                        aria-hidden
-                        className={clsx('h-3.5 w-3.5 transition-transform duration-150', isCollapsed ? '-rotate-90' : 'rotate-0')}
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={1.6}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 10l4 4 4-4" />
-                      </svg>
-                    </button>
-                    <div className={clsx('flex flex-col gap-2', isCollapsed && 'hidden')}>
-                      {categories.map(({ category, visible: categoryVisible }) => {
-                        if (categoryVisible.length === 0) {
-                          return null;
-                        }
-                        return (
-                          <div key={`${module.id}-${category.id}`} className="flex flex-col gap-1">
-                            <div className="px-2 text-[10px] font-semibold uppercase tracking-wide text-muted">
-                              {category.label}
-                            </div>
-                            {categoryVisible.map(({ item, active }) => {
-                              const status = item.status;
-                              let statusNode: React.ReactNode = null;
-                              if (status?.kind) {
-                                const statusLink = status.link;
-                                const tooltip = statusLink
-                                  ? NAV_STATUS_TOOLTIPS[status.kind as StatusIndicatorKind]
-                                  : undefined;
-                                if (statusLink) {
-                                  statusNode = (
-                                    <span
-                                      role="button"
-                                      tabIndex={0}
-                                      className="ml-2 inline-flex items-center"
-                                      onClick={(event) => handleStatusNavigate(status, event)}
-                                      onKeyDown={(event) => {
-                                        if (event.key === 'Enter' || event.key === ' ') {
-                                          event.preventDefault();
-                                          event.stopPropagation();
-                                          router.push(statusLink);
-                                        }
-                                      }}
-                                    >
-                                      <StatusIndicator kind={status.kind as StatusIndicatorKind} tooltip={tooltip} />
-                                    </span>
-                                  );
-                                } else {
-                                  statusNode = (
-                                    <StatusIndicator kind={status.kind as StatusIndicatorKind} tooltip={tooltip} />
-                                  );
-                                }
+          <svg
+            aria-hidden
+            className="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.6}
+          >
+            {isSidebarCollapsed ? (
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 6l-6 6 6 6" />
+            )}
+          </svg>
+        </button>
+        <Link
+          href="/"
+          prefetch={false}
+          className={clsx(
+            'group inline-flex items-center gap-2 rounded-full border border-transparent px-2 py-1 transition-base hover:border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]',
+            isSidebarCollapsed ? 'justify-center' : 'justify-start',
+          )}
+          aria-label="Intelligent Data Pro — на главную"
+        >
+          <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl shadow-soft">
+            <Image
+              src="/static/img/brand/mark.svg"
+              alt="Логотип Intelligent Data Pro"
+              width={28}
+              height={28}
+              className="h-7 w-7"
+              priority
+              unoptimized
+            />
+          </span>
+          {isSidebarCollapsed ? null : (
+            <span className="flex flex-col leading-tight">
+              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+                Intelligent Data Pro
+              </span>
+              <span className="text-sm font-semibold text-[var(--text-primary)]">Control Hub</span>
+            </span>
+          )}
+        </Link>
+        <button
+          type="button"
+          onClick={() => setIsMobileNavOpen(false)}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted transition-base hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] md:hidden"
+          aria-label="Скрыть меню"
+        >
+          <svg aria-hidden className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      {!isSidebarCollapsed ? (
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">Текущий модуль</span>
+          <span className="text-sm font-semibold text-[var(--text-primary)]" title={activeModule.label}>
+            {activeModule.label}
+          </span>
+        </div>
+      ) : null}
+    </div>
+    <div className={clsx('flex items-center justify-end gap-2', isSidebarCollapsed ? 'px-1' : 'px-0')}>
+      {!isSidebarCollapsed ? (
+        <span className="text-xs font-semibold uppercase tracking-wide text-muted">Меню разделов</span>
+      ) : null}
+      <button
+        type="button"
+        onClick={() => setIsNavEditorOpen(true)}
+        disabled={!canOpenEditor}
+        className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted transition-base hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:opacity-50"
+        aria-label="Настроить меню"
+      >
+        <svg aria-hidden className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M6 12h12M10 17h4" />
+        </svg>
+      </button>
+    </div>
+    <nav
+      className={clsx(
+        'flex-1 overflow-y-auto',
+        isSidebarCollapsed ? 'space-y-2 pr-1' : 'space-y-3 pr-2',
+      )}
+      aria-label="Основные модули"
+    >
+      {navSections.map((section) => {
+        const moduleId = section.module.id;
+        const hiddenOpen = expandedHiddenSections.includes(moduleId);
+        const hiddenCount = section.hidden.length;
+        const isActiveModule = activeModuleId === moduleId;
+        const moduleIcon = section.module.icon ?? 'module-generic';
+        const pinnedItems = section.pinned;
+
+        return (
+          <div
+            key={moduleId}
+            className={clsx(
+              'rounded-2xl border border-transparent px-1 py-0.5 transition-base',
+              isActiveModule && !isSidebarCollapsed
+                ? 'bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)]'
+                : 'bg-transparent',
+            )}
+          >
+            <button
+              type="button"
+              onClick={() => handleModuleNavigate(moduleId)}
+              className={clsx(
+                'flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]',
+                isActiveModule
+                  ? 'text-[var(--text-primary)]'
+                  : 'text-muted hover:bg-surface-soft hover:text-[var(--text-primary)]',
+              )}
+              title={section.module.label}
+              aria-label={section.module.label}
+            >
+              <NavIcon
+                name={moduleIcon}
+                className={clsx(
+                  'h-5 w-5',
+                  isActiveModule ? 'text-[var(--accent-primary)]' : 'text-muted',
+                )}
+              />
+              {!isSidebarCollapsed ? (
+                <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                  <span className="truncate text-sm font-semibold">{section.module.label}</span>
+                  {hiddenCount > 0 ? (
+                    <span className="rounded-full bg-surface-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                      {hiddenCount}
+                    </span>
+                  ) : null}
+                </span>
+              ) : null}
+            </button>
+            {!isSidebarCollapsed && pinnedItems.length > 0 ? (
+              <div className="mt-1 flex flex-col gap-1 pl-9 pr-2">
+                {pinnedItems.map(({ item, active }) => {
+                  const status = item.status;
+                  const statusKind = status?.kind as StatusIndicatorKind | undefined;
+                  const statusTooltip = statusKind ? NAV_STATUS_TOOLTIPS[statusKind] : undefined;
+                  const removeDisabled = userSaving;
+                  const removeLabel = `Убрать «${item.label}» из меню`;
+
+                  const content = (
+                    <span className="flex flex-1 items-center gap-2 truncate">
+                      <NavIcon name={item.icon ?? 'nav-generic'} className="h-4 w-4 text-muted" />
+                      <span className="truncate text-sm font-medium">{item.label}</span>
+                      {statusKind ? (
+                        status?.link ? (
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            className="ml-1 inline-flex"
+                            onClick={(event) => handleStatusNavigate(status, event)}
+                            onKeyDown={(event) => {
+                              if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                router.push(status.link!);
                               }
-                              const linkContent = (
-                                <>
-                                  <span className="truncate">{item.label}</span>
-                                  {statusNode}
-                                </>
-                              );
-                              const baseLinkClass = clsx(
-                                'flex flex-1 items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-base',
-                                item.disabled
-                                  ? 'cursor-not-allowed text-muted opacity-70'
-                                  : active
-                                  ? 'bg-[var(--accent-primary)] text-[var(--accent-on-primary)] shadow-soft'
-                                  : 'text-muted hover:bg-surface-soft hover:text-[var(--text-primary)]',
-                                !item.disabled &&
-                                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]',
-                              );
-                              const removeDisabled = item.disabled || userSaving;
-                              const removeLabel = `Убрать «${item.label}» из меню`;
-                              const linkNode = item.disabled || !item.href ? (
-                                <span className={baseLinkClass} aria-disabled>
-                                  {linkContent}
-                                </span>
-                              ) : item.external ? (
-                                <a href={item.href} target="_blank" rel="noreferrer" className={baseLinkClass}>
-                                  {linkContent}
-                                </a>
-                              ) : (
-                                <Link
-                                  href={item.href}
-                                  className={baseLinkClass}
-                                  aria-current={active ? 'page' : undefined}
-                                  prefetch={false}
-                                >
-                                  {linkContent}
-                                </Link>
-                              );
-                              return (
-                                <div key={item.key} className="group flex items-center gap-2">
-                                  {linkNode}
-                                  <button
-                                    type="button"
-                                    onClick={() => handleToggleNavItemVisibility(item, true)}
-                                    disabled={removeDisabled}
-                                    className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-full text-muted transition-base hover:bg-surface-soft hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:opacity-40"
-                                    aria-label={removeLabel}
-                                    title={removeLabel}
-                                  >
-                                    <svg aria-hidden className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 12h12" />
-                                    </svg>
-                                  </button>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        );
-                      })}
-                      {hiddenCount > 0 ? (
-                        <div className="mt-2 rounded-xl border border-dashed border-subtle bg-surface-soft/60 p-3">
-                          <button
-                            type="button"
-                            onClick={() => toggleHiddenSection(module.id)}
-                            className="flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wide text-muted transition-base hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
-                            aria-expanded={hiddenOpen}
+                            }}
                           >
-                            <span>Скрытые страницы</span>
-                            <svg
-                              aria-hidden
-                              className={clsx('h-3 w-3 transition-transform duration-150', hiddenOpen ? 'rotate-180' : 'rotate-0')}
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth={1.6}
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M8 10l4 4 4-4" />
-                            </svg>
-                          </button>
-                          <div className={clsx('mt-2 flex flex-col gap-1', !hiddenOpen && 'hidden')}>
-                            {hidden.map((item) => {
-                              const addDisabled = userSaving;
-                              const addLabel = `Вернуть «${item.label}» в меню`;
-                              return (
-                                <button
-                                  key={item.key}
-                                  type="button"
-                                  onClick={() => handleToggleNavItemVisibility(item, false)}
-                                  disabled={addDisabled}
-                                  className="flex items-center justify-between rounded-lg border border-dashed border-subtle bg-[var(--surface-0)] px-3 py-2 text-sm font-medium text-muted transition-base hover:border-[var(--accent-primary)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:opacity-40"
-                                  aria-label={addLabel}
-                                  title={addLabel}
-                                >
-                                  <span className="truncate">{item.label}</span>
-                                  <svg
-                                    aria-hidden
-                                    className="h-4 w-4"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth={1.6}
-                                  >
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
-                                  </svg>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
+                            <StatusIndicator kind={statusKind} className="h-1.5 w-1.5" />
+                            <span className="sr-only">{statusTooltip}</span>
+                          </span>
+                        ) : (
+                          <StatusIndicator
+                            kind={statusKind}
+                            className="ml-1 h-1.5 w-1.5"
+                            title={statusTooltip}
+                          />
+                        )
                       ) : null}
+                    </span>
+                  );
+
+                  const itemNode = !item.href || item.disabled ? (
+                    <span
+                      key={item.key}
+                      className="group flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted"
+                      aria-disabled
+                    >
+                      {content}
+                    </span>
+                  ) : (
+                    <Link
+                      key={item.key}
+                      href={item.href}
+                      prefetch={false}
+                      className={clsx(
+                        'flex flex-1 items-center gap-2 rounded-lg px-3 py-2 text-sm transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]',
+                        active
+                          ? 'bg-[var(--accent-primary)]/15 text-[var(--text-primary)]'
+                          : 'text-muted hover:bg-surface-soft hover:text-[var(--text-primary)]',
+                      )}
+                      aria-current={active ? 'page' : undefined}
+                      onClick={() => {
+                        if (!isDesktop) {
+                          setIsMobileNavOpen(false);
+                        }
+                      }}
+                    >
+                      {content}
+                    </Link>
+                  );
+
+                  return (
+                    <div key={item.key} className="group flex items-center gap-2">
+                      {itemNode}
+                      <button
+                        type="button"
+                        onClick={() => handleToggleNavItemVisibility(item, true)}
+                        disabled={removeDisabled}
+                        className="inline-flex h-7 w-7 flex-none items-center justify-center rounded-full text-muted transition-base hover:bg-surface-soft hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:opacity-40"
+                        aria-label={removeLabel}
+                        title={removeLabel}
+                      >
+                        <svg aria-hidden className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 12h12" />
+                        </svg>
+                      </button>
                     </div>
-                  </section>
-                );
-              })}
-            </nav>
-            {viewer ? (
-              <div className="space-y-2 rounded-2xl border border-subtle bg-surface-soft p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted">Поддержка</p>
-                <a
-                  href={COMMUNITY_CHANNEL_URL}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--accent-primary)] hover:bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
-                >
-                  Сообщество
-                  <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
-                  </svg>
-                </a>
-                {hasPaidSupport ? (
-                  <a
-                    href={SUPPORT_CHANNEL_URL}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--accent-primary)] hover:bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
-                  >
-                    Техподдержка
-                    <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
-                    </svg>
-                  </a>
-                ) : null}
-                {hasDeveloperContact ? (
-                  <a
-                    href={DEVELOPER_CONTACT_URL}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--accent-primary)] hover:bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
-                  >
-                    Связь с разработчиком
-                    <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
-                    </svg>
-                  </a>
-                ) : null}
+                  );
+                })}
               </div>
             ) : null}
-            <MiniTimerWidget viewer={viewer} />
+            {!isSidebarCollapsed && hiddenCount > 0 ? (
+              <div className="mt-2 space-y-2 rounded-xl border border-dashed border-subtle bg-surface-soft/60 px-3 py-3">
+                <button
+                  type="button"
+                  onClick={() => toggleHiddenSection(moduleId)}
+                  className="flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wide text-muted transition-base hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
+                  aria-expanded={hiddenOpen}
+                >
+                  <span>Скрытые страницы</span>
+                  <svg
+                    aria-hidden
+                    className={clsx('h-3 w-3 transition-transform duration-150', hiddenOpen ? 'rotate-180' : 'rotate-0')}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.6}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 10l4 4 4-4" />
+                  </svg>
+                </button>
+                <div className={clsx('flex flex-col gap-1', !hiddenOpen && 'hidden')}>
+                  {section.hidden.map(({ item }) => {
+                    const addDisabled = userSaving;
+                    const addLabel = `Вернуть «${item.label}» в меню`;
+                    return (
+                      <button
+                        key={item.key}
+                        type="button"
+                        onClick={() => handleToggleNavItemVisibility(item, false)}
+                        disabled={addDisabled}
+                        className="flex items-center justify-between rounded-lg border border-dashed border-subtle bg-[var(--surface-0)] px-3 py-2 text-sm font-medium text-muted transition-base hover:border-[var(--accent-primary)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:opacity-40"
+                        aria-label={addLabel}
+                        title={addLabel}
+                      >
+                        <span className="flex items-center gap-2 truncate">
+                          <NavIcon name={item.icon ?? 'nav-generic'} className="h-4 w-4" />
+                          <span className="truncate">{item.label}</span>
+                        </span>
+                        <svg
+                          aria-hidden
+                          className="h-4 w-4"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth={1.6}
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+                        </svg>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
           </div>
-        </aside>
+        );
+      })}
+    </nav>
+    {!isSidebarCollapsed && viewer ? (
+      <div className="space-y-2 rounded-2xl border border-subtle bg-surface-soft p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted">Поддержка</p>
+        <a
+          href={COMMUNITY_CHANNEL_URL}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--accent-primary)] hover:bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+        >
+          Сообщество
+          <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
+          </svg>
+        </a>
+        {hasPaidSupport ? (
+          <a
+            href={SUPPORT_CHANNEL_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--accent-primary)] hover:bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+          >
+            Техподдержка
+            <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
+            </svg>
+          </a>
+        ) : null}
+        {hasDeveloperContact ? (
+          <a
+            href={DEVELOPER_CONTACT_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--accent-primary)] hover:bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+          >
+            Связь с разработчиком
+            <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
+            </svg>
+          </a>
+        ) : null}
+      </div>
+    ) : null}
+    {!isSidebarCollapsed ? <MiniTimerWidget viewer={viewer} /> : null}
+  </div>
+</aside>
+
         {isMobileNavOpen ? (
           <div
             className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden"

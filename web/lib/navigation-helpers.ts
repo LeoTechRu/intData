@@ -54,6 +54,7 @@ function normalizeModuleDefinition(
       id: safeId,
       label: typeof found.label === 'string' && found.label.length > 0 ? found.label : safeId,
       order: typeof found.order === 'number' ? found.order : DEFAULT_MODULE_ORDER,
+      icon: typeof found.icon === 'string' && found.icon.length > 0 ? found.icon : 'module-generic',
     };
   }
   const fallbackId = moduleId.trim().length > 0 ? moduleId : 'general';
@@ -61,6 +62,7 @@ function normalizeModuleDefinition(
     id: fallbackId,
     label: fallbackId,
     order: DEFAULT_MODULE_ORDER,
+    icon: 'module-generic',
   };
 }
 

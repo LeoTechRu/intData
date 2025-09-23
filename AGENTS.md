@@ -210,6 +210,25 @@ gate:
 
 ```yaml
 agent_sync:
+  - when_utc: "2025-09-23T20:11:26Z"
+    agent: "codex"
+    role: "fe"
+    branch: "feature/E17/bitrix-menu-codex"
+    task: "TL-2025-09-23-bitrix-menu"
+    epic_scope: "E17 / Frontend navigation"
+    files:
+      - "web/components/AppShell.tsx"
+      - "web/components/navigation/*"
+      - "web/lib/navigation-helpers.ts"
+      - "web/lib/types.ts"
+      - "core/services/navigation_service.py"
+      - "web/routes/api/navigation.py"
+      - "web/app/reminders/page.tsx"
+    pr: null
+    ac_link: "README.md#e17-frontend-modernization"
+    ttl_minutes: 0
+    status: "Review"
+    note: "Bitrix24-style модульное меню, NavIcon, страница Reminders; eslint/vitest ok."
   - when_utc: "2025-09-23T15:34:26Z"
     agent: "codex"
     role: "fe"

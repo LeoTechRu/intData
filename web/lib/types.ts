@@ -391,6 +391,7 @@ export interface SidebarNavItem {
   module?: string;
   section_order?: number;
   category?: string;
+  icon?: string;
 }
 
 export interface SidebarWidgetItem {
@@ -406,6 +407,7 @@ export interface SidebarModuleDefinition {
   id: string;
   label: string;
   order: number;
+  icon?: string;
 }
 
 export interface SidebarCategoryDefinition {

@@ -33,6 +33,6 @@ describe('ModuleTabs', () => {
       'href',
       'https://docs.example.com',
     );
-    expect(screen.getByText('Скрыто')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Ресурсы' })).toHaveAttribute('href', '/resources');
   });
 });
