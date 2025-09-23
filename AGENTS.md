@@ -210,6 +210,21 @@ gate:
 
 ```yaml
 agent_sync:
+  - when_utc: "2025-09-23T21:12:15Z"
+    agent: "codex"
+    role: "fe"
+    branch: "feature/E17/bitrix-leftnav"
+    task: "TL-2025-09-23-bitrix-menu"
+    epic_scope: "E17 / Frontend navigation"
+    files:
+      - "web/components/AppShell.tsx"
+      - "web/components/navigation/*"
+      - "web/lib/navigation-helpers.ts"
+    pr: null
+    ac_link: "README.md#e17-frontend-modernization"
+    ttl_minutes: 180
+    status: "In Progress"
+    note: "Рефакторим AppShell: убираем общий header, модульные вкладки внутри левого меню, Bitrix-подобный рейл."
   - when_utc: "2025-09-23T20:52:50Z"
     agent: "codex"
     role: "tl"

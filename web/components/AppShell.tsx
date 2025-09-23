@@ -30,7 +30,6 @@ import { formatClock, formatDateTime, normalizeTimerDescription, parseDateToUtc 
 import { TimezoneProvider, useTimezone } from '../lib/timezone';
 import { Button, Card, StatusIndicator, type StatusIndicatorKind } from './ui';
 import { SidebarEditor } from './navigation/SidebarEditor';
-import { ModuleTabs, type ModuleTabItem } from './navigation/ModuleTabs';
 import { FavoriteToggle } from './navigation/FavoriteToggle';
 import { NavIcon } from './navigation/NavIcon';
 
@@ -378,17 +377,6 @@ export default function AppShell({
   const sidebarStorageRef = useRef<Storage | null>(null);
   const headingId = titleId ?? 'app-shell-title';
   const headingDescriptionId = subtitle ? `${headingId}-description` : undefined;
-  const headingPageId = title ? `${headingId}-page` : undefined;
-  const headingAriaDescribedBy = useMemo(() => {
-    const parts: string[] = [];
-    if (headingDescriptionId) {
-      parts.push(headingDescriptionId);
-    }
-    if (headingPageId) {
-      parts.push(headingPageId);
-    }
-    return parts.length > 0 ? parts.join(' ') : undefined;
-  }, [headingDescriptionId, headingPageId]);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -661,43 +649,13 @@ export default function AppShell({
     ? `Убрать страницу «${currentNavEntry.label}» из меню`
     : 'Убрать страницу из меню';
 
-  const moduleTabsData = useMemo(() => {
-    const navigable = navItems.filter((item) => item.href && !item.disabled);
-    return groupSidebarItemsByModule(navigable, navModules, navCategories);
-  }, [navItems, navModules, navCategories]);
-
   const activeModuleId =
     currentNavEntry?.module ??
-    moduleTabsData[0]?.id ??
     moduleGroups[0]?.id ??
     navModules[0]?.id ??
     'general';
   const activeModule =
     moduleMap.get(activeModuleId) ?? { id: activeModuleId, label: activeModuleId, order: 9000 };
-  const activeModuleTabs = useMemo<ModuleTabItem[]>(() => {
-    const section = moduleTabsData.find((candidate) => candidate.id === activeModuleId);
-    if (!section) {
-      return [];
-    }
-    const tabs: ModuleTabItem[] = [];
-    section.categories.forEach(({ category, items }) => {
-      const firstVisible = items.find((item) => item.href && !item.disabled);
-      if (!firstVisible) {
-        return;
-      }
-      const isActive = currentNavEntry ? items.some((item) => item.key === currentNavEntry.key) : false;
-      const allHidden = items.every((item) => item.hidden);
-      tabs.push({
-        key: category.id,
-        label: category.label,
-        href: firstVisible.href,
-        external: Boolean(firstVisible.external),
-        hidden: allHidden,
-        active: isActive,
-      });
-    });
-    return tabs;
-  }, [activeModuleId, currentNavEntry, moduleTabsData]);
 
   const handleToggleFavorite = async () => {
     if (!currentNavEntry || saveUserLayoutMutation.isPending) {
@@ -804,25 +762,6 @@ export default function AppShell({
     }
   };
 
-  const moduleTabsDesktop =
-    activeModuleTabs.length > 1 ? (
-      <div className="hidden w-full items-center justify-end gap-3 md:flex" data-module-tabs-desktop>
-        <ModuleTabs
-          moduleLabel={activeModule.label}
-          items={activeModuleTabs}
-          className="flex flex-wrap justify-end gap-2"
-        />
-      </div>
-    ) : null;
-
-  const moduleTabsMobile =
-    activeModuleTabs.length > 1 ? (
-      <ModuleTabs
-        moduleLabel={activeModule.label}
-        items={activeModuleTabs}
-        className="flex gap-2 overflow-x-auto pb-1"
-      />
-    ) : null;
   const sidebarClassName = clsx(
     'fixed inset-y-0 left-0 z-50 flex w-72 transform border-r border-subtle bg-[var(--surface-0)] transition-transform duration-200 ease-out md:static md:h-full',
     isMobileNavOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
@@ -830,12 +769,6 @@ export default function AppShell({
   );
 
   const computedMaxWidth = maxWidthClassName ?? 'max-w-[1400px]';
-  const headerClasses = clsx(
-    'grid w-full grid-cols-[auto,minmax(0,1fr),auto] items-center gap-x-3 gap-y-2 px-3 py-2',
-    'sm:px-4 sm:py-2.5',
-    'md:px-6 md:py-3',
-    'lg:py-3.5',
-  );
   const mainClasses = clsx(
     'relative z-10 flex w-full flex-col gap-6 px-4 py-6 md:px-8 md:py-10',
     contentVariant === 'flat' && 'md:px-10 lg:px-12',
@@ -843,483 +776,376 @@ export default function AppShell({
     mainClassName,
   );
 
+  const pageTitle = title ?? currentNavEntry?.label ?? activeModule.label;
+
   return (
     <TimezoneProvider value={timezone}>
-      <div className="flex min-h-screen flex-col bg-surface" data-app-shell>
-        <header className="sticky top-0 z-40 border-b border-subtle bg-[var(--surface-0)]/95 backdrop-blur">
-          <div className={headerClasses}>
-          <div className="col-span-1 order-1 flex items-center gap-2 md:hidden">
-            <button
-              type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-surface-soft text-muted transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] md:h-10 md:w-10"
-              aria-label={toggleLabel}
-              aria-pressed={isDesktop ? !isSidebarCollapsed : isMobileNavOpen}
-              onClick={handleToggleNav}
-            >
-              <span className="sr-only">Меню</span>
-              <svg
-                aria-hidden
-                className="h-5 w-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                {!isDesktop && isMobileNavOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 12h18" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 18h18" />
-                  </>
-                )}
-              </svg>
-            </button>
-            <Link
-              href="/"
-              prefetch={false}
-              className="group inline-flex items-center gap-2 rounded-full border border-transparent px-2.5 py-1 transition-base hover:border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
-              aria-label="Intelligent Data Pro — на главную"
-            >
-              <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl shadow-soft">
-                <Image
-                  src="/static/img/brand/mark.svg"
-                  alt="Логотип Intelligent Data Pro"
-                  width={28}
-                  height={28}
-                  className="h-7 w-7"
-                  priority
-                  unoptimized
-                />
-              </span>
-              <span className="flex flex-col leading-tight">
-                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-                  Intelligent Data Pro
-                </span>
-                <span className="text-sm font-semibold text-[var(--text-primary)]">Control Hub</span>
-              </span>
-            </Link>
-          </div>
-          <div className="col-span-1 order-2 flex min-w-0 flex-col items-center gap-0.5 text-center md:col-span-1 md:justify-self-center">
-            <div className="flex items-center gap-2">
-              <h1
-                id={headingId}
-                className="truncate text-lg font-semibold leading-tight text-[var(--text-primary)] md:text-xl"
-                title={activeModule.label}
-                aria-describedby={headingAriaDescribedBy}
-              >
-                {activeModule.label}
-              </h1>
-              {title ? (
-                <span id={headingPageId} className="sr-only">
-                  {title}
-                </span>
-              ) : null}
-              <div className="hidden sm:block">
-                <FavoriteToggle
-                  active={isFavorite}
-                  disabled={!canToggleFavorite || saveUserLayoutMutation.isPending}
-                  onToggle={handleToggleFavorite}
-                  labelAdd={favoriteLabelAdd}
-                  labelRemove={favoriteLabelRemove}
-                />
-              </div>
-            </div>
-            {subtitle ? (
-              <p id={headingDescriptionId} className="sr-only">
-                {subtitle}
-              </p>
-            ) : null}
-          </div>
-          <div className="col-span-3 order-3 flex min-w-0 flex-col items-center gap-2 md:order-3 md:col-span-1 md:items-end">
-            {moduleTabsDesktop}
-            <div className="flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 text-right sm:justify-end md:w-auto md:flex-nowrap">
-              {actions ? <div className="flex flex-wrap items-center gap-x-2 gap-y-1 md:flex-nowrap">{actions}</div> : null}
-              {canToggleFavorite ? (
-                <div className="sm:hidden">
-                  <FavoriteToggle
-                    active={isFavorite}
-                    disabled={!canToggleFavorite || saveUserLayoutMutation.isPending}
-                    onToggle={handleToggleFavorite}
-                    labelAdd={favoriteLabelAdd}
-                    labelRemove={favoriteLabelRemove}
-                  />
-                </div>
-              ) : null}
-              <UserSummary viewer={viewer} isLoading={viewerLoading} personaBundle={personaBundle} />
-            </div>
-          </div>
-        </div>
-      </header>
-      <div className="relative flex flex-1 overflow-hidden">
-
-<aside
-  className={sidebarClassName}
-  aria-label="Главное меню"
-  aria-hidden={isSidebarCollapsed && !isMobileNavOpen}
->
-  <div
-    className={clsx(
-      'flex h-full w-full flex-col gap-4',
-      isSidebarCollapsed ? 'px-2 py-4 md:px-3 md:py-6' : 'px-4 py-6 md:px-5 md:py-8',
-    )}
-  >
-    <div
-      className={clsx(
-        'sticky top-0 z-10 flex flex-col gap-3 border-b border-subtle/60 pb-3 backdrop-blur',
-        isSidebarCollapsed ? 'items-center' : 'items-start',
-      )}
-    >
-      <div
-        className={clsx(
-          'flex w-full items-center gap-2',
-          isSidebarCollapsed ? 'justify-center' : 'justify-start',
-        )}
-      >
-        <button
-          type="button"
-          onClick={() => setIsSidebarCollapsed((prev) => !prev)}
-          className={clsx(
-            'hidden md:inline-flex h-9 w-9 items-center justify-center rounded-full text-muted transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]',
-            isSidebarCollapsed ? 'bg-surface-soft/70' : 'bg-surface-soft',
-          )}
-          aria-label={isSidebarCollapsed ? 'Развернуть меню' : 'Свернуть меню'}
+      <div className="flex min-h-screen bg-surface" data-app-shell>
+        <aside
+          className={sidebarClassName}
+          aria-label="Главное меню"
+          aria-hidden={isSidebarCollapsed && !isMobileNavOpen}
         >
-          <svg
-            aria-hidden
-            className="h-4 w-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.6}
-          >
-            {isSidebarCollapsed ? (
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 6l-6 6 6 6" />
-            )}
-          </svg>
-        </button>
-        <Link
-          href="/"
-          prefetch={false}
-          className={clsx(
-            'group inline-flex items-center gap-2 rounded-full border border-transparent px-2 py-1 transition-base hover:border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]',
-            isSidebarCollapsed ? 'justify-center' : 'justify-start',
-          )}
-          aria-label="Intelligent Data Pro — на главную"
-        >
-          <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl shadow-soft">
-            <Image
-              src="/static/img/brand/mark.svg"
-              alt="Логотип Intelligent Data Pro"
-              width={28}
-              height={28}
-              className="h-7 w-7"
-              priority
-              unoptimized
-            />
-          </span>
-          {isSidebarCollapsed ? null : (
-            <span className="flex flex-col leading-tight">
-              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-                Intelligent Data Pro
-              </span>
-              <span className="text-sm font-semibold text-[var(--text-primary)]">Control Hub</span>
-            </span>
-          )}
-        </Link>
-        <button
-          type="button"
-          onClick={() => setIsMobileNavOpen(false)}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted transition-base hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] md:hidden"
-          aria-label="Скрыть меню"
-        >
-          <svg aria-hidden className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-      {!isSidebarCollapsed ? (
-        <div className="flex flex-col gap-0.5">
-          <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">Текущий модуль</span>
-          <span className="text-sm font-semibold text-[var(--text-primary)]" title={activeModule.label}>
-            {activeModule.label}
-          </span>
-        </div>
-      ) : null}
-    </div>
-    <div className={clsx('flex items-center justify-end gap-2', isSidebarCollapsed ? 'px-1' : 'px-0')}>
-      {!isSidebarCollapsed ? (
-        <span className="text-xs font-semibold uppercase tracking-wide text-muted">Меню разделов</span>
-      ) : null}
-      <button
-        type="button"
-        onClick={() => setIsNavEditorOpen(true)}
-        disabled={!canOpenEditor}
-        className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted transition-base hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:opacity-50"
-        aria-label="Настроить меню"
-      >
-        <svg aria-hidden className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M6 12h12M10 17h4" />
-        </svg>
-      </button>
-    </div>
-    <nav
-      className={clsx(
-        'flex-1 overflow-y-auto',
-        isSidebarCollapsed ? 'space-y-2 pr-1' : 'space-y-3 pr-2',
-      )}
-      aria-label="Основные модули"
-    >
-      {navSections.map((section) => {
-        const moduleId = section.module.id;
-        const hiddenOpen = expandedHiddenSections.includes(moduleId);
-        const hiddenCount = section.hidden.length;
-        const isActiveModule = activeModuleId === moduleId;
-        const moduleIcon = section.module.icon ?? 'module-generic';
-        const pinnedItems = section.pinned;
-
-        return (
           <div
-            key={moduleId}
             className={clsx(
-              'rounded-2xl border border-transparent px-1 py-0.5 transition-base',
-              isActiveModule && !isSidebarCollapsed
-                ? 'bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)]'
-                : 'bg-transparent',
+              'flex h-full w-full flex-col gap-4',
+              isSidebarCollapsed ? 'px-2 py-4 md:px-3 md:py-6' : 'px-4 py-6 md:px-5 md:py-8',
             )}
           >
-            <button
-              type="button"
-              onClick={() => handleModuleNavigate(moduleId)}
+            <div
               className={clsx(
-                'flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]',
-                isActiveModule
-                  ? 'text-[var(--text-primary)]'
-                  : 'text-muted hover:bg-surface-soft hover:text-[var(--text-primary)]',
+                'sticky top-0 z-10 flex flex-col gap-3 border-b border-subtle/60 pb-3 backdrop-blur',
+                isSidebarCollapsed ? 'items-center' : 'items-start',
               )}
-              title={section.module.label}
-              aria-label={section.module.label}
             >
-              <NavIcon
-                name={moduleIcon}
+              <div
                 className={clsx(
-                  'h-5 w-5',
-                  isActiveModule ? 'text-[var(--accent-primary)]' : 'text-muted',
+                  'flex w-full items-center gap-2',
+                  isSidebarCollapsed ? 'justify-center' : 'justify-start',
                 )}
-              />
-              {!isSidebarCollapsed ? (
-                <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
-                  <span className="truncate text-sm font-semibold">{section.module.label}</span>
-                  {hiddenCount > 0 ? (
-                    <span className="rounded-full bg-surface-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted">
-                      {hiddenCount}
-                    </span>
-                  ) : null}
-                </span>
-              ) : null}
-            </button>
-            {!isSidebarCollapsed && pinnedItems.length > 0 ? (
-              <div className="mt-1 flex flex-col gap-1 pl-9 pr-2">
-                {pinnedItems.map(({ item, active }) => {
-                  const status = item.status;
-                  const statusKind = status?.kind as StatusIndicatorKind | undefined;
-                  const statusTooltip = statusKind ? NAV_STATUS_TOOLTIPS[statusKind] : undefined;
-                  const removeDisabled = userSaving;
-                  const removeLabel = `Убрать «${item.label}» из меню`;
-
-                  const content = (
-                    <span className="flex flex-1 items-center gap-2 truncate">
-                      <NavIcon name={item.icon ?? 'nav-generic'} className="h-4 w-4 text-muted" />
-                      <span className="truncate text-sm font-medium">{item.label}</span>
-                      {statusKind ? (
-                        status?.link ? (
-                          <span
-                            role="button"
-                            tabIndex={0}
-                            className="ml-1 inline-flex"
-                            onClick={(event) => handleStatusNavigate(status, event)}
-                            onKeyDown={(event) => {
-                              if (event.key === 'Enter' || event.key === ' ') {
-                                event.preventDefault();
-                                event.stopPropagation();
-                                router.push(status.link!);
-                              }
-                            }}
-                          >
-                            <StatusIndicator kind={statusKind} className="h-1.5 w-1.5" />
-                            <span className="sr-only">{statusTooltip}</span>
-                          </span>
-                        ) : (
-                          <StatusIndicator
-                            kind={statusKind}
-                            className="ml-1 h-1.5 w-1.5"
-                            tooltip={statusTooltip}
-                          />
-                        )
-                      ) : null}
-                    </span>
-                  );
-
-                  const itemNode = !item.href || item.disabled ? (
-                    <span
-                      key={item.key}
-                      className="group flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted"
-                      aria-disabled
-                    >
-                      {content}
-                    </span>
-                  ) : (
-                    <Link
-                      key={item.key}
-                      href={item.href}
-                      prefetch={false}
-                      className={clsx(
-                        'flex flex-1 items-center gap-2 rounded-lg px-3 py-2 text-sm transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]',
-                        active
-                          ? 'bg-[var(--accent-primary)]/15 text-[var(--text-primary)]'
-                          : 'text-muted hover:bg-surface-soft hover:text-[var(--text-primary)]',
-                      )}
-                      aria-current={active ? 'page' : undefined}
-                      onClick={() => {
-                        if (!isDesktop) {
-                          setIsMobileNavOpen(false);
-                        }
-                      }}
-                    >
-                      {content}
-                    </Link>
-                  );
-
-                  return (
-                    <div key={item.key} className="group flex items-center gap-2">
-                      {itemNode}
-                      <button
-                        type="button"
-                        onClick={() => handleToggleNavItemVisibility(item, true)}
-                        disabled={removeDisabled}
-                        className="inline-flex h-7 w-7 flex-none items-center justify-center rounded-full text-muted transition-base hover:bg-surface-soft hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:opacity-40"
-                        aria-label={removeLabel}
-                        title={removeLabel}
-                      >
-                        <svg aria-hidden className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 12h12" />
-                        </svg>
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : null}
-            {!isSidebarCollapsed && hiddenCount > 0 ? (
-              <div className="mt-2 space-y-2 rounded-xl border border-dashed border-subtle bg-surface-soft/60 px-3 py-3">
+              >
                 <button
                   type="button"
-                  onClick={() => toggleHiddenSection(moduleId)}
-                  className="flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wide text-muted transition-base hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
-                  aria-expanded={hiddenOpen}
+                  onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+                  className={clsx(
+                    'hidden md:inline-flex h-9 w-9 items-center justify-center rounded-full text-muted transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]',
+                    isSidebarCollapsed ? 'bg-surface-soft/70' : 'bg-surface-soft',
+                  )}
+                  aria-label={isSidebarCollapsed ? 'Развернуть меню' : 'Свернуть меню'}
                 >
-                  <span>Скрытые страницы</span>
                   <svg
                     aria-hidden
-                    className={clsx('h-3 w-3 transition-transform duration-150', hiddenOpen ? 'rotate-180' : 'rotate-0')}
+                    className="h-4 w-4"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth={1.6}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 10l4 4 4-4" />
+                    {isSidebarCollapsed ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 6l-6 6 6 6" />
+                    )}
                   </svg>
                 </button>
-                <div className={clsx('flex flex-col gap-1', !hiddenOpen && 'hidden')}>
-                  {section.hidden.map(({ item }) => {
-                    const addDisabled = userSaving;
-                    const addLabel = `Вернуть «${item.label}» в меню`;
-                    return (
-                      <button
-                        key={item.key}
-                        type="button"
-                        onClick={() => handleToggleNavItemVisibility(item, false)}
-                        disabled={addDisabled}
-                        className="flex items-center justify-between rounded-lg border border-dashed border-subtle bg-[var(--surface-0)] px-3 py-2 text-sm font-medium text-muted transition-base hover:border-[var(--accent-primary)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:opacity-40"
-                        aria-label={addLabel}
-                        title={addLabel}
-                      >
-                        <span className="flex items-center gap-2 truncate">
-                          <NavIcon name={item.icon ?? 'nav-generic'} className="h-4 w-4" />
-                          <span className="truncate">{item.label}</span>
-                        </span>
-                        <svg
-                          aria-hidden
-                          className="h-4 w-4"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={1.6}
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
-                        </svg>
-                      </button>
-                    );
-                  })}
+                <Link
+                  href="/"
+                  prefetch={false}
+                  className={clsx(
+                    'group inline-flex items-center gap-2 rounded-full border border-transparent px-2 py-1 transition-base hover:border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]',
+                    isSidebarCollapsed ? 'justify-center' : 'justify-start',
+                  )}
+                  aria-label="Intelligent Data Pro — на главную"
+                >
+                  <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl shadow-soft">
+                    <Image
+                      src="/static/img/brand/mark.svg"
+                      alt="Логотип Intelligent Data Pro"
+                      width={28}
+                      height={28}
+                      className="h-7 w-7"
+                      priority
+                      unoptimized
+                    />
+                  </span>
+                  {isSidebarCollapsed ? null : (
+                    <span className="flex flex-col leading-tight">
+                      <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
+                        Intelligent Data Pro
+                      </span>
+                      <span className="text-sm font-semibold text-[var(--text-primary)]">Control Hub</span>
+                    </span>
+                  )}
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileNavOpen(false)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted transition-base hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] md:hidden"
+                  aria-label="Скрыть меню"
+                >
+                  <svg aria-hidden className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              {!isSidebarCollapsed ? (
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">Текущий модуль</span>
+                  <span className="text-sm font-semibold text-[var(--text-primary)]" title={activeModule.label}>
+                    {activeModule.label}
+                  </span>
                 </div>
+              ) : null}
+            </div>
+            <div className={clsx('flex items-center justify-end gap-2', isSidebarCollapsed ? 'px-1' : 'px-0')}>
+              {!isSidebarCollapsed ? (
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted">Меню разделов</span>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => setIsNavEditorOpen(true)}
+                disabled={!canOpenEditor}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted transition-base hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:opacity-50"
+                aria-label="Настроить меню"
+              >
+                <svg aria-hidden className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M6 12h12M10 17h4" />
+                </svg>
+              </button>
+            </div>
+            <nav
+              className={clsx(
+                'flex-1 overflow-y-auto',
+                isSidebarCollapsed ? 'space-y-2 pr-1' : 'space-y-3 pr-2',
+              )}
+              aria-label="Основные модули"
+            >
+              {navSections.map((section) => {
+                const moduleId = section.module.id;
+                const hiddenOpen = expandedHiddenSections.includes(moduleId);
+                const hiddenCount = section.hidden.length;
+                const isActiveModule = activeModuleId === moduleId;
+                const moduleIcon = section.module.icon ?? 'module-generic';
+                const pinnedItems = section.pinned;
+        
+                return (
+                  <div
+                    key={moduleId}
+                    className={clsx(
+                      'rounded-2xl border border-transparent px-1 py-0.5 transition-base',
+                      isActiveModule && !isSidebarCollapsed
+                        ? 'bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)]'
+                        : 'bg-transparent',
+                    )}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleModuleNavigate(moduleId)}
+                      className={clsx(
+                        'flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]',
+                        isActiveModule
+                          ? 'text-[var(--text-primary)]'
+                          : 'text-muted hover:bg-surface-soft hover:text-[var(--text-primary)]',
+                      )}
+                      title={section.module.label}
+                      aria-label={section.module.label}
+                    >
+                      <NavIcon
+                        name={moduleIcon}
+                        className={clsx(
+                          'h-5 w-5',
+                          isActiveModule ? 'text-[var(--accent-primary)]' : 'text-muted',
+                        )}
+                      />
+                      {!isSidebarCollapsed ? (
+                        <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                          <span className="truncate text-sm font-semibold">{section.module.label}</span>
+                          {hiddenCount > 0 ? (
+                            <span className="rounded-full bg-surface-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                              {hiddenCount}
+                            </span>
+                          ) : null}
+                        </span>
+                      ) : null}
+                    </button>
+                    {!isSidebarCollapsed && pinnedItems.length > 0 ? (
+                      <div className="mt-1 flex flex-col gap-1 pl-9 pr-2">
+                        {pinnedItems.map(({ item, active }) => {
+                          const status = item.status;
+                          const statusKind = status?.kind as StatusIndicatorKind | undefined;
+                          const statusTooltip = statusKind ? NAV_STATUS_TOOLTIPS[statusKind] : undefined;
+                          const removeDisabled = userSaving;
+                          const removeLabel = `Убрать «${item.label}» из меню`;
+        
+                          const content = (
+                            <span className="flex flex-1 items-center gap-2 truncate">
+                              <NavIcon name={item.icon ?? 'nav-generic'} className="h-4 w-4 text-muted" />
+                              <span className="truncate text-sm font-medium">{item.label}</span>
+                              {statusKind ? (
+                                status?.link ? (
+                                  <span
+                                    role="button"
+                                    tabIndex={0}
+                                    className="ml-1 inline-flex"
+                                    onClick={(event) => handleStatusNavigate(status, event)}
+                                    onKeyDown={(event) => {
+                                      if (event.key === 'Enter' || event.key === ' ') {
+                                        event.preventDefault();
+                                        event.stopPropagation();
+                                        router.push(status.link!);
+                                      }
+                                    }}
+                                  >
+                                    <StatusIndicator kind={statusKind} className="h-1.5 w-1.5" />
+                                    <span className="sr-only">{statusTooltip}</span>
+                                  </span>
+                                ) : (
+                                  <StatusIndicator
+                                    kind={statusKind}
+                                    className="ml-1 h-1.5 w-1.5"
+                                    tooltip={statusTooltip}
+                                  />
+                                )
+                              ) : null}
+                            </span>
+                          );
+        
+                          const itemNode = !item.href || item.disabled ? (
+                            <span
+                              key={item.key}
+                              className="group flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted"
+                              aria-disabled
+                            >
+                              {content}
+                            </span>
+                          ) : (
+                            <Link
+                              key={item.key}
+                              href={item.href}
+                              prefetch={false}
+                              className={clsx(
+                                'flex flex-1 items-center gap-2 rounded-lg px-3 py-2 text-sm transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]',
+                                active
+                                  ? 'bg-[var(--accent-primary)]/15 text-[var(--text-primary)]'
+                                  : 'text-muted hover:bg-surface-soft hover:text-[var(--text-primary)]',
+                              )}
+                              aria-current={active ? 'page' : undefined}
+                              onClick={() => {
+                                if (!isDesktop) {
+                                  setIsMobileNavOpen(false);
+                                }
+                              }}
+                            >
+                              {content}
+                            </Link>
+                          );
+        
+                          return (
+                            <div key={item.key} className="group flex items-center gap-2">
+                              {itemNode}
+                              <button
+                                type="button"
+                                onClick={() => handleToggleNavItemVisibility(item, true)}
+                                disabled={removeDisabled}
+                                className="inline-flex h-7 w-7 flex-none items-center justify-center rounded-full text-muted transition-base hover:bg-surface-soft hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:opacity-40"
+                                aria-label={removeLabel}
+                                title={removeLabel}
+                              >
+                                <svg aria-hidden className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 12h12" />
+                                </svg>
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                    {!isSidebarCollapsed && hiddenCount > 0 ? (
+                      <div className="mt-2 space-y-2 rounded-xl border border-dashed border-subtle bg-surface-soft/60 px-3 py-3">
+                        <button
+                          type="button"
+                          onClick={() => toggleHiddenSection(moduleId)}
+                          className="flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wide text-muted transition-base hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
+                          aria-expanded={hiddenOpen}
+                        >
+                          <span>Скрытые страницы</span>
+                          <svg
+                            aria-hidden
+                            className={clsx('h-3 w-3 transition-transform duration-150', hiddenOpen ? 'rotate-180' : 'rotate-0')}
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={1.6}
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 10l4 4 4-4" />
+                          </svg>
+                        </button>
+                        <div className={clsx('flex flex-col gap-1', !hiddenOpen && 'hidden')}>
+                          {section.hidden.map(({ item }) => {
+                            const addDisabled = userSaving;
+                            const addLabel = `Вернуть «${item.label}» в меню`;
+                            return (
+                              <button
+                                key={item.key}
+                                type="button"
+                                onClick={() => handleToggleNavItemVisibility(item, false)}
+                                disabled={addDisabled}
+                                className="flex items-center justify-between rounded-lg border border-dashed border-subtle bg-[var(--surface-0)] px-3 py-2 text-sm font-medium text-muted transition-base hover:border-[var(--accent-primary)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:opacity-40"
+                                aria-label={addLabel}
+                                title={addLabel}
+                              >
+                                <span className="flex items-center gap-2 truncate">
+                                  <NavIcon name={item.icon ?? 'nav-generic'} className="h-4 w-4" />
+                                  <span className="truncate">{item.label}</span>
+                                </span>
+                                <svg
+                                  aria-hidden
+                                  className="h-4 w-4"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth={1.6}
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+                                </svg>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </nav>
+            {!isSidebarCollapsed && viewer ? (
+              <div className="space-y-2 rounded-2xl border border-subtle bg-surface-soft p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted">Поддержка</p>
+                <a
+                  href={COMMUNITY_CHANNEL_URL}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--accent-primary)] hover:bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+                >
+                  Сообщество
+                  <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
+                  </svg>
+                </a>
+                {hasPaidSupport ? (
+                  <a
+                    href={SUPPORT_CHANNEL_URL}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--accent-primary)] hover:bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+                  >
+                    Техподдержка
+                    <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
+                    </svg>
+                  </a>
+                ) : null}
+                {hasDeveloperContact ? (
+                  <a
+                    href={DEVELOPER_CONTACT_URL}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--accent-primary)] hover:bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+                  >
+                    Связь с разработчиком
+                    <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
+                    </svg>
+                  </a>
+                ) : null}
               </div>
             ) : null}
+            {!isSidebarCollapsed ? <MiniTimerWidget viewer={viewer} /> : null}
           </div>
-        );
-      })}
-    </nav>
-    {!isSidebarCollapsed && viewer ? (
-      <div className="space-y-2 rounded-2xl border border-subtle bg-surface-soft p-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted">Поддержка</p>
-        <a
-          href={COMMUNITY_CHANNEL_URL}
-          target="_blank"
-          rel="noreferrer noopener"
-          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--accent-primary)] hover:bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
-        >
-          Сообщество
-          <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
-          </svg>
-        </a>
-        {hasPaidSupport ? (
-          <a
-            href={SUPPORT_CHANNEL_URL}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--accent-primary)] hover:bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
-          >
-            Техподдержка
-            <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
-            </svg>
-          </a>
-        ) : null}
-        {hasDeveloperContact ? (
-          <a
-            href={DEVELOPER_CONTACT_URL}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--accent-primary)] hover:bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
-          >
-            Связь с разработчиком
-            <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
-            </svg>
-          </a>
-        ) : null}
-      </div>
-    ) : null}
-    {!isSidebarCollapsed ? <MiniTimerWidget viewer={viewer} /> : null}
-  </div>
-</aside>
-
+        </aside>
         {isMobileNavOpen ? (
           <div
             className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden"
@@ -1327,15 +1153,68 @@ export default function AppShell({
             onClick={() => setIsMobileNavOpen(false)}
           />
         ) : null}
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-surface">
-          {moduleTabsMobile ? (
-            <div
-              className="flex justify-center border-b border-subtle/70 bg-[var(--surface-0)]/95 px-3 py-2 sm:px-4 md:hidden"
-              data-module-tabs
-            >
-              <div className={clsx('w-full', computedMaxWidth)}>{moduleTabsMobile}</div>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="flex flex-col gap-4 border-b border-subtle bg-[var(--surface-0)]/95 px-4 py-4 md:px-8 md:py-5" data-app-shell-toolbar>
+            <div className="flex items-start gap-3">
+              <button
+                type="button"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-surface-soft text-muted transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] md:hidden"
+                aria-label={toggleLabel}
+                aria-pressed={isMobileNavOpen}
+                onClick={handleToggleNav}
+              >
+                <span className="sr-only">Меню</span>
+                <svg
+                  aria-hidden
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  {isMobileNavOpen ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 12h18" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 18h18" />
+                    </>
+                  )}
+                </svg>
+              </button>
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">{activeModule.label}</span>
+                <h1
+                  id={headingId}
+                  className="text-xl font-semibold leading-tight text-[var(--text-primary)] md:text-2xl"
+                  aria-describedby={headingDescriptionId}
+                >
+                  {pageTitle}
+                </h1>
+                {subtitle ? (
+                  <p id={headingDescriptionId} className="text-sm text-muted">
+                    {subtitle}
+                  </p>
+                ) : null}
+              </div>
             </div>
-          ) : null}
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-2">
+                {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+                {canToggleFavorite ? (
+                  <FavoriteToggle
+                    active={isFavorite}
+                    disabled={!canToggleFavorite || saveUserLayoutMutation.isPending}
+                    onToggle={handleToggleFavorite}
+                    labelAdd={favoriteLabelAdd}
+                    labelRemove={favoriteLabelRemove}
+                  />
+                ) : null}
+              </div>
+              <UserSummary viewer={viewer} isLoading={viewerLoading} personaBundle={personaBundle} />
+            </div>
+          </div>
           <div className="flex min-h-0 flex-1 justify-center overflow-y-auto">
             <main className={mainClasses}>
               {contentVariant === 'card' ? (
@@ -1350,7 +1229,7 @@ export default function AppShell({
             </main>
           </div>
         </div>
-      </div>
+
       <SidebarEditor
         open={isNavEditorOpen}
         version={navVersion}
