@@ -8,6 +8,6 @@ gate:
     when_utc: null
   notes: |
     QA: reports/2025-09-20-release-qa.md — green.
-    InfoSec: reports/infosec/2025-09-20-e2-e3-e17.md — MUST закрыт (core/db/repair.py параметризован).
-    DevOps: reports/runbooks/test-to-main.md обновлён security gating.
-    Pending: Tech Writer обновил README/Tasklist/Changelog; ожидание утверждения TL.
+    InfoSec: reports/infosec/2025-09-20-e2-e3-e17.md — Bandit MUST закрыт; Trivy 2025-09-23 выявил HIGH CVE-2024-47874 (starlette 0.38.6).
+    DevOps: reports/runbooks/test-to-main.md обновлён security gating; Trivy отчёт загружен (`reports/infosec/trivy-2025-09-23.json`).
+    Pending: Tech Writer обновил README/Tasklist/Changelog; требуется апгрейд starlette ≥0.40.0 и TL approval.

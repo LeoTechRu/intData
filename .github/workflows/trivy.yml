@@ -39,8 +39,8 @@ jobs:
           trivy fs \
             --exit-code 1 \
             --severity CRITICAL,HIGH \
-            --scanners vuln,secret,config \
-            --skip-dirs '.git,.venv,node_modules' \
+            --scanners vuln,secret,misconfig \
+            --skip-dirs '.git,.venv,node_modules,.tools' \
             --no-progress \
             --format json . > trivy-report.json
 

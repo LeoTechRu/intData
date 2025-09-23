@@ -210,6 +210,20 @@ gate:
 
 ```yaml
 agent_sync:
+  - when_utc: "2025-09-23T14:44:28Z"
+    agent: "codex"
+    role: "devops"
+    branch: "feature/release/trivy-scan-devops"
+    task: "TL-2025-09-21-trivy-scan"
+    epic_scope: "Release / InfoSec follow-ups"
+    files:
+      - ".github/workflows/trivy.yml"
+      - "reports/infosec/trivy-2025-09-23.json"
+    pr: null
+    ac_link: "README.md#release-gating"
+    ttl_minutes: 0
+    status: "Review"
+    note: "Trivy fs (v0.52.2) — отчёт reports/infosec/trivy-2025-09-23.json, обнаружен HIGH CVE-2024-47874 (starlette)."
   - when_utc: "2025-09-23T14:40:52Z"
     agent: "codex"
     role: "devops"
