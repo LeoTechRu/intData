@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Optional, Literal
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Response
+from fastapi import APIRouter, Body, Depends, HTTPException, Response, Query
 from pydantic import BaseModel, Field
 
 from core.auth.owner import OwnerCtx, get_current_owner
@@ -12,6 +12,7 @@ from core.services.habits import (
     RewardsService,
     UserStatsService,
     HabitsCronService,
+    HabitsDashboardService,
     habits,
 )
 from core.services.nexus_service import HabitService
@@ -48,6 +49,59 @@ COOLDOWN_RESP = {
         },
     }
 }
+
+
+class StatsOut(BaseModel):
+    level: int
+    xp: int
+    gold: int
+    hp: int
+    kp: int
+    daily_xp: int
+    daily_gold: int
+
+
+class HabitDashboardHabit(BaseModel):
+    id: int
+    name: Optional[str] = None
+    title: Optional[str] = None
+    type: Optional[str] = None
+    difficulty: Optional[str] = None
+    frequency: str
+    note: Optional[str] = None
+    area_id: Optional[int] = None
+    project_id: Optional[int] = None
+    progress: list[str] = Field(default_factory=list)
+    created_at: Optional[str] = None
+
+
+class HabitDashboardDaily(BaseModel):
+    id: int
+    title: str
+    note: Optional[str] = None
+    rrule: str
+    difficulty: Optional[str] = None
+    streak: int = 0
+    frozen: bool = False
+    area_id: Optional[int] = None
+    project_id: Optional[int] = None
+    created_at: Optional[str] = None
+
+
+class HabitDashboardReward(BaseModel):
+    id: int
+    title: str
+    cost_gold: int
+    area_id: Optional[int] = None
+    project_id: Optional[int] = None
+    created_at: Optional[str] = None
+
+
+class HabitDashboardResponse(BaseModel):
+    habits: list[HabitDashboardHabit] = Field(default_factory=list)
+    dailies: list[HabitDashboardDaily] = Field(default_factory=list)
+    rewards: list[HabitDashboardReward] = Field(default_factory=list)
+    stats: StatsOut
 
 
 # ----------------------- Habits -----------------------
@@ -296,14 +350,27 @@ async def api_habit_down(
     return res
 
 
-class StatsOut(BaseModel):
-    level: int
-    xp: int
-    gold: int
-    hp: int
-    kp: int
-    daily_xp: int
-    daily_gold: int
+@router.get(
+    "/habits/dashboard",
+    tags=["Habits"],
+    response_model=HabitDashboardResponse,
+)
+async def api_habits_dashboard(
+    owner: OwnerCtx | None = Depends(get_current_owner),
+    area_id: int | None = Query(default=None),
+    project_id: int | None = Query(default=None),
+    include_sub: int | None = Query(default=0),
+):
+    if owner is None:
+        raise HTTPException(status_code=401)
+    async with HabitsDashboardService() as svc:
+        payload = await svc.fetch_dashboard(
+            owner.owner_id,
+            area_id=area_id,
+            project_id=project_id,
+            include_sub=bool(include_sub),
+        )
+    return payload
 
 
 @router.get("/habits/stats", tags=["Stats"], response_model=StatsOut)

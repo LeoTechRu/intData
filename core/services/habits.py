@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core import db
 from core.config import config
 from .errors import CooldownError, InsufficientGoldError
-from core.models import Area
+from core.models import Area, Project
 
 # SQLite-friendly table metadata used by tests and services
 metadata = sa.MetaData()
@@ -678,3 +678,220 @@ class RewardsService:
             raise InsufficientGoldError()
         new_stats = await self.stats.apply(owner_id, gold=-cost)
         return new_stats["gold"]
+
+
+class HabitsDashboardService:
+    """Aggregate habits, dailies, rewards and stats into a single payload."""
+
+    def __init__(self, session: Optional[AsyncSession] = None) -> None:
+        self.session = session
+        self._external = session is not None
+        self.stats = UserStatsService(session)
+
+    async def __aenter__(self) -> "HabitsDashboardService":
+        if self.session is None:
+            self.session = db.async_session()
+            self.stats.session = self.session
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb) -> None:
+        if not self._external:
+            if exc_type is None:
+                await self.session.commit()
+            else:
+                await self.session.rollback()
+            await self.session.close()
+
+    async def _resolve_area_ids(
+        self,
+        owner_id: int,
+        area_id: Optional[int],
+        include_sub: bool,
+    ) -> Optional[list[int]]:
+        if area_id is None:
+            return None
+        stmt = (
+            select(Area)
+            .where(Area.id == area_id)
+            .where(Area.owner_id == owner_id)
+        )
+        res = await self.session.execute(stmt)
+        node = res.scalars().first()
+        if node is None:
+            return []
+        if not include_sub:
+            return [node.id]
+        prefix = node.mp_path or ""
+        stmt_ids = (
+            select(Area.id)
+            .where(Area.owner_id == owner_id)
+            .where(
+                sa.or_(
+                    Area.mp_path == prefix,
+                    Area.mp_path.like(prefix + "%"),
+                )
+            )
+        )
+        res_ids = await self.session.execute(stmt_ids)
+        return [row[0] for row in res_ids.all()]
+
+    async def _ensure_project_is_owned(
+        self, owner_id: int, project_id: Optional[int]
+    ) -> bool:
+        if project_id is None:
+            return True
+        stmt = select(Project.owner_id).where(Project.id == project_id)
+        res = await self.session.execute(stmt)
+        row = res.first()
+        if row is None:
+            return False
+        return row[0] == owner_id
+
+    @staticmethod
+    def _habit_payload(row: sa.RowMapping) -> Dict[str, Any]:
+        progress_dict = row.get("progress") or {}
+        completed = [
+            day
+            for day, done in progress_dict.items()
+            if isinstance(done, bool) and done
+        ]
+        created = row.get("created_at")
+        created_str = (
+            created.isoformat()
+            if isinstance(created, datetime)
+            else created
+        )
+        return {
+            "id": row["id"],
+            "name": row.get("title"),
+            "title": row.get("title"),
+            "type": row.get("type"),
+            "difficulty": row.get("difficulty"),
+            "frequency": row.get("frequency", "daily"),
+            "note": row.get("note"),
+            "area_id": row.get("area_id"),
+            "project_id": row.get("project_id"),
+            "progress": completed,
+            "created_at": created_str,
+        }
+
+    @staticmethod
+    def _daily_payload(row: sa.RowMapping) -> Dict[str, Any]:
+        created = row.get("created_at")
+        created_str = (
+            created.isoformat()
+            if isinstance(created, datetime)
+            else created
+        )
+        streak = row.get("streak")
+        frozen = row.get("frozen")
+        return {
+            "id": row["id"],
+            "title": row.get("title"),
+            "note": row.get("note"),
+            "rrule": row.get("rrule"),
+            "difficulty": row.get("difficulty"),
+            "streak": int(streak) if isinstance(streak, int) else int(streak or 0),
+            "frozen": bool(frozen) if frozen is not None else False,
+            "area_id": row.get("area_id"),
+            "project_id": row.get("project_id"),
+            "created_at": created_str,
+        }
+
+    @staticmethod
+    def _reward_payload(row: sa.RowMapping) -> Dict[str, Any]:
+        created = row.get("created_at")
+        created_str = (
+            created.isoformat()
+            if isinstance(created, datetime)
+            else created
+        )
+        return {
+            "id": row["id"],
+            "title": row.get("title"),
+            "cost_gold": row.get("cost_gold"),
+            "area_id": row.get("area_id"),
+            "project_id": row.get("project_id"),
+            "created_at": created_str,
+        }
+
+    async def fetch_dashboard(
+        self,
+        owner_id: int,
+        *,
+        area_id: Optional[int] = None,
+        project_id: Optional[int] = None,
+        include_sub: bool = False,
+    ) -> Dict[str, Any]:
+        area_ids = await self._resolve_area_ids(owner_id, area_id, include_sub)
+        if not await self._ensure_project_is_owned(owner_id, project_id):
+            area_ids = []
+
+        stats = await self.stats.get_or_create(owner_id)
+        stats_payload = {
+            k: v
+            for k, v in stats.items()
+            if k not in {"owner_id", "last_cron"}
+        }
+
+        if area_ids == []:
+            return {
+                "habits": [],
+                "dailies": [],
+                "rewards": [],
+                "stats": stats_payload,
+            }
+
+        filters: list[Any] = [habits.c.owner_id == owner_id, habits.c.archived_at.is_(None)]
+        if area_ids is not None:
+            filters.append(habits.c.area_id.in_(area_ids))
+        if project_id is not None:
+            filters.append(habits.c.project_id == project_id)
+        stmt_habits = select(habits).where(*filters).order_by(habits.c.id.asc())
+        res_habits = await self.session.execute(stmt_habits)
+        habits_payload = [
+            self._habit_payload(row) for row in res_habits.mappings().all()
+        ]
+
+        filters_dailies: list[Any] = [
+            dailies.c.owner_id == owner_id,
+            dailies.c.archived_at.is_(None),
+        ]
+        if area_ids is not None:
+            filters_dailies.append(dailies.c.area_id.in_(area_ids))
+        if project_id is not None:
+            filters_dailies.append(dailies.c.project_id == project_id)
+        stmt_dailies = (
+            select(dailies)
+            .where(*filters_dailies)
+            .order_by(dailies.c.id.asc())
+        )
+        res_dailies = await self.session.execute(stmt_dailies)
+        dailies_payload = [
+            self._daily_payload(row) for row in res_dailies.mappings().all()
+        ]
+
+        filters_rewards: list[Any] = [
+            rewards.c.owner_id == owner_id,
+            rewards.c.archived_at.is_(None),
+        ]
+        if area_ids is not None:
+            filters_rewards.append(rewards.c.area_id.in_(area_ids))
+        if project_id is not None:
+            filters_rewards.append(rewards.c.project_id == project_id)
+        stmt_rewards = (
+            select(rewards)
+            .where(*filters_rewards)
+            .order_by(rewards.c.id.asc())
+        )
+        res_rewards = await self.session.execute(stmt_rewards)
+        rewards_payload = [
+            self._reward_payload(row) for row in res_rewards.mappings().all()
+        ]
+
+        return {
+            "habits": habits_payload,
+            "dailies": dailies_payload,
+            "rewards": rewards_payload,
+            "stats": stats_payload,
+        }

@@ -326,7 +326,7 @@ CREATE TABLE dailies (
 	archived_at TIMESTAMP WITH TIME ZONE, 
 	created_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 
-	CONSTRAINT ck_dailies_single_container CHECK ((project_id IS NOT NULL) <> (area_id IS NOT NULL)), 
+	CONSTRAINT ck_dailies_single_container CHECK ((project_id IS NOT NULL) OR (area_id IS NOT NULL)), 
 	FOREIGN KEY(owner_id) REFERENCES users_web (id), 
 	FOREIGN KEY(area_id) REFERENCES areas (id), 
 	FOREIGN KEY(project_id) REFERENCES projects (id)
@@ -519,7 +519,7 @@ CREATE TABLE habits (
 	archived_at TIMESTAMP WITH TIME ZONE, 
 	created_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 
-	CONSTRAINT ck_habits_single_container CHECK ((project_id IS NOT NULL) <> (area_id IS NOT NULL)), 
+	CONSTRAINT ck_habits_single_container CHECK ((project_id IS NOT NULL) OR (area_id IS NOT NULL)), 
 	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id), 
 	FOREIGN KEY(area_id) REFERENCES areas (id), 
 	FOREIGN KEY(project_id) REFERENCES projects (id)
@@ -724,7 +724,7 @@ CREATE TABLE rewards (
 	archived_at TIMESTAMP WITH TIME ZONE, 
 	created_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 
-	CONSTRAINT ck_rewards_single_container CHECK ((project_id IS NOT NULL) <> (area_id IS NOT NULL)), 
+	CONSTRAINT ck_rewards_single_container CHECK ((project_id IS NOT NULL) OR (area_id IS NOT NULL)), 
 	FOREIGN KEY(owner_id) REFERENCES users_web (id), 
 	FOREIGN KEY(area_id) REFERENCES areas (id), 
 	FOREIGN KEY(project_id) REFERENCES projects (id)

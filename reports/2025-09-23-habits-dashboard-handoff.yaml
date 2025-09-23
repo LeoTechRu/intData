@@ -1,0 +1,25 @@
+handoff:
+  from: frontend
+  to: qa
+  initiative: E16 / Habits
+  task: TL-2025-09-23-habits-dailies-rewards
+  context: |
+    Бэкенд и фронтенд собрали агрегированный /api/v1/habits/dashboard: возвращает привычки, ежедневки, награды и HUD-статистику с фильтрами area/project/include_sub.
+    HabitsModule теперь грузит дашборд через React Query, добавлены фильтры и секции для Dailies/Rewards.
+    Дополнительно обновили PARA-инварианты: ck_*_single_container в `habits/dailies/rewards` теперь разрешают проект вместе с area, а ddl 20250920 переустанавливает ограничения.
+    Нужно прогнать e2e/pytest + веб-тесты на dailies/rewards, убедиться, что include_sub работает и UI корректно отображает пустые состояния.
+  artifacts:
+    - path: web/components/habits/HabitsModule.tsx
+      note: UI с новыми фильтрами и секциями
+    - path: core/services/habits.py
+      note: HabitsDashboardService и проверка include_sub
+    - path: tests/web/test_habits_v1_api.py
+      note: Новые pytest кейсы для дашборда
+    - path: web/components/habits/HabitsModule.test.tsx
+      note: Vitest проверки на CTA, создание и обновление
+  acceptance:
+    - pytest tests/web/test_habits_v1_api.py на postgres fixture
+    - cd web && npx vitest run components/habits/HabitsModule.test.tsx
+    - Ручная проверка фильтров area/project/include_sub в браузере (QA окружение)
+  blockers:
+    - нет

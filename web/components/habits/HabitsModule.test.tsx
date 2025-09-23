@@ -45,7 +45,7 @@ afterEach(() => {
 describe('HabitsModule', () => {
   it('renders habits and toggles completion', async () => {
     const today = new Date().toISOString().slice(0, 10);
-    let habitsCall = 0;
+    let dashboardCall = 0;
     const fetchMock = vi.spyOn(global, 'fetch').mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === 'string' ? input : input.toString();
       if (url.endsWith('/api/v1/areas')) {
@@ -58,38 +58,43 @@ describe('HabitsModule', () => {
       if (url.endsWith('/api/v1/projects')) {
         return Promise.resolve(jsonResponse([]));
       }
-      if (url.endsWith('/api/v1/habits/stats')) {
-        return Promise.resolve(
-          jsonResponse({ level: 2, xp: 40, gold: 15, hp: 48, kp: 120, daily_xp: 10, daily_gold: 5 }),
-        );
-      }
-      if (url.endsWith('/api/v1/habits') && (!init || init.method === undefined)) {
-        habitsCall += 1;
-        if (habitsCall === 1) {
+      if (url.includes('/api/v1/habits/dashboard') && (!init || init.method === undefined)) {
+        dashboardCall += 1;
+        if (dashboardCall === 1) {
           return Promise.resolve(
-            jsonResponse([
+            jsonResponse({
+              habits: [
+                {
+                  id: 5,
+                  title: 'Утренняя зарядка',
+                  frequency: 'daily',
+                  area_id: 1,
+                  project_id: null,
+                  progress: [],
+                },
+              ],
+              dailies: [],
+              rewards: [],
+              stats: { level: 2, xp: 40, gold: 15, hp: 48, kp: 120, daily_xp: 10, daily_gold: 5 },
+            }),
+          );
+        }
+        return Promise.resolve(
+          jsonResponse({
+            habits: [
               {
                 id: 5,
                 title: 'Утренняя зарядка',
                 frequency: 'daily',
                 area_id: 1,
                 project_id: null,
-                progress: [],
+                progress: [today],
               },
-            ]),
-          );
-        }
-        return Promise.resolve(
-          jsonResponse([
-            {
-              id: 5,
-              title: 'Утренняя зарядка',
-              frequency: 'daily',
-              area_id: 1,
-              project_id: null,
-              progress: [today],
-            },
-          ]),
+            ],
+            dailies: [],
+            rewards: [],
+            stats: { level: 2, xp: 40, gold: 15, hp: 48, kp: 120, daily_xp: 10, daily_gold: 5 },
+          }),
         );
       }
       if (url.endsWith('/api/v1/habits/5/toggle') && init?.method === 'POST') {
@@ -117,7 +122,7 @@ describe('HabitsModule', () => {
   });
 
   it('creates a habit with selected area', async () => {
-    let habitsCall = 0;
+    let dashboardCall = 0;
     const fetchMock = vi.spyOn(global, 'fetch').mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === 'string' ? input : input.toString();
       if (url.endsWith('/api/v1/areas')) {
@@ -131,27 +136,29 @@ describe('HabitsModule', () => {
       if (url.endsWith('/api/v1/projects')) {
         return Promise.resolve(jsonResponse([{ id: 10, name: 'Фитнес', area_id: 2, description: null, slug: 'fitness' }]));
       }
-      if (url.endsWith('/api/v1/habits/stats')) {
-        return Promise.resolve(
-          jsonResponse({ level: 1, xp: 0, gold: 0, hp: 50, kp: 0, daily_xp: 0, daily_gold: 0 }),
-        );
-      }
-      if (url.endsWith('/api/v1/habits') && (!init || init.method === undefined)) {
-        habitsCall += 1;
-        if (habitsCall === 1) {
-          return Promise.resolve(jsonResponse([]));
+      if (url.includes('/api/v1/habits/dashboard') && (!init || init.method === undefined)) {
+        dashboardCall += 1;
+        if (dashboardCall === 1) {
+          return Promise.resolve(
+            jsonResponse({ habits: [], dailies: [], rewards: [], stats: { level: 1, xp: 0, gold: 0, hp: 50, kp: 0, daily_xp: 0, daily_gold: 0 } }),
+          );
         }
         return Promise.resolve(
-          jsonResponse([
-            {
-              id: 11,
-              title: 'Пить воду',
-              frequency: 'daily',
-              area_id: 2,
-              project_id: 10,
-              progress: [],
-            },
-          ]),
+          jsonResponse({
+            habits: [
+              {
+                id: 11,
+                title: 'Пить воду',
+                frequency: 'daily',
+                area_id: 2,
+                project_id: 10,
+                progress: [],
+              },
+            ],
+            dailies: [],
+            rewards: [],
+            stats: { level: 1, xp: 0, gold: 0, hp: 50, kp: 0, daily_xp: 0, daily_gold: 0 },
+          }),
         );
       }
       if (url.endsWith('/api/v1/habits') && init?.method === 'POST') {
@@ -192,12 +199,7 @@ describe('HabitsModule', () => {
       if (url.endsWith('/api/v1/projects')) {
         return Promise.resolve(jsonResponse([]));
       }
-      if (url.endsWith('/api/v1/habits/stats')) {
-        return Promise.resolve(
-          jsonResponse({ level: 1, xp: 0, gold: 0, hp: 50, kp: 0, daily_xp: 0, daily_gold: 0 }),
-        );
-      }
-      if (url.endsWith('/api/v1/habits') && (!init || init.method === undefined)) {
+      if (url.includes('/api/v1/habits/dashboard') && (!init || init.method === undefined)) {
         return Promise.resolve(
           new Response(JSON.stringify({ error: 'tg_link_required' }), {
             status: 403,
@@ -210,10 +212,11 @@ describe('HabitsModule', () => {
 
     renderWithClient(<HabitsModule />);
 
-    expect(await screen.findByText('Свяжите Telegram')).toBeInTheDocument();
+    const telegramCtas = await screen.findAllByText('Свяжите Telegram');
+    expect(telegramCtas.length).toBeGreaterThan(0);
 
-    const openSettings = screen.getByRole('button', { name: 'Открыть настройки' });
-    fireEvent.click(openSettings);
+    const openSettingsButtons = screen.getAllByRole('button', { name: 'Открыть настройки' });
+    fireEvent.click(openSettingsButtons[0]);
 
     expect(pushMock).toHaveBeenCalledWith('/settings#telegram-linking');
     expect(fetchMock).toHaveBeenCalled();

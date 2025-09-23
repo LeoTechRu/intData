@@ -1110,7 +1110,7 @@ class Habit(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "(project_id IS NOT NULL) <> (area_id IS NOT NULL)",
+            "(project_id IS NOT NULL) OR (area_id IS NOT NULL)",
             name="ck_habits_single_container",
         ),
         Index("idx_habits_owner_project", owner_id, project_id),
@@ -1176,7 +1176,7 @@ class Daily(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "(project_id IS NOT NULL) <> (area_id IS NOT NULL)",
+            "(project_id IS NOT NULL) OR (area_id IS NOT NULL)",
             name="ck_dailies_single_container",
         ),
         Index("idx_dailies_owner_project", owner_id, project_id),
@@ -1215,7 +1215,7 @@ class Reward(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "(project_id IS NOT NULL) <> (area_id IS NOT NULL)",
+            "(project_id IS NOT NULL) OR (area_id IS NOT NULL)",
             name="ck_rewards_single_container",
         ),
         Index("idx_rewards_owner_project", owner_id, project_id),
