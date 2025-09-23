@@ -210,6 +210,22 @@ gate:
 
 ```yaml
 agent_sync:
+  - when_utc: "2025-09-23T15:34:26Z"
+    agent: "codex"
+    role: "fe"
+    branch: "feature/E17/nav-blueprint-codex"
+    task: "TL-2025-09-18-nav-blueprint"
+    epic_scope: "E17 / Frontend navigation"
+    files:
+      - "web/lib/navigation/nav_blueprint.ts"
+      - "web/app/api/navigation/sidebar/*"
+      - "web/components/navigation/*"
+      - "tests/web/test_navigation_api.py"
+    pr: null
+    ac_link: "README.md#e17-frontend-modernization"
+    ttl_minutes: 120
+    status: "In Progress"
+    note: "Расширяем NAV_BLUEPRINT модулями/секциями + API sidebar; готовим переход для module tabs." 
   - when_utc: "2025-09-23T14:59:39Z"
     agent: "codex"
     role: "tl"
