@@ -1,6 +1,6 @@
 {
   "SchemaVersion": 2,
-  "CreatedAt": "2025-09-23T17:45:30.082552628+03:00",
+  "CreatedAt": "2025-09-23T17:54:13.342246305+03:00",
   "ArtifactName": ".",
   "ArtifactType": "filesystem",
   "Metadata": {
@@ -19,54 +19,7 @@
     {
       "Target": "requirements.txt",
       "Class": "lang-pkgs",
-      "Type": "pip",
-      "Vulnerabilities": [
-        {
-          "VulnerabilityID": "CVE-2024-47874",
-          "PkgName": "starlette",
-          "PkgIdentifier": {
-            "PURL": "pkg:pypi/starlette@0.38.6",
-            "UID": "d9c8a0ec1782ad4c"
-          },
-          "InstalledVersion": "0.38.6",
-          "FixedVersion": "0.40.0",
-          "Status": "fixed",
-          "Layer": {},
-          "SeveritySource": "ghsa",
-          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2024-47874",
-          "DataSource": {
-            "ID": "ghsa",
-            "Name": "GitHub Security Advisory pip",
-            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Apip"
-          },
-          "Title": "starlette: Starlette Denial of service (DoS) via multipart/form-data",
-          "Description": "Starlette is an Asynchronous Server Gateway Interface (ASGI) framework/toolkit. Prior to version 0.40.0, Starlette treats `multipart/form-data` parts without a `filename` as text form fields and buffers those in byte strings with no size limit. This allows an attacker to upload arbitrary large form fields and cause Starlette to both slow down significantly due to excessive memory allocations and copy operations, and also consume more and more memory until the server starts swapping and grinds to a halt, or the OS terminates the server process with an OOM error. Uploading multiple such requests in parallel may be enough to render a service practically unusable, even if reasonable request size limits are enforced by a reverse proxy in front of Starlette. This Denial of service (DoS) vulnerability affects all applications built with Starlette (or FastAPI) accepting form requests. Verison 0.40.0 fixes this issue.",
-          "Severity": "HIGH",
-          "CweIDs": [
-            "CWE-770"
-          ],
-          "VendorSeverity": {
-            "ghsa": 3,
-            "redhat": 3
-          },
-          "CVSS": {
-            "redhat": {
-              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
-              "V3Score": 7.5
-            }
-          },
-          "References": [
-            "https://access.redhat.com/security/cve/CVE-2024-47874",
-            "https://github.com/encode/starlette",
-            "https://github.com/encode/starlette/commit/fd038f3070c302bff17ef7d173dbb0b007617733",
-            "https://github.com/encode/starlette/security/advisories/GHSA-f96h-pmfr-66vw",
-            "https://nvd.nist.gov/vuln/detail/CVE-2024-47874",
-            "https://www.cve.org/CVERecord?id=CVE-2024-47874"
-          ],
-          "PublishedDate": "2024-10-15T16:15:05.26Z",
-          "LastModifiedDate": "2024-11-21T17:15:17.99Z"
-        }
-      ]
+      "Type": "pip"
     },
     {
       "Target": "web/package-lock.json",

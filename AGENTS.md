@@ -210,6 +210,20 @@ gate:
 
 ```yaml
 agent_sync:
+  - when_utc: "2025-09-23T14:51:15Z"
+    agent: "codex"
+    role: "be"
+    branch: "feature/release/starlette-upgrade-be"
+    task: "TL-2025-09-23-starlette-upgrade"
+    epic_scope: "Release / InfoSec follow-ups"
+    files:
+      - "requirements.txt"
+      - "reports/infosec/*"
+    pr: null
+    ac_link: "README.md#release-gating"
+    ttl_minutes: 0
+    status: "Review"
+    note: "fastapi→0.117.1, starlette→0.48.0; pytest targeted web/diagnostics; Trivy 2025-09-23 без CRITICAL/HIGH."
   - when_utc: "2025-09-23T14:44:28Z"
     agent: "codex"
     role: "devops"
