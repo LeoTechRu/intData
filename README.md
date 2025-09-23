@@ -737,6 +737,7 @@ POST /api/v1/rewards/{id}/buy
 - `/calendar/agenda?include_habits=1` возвращает due-ежедневки; ICS содержит `VTODO` с `RRULE`.
 - `/rewards/{id}/buy` списывает Gold и возвращает баланс.
 - В `/habits` действия мгновенно отражаются в HUD.
+- `/api/v1/habits/dashboard` агрегирует привычки, ежедневки и награды; фильтры area/project/include_sub синхронно обновляют UI Next.js.
 - [x] `/habits` доступен по веб-сессии; write без TG возвращают 403 `tg_link_required`.
 - [x] Повторный `up` в кулдауне возвращает 429 с заголовком `Retry-After` и полем `retry_after`.
 - [x] `api/openapi.json` совпадает с `/api/openapi.json` и содержит модели ошибок `tg_link_required` и `cooldown`.
@@ -761,7 +762,7 @@ Reference: см. архивный отчёт `reports/archive/report_frontend_mo
 - [x] P2•M — Внедрить AppShell-лейаут Next.js с дизайн-токенами, адаптивной навигацией и современными UI паттернами для перенесённых страниц.
 - [x] P2•S — Страница `/habits` работает на Next.js, использует React Query и HUD с XP/Gold/KP.
 - [x] P1•M — Перенести страницу `/settings` на Next.js, добавить пункт меню «Настройки» и удалить legacy-шаблон.
-- [ ] P2•M — Расширить `/habits` карточками Dailies/Rewards и фильтрами проектов после обновления API (связка с E16).
+- [x] P2•M — Расширить `/habits` карточками Dailies/Rewards и фильтрами проектов после обновления API (связка с E16).
 - [x] P0•M — Перенести ЦУП (`/`) на Next.js «Обзор» с современными виджетами, drag'n'drop макетом и настройками из `user_settings.dashboard_layout`.
 - [x] P0•M — Перенести страницы `/groups` и `/groups/manage/{id}` на Next.js, реализовать CRM-инструменты и удалить Jinja-шаблоны `web/templates/groups/*` вместе с FastAPI `ui_router`.
 - [x] P0•M — Перенести каталог `/products` и профили `/products/{slug}` на Next.js, убрать Jinja-шаблоны `web/templates/products/*` и `ui_router` модуля `web/routes/products`.
@@ -908,6 +909,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - CI workflow `tests.yml`: Postgres-прогон разделён на два шага (web+diagnostics и остальной набор) с увеличенными таймаутами и выгрузкой логов `pytest-part1.log`/`pytest-part2.log`.
 - `/notes`: управление заметками стало безопасным — кнопка «Архивировать» заменяет безвозвратное удаление, фильтр «Показать архив» отображает только архивные карточки с меткой «В архиве» и кнопкой «Восстановить», drag-and-drop отключается для архива, а React Query обновляет список без перезагрузки.
+- `/habits` работает от агрегатора `/api/v1/habits/dashboard`: фильтры по области/проекту/include_sub обновляют привычки, ежедневки и награды в Next.js UI, HUD отражает статистику мгновенно.
 - UI kit skeleton with reusable components.
 - Shared Next.js UI primitives (Button, Card, Field, Input, Select, Textarea, Badge, Checkbox, Toolbar) powered by clsx/tailwind-merge для консистентного фронтенд-стайлинга.
 - Time summary endpoint `/api/v1/time/summary` for aggregating durations by day, project, area or user.
