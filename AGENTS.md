@@ -224,7 +224,7 @@ agent_sync:
     ac_link: "README.md#release-gating"
     ttl_minutes: 0
     status: "Done"
-    note: "FF merge feature/release/* fixes в test; проверены targeted pytest и Trivy без CRITICAL/HIGH."
+    note: "FF merge feature/E2/E3/E17 + follow-ups в test; targeted pytest и Trivy без CRITICAL/HIGH."
   - when_utc: "2025-09-23T14:51:15Z"
     agent: "codex"
     role: "be"
@@ -252,7 +252,7 @@ agent_sync:
     ac_link: "README.md#release-gating"
     ttl_minutes: 0
     status: "Done"
-    note: "Trivy fs (v0.52.2) — отчёт reports/infosec/trivy-2025-09-23.json, CRITICAL/HIGH не обнаружены."
+    note: "Trivy fs (v0.52.2) — отчёт reports/infосec/trivy-2025-09-23.json, CRITICAL/HIGH не обнаружены."
   - when_utc: "2025-09-23T14:40:52Z"
     agent: "codex"
     role: "devops"
@@ -279,8 +279,8 @@ agent_sync:
     pr: null
     ac_link: "README.md#release-gating"
     ttl_minutes: 0
-    status: "Review"
-    note: "Бот переключён на enum ProductStatus (без строкового paid); проверка python3 -m compileall bot/handlers/telegram.py."
+    status: "Done"
+    note: "Бот переключён на enum ProductStatus; python3 -m compileall bot/handlers/telegram.py."
   - when_utc: "2025-09-20T23:55:00Z"
     agent: "codex"
     role: "tw"
@@ -298,7 +298,7 @@ agent_sync:
     ac_link: "README.md#-workflow-playbook"
     ttl_minutes: 0
     status: "Done"
-    note: "README обновлён, отчёты QA/InfoSec/Runbook/ GateRecord собраны; готово к Gate-6 TL."
+    note: "README обновлён, отчёты QA/InfoSec/Runbook/GateRecord собраны; готово к Gate-6 TL."
   - when_utc: "2025-09-20T23:59:00Z"
     agent: "codex-cli::techwriter"
     role: "tw"

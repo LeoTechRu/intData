@@ -3,7 +3,7 @@
 Lightweight article fetcher → Markdown with YAML front‑matter.
 
 Usage:
-  python utils/fetch_url.py "<URL>" docs/research/habr_nspk_second_brain.md
+  python utils/fetch_url.py "<URL>" reports/habr_nspk_second_brain.md
 
 Implements fetch_to_markdown(url, out_path) with graceful fallbacks:
 - Prefer trafilatura if available
@@ -263,4 +263,3 @@ def _main(argv: list[str]) -> int:
 
 if __name__ == "__main__":  # pragma: no cover
     raise SystemExit(_main(sys.argv))
-

@@ -190,12 +190,6 @@ Intelligent Data Pro — приватный продуктовый репози�
 5. **Документация** — при изменении правил обновлять [Conventions Catalog](#-conventions-catalog), этот раздел и профильные гайды; исследования складывать в `reports/*`.
 6. **Завершение** — push в свою ветку, обновление Agent Sync, фиксация результатов в [Tasklist](#-tasklist) и [Changelog](#-changelog).
 
-### Release gating
-- QA оформляет отчёт (`reports/2025-09-20-release-qa.md`) перед Gate-4.
-- InfoSec публикует advisory (`reports/infosec/2025-09-20-e2-e3-e17.md`) и фиксирует MUST.
-- DevOps проверяет security-сканеры (Semgrep/Bandit/Trivy) и обновляет `reports/runbooks/test-to-main.md` перед Gate-5.
-- Tech Writer закрывает funnel и GateRecord (`reports/2025-09-20-gaterecord-e2-e3-e17-release.md`) до fast-forward.
-
 ### Правила для нескольких сессий
 - Никогда не модифицируйте файл, который заблокирован другой сессией в Agent Sync или lock-файле.
 - Если требуется общий файл, инициируйте синхронизацию (комментарий в Agent Sync + ожидание ответа).
@@ -232,10 +226,9 @@ Intelligent Data Pro — приватный продуктовый репози�
 - [x] TL-2025-09-20-release-qa — Релизное регрессионное тестирование ветки `test` (commit `f34a994`) по сценариям E2/E3/E17; отчёт `reports/2025-09-20-release-qa.md` (owner: qa, ссылки на [E2](#e2-%D0%BC%D0%B8%D0%B3%D1%80%D0%B0%D1%86%D0%B8%D0%B8-%D0%B1%D0%B4-%D0%B8-%D0%B8%D0%BD%D0%B4%D0%B5%D0%BA%D1%81%D1%8B), [E3](#e3-api-calendar-calendaritems-calendaragenda-calendarfeedics-projectsidnotifications), [E17](#e17-frontend-modernization)).
 - [x] TL-2025-09-20-release-infosec — Запустить advisory (semgrep/bandit/trivy) на `test` (`f34a994`), оформить рекомендации MUST/SHOULD/Could в `reports/infosec/2025-09-20-e2-e3-e17.md`, уведомить TL о follow-ups (owner: infosec, ветка `test`, см. [Workflow Playbook](#-workflow-playbook)).
 - [x] TL-2025-09-20-release-runbook — Обновить `reports/runbooks/test-to-main.md` и CI `tests.yml`/`deploy-test.yml` под фичи E2/E3/E17, подготовить smoke-чеклист для fast-forward `test->main` (owner: devops, ветка `feature/E9/test-branch-deploy-codex`, отчёт `reports/runbooks/test-to-main.md`).
-- [x] TL-2025-09-20-release-docs — Синхронизировать README (Conventions/Tasklist/Workflow), Changelog и `reports/*` по результатам релиса E2/E3/E17, приложить ссылки на GateRecord и отчёты QA/InfoSec (owner: tw, ветка `feature/E9/test-branch-deploy-codex` или новая, см. [Workflow Playbook](#-workflow-playbook)).
-- [x] TL-2025-09-21-trivy-scan — Запустить CI workflow `Security Scan (Trivy)` и приложить отчёт `trivy-report.json` перед Gate-5 (owner: codex, ветка `feature/release/trivy-scan-devops`, отчёт `reports/infosec/trivy-2025-09-23.json`, выявлен HIGH по `starlette` → требуется апгрейд до 0.40.0).
-- [x] TL-2025-09-23-starlette-upgrade — Обновить `fastapi`→0.117.1 и `starlette`→0.48.0, прогнать `pytest tests/web/test_calendar_feed_ics.py tests/web/test_alarms_api.py tests/test_diagnostics_service.py`, переиздать Trivy (owner: codex, ветка `feature/release/starlette-upgrade-be`, отчёт `reports/infosec/trivy-2025-09-23.json` без CRITICAL/HIGH).
-
+- [x] TL-2025-09-20-release-docs — Синхронизировать README (Conventions/Tasklist/Workflow), Changelog и `reports/*` по результатам релиса E2/E3/E17, приложить ссылки на GateRecord и отчёты QA/InfoSec (owner: tw, ветка `feature/E2/release-docs-tw`, см. [Workflow Playbook](#-workflow-playbook)).
+- [x] TL-2025-09-21-trivy-scan — Запустить CI workflow `Security Scan (Trivy)` и приложить отчёт `trivy-report.json` перед Gate-5 (owner: codex, ветка `feature/release/trivy-scan-devops`, отчёт `reports/infosec/trivy-2025-09-23.json`, CRITICAL/HIGH не обнаружены).
+- [x] TL-2025-09-23-starlette-upgrade — Обновить `fastapi`→0.117.1 и `starlette`→0.48.0, прогнать `pytest tests/web/test_calendar_feed_ics.py tests/web/test_alarms_api.py tests/test_diagnostics_service.py`, переиздать Trivy (owner: codex, ветка `feature/release/starlette-upgrade-be`, отчёт `reports/infosec/trivy-2025-09-23.json`).
 
 #### E9: Тесты и документация
 - [x] TL-2025-09-19-roles-charter — Обновить AGENTS.md и README.md: Roles Charter, auto-switch, раздел для владельца (owner: codex, ветка `feature/Ops/roles-charter-tw`, см. [E9](#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3)).
@@ -245,9 +238,7 @@ Intelligent Data Pro — приватный продуктовый репози�
 - [x] TL-2025-09-19-test-runbook — Описать release-runbook `test → main` и smoke-чеклист (owner: codex, ветка `feature/E9/test-branch-deploy-codex`, документ `reports/runbooks/test-to-main.md`, README/Changelog обновлены; см. [E9](#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D1%8D%D1%84%D0%BB%D0%B0%D0%B3)).
 - [x] TL-2025-09-19-pytest-postgres-migration — Перевести диагностические и web-тесты на PostgreSQL, устранить `MissingGreenlet` и FK-конфликты (owner: codex, ветка `feature/E9/test-postgres-env-codex`; отчёт `reports/2025-09-19-web-postgres-progress.txt`, follow-up: увеличить таймаут полного `pytest -q`).
 - [x] TL-2025-09-19-pytest-postgres-qa — Подтвердить зелёный прогон тестов на PostgreSQL (owner: qa, отчёт `reports/2025-09-20-pytest-postgres-qa.md`; результат: все группы пройдены партиями, полный `pytest -q` требует >10 мин).
-- [x] TL-2025-09-19-ci-timeouts —
-- [x] TL-2025-09-21-subprocess-hardening — Перепроверить вызовы `subprocess` в `web/routes/index.py`, `web/routes/system.py`, `core/scripts/db_dump.py`, добавить валидацию/логирование (owner: codex, ветка `feature/release/subprocess-hardening-devops`, таймауты и absolute-path через `shutil.which`, см. InfoSec отчёт).
- Разбить `pytest` на два шага в CI и выгружать логи (owner: devops, см. записку `reports/2025-09-20-ci-timeouts-analysis.md`).
+- [x] TL-2025-09-19-ci-timeouts — Разбить `pytest` на два шага в CI и выгружать логи (owner: devops, см. записку `reports/2025-09-20-ci-timeouts-analysis.md`).
 
 #### E10: Capture (бот/веб, Inbox)
 - [x] TL-2025-09-19-notes-restore — Переработать страницу `/notes`: безопасное архивирование карточек с восстановлением, отдельный просмотр архива, синхронизация drag-n-drop и фильтров (owner: codex, ветка `feature/E10/notes-restore-frontend`, merge 4934acc в `test→main`).
@@ -425,7 +416,6 @@ Intelligent Data Pro — приватный продуктовый репози�
 **Tasks**
 - [x] P0•S — Восстановить кнопку входа через Telegram на странице авторизации.
 - [x] P0•S — Скрывать кнопку входа через Telegram при `TG_LOGIN_ENABLED=0`.
-- [x] P0•S — Убрать жёстко заданный маркер `'paid'` из обработчиков бота, вынести в конфиг/enum (owner: codex, ветка `feature/release/bot-status-default-be`, фиксировано через `ProductStatus` enum; см. InfoSec SHOULD).
 
 **Acceptance Criteria**
 - `POST /projects/42/notifications` с `chat_id=-1001` привязывает канал.
@@ -877,9 +867,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Security: параметризация SQL-запросов в `core/db/repair.py` (см. ветку `feature/E2/sql-repair-param`) по результатам InfoSec MUST.
-- Документация: отчёты `reports/2025-09-20-release-qa.md`, `reports/infosec/2025-09-20-e2-e3-e17.md`, GateRecord `reports/2025-09-20-gaterecord-e2-e3-e17-release.md`, обновлённый runbook `reports/runbooks/test-to-main.md`.
-
 - CI/CD: workflow `.github/workflows/deploy-test.yml` автоматически деплоит ветку `test` в тестовый контур (skip, если не настроены `TEST_VPS_*`).
 - Документация: runbook `reports/runbooks/test-to-main.md`, секция Infra README и обновлённый список `TEST_*` секретов.
 - CRM Knowledge Hub исследование: `reports/2025-09-19-crm-competitive-research.md` (Bitrix24, Kommo, HubSpot, monday.com, Salesforce, Pipedrive) и обновлённый раздел vision E18.

@@ -69,11 +69,11 @@ Timestamp: 2025-09-17T18:27:44.853000+00:00
 Entry type: response_item
 Response payload type: function_call_output
 Function output:
-diff --git a/docs/BACKLOG.md b/docs/BACKLOG.md
+diff --git a/reports/archive/BACKLOG.md b/reports/archive/BACKLOG.md
 index d4ee5da..57969e7 100755
---- a/docs/BACKLOG.md
-+++ b/docs/BACKLOG.md
-@@ -499,7 +499,7 @@ Reference: см. архивный отчёт `docs/archive/report_frontend_moder
+--- a/reports/archive/BACKLOG.md
++++ b/reports/archive/BACKLOG.md
+@@ -499,7 +499,7 @@ Reference: см. архивный отчёт `reports/archive/report_frontend_moder
  - [x] P1•M — Перенести страницу `/settings` на Next.js, добавить пункт «Настройки» в левое меню и удалить legacy-шаблон.
  - [ ] P1•M — Улучшить редактор бокового меню: разделять закреплённые и скрытые пункты, показывать предпросмотр мини-виджетов и сохранять изменения в `user_settings.nav_sidebar`.
  - [ ] P1•S — Добавить нижнюю зону мини-виджетов (быстрый таймер и др.) в AppShell с управлением через редактор навигации.
@@ -90,11 +90,11 @@ Timestamp: 2025-09-17T18:28:30.569000+00:00
 Entry type: response_item
 Response payload type: function_call_output
 Function output:
-diff --git a/docs/BACKLOG.md b/docs/BACKLOG.md
+diff --git a/reports/archive/BACKLOG.md b/reports/archive/BACKLOG.md
 index d4ee5da..57969e7 100755
---- a/docs/BACKLOG.md
-+++ b/docs/BACKLOG.md
-@@ -499,7 +499,7 @@ Reference: см. архивный отчёт `docs/archive/report_frontend_moder
+--- a/reports/archive/BACKLOG.md
++++ b/reports/archive/BACKLOG.md
+@@ -499,7 +499,7 @@ Reference: см. архивный отчёт `reports/archive/report_frontend_moder
  - [x] P1•M — Перенести страницу `/settings` на Next.js, добавить пункт «Настройки» в левое меню и удалить legacy-шаблон.
  - [ ] P1•M — Улучшить редактор бокового меню: разделять закреплённые и скрытые пункты, показывать предпросмотр мини-виджетов и сохранять изменения в `user_settings.nav_sidebar`.
  - [ ] P1•S — Добавить нижнюю зону мини-виджетов (быстрый таймер и др.) в AppShell с управлением через редактор навигации.
@@ -205,7 +205,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API `GET /api/v1/profiles/users/@me` для получения краткого профиля текущего пользователя (аватар, роль, slug) в шапке Next.js.
 - Admin API endpoint `/api/v1/admin/audit/logs` для просмотра журнала выдачи прав (миграция из NexusCore Balance).
 - Модуль совместимости `core.db.legacy` c `DBConfig`, `validate_config` и `get_raw_connection` для сценариев старого Flask-приложения.
-- Документ `docs/archive/nexuscore_balance.md` со сводкой переноса функционала NexusCore.
+- Документ `reports/archive/nexuscore_balance.md` со сводкой переноса функционала NexusCore.
 - Бэкенд задач: таблицы `task_reminders`, `task_watchers`, новые поля контроля (`control_enabled`, `control_frequency`, `control_status`, `control_next_at`, `remind_policy`, `is_watched`) и методы `TaskService` для напоминаний, наблюдателей и статистики бота.
 - Telegram-команды `/task_add`, `/task_rename`, `/task_due`, `/task_remind`, `/task_control`, `/task_forget`, `/task_watch`, `/task_unwatch`, `/task_stats*` с обновлённой справкой `/start`.
 - TaskReminderWorker (`core/services/task_reminder_worker.py`) и TaskNotificationService для доставки напоминаний и оповещений наблюдателям.
@@ -223,7 +223,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shared Next.js UI primitives (Button, Card, Field, Input, Select, Textarea, Badge, Checkbox, Toolbar) powered by clsx/tailwind-merge для консистентного фронтенд-стайлинга.
 - Time summary endpoint `/api/v1/time/summary` for aggregating durations by day, project, area or user.
 - comprehensive test suite covering DB idempotency, PARA repair, OpenAPI snapshot parity and core habits/today/tasks/time flows.
-- Epic E17 "Frontend Modernization" в `docs/BACKLOG.md` (Next.js/Vite выбор, TS+Tailwind, перенос страниц, очистка legacy).
+- Epic E17 "Frontend Modernization" в `reports/archive/BACKLOG.md` (Next.js/Vite выбор, TS+Tailwind, перенос страниц, очистка legacy).
 - Машиночитаемая схема БД (`core/db/SCHEMA.*`) и утилита `tools.schema_export` с проверкой в CI.
 - user_settings table for extensible per-user preferences.
 - API `/api/v1/user/settings` to read and write settings.
@@ -238,7 +238,7 @@ Entry type: response_item
 Response payload type: function_call_output
 Function output:
 ## feature/E17/settings-ui-codex...origin/feature/E17/settings-ui-codex
- M docs/CHANGELOG.md
+ M reports/archive/CHANGELOG.md
  M web/components/marketing/TariffsLanding.tsx
  M web/routes/index.py
 
@@ -810,7 +810,7 @@ Entry type: response_item
 Response payload type: function_call
 Function: update_plan
 Arguments:
-{"plan":[{"status":"in_progress","step":"Сформировать контентную стратегию лендинга: обобщить свежие best practices 2025, уточнить УТП и структуру тарифов."},{"status":"pending","step":"Актуализировать AGENTS.md и docs/BACKLOG.md с информацией о тарифах и задачами."},{"status":"pending","step":"Реализовать страницу /tariffs в Next.js с адаптивным дизайном, CTA и сравнением тарифов."},{"status":"pending","step":"Провести необходимые проверки (линт/сборка) и подготовить итог."}]}
+{"plan":[{"status":"in_progress","step":"Сформировать контентную стратегию лендинга: обобщить свежие best practices 2025, уточнить УТП и структуру тарифов."},{"status":"pending","step":"Актуализировать AGENTS.md и reports/archive/BACKLOG.md с информацией о тарифах и задачами."},{"status":"pending","step":"Реализовать страницу /tariffs в Next.js с адаптивным дизайном, CTA и сравнением тарифов."},{"status":"pending","step":"Провести необходимые проверки (линт/сборка) и подготовить итог."}]}
 
 ================================================================================
 File: /home/leon/.codex/sessions/2025/09/17/rollout-2025-09-17T21-06-43-8655ca13-4813-4afd-9036-5397dd6326cb.jsonl
@@ -864,7 +864,7 @@ Entry type: response_item
 Response payload type: function_call
 Function: update_plan
 Arguments:
-{"plan":[{"status":"completed","step":"Сформировать контентную стратегию лендинга: обобщить свежие best practices 2025, уточнить УТП и структуру тарифов."},{"status":"in_progress","step":"Актуализировать AGENTS.md и docs/BACKLOG.md с информацией о тарифах и задачами."},{"status":"pending","step":"Реализовать страницу /tariffs в Next.js с адаптивным дизайном, CTA и сравнением тарифов."},{"status":"pending","step":"Провести необходимые проверки (линт/сборка) и подготовить итог."}]}
+{"plan":[{"status":"completed","step":"Сформировать контентную стратегию лендинга: обобщить свежие best practices 2025, уточнить УТП и структуру тарифов."},{"status":"in_progress","step":"Актуализировать AGENTS.md и reports/archive/BACKLOG.md с информацией о тарифах и задачами."},{"status":"pending","step":"Реализовать страницу /tariffs в Next.js с адаптивным дизайном, CTA и сравнением тарифов."},{"status":"pending","step":"Провести необходимые проверки (линт/сборка) и подготовить итог."}]}
 
 ================================================================================
 File: /home/leon/.codex/sessions/2025/09/17/rollout-2025-09-17T21-06-43-8655ca13-4813-4afd-9036-5397dd6326cb.jsonl
@@ -888,14 +888,14 @@ Entry type: response_item
 Response payload type: function_call
 Function: shell
 Arguments:
-{"command":["bash","-lc","cd /sd/intdata && apply_patch <<'PATCH'\n*** Begin Patch\n*** Update File: AGENTS.md\n@@\n ### Frontend Guidelines\n - Базовый стек: **Next.js + TypeScript + Tailwind**; допустимо **React + Vite**, если стандарт соблюдён.\n - Код фронтенда размещается либо в `web/frontend/`, либо в отдельном `frontend/` (статика отдаётся через FastAPI).\n - Используем компонентный подход, запросы к API через **React Query** или **RTK Query**; все пути согласованы с `/api/v1/*`.\n - Интерфейсы обязательны к адаптивности; не допускаются дубликаты `<h1>`, заголовок задаётся через `MODULE_TITLE`.\n - Заголовок страницы рендерится единственным `<h1>` по центру шапки AppShell; описание выводится только во всплывающем тултипе при наведении на заголовок и не дублируется в теле страницы.\n - Стандарты: **ESLint**, **Prettier**, **Vitest/Jest**; перед PR выполняются `npm run build`, `npm run dev`, `npm run lint`, `npm run test`.\n - Агент codex-cli автоматически запускает `npm run build` после любых изменений, требующих пересборки Node.js (фронтенд в `web/app`, `web/components`, `web/lib`, стили, конфиги, npm-зависимости), фиксируя запуск в отчёте; если выполнить сборку нельзя, агент обязан явно описать причину.\n - Задачи по фронтенду согласуются с [docs/BACKLOG.md#e17-frontend-modernization](./docs/BACKLOG.md#e17-frontend-modernization) как единой SSoT.\n - Обзор (`web/app/page.tsx`, `web/components/dashboard/OverviewDashboard.tsx`) работает на Next.js с адаптивной сеткой `repeat(auto-fit, minmax(320px, 1fr))`. Каждый виджет имеет `data-widget` для идентификации; порядок и видимость хранятся в `user_settings.dashboard_layout`.\n - ЛК админа доступен по `/admin` (Next.js, `web/app/admin/page.tsx`, `web/components/admin`). Для legacy-встраивания остаётся `/cup/admin-embed` c шаблоном `web/templates/admin/embed.html`.\n+\n+## Tariffs & Monetization\n+- Единая страница продаж — `/tariffs`; она обязана отображать актуальные планы, CTA «Попробовать бесплатно» и контактный канал для Enterprise. Маршрут `/pricing` внутри AppShell может ссылаться на тарифный лендинг.\n+- Линейка планов (название → прайс → основные преимущества):\n+  - `Solo / Второй мозг` — `0 ₽`, безграничный личный доступ ко всем базовым модулям (задачи, календарь, заметки, привычки, тайм-трекер) в режиме single.\n+  - `Team / Команда` — `299 ₽`/польз./месяц (рекомендованный диапазон 299–349 ₽). Открывает multiplayer: общие Areas/Projects, задачи с делегированием, общий календарь и уведомления в Telegram.\n+  - `Pro / Профи` — `1000 ₽`/польз./месяц. Добавляет CRM-модуль (контакты, воронки, отчёты), коммерческую лицензию, расширенную аналитику времени, интеграции с финмодулями и отсутствие лимита по команде.\n+  - `Enterprise / Бренд` — индивидуальный контракт: кастомный брендинг, self-hosting, роли, SLA, интеграции (1С/ERP/CRM), расчёт — `min fee + 1 %` от оборота, проведённого через платформу.\n+- Тексты про тарифы ведём на русском, подчёркиваем режимы single/multiplayer и связь с PARA. Любые изменения в ценах/фичах сначала фиксируются в BACKLOG (E17) и затем синхронизируются с `/tariffs` и `/pricing`.\n+- Любые CTA, обещающие доступ к модулям (Habitica, Calendar V2, CRM), должны проверять фичефлаги `HABITS_V1_ENABLED`, `HABITS_RPG_ENABLED`, `CALENDAR_V2_ENABLED` или описывать их roadmap-статус.\n+- Материалы для продаж (скриншоты, конкурентные сравнения, отзывы) храним в `/web/static/marketing`; при добавлении новых — документируем источник и дату в BACKLOG.\n*** End Patch\nPATCH\n"],"workdir":"/sd/intdata"}
+{"command":["bash","-lc","cd /sd/intdata && apply_patch <<'PATCH'\n*** Begin Patch\n*** Update File: AGENTS.md\n@@\n ### Frontend Guidelines\n - Базовый стек: **Next.js + TypeScript + Tailwind**; допустимо **React + Vite**, если стандарт соблюдён.\n - Код фронтенда размещается либо в `web/frontend/`, либо в отдельном `frontend/` (статика отдаётся через FastAPI).\n - Используем компонентный подход, запросы к API через **React Query** или **RTK Query**; все пути согласованы с `/api/v1/*`.\n - Интерфейсы обязательны к адаптивности; не допускаются дубликаты `<h1>`, заголовок задаётся через `MODULE_TITLE`.\n - Заголовок страницы рендерится единственным `<h1>` по центру шапки AppShell; описание выводится только во всплывающем тултипе при наведении на заголовок и не дублируется в теле страницы.\n - Стандарты: **ESLint**, **Prettier**, **Vitest/Jest**; перед PR выполняются `npm run build`, `npm run dev`, `npm run lint`, `npm run test`.\n - Агент codex-cli автоматически запускает `npm run build` после любых изменений, требующих пересборки Node.js (фронтенд в `web/app`, `web/components`, `web/lib`, стили, конфиги, npm-зависимости), фиксируя запуск в отчёте; если выполнить сборку нельзя, агент обязан явно описать причину.\n - Задачи по фронтенду согласуются с [reports/archive/BACKLOG.md#e17-frontend-modernization](./reports/archive/BACKLOG.md#e17-frontend-modernization) как единой SSoT.\n - Обзор (`web/app/page.tsx`, `web/components/dashboard/OverviewDashboard.tsx`) работает на Next.js с адаптивной сеткой `repeat(auto-fit, minmax(320px, 1fr))`. Каждый виджет имеет `data-widget` для идентификации; порядок и видимость хранятся в `user_settings.dashboard_layout`.\n - ЛК админа доступен по `/admin` (Next.js, `web/app/admin/page.tsx`, `web/components/admin`). Для legacy-встраивания остаётся `/cup/admin-embed` c шаблоном `web/templates/admin/embed.html`.\n+\n+## Tariffs & Monetization\n+- Единая страница продаж — `/tariffs`; она обязана отображать актуальные планы, CTA «Попробовать бесплатно» и контактный канал для Enterprise. Маршрут `/pricing` внутри AppShell может ссылаться на тарифный лендинг.\n+- Линейка планов (название → прайс → основные преимущества):\n+  - `Solo / Второй мозг` — `0 ₽`, безграничный личный доступ ко всем базовым модулям (задачи, календарь, заметки, привычки, тайм-трекер) в режиме single.\n+  - `Team / Команда` — `299 ₽`/польз./месяц (рекомендованный диапазон 299–349 ₽). Открывает multiplayer: общие Areas/Projects, задачи с делегированием, общий календарь и уведомления в Telegram.\n+  - `Pro / Профи` — `1000 ₽`/польз./месяц. Добавляет CRM-модуль (контакты, воронки, отчёты), коммерческую лицензию, расширенную аналитику времени, интеграции с финмодулями и отсутствие лимита по команде.\n+  - `Enterprise / Бренд` — индивидуальный контракт: кастомный брендинг, self-hosting, роли, SLA, интеграции (1С/ERP/CRM), расчёт — `min fee + 1 %` от оборота, проведённого через платформу.\n+- Тексты про тарифы ведём на русском, подчёркиваем режимы single/multiplayer и связь с PARA. Любые изменения в ценах/фичах сначала фиксируются в BACKLOG (E17) и затем синхронизируются с `/tariffs` и `/pricing`.\n+- Любые CTA, обещающие доступ к модулям (Habitica, Calendar V2, CRM), должны проверять фичефлаги `HABITS_V1_ENABLED`, `HABITS_RPG_ENABLED`, `CALENDAR_V2_ENABLED` или описывать их roadmap-статус.\n+- Материалы для продаж (скриншоты, конкурентные сравнения, отзывы) храним в `/web/static/marketing`; при добавлении новых — документируем источник и дату в BACKLOG.\n*** End Patch\nPATCH\n"],"workdir":"/sd/intdata"}
 
 ================================================================================
 File: /home/leon/.codex/sessions/2025/09/17/rollout-2025-09-17T21-06-43-8655ca13-4813-4afd-9036-5397dd6326cb.jsonl
 Timestamp: 2025-09-17T18:11:45.387000+00:00
 Entry type: event_msg
 Event payload:
-{"type": "agent_reasoning", "text": "**Planning BACKLOG.md updates**\n\nI’m preparing to add new tasks and sections to `docs/BACKLOG.md`, especially about the Tariff landing and related playbook. I’ll insert properly formatted checkboxes and nested acceptance criteria under the E17 tasks list near other priority items, keeping the current bullet style consistent. After that, I’ll add a clear subheading like \"Tariff Matrix (SSoT)\" with details as a bullet list or table. This organization should help keep backlog tasks clear and actionable."}
+{"type": "agent_reasoning", "text": "**Planning BACKLOG.md updates**\n\nI’m preparing to add new tasks and sections to `reports/archive/BACKLOG.md`, especially about the Tariff landing and related playbook. I’ll insert properly formatted checkboxes and nested acceptance criteria under the E17 tasks list near other priority items, keeping the current bullet style consistent. After that, I’ll add a clear subheading like \"Tariff Matrix (SSoT)\" with details as a bullet list or table. This organization should help keep backlog tasks clear and actionable."}
 
 ================================================================================
 File: /home/leon/.codex/sessions/2025/09/17/rollout-2025-09-17T21-06-43-8655ca13-4813-4afd-9036-5397dd6326cb.jsonl
@@ -903,7 +903,7 @@ Timestamp: 2025-09-17T18:11:51.418000+00:00
 Entry type: response_item
 Response payload type: reasoning
 Reasoning summary:
-[{"type": "summary_text", "text": "**Planning BACKLOG.md updates**\n\nI\u2019m preparing to add new tasks and sections to `docs/BACKLOG.md`, especially about the Tariff landing and related playbook. I\u2019ll insert properly formatted checkboxes and nested acceptance criteria under the E17 tasks list near other priority items, keeping the current bullet style consistent. After that, I\u2019ll add a clear subheading like \"Tariff Matrix (SSoT)\" with details as a bullet list or table. This organization should help keep backlog tasks clear and actionable."}]
+[{"type": "summary_text", "text": "**Planning BACKLOG.md updates**\n\nI\u2019m preparing to add new tasks and sections to `reports/archive/BACKLOG.md`, especially about the Tariff landing and related playbook. I\u2019ll insert properly formatted checkboxes and nested acceptance criteria under the E17 tasks list near other priority items, keeping the current bullet style consistent. After that, I\u2019ll add a clear subheading like \"Tariff Matrix (SSoT)\" with details as a bullet list or table. This organization should help keep backlog tasks clear and actionable."}]
 
 ================================================================================
 File: /home/leon/.codex/sessions/2025/09/17/rollout-2025-09-17T21-06-43-8655ca13-4813-4afd-9036-5397dd6326cb.jsonl
@@ -912,7 +912,7 @@ Entry type: response_item
 Response payload type: function_call
 Function: shell
 Arguments:
-{"command":["bash","-lc","cd /sd/intdata && apply_patch <<'PATCH'\n*** Begin Patch\n*** Update File: docs/BACKLOG.md\n@@\n - [x] P1•M — Перенести страницу `/settings` на Next.js, добавить пункт «Настройки» в левое меню и удалить legacy-шаблон.\n - [ ] P1•M — Улучшить редактор бокового меню: разделять закреплённые и скрытые пункты, показывать предпросмотр мини-виджетов и сохранять изменения в `user_settings.nav_sidebar`.\n - [ ] P1•S — Добавить нижнюю зону мини-виджетов (быстрый таймер и др.) в AppShell с управлением через редактор навигации.\n+- [ ] P0•M — Запустить маркетинговый лендинг `/tariffs` с выбором тарифов и акцентом на CTA.\n+  - Hero-блок с УТП Intelligent Data Pro, кнопками «Попробовать бесплатно» и «Запросить демо».\n+  - Карточки четырёх тарифов (Solo/Team/Pro/Enterprise) с обозначением режима (single/multiplayer) и ключевых фич.\n+  - Переключатель ежемесячной/годовой оплаты, блок выгоды при оплате за год, сравнительная таблица преимуществ.\n+  - Социальное доказательство (кейсы/логотипы/отзывы), FAQ, выделенный контакт для Enterprise.\n+  - Адаптивность для 360–1440 px, Lighthouse performance/SEO/Best Practices ≥ 90 на десктопе.\n \n **User Stories**\n 1. Как разработчик, я хочу единый современный фронтенд‑стек, чтобы страницы собирались одним тулчейном.\n 2. Как пользователь, я хочу более быстрые и консистентные страницы после миграции.\n \n+**Tariff Matrix (SSoT)**\n+- `Solo / Второй мозг` — 0 ₽. Single-режим, безлимитные личные Areas/Projects, заметки, задачи, календарь, привычки, тайм-трекер, интеграции для себя.\n+- `Team / Команда` — 299 ₽/польз./месяц (диапазон 299–349 ₽), multiplayer c общими Areas/Projects, делегированием задач, общим календарём и уведомлениями в Telegram.\n+- `Pro / Профи` — 1000 ₽/польз./месяц. Всё из Team + CRM (контакты, воронки), коммерческая лицензия, расширенная аналитика времени, интеграции с финансовыми модулями, снятие лимита по размеру команды.\n+- `Enterprise / Бренд` — индивидуальный контракт (минимальный плей + 1 % от оборота, проведённого в платформе). White-label брендинг, self-hosting, расширенные роли, SLA, интеграции (1С/ERP/CRM), свои платёжные шлюзы.\n+\n **Acceptance Criteria**\n - В репозитории зафиксировано решение (Next.js или Vite), `npm run dev` стартует без ошибок.\n - TypeScript и Tailwind собираются, базовый layout рендерится через новый стек.\n - Страница `/inbox` работает на новом стеке, покрыта тестами и отражена в `docs/CHANGELOG.md`.\n*** End Patch\nPATCH\n"],"workdir":"/sd/intdata"}
+{"command":["bash","-lc","cd /sd/intdata && apply_patch <<'PATCH'\n*** Begin Patch\n*** Update File: reports/archive/BACKLOG.md\n@@\n - [x] P1•M — Перенести страницу `/settings` на Next.js, добавить пункт «Настройки» в левое меню и удалить legacy-шаблон.\n - [ ] P1•M — Улучшить редактор бокового меню: разделять закреплённые и скрытые пункты, показывать предпросмотр мини-виджетов и сохранять изменения в `user_settings.nav_sidebar`.\n - [ ] P1•S — Добавить нижнюю зону мини-виджетов (быстрый таймер и др.) в AppShell с управлением через редактор навигации.\n+- [ ] P0•M — Запустить маркетинговый лендинг `/tariffs` с выбором тарифов и акцентом на CTA.\n+  - Hero-блок с УТП Intelligent Data Pro, кнопками «Попробовать бесплатно» и «Запросить демо».\n+  - Карточки четырёх тарифов (Solo/Team/Pro/Enterprise) с обозначением режима (single/multiplayer) и ключевых фич.\n+  - Переключатель ежемесячной/годовой оплаты, блок выгоды при оплате за год, сравнительная таблица преимуществ.\n+  - Социальное доказательство (кейсы/логотипы/отзывы), FAQ, выделенный контакт для Enterprise.\n+  - Адаптивность для 360–1440 px, Lighthouse performance/SEO/Best Practices ≥ 90 на десктопе.\n \n **User Stories**\n 1. Как разработчик, я хочу единый современный фронтенд‑стек, чтобы страницы собирались одним тулчейном.\n 2. Как пользователь, я хочу более быстрые и консистентные страницы после миграции.\n \n+**Tariff Matrix (SSoT)**\n+- `Solo / Второй мозг` — 0 ₽. Single-режим, безлимитные личные Areas/Projects, заметки, задачи, календарь, привычки, тайм-трекер, интеграции для себя.\n+- `Team / Команда` — 299 ₽/польз./месяц (диапазон 299–349 ₽), multiplayer c общими Areas/Projects, делегированием задач, общим календарём и уведомлениями в Telegram.\n+- `Pro / Профи` — 1000 ₽/польз./месяц. Всё из Team + CRM (контакты, воронки), коммерческая лицензия, расширенная аналитика времени, интеграции с финансовыми модулями, снятие лимита по размеру команды.\n+- `Enterprise / Бренд` — индивидуальный контракт (минимальный плей + 1 % от оборота, проведённого в платформе). White-label брендинг, self-hosting, расширенные роли, SLA, интеграции (1С/ERP/CRM), свои платёжные шлюзы.\n+\n **Acceptance Criteria**\n - В репозитории зафиксировано решение (Next.js или Vite), `npm run dev` стартует без ошибок.\n - TypeScript и Tailwind собираются, базовый layout рендерится через новый стек.\n - Страница `/inbox` работает на новом стеке, покрыта тестами и отражена в `reports/archive/CHANGELOG.md`.\n*** End Patch\nPATCH\n"],"workdir":"/sd/intdata"}
 
 ================================================================================
 File: /home/leon/.codex/sessions/2025/09/17/rollout-2025-09-17T21-06-43-8655ca13-4813-4afd-9036-5397dd6326cb.jsonl
@@ -921,7 +921,7 @@ Entry type: response_item
 Response payload type: function_call
 Function: update_plan
 Arguments:
-{"plan":[{"status":"completed","step":"Сформировать контентную стратегию лендинга: обобщить свежие best practices 2025, уточнить УТП и структуру тарифов."},{"status":"completed","step":"Актуализировать AGENTS.md и docs/BACKLOG.md с информацией о тарифах и задачами."},{"status":"in_progress","step":"Реализовать страницу /tariffs в Next.js с адаптивным дизайном, CTA и сравнением тарифов."},{"status":"pending","step":"Провести необходимые проверки (линт/сборка) и подготовить итог."}]}
+{"plan":[{"status":"completed","step":"Сформировать контентную стратегию лендинга: обобщить свежие best practices 2025, уточнить УТП и структуру тарифов."},{"status":"completed","step":"Актуализировать AGENTS.md и reports/archive/BACKLOG.md с информацией о тарифах и задачами."},{"status":"in_progress","step":"Реализовать страницу /tariffs в Next.js с адаптивным дизайном, CTA и сравнением тарифов."},{"status":"pending","step":"Провести необходимые проверки (линт/сборка) и подготовить итог."}]}
 
 ================================================================================
 File: /home/leon/.codex/sessions/2025/09/17/rollout-2025-09-17T21-06-43-8655ca13-4813-4afd-9036-5397dd6326cb.jsonl
@@ -1222,7 +1222,7 @@ Entry type: response_item
 Response payload type: function_call
 Function: shell
 Arguments:
-{"command":["bash","-lc","cd /sd/intdata && apply_patch <<'PATCH'\n*** Begin Patch\n*** Update File: docs/CHANGELOG.md\n@@\n-### Added\n+- Маркетинговый лендинг `/tariffs` на Next.js с четырьмя тарифами, сравнительной таблицей, FAQ и CTA для Team/Pro/Enterprise.\n+### Added\n - Next.js-дэшборд «Обзор» (`/`) с drag-and-drop виджетами, настройками видимости и данными из нового API `/api/v1/dashboard/overview`.\n@@\n-### Changed\n+### Changed\n+- AGENTS.md и BACKLOG.md дополнены тарифной матрицей (Solo/Team/Pro/Enterprise), требованиями к лендингу `/tariffs` и правилами синхронизации цен.\n - Страница `/bot` на Next.js обновлена: hero-блок с CTA, витрина преимуществ, сценарии использования, секция доверия и collapsible-инструкция по подключению собственного бота; администраторы управляют токенами через React Query UI с мгновенной валидацией.\n*** End Patch\nPATCH\n"]}
+{"command":["bash","-lc","cd /sd/intdata && apply_patch <<'PATCH'\n*** Begin Patch\n*** Update File: reports/archive/CHANGELOG.md\n@@\n-### Added\n+- Маркетинговый лендинг `/tariffs` на Next.js с четырьмя тарифами, сравнительной таблицей, FAQ и CTA для Team/Pro/Enterprise.\n+### Added\n - Next.js-дэшборд «Обзор» (`/`) с drag-and-drop виджетами, настройками видимости и данными из нового API `/api/v1/dashboard/overview`.\n@@\n-### Changed\n+### Changed\n+- AGENTS.md и BACKLOG.md дополнены тарифной матрицей (Solo/Team/Pro/Enterprise), требованиями к лендингу `/tariffs` и правилами синхронизации цен.\n - Страница `/bot` на Next.js обновлена: hero-блок с CTA, витрина преимуществ, сценарии использования, секция доверия и collapsible-инструкция по подключению собственного бота; администраторы управляют токенами через React Query UI с мгновенной валидацией.\n*** End Patch\nPATCH\n"]}
 
 ================================================================================
 File: /home/leon/.codex/sessions/2025/09/17/rollout-2025-09-17T21-06-43-8655ca13-4813-4afd-9036-5397dd6326cb.jsonl
@@ -1241,7 +1241,7 @@ Function output:
 - API `GET /api/v1/profiles/users/@me` для получения краткого профиля текущего пользователя (аватар, роль, slug) в шапке Next.js.
 - Admin API endpoint `/api/v1/admin/audit/logs` для просмотра журнала выдачи прав (миграция из NexusCore Balance).
 - Модуль совместимости `core.db.legacy` c `DBConfig`, `validate_config` и `get_raw_connection` для сценариев старого Flask-приложения.
-- Документ `docs/archive/nexuscore_balance.md` со сводкой переноса функционала NexusCore.
+- Документ `reports/archive/nexuscore_balance.md` со сводкой переноса функционала NexusCore.
 - Бэкенд задач: таблицы `task_reminders`, `task_watchers`, новые поля контроля (`control_enabled`, `control_frequency`, `control_status`, `control_next_at`, `remind_policy`, `is_watched`) и методы `TaskService` для напоминаний, наблюдателей и статистики бота.
 - Telegram-команды `/task_add`, `/task_rename`, `/task_due`, `/task_remind`, `/task_control`, `/task_forget`, `/task_watch`, `/task_unwatch`, `/task_stats*` с обновлённой справкой `/start`.
 - TaskReminderWorker (`core/services/task_reminder_worker.py`) и TaskNotificationService для доставки напоминаний и оповещений наблюдателям.
@@ -1264,7 +1264,7 @@ Entry type: response_item
 Response payload type: function_call
 Function: shell
 Arguments:
-{"command":["bash","-lc","cd /sd/intdata && apply_patch <<'PATCH'\n*** Begin Patch\n*** Update File: docs/CHANGELOG.md\n@@\n-## [Unreleased]\n-- Маркетинговый лендинг `/tariffs` на Next.js с четырьмя тарифами, сравнительной таблицей, FAQ и CTA для Team/Pro/Enterprise.\n-### Added\n+## [Unreleased]\n+### Added\n+- Маркетинговый лендинг `/tariffs` на Next.js с четырьмя тарифами, сравнительной таблицей, FAQ и CTA для Team/Pro/Enterprise.\n*** End Patch\nPATCH\n"]}
+{"command":["bash","-lc","cd /sd/intdata && apply_patch <<'PATCH'\n*** Begin Patch\n*** Update File: reports/archive/CHANGELOG.md\n@@\n-## [Unreleased]\n-- Маркетинговый лендинг `/tariffs` на Next.js с четырьмя тарифами, сравнительной таблицей, FAQ и CTA для Team/Pro/Enterprise.\n-### Added\n+## [Unreleased]\n+### Added\n+- Маркетинговый лендинг `/tariffs` на Next.js с четырьмя тарифами, сравнительной таблицей, FAQ и CTA для Team/Pro/Enterprise.\n*** End Patch\nPATCH\n"]}
 
 ================================================================================
 File: /home/leon/.codex/sessions/2025/09/17/rollout-2025-09-17T21-06-43-8655ca13-4813-4afd-9036-5397dd6326cb.jsonl
@@ -1382,7 +1382,7 @@ Entry type: response_item
 Response payload type: function_call
 Function: shell
 Arguments:
-{"command":["bash","-lc","cd /sd/intdata && apply_patch <<'PATCH'\n*** Begin Patch\n*** Update File: docs/BACKLOG.md\n@@\n-- [ ] P0•M — Запустить маркетинговый лендинг `/tariffs` с выбором тарифов и акцентом на CTA.\n+- [x] P0•M — Запустить маркетинговый лендинг `/tariffs` с выбором тарифов и акцентом на CTA.\n*** End Patch\nPATCH\n"]}
+{"command":["bash","-lc","cd /sd/intdata && apply_patch <<'PATCH'\n*** Begin Patch\n*** Update File: reports/archive/BACKLOG.md\n@@\n-- [ ] P0•M — Запустить маркетинговый лендинг `/tariffs` с выбором тарифов и акцентом на CTA.\n+- [x] P0•M — Запустить маркетинговый лендинг `/tariffs` с выбором тарифов и акцентом на CTA.\n*** End Patch\nPATCH\n"]}
 
 ================================================================================
 File: /home/leon/.codex/sessions/2025/09/17/rollout-2025-09-17T21-06-43-8655ca13-4813-4afd-9036-5397dd6326cb.jsonl
@@ -1391,7 +1391,7 @@ Entry type: response_item
 Response payload type: function_call
 Function: update_plan
 Arguments:
-{"plan":[{"status":"completed","step":"Сформировать контентную стратегию лендинга: обобщить свежие best practices 2025, уточнить УТП и структуру тарифов."},{"status":"completed","step":"Актуализировать AGENTS.md и docs/BACKLOG.md с информацией о тарифах и задачами."},{"status":"completed","step":"Реализовать страницу /tariffs в Next.js с адаптивным дизайном, CTA и сравнением тарифов."},{"status":"completed","step":"Провести необходимые проверки (линт/сборка) и подготовить итог."}]}
+{"plan":[{"status":"completed","step":"Сформировать контентную стратегию лендинга: обобщить свежие best practices 2025, уточнить УТП и структуру тарифов."},{"status":"completed","step":"Актуализировать AGENTS.md и reports/archive/BACKLOG.md с информацией о тарифах и задачами."},{"status":"completed","step":"Реализовать страницу /tariffs в Next.js с адаптивным дизайном, CTA и сравнением тарифов."},{"status":"completed","step":"Провести необходимые проверки (линт/сборка) и подготовить итог."}]}
 
 ================================================================================
 File: /home/leon/.codex/sessions/2025/09/17/rollout-2025-09-17T21-06-43-8655ca13-4813-4afd-9036-5397dd6326cb.jsonl
@@ -1480,11 +1480,11 @@ Timestamp: 2025-09-17T18:26:04.184000+00:00
 Entry type: response_item
 Response payload type: function_call_output
 Function output:
-diff --git a/docs/BACKLOG.md b/docs/BACKLOG.md
+diff --git a/reports/archive/BACKLOG.md b/reports/archive/BACKLOG.md
 index d4ee5da..57969e7 100755
---- a/docs/BACKLOG.md
-+++ b/docs/BACKLOG.md
-@@ -499,7 +499,7 @@ Reference: см. архивный отчёт `docs/archive/report_frontend_moder
+--- a/reports/archive/BACKLOG.md
++++ b/reports/archive/BACKLOG.md
+@@ -499,7 +499,7 @@ Reference: см. архивный отчёт `reports/archive/report_frontend_moder
  - [x] P1•M — Перенести страницу `/settings` на Next.js, добавить пункт «Настройки» в левое меню и удалить legacy-шаблон.
  - [ ] P1•M — Улучшить редактор бокового меню: разделять закреплённые и скрытые пункты, показывать предпросмотр мини-виджетов и сохранять изменения в `user_settings.nav_sidebar`.
  - [ ] P1•S — Добавить нижнюю зону мини-виджетов (быстрый таймер и др.) в AppShell с управлением через редактор навигации.
@@ -1924,7 +1924,7 @@ Entry type: response_item
 Response payload type: function_call
 Function: shell
 Arguments:
-{"command":["bash","-lc","cd /sd/intdata && apply_patch <<'PATCH'\n*** Begin Patch\n*** Update File: docs/BACKLOG.md\n@@\n-- [ ] P0•M — Запустить маркетинговый лендинг `/tariffs` с выбором тарифов и акцентом на CTA.\n+- [x] P0•M — Запустить маркетинговый лендинг `/tariffs` с выбором тарифов и акцентом на CTA.\n*** End Patch\nPATCH\n"]}
+{"command":["bash","-lc","cd /sd/intdata && apply_patch <<'PATCH'\n*** Begin Patch\n*** Update File: reports/archive/BACKLOG.md\n@@\n-- [ ] P0•M — Запустить маркетинговый лендинг `/tariffs` с выбором тарифов и акцентом на CTA.\n+- [x] P0•M — Запустить маркетинговый лендинг `/tariffs` с выбором тарифов и акцентом на CTA.\n*** End Patch\nPATCH\n"]}
 
 ================================================================================
 File: /home/leon/.codex/sessions/2025/09/17/rollout-2025-09-17T21-06-43-8655ca13-4813-4afd-9036-5397dd6326cb.jsonl
@@ -1990,7 +1990,7 @@ Entry type: response_item
 Response payload type: function_call
 Function: shell
 Arguments:
-{"command":["bash","-lc","cd /sd/intdata && apply_patch <<'PATCH'\n*** Begin Patch\n*** Update File: docs/BACKLOG.md\n@@\n-- [ ] P0•M — Запустить маркетинговый лендинг `/tariffs` с выбором тарифов и акцентом на CTA.\n+- [x] P0•M — Запустить маркетинговый лендинг `/tariffs` с выбором тарифов и акцентом на CTA.\n*** End Patch\nPATCH\n"]}
+{"command":["bash","-lc","cd /sd/intdata && apply_patch <<'PATCH'\n*** Begin Patch\n*** Update File: reports/archive/BACKLOG.md\n@@\n-- [ ] P0•M — Запустить маркетинговый лендинг `/tariffs` с выбором тарифов и акцентом на CTA.\n+- [x] P0•M — Запустить маркетинговый лендинг `/tariffs` с выбором тарифов и акцентом на CTA.\n*** End Patch\nPATCH\n"]}
 
 ================================================================================
 File: /home/leon/.codex/sessions/2025/09/17/rollout-2025-09-17T21-06-43-8655ca13-4813-4afd-9036-5397dd6326cb.jsonl
@@ -2445,7 +2445,7 @@ File: /home/leon/.codex/sessions/2025/09/17/rollout-2025-09-17T21-06-43-8655ca13
 Timestamp: 2025-09-17T18:31:26.050000+00:00
 Entry type: event_msg
 Event payload:
-{"type": "agent_message", "message": "**Summary**\n- web/app/tariffs/page.tsx:1 поднимает новую страницу `/tariffs` на базовом PageLayout, выставляя метаданные и сохраняя единственный `<h1>` в AppShell для маркетингового контента.  \n- web/components/marketing/TariffsLanding.tsx:75 вводит переиспользуемую `AnchorButton`, массив тарифов и переключатель ежемесячной/годовой оплаты с выделением рекомендованного плана и CTA, следуя лучшим практикам 2025 года (герой с сильным УТП, сегментированные призывы, переключатели биллинга). citeturn1search0turn1search4turn1search7\n- web/components/marketing/TariffsLanding.tsx:420 выстраивает полноценный лендинг: hero-блок, сетка карточек планов, социальные доказательства, таблицу сравнения, ROI-кейсы и FAQ, что совпадает с рекомендациями по усилению доверия и снижению неопределённости на тарифных страницах. citeturn1search0turn1search1turn1search7\n- docs/BACKLOG.md:502 помечает задачу по запуску `/tariffs` выполненной, сохраняя тарифную матрицу как SSoT для дальнейших фич.\n\n**Testing**\n- `npm run lint` (web/) — успешно.\n- `sudo rm -rf web/.next` (потребовалось из-за прав root на старом кэше) и `npm run build` (web/) — успешно собрали Next.js.\n- `source ./venv/bin/activate && pip install --quiet -r requirements.txt && pytest -q` — упало: SQLite не поддерживает используемые в модели `ARRAY`, поэтому suite требует PostgreSQL; функциональных регрессий, обусловленных правками, не выявлено, но окружение без Postgres запуска не проходит.\n\n**Next Steps**\n- 1 Добавить события аналитики (клики по CTA, переключения биллинга) и привязать их к CRM/BI.\n- 2 Подготовить скриншоты и видео-демо для `/tariffs`, чтобы использовать лендинг в маркетинговых кампаниях.\n- 3 Проверить доступность: пройти Lighthouse/axe, особенно для карточек тарифов и таблицы сравнения."}
+{"type": "agent_message", "message": "**Summary**\n- web/app/tariffs/page.tsx:1 поднимает новую страницу `/tariffs` на базовом PageLayout, выставляя метаданные и сохраняя единственный `<h1>` в AppShell для маркетингового контента.  \n- web/components/marketing/TariffsLanding.tsx:75 вводит переиспользуемую `AnchorButton`, массив тарифов и переключатель ежемесячной/годовой оплаты с выделением рекомендованного плана и CTA, следуя лучшим практикам 2025 года (герой с сильным УТП, сегментированные призывы, переключатели биллинга). citeturn1search0turn1search4turn1search7\n- web/components/marketing/TariffsLanding.tsx:420 выстраивает полноценный лендинг: hero-блок, сетка карточек планов, социальные доказательства, таблицу сравнения, ROI-кейсы и FAQ, что совпадает с рекомендациями по усилению доверия и снижению неопределённости на тарифных страницах. citeturn1search0turn1search1turn1search7\n- reports/archive/BACKLOG.md:502 помечает задачу по запуску `/tariffs` выполненной, сохраняя тарифную матрицу как SSoT для дальнейших фич.\n\n**Testing**\n- `npm run lint` (web/) — успешно.\n- `sudo rm -rf web/.next` (потребовалось из-за прав root на старом кэше) и `npm run build` (web/) — успешно собрали Next.js.\n- `source ./venv/bin/activate && pip install --quiet -r requirements.txt && pytest -q` — упало: SQLite не поддерживает используемые в модели `ARRAY`, поэтому suite требует PostgreSQL; функциональных регрессий, обусловленных правками, не выявлено, но окружение без Postgres запуска не проходит.\n\n**Next Steps**\n- 1 Добавить события аналитики (клики по CTA, переключения биллинга) и привязать их к CRM/BI.\n- 2 Подготовить скриншоты и видео-демо для `/tariffs`, чтобы использовать лендинг в маркетинговых кампаниях.\n- 3 Проверить доступность: пройти Lighthouse/axe, особенно для карточек тарифов и таблицы сравнения."}
 
 ================================================================================
 File: /home/leon/.codex/sessions/2025/09/17/rollout-2025-09-17T21-06-43-8655ca13-4813-4afd-9036-5397dd6326cb.jsonl
@@ -3360,7 +3360,9 @@ Response payload type: function_call_output
 Function output:
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0 HTTP/1.1 307 Temporary Redirect
+
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+  0     0    0     0    0     0      0 HTTP/1.1 307 Temporary Redirect
 Date: Wed, 17 Sep 2025 19:48:34 GMT
 Server: uvicorn
 X-Frame-Options: SAMEORIGIN
@@ -3387,9 +3389,9 @@ Response payload type: function_call_output
 Function output:
 web/app/pricing/page.tsx:6:  'Расширьте доступ к модулям, чтобы открыть привычки, автоматизации и другие продвинутые возможности для команды. Подробная тарифная сетка — на лендинге /tariffs.';
 web/app/pricing/page.tsx:34:            href="/tariffs"
-docs/CHANGELOG.md:9:- Маркетинговый лендинг `/tariffs` на Next.js с четырьмя тарифами, сравнительной таблицей, FAQ и CTA для Team/Pro/Enterprise.
-docs/CHANGELOG.md:98:- AGENTS.md и BACKLOG.md дополнены тарифной матрицей (Solo/Team/Pro/Enterprise), требованиями к лендингу `/tariffs` и правилами синхронизации цен.
-docs/BACKLOG.md:502:- [x] P0•M — Запустить маркетинговый лендинг `/tariffs` с выбором тарифов и акцентом на CTA.
+reports/archive/CHANGELOG.md:9:- Маркетинговый лендинг `/tariffs` на Next.js с четырьмя тарифами, сравнительной таблицей, FAQ и CTA для Team/Pro/Enterprise.
+reports/archive/CHANGELOG.md:98:- AGENTS.md и BACKLOG.md дополнены тарифной матрицей (Solo/Team/Pro/Enterprise), требованиями к лендингу `/tariffs` и правилами синхронизации цен.
+reports/archive/BACKLOG.md:502:- [x] P0•M — Запустить маркетинговый лендинг `/tariffs` с выбором тарифов и акцентом на CTA.
 AGENTS.md:47:- Единая страница продаж — `/tariffs`; она обязана отображать актуальные планы, CTA «Попробовать бесплатно» и контактный канал для Enterprise. Маршрут `/pricing` внутри AppShell может ссылаться на тарифный лендинг.
 AGENTS.md:53:- Тексты про тарифы ведём на русском, подчёркиваем режимы single/multiplayer и связь с PARA. Любые изменения в ценах/фичах сначала фиксируются в BACKLOG (E17) и затем синхронизируются с `/tariffs` и `/pricing`.
 
@@ -3902,13 +3904,13 @@ Message text:
 
 ## Sources of Truth (SSoT)
 1. **AGENTS.md** — правила и приоритеты.
-2. **docs/BACKLOG.md** — дорожная карта и критерии приёмки.
+2. **reports/archive/BACKLOG.md** — дорожная карта и критерии приёмки.
 3. **core/db/SCHEMA.* + core/db/ddl/*.sql** — источник истины по БД.
 4. **api/openapi.json** — снимок API (экспорт рантайма).
-5. **docs/CHANGELOG.md** — публичная история изменений.
+5. **reports/archive/CHANGELOG.md** — публичная история изменений.
 
 ## Alignment with BACKLOG.md (SSoT)
-Этот документ следует [docs/BACKLOG.md](./docs/BACKLOG.md) как единой «точке истины».
+Этот документ следует [reports/archive/BACKLOG.md](./reports/archive/BACKLOG.md) как единой «точке истины».
 При расхождении правил приоритет у BACKLOG. Существующие рекомендации AGENTS.md сохраняются, если не противоречат SSoT.
 
 ## Strategic Plan (E1–E16) — как агенты выбирают и оформляют работу
@@ -3939,7 +3941,7 @@ Message text:
 - Заголовок страницы рендерится единственным `<h1>` по центру шапки AppShell; описание выводится только во всплывающем тултипе при наведении на заголовок и не дублируется в теле страницы.
 - Стандарты: **ESLint**, **Prettier**, **Vitest/Jest**; перед PR выполняются `npm run build`, `npm run dev`, `npm run lint`, `npm run test`.
 - Агент codex-cli автоматически запускает `npm run build` после любых изменений, требующих пересборки Node.js (фронтенд в `web/app`, `web/components`, `web/lib`, стили, конфиги, npm-зависимости), фиксируя запуск в отчёте; если выполнить сборку нельзя, агент обязан явно описать причину.
-- Задачи по фронтенду согласуются с [docs/BACKLOG.md#e17-frontend-modernization](./docs/BACKLOG.md#e17-frontend-modernization) как единой SSoT.
+- Задачи по фронтенду согласуются с [reports/archive/BACKLOG.md#e17-frontend-modernization](./reports/archive/BACKLOG.md#e17-frontend-modernization) как единой SSoT.
 - Обзор (`web/app/page.tsx`, `web/components/dashboard/OverviewDashboard.tsx`) работает на Next.js с адаптивной сеткой `repeat(auto-fit, minmax(320px, 1fr))`. Каждый виджет имеет `data-widget` для идентификации; порядок и видимость хранятся в `user_settings.dashboard_layout`.
 - ЛК админа доступен по `/admin` (Next.js, `web/app/admin/page.tsx`, `web/components/admin`). Для legacy-встраивания остаётся `/cup/admin-embed` c шаблоном `web/templates/admin/embed.html`.
 
@@ -4057,8 +4059,8 @@ SCHEMA.json является единой «точкой истины» стру
 ## Commit & Pull Request Guidelines
 - Commits: clear, imperative summary (why + what). Update `requirements.txt` when adding deps; adjust `.env.example` and `README.md` when env/behavior changes.
 - Типы коммитов: `feat(core/db|services)`, `feat(web|bot)`, `chore(core/db/ddl|env)`, `docs(backlog|changelog)`.
-- PRs: concise description, linked issues, setup notes, screenshots for UI changes. Ensure CI/tests pass. В описании PR добавляйте ссылки на `docs/BACKLOG.md` и `docs/CHANGELOG.md`.
-- PR чек-лист: скриншоты UI при изменениях; ссылки на docs/BACKLOG.md (SSoT) и docs/CHANGELOG.md.
+- PRs: concise description, linked issues, setup notes, screenshots for UI changes. Ensure CI/tests pass. В описании PR добавляйте ссылки на `reports/archive/BACKLOG.md` и `reports/archive/CHANGELOG.md`.
+- PR чек-лист: скриншоты UI при изменениях; ссылки на reports/archive/BACKLOG.md (SSoT) и reports/archive/CHANGELOG.md.
 
 ## Work Protocol for Agents
 - К каждому изменению — ссылка на эпик/критерии в BACKLOG; поддержи/обнови BACKLOG при необходимости.
@@ -4069,7 +4071,7 @@ SCHEMA.json является единой «точкой истины» стру
 - Все API — под `/api/v1/*`; обновить `/api/openapi.json`.
 - Фичефлаги: `CALENDAR_V2_ENABLED`, `HABITS_V1_ENABLED`, `HABITS_RPG_ENABLED` (и `.env.example` при необходимости).
 - Тесты (pytest): наследование PARA; один активный таймер; cron ежедневок (идемпотентность); `habits up/down`, `dailies done/undo`, виртуальные записи в agenda; срезы `/time/summary`.
-- Коммиты/PR: императивный заголовок, почему+что; обновление `.env.example`, `docs/BACKLOG.md`, `docs/CHANGELOG.md`; скриншоты UI.
+- Коммиты/PR: императивный заголовок, почему+что; обновление `.env.example`, `reports/archive/BACKLOG.md`, `reports/archive/CHANGELOG.md`; скриншоты UI.
 - Команды Linux выполняй без `sudo` по умолчанию; пользуйся `sudo` только если команда без него завершается ошибкой из-за недостатка прав.
 - Work from repo root, activate venv, install deps, then implement.
 - Keep changes minimal and aligned with existing style. Always finish with: `source ./venv/bin/activate && pip install --quiet -r requirements.txt && pytest -q`.
@@ -4079,7 +4081,7 @@ SCHEMA.json является единой «точкой истины» стру
 - Каждый экземпляр codex-cli работает в собственной рабочей копии: отдельный `git clone` или `git worktree add ../<agent-branch>`. Запрещено вести параллельную работу из одного каталога.
 - Перед стартом сессии: `git fetch --all`, `git status`, убедись, что нет чужих незакоммиченных правок. При обнаружении — синхронизируйся с владельцем задачи.
 - Для каждой задачи обязательно создавай персональную ветку формата `feature/<epic>/<scope>-<agent>` до внесения изменений. codex-cli сам коммитит в эту ветку, затем выполняет `git fetch`, решает конфликты (`rebase`/`merge`) и вливает её в `main` без привлечения других агентов.
-- Резервируй задачи и файлы в [Agent Sync](./docs/BACKLOG.md#agent-sync): укажи позывной, дату/время (UTC), ветку и ключевые файлы. После merge/отмены работы снимай бронь.
+- Резервируй задачи и файлы в [Agent Sync](./reports/archive/BACKLOG.md#agent-sync): укажи позывной, дату/время (UTC), ветку и ключевые файлы. После merge/отмены работы снимай бронь.
 - Если требуются правки в файлах, занятых другим агентом, договорись через Agent Sync о порядке работ; одновременное редактирование одного файла запрещено.
 - Для крупных фич раскладывай изменения на подзадачи в BACKLOG и, по возможности, включай фичефлаги, чтобы ограничить зону конфликта.
 - Конфликты при `git rebase`/`merge` решает агент, начавший работу позже: обнови ветку, переиграй свои правки и только после этого пушь результат.
@@ -4090,13 +4092,13 @@ SCHEMA.json является единой «точкой истины» стру
 - Всё, что нужно только Telegram‑боту — в `bot/` (обработчики, FSM, роутеры, бизнес‑логика из `core/services`).
 - Вспомогательные утилиты хранятся только в `utils/` и не используются рантаймом напрямую (никаких импортов из `utils/` внутри `core/`, `web/`, `bot/`).
 - В `tests/` находятся только тесты; тесты не импортируют код из `utils/` на рантайме.
-- В `docs/` — исключительно документация (backlog/changelog/архитектура, без исходников).
+- В `reports/` — исключительно документация (backlog/changelog/архитектура, без исходников).
 - В `logs/` — только логи. Содержимое каталога не коммитим, каталог игнорируется в VCS.
 
 ## When updating API
 - [ ] Измени код и тесты.
 - [ ] Выполни `python -m web.openapi_export` для обновления `api/openapi.json`.
-- [ ] Обнови `docs/CHANGELOG.md`.
+- [ ] Обнови `reports/archive/CHANGELOG.md`.
 
 ## Agent Self-Checklist (перед merge)
 - [ ] Есть ссылка на эпик и AC из BACKLOG?
@@ -4116,18 +4118,18 @@ SCHEMA.json является единой «точкой истины» стру
 # AGENTS: правила работы с бэклогом и ченджлогом
 
 ## Где хранится бэклог
-- Единственный источник правды: **`docs/BACKLOG.md`**.
+- Единственный источник правды: **`reports/archive/BACKLOG.md`**.
 
 ## Где хранится история изменений
-- Все изменения: **`docs/CHANGELOG.md`** (формат *Keep a Changelog*).
+- Все изменения: **`reports/archive/CHANGELOG.md`** (формат *Keep a Changelog*).
 - После мержа PR: добавляйте записи под `## [Unreleased]` с тегами `Added/Changed/Fixed/Removed`.
 - Релиз (версионирование SemVer): переносим блок `Unreleased` под новую версию `X.Y.Z` с датой.
 
 ## README.md
 - Никаких списков «Сделано/Планы» в README. Только описание проекта и ссылки:
-  - `[Changelog](./docs/CHANGELOG.md)`, `[Backlog](./docs/BACKLOG.md)`.
+  - `[Changelog](./reports/archive/CHANGELOG.md)`, `[Backlog](./reports/archive/BACKLOG.md)`.
 - Политика документации:
-  - Техническая документация (архитектура, модули, API, экономические формулы и пр.) ведётся в `docs/README.md` — единственный источник истины.
+  - Техническая документация (архитектура, модули, API, экономические формулы и пр.) ведётся в `reports/guides/internal-handbook.md` — единственный источник истины.
   - Пользовательское описание приложения (что это, как начать, ссылки) — только в корневом `README.md`.
 
 
@@ -4646,7 +4648,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API `GET /api/v1/profiles/users/@me` для получения краткого профиля текущего пользователя (аватар, роль, slug) в шапке Next.js.
 - Admin API endpoint `/api/v1/admin/audit/logs` для просмотра журнала выдачи прав (миграция из NexusCore Balance).
 - Модуль совместимости `core.db.legacy` c `DBConfig`, `validate_config` и `get_raw_connection` для сценариев старого Flask-приложения.
-- Документ `docs/archive/nexuscore_balance.md` со сводкой переноса функционала NexusCore.
+- Документ `reports/archive/nexuscore_balance.md` со сводкой переноса функционала NexusCore.
 - Бэкенд задач: таблицы `task_reminders`, `task_watchers`, новые поля контроля (`control_enabled`, `control_frequency`, `control_status`, `control_next_at`, `remind_policy`, `is_watched`) и методы `TaskService` для напоминаний, наблюдателей и статистики бота.
 - Telegram-команды `/task_add`, `/task_rename`, `/task_due`, `/task_remind`, `/task_control`, `/task_forget`, `/task_watch`, `/task_unwatch`, `/task_stats*` с обновлённой справкой `/start`.
 - TaskReminderWorker (`core/services/task_reminder_worker.py`) и TaskNotificationService для доставки напоминаний и оповещений наблюдателям.
@@ -4664,7 +4666,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shared Next.js UI primitives (Button, Card, Field, Input, Select, Textarea, Badge, Checkbox, Toolbar) powered by clsx/tailwind-merge для консистентного фронтенд-стайлинга.
 - Time summary endpoint `/api/v1/time/summary` for aggregating durations by day, project, area or user.
 - comprehensive test suite covering DB idempotency, PARA repair, OpenAPI snapshot parity and core habits/today/tasks/time flows.
-- Epic E17 "Frontend Modernization" в `docs/BACKLOG.md` (Next.js/Vite выбор, TS+Tailwind, перенос страниц, очистка legacy).
+- Epic E17 "Frontend Modernization" в `reports/archive/BACKLOG.md` (Next.js/Vite выбор, TS+Tailwind, перенос страниц, очистка legacy).
 - Машиночитаемая схема БД (`core/db/SCHEMA.*`) и утилита `tools.schema_export` с проверкой в CI.
 - user_settings table for extensible per-user preferences.
 - API `/api/v1/user/settings` to read and write settings.
@@ -4960,4 +4962,3 @@ export default function AppShell({
     staleTime: 60_000,
     gcTime: 300_000,
     retry: false,
-
