@@ -224,7 +224,7 @@ agent_sync:
     ac_link: "README.md#e17-frontend-modernization"
     ttl_minutes: 0
     status: "Done"
-    note: "FF feature/E17/bitrix-menu-codex -> test -> main, npm lint/test, готово к перезапуску web."
+    note: "FF feature/E17/bitrix-menu-codex -> test -> main, npm lint/test/build, systemctl restart intdata-web; готово к smoke."
   - when_utc: "2025-09-23T20:11:26Z"
     agent: "codex"
     role: "fe"
