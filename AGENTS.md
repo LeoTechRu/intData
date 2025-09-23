@@ -297,6 +297,22 @@ agent_sync:
     ttl_minutes: 0
     status: "Done"
     note: "Бот переключён на enum ProductStatus; python3 -m compileall bot/handlers/telegram.py."
+  - when_utc: "2025-09-23T16:10:42Z"
+    agent: "codex"
+    role: "fe"
+    branch: "feature/E17/appshell-nav-tuning-codex"
+    task: "TL-2025-09-19-appshell-nav-tuning"
+    epic_scope: "E17 / AppShell"
+    files:
+      - "web/components/AppShell.tsx"
+      - "web/components/navigation/ModuleTabs.tsx"
+      - "web/components/navigation/SidebarEditor.tsx"
+      - "web/components/navigation/SidebarEditor.test.tsx"
+    pr: null
+    ac_link: "README.md#e17-frontend-modernization"
+    ttl_minutes: 120
+    status: "In Progress"
+    note: "Тюним AppShell: компактная mobile header, независимый скролл, адаптивные ModuleTabs и collapsible секции." 
   - when_utc: "2025-09-20T23:55:00Z"
     agent: "codex"
     role: "tw"
