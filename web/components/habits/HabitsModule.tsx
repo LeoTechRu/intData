@@ -4,10 +4,10 @@ import React, { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import PageLayout from '../PageLayout';
-import { apiFetch, ApiError } from '../../lib/api';
+import { apiFetch, ApiError, buildQuery } from '../../lib/api';
 import type { Area, Project } from '../../lib/types';
 import { buildAreaOptions } from '../../lib/areas';
-import { Badge, Button, Card, EmptyState, Field, Input, Select } from '../ui';
+import { Badge, Button, Card, Checkbox, EmptyState, Field, Input, Select } from '../ui';
 
 const MODULE_TITLE = 'Привычки';
 const MODULE_DESCRIPTION =
@@ -52,6 +52,33 @@ interface HabitStats {
   daily_gold: number;
 }
 
+interface DailyItem {
+  id: number;
+  title: string;
+  note?: string | null;
+  rrule: string;
+  difficulty?: string | null;
+  streak: number;
+  frozen: boolean;
+  area_id?: number | null;
+  project_id?: number | null;
+}
+
+interface RewardItem {
+  id: number;
+  title: string;
+  cost_gold: number;
+  area_id?: number | null;
+  project_id?: number | null;
+}
+
+interface HabitsDashboardPayload {
+  habits: Habit[];
+  dailies: DailyItem[];
+  rewards: RewardItem[];
+  stats: HabitStats;
+}
+
 interface HabitFormState {
   name: string;
   frequency: Frequency;
@@ -61,6 +88,8 @@ interface HabitFormState {
 
 interface HabitFilterState {
   areaId: string;
+  projectId: string;
+  includeSub: boolean;
 }
 
 interface HabitActionState {
@@ -141,7 +170,7 @@ export default function HabitsModule() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<HabitFormState>({ name: '', frequency: 'daily', areaId: '', projectId: '' });
-  const [filters, setFilters] = useState<HabitFilterState>({ areaId: '' });
+  const [filters, setFilters] = useState<HabitFilterState>({ areaId: '', projectId: '', includeSub: false });
   const [requiresTelegram, setRequiresTelegram] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -161,25 +190,22 @@ export default function HabitsModule() {
     queryFn: () => apiFetch<Project[]>('/api/v1/projects'),
   });
 
-  const habitsQuery = useQuery<Habit[]>({
-    queryKey: ['habits'],
-    queryFn: () => apiFetch<Habit[]>('/api/v1/habits'),
+  const dashboardQuery = useQuery<HabitsDashboardPayload>({
+    queryKey: ['habits', 'dashboard', filters.areaId, filters.projectId, filters.includeSub ? 1 : 0],
+    queryFn: () => {
+      const query = buildQuery({
+        area_id: filters.areaId || undefined,
+        project_id: filters.projectId || undefined,
+        include_sub: filters.includeSub && filters.areaId ? 1 : undefined,
+      });
+      return apiFetch<HabitsDashboardPayload>(`/api/v1/habits/dashboard${query}`);
+    },
     staleTime: 15_000,
     gcTime: 120_000,
     retry: (failureCount, error) => {
       if (isTelegramRequired(error)) {
         return false;
       }
-      return failureCount < 2;
-    },
-  });
-
-  const statsQuery = useQuery<HabitStats>({
-    queryKey: ['habits', 'stats'],
-    queryFn: () => apiFetch<HabitStats>('/api/v1/habits/stats'),
-    staleTime: 30_000,
-    gcTime: 120_000,
-    retry: (failureCount, error) => {
       if (error instanceof ApiError && error.status === 401) {
         return false;
       }
@@ -188,16 +214,16 @@ export default function HabitsModule() {
   });
 
   useEffect(() => {
-    if (habitsQuery.error) {
-      if (isTelegramRequired(habitsQuery.error)) {
+    if (dashboardQuery.error) {
+      if (isTelegramRequired(dashboardQuery.error)) {
         setRequiresTelegram(true);
-      } else if (habitsQuery.error instanceof ApiError && habitsQuery.error.status === 401) {
+      } else if (dashboardQuery.error instanceof ApiError && dashboardQuery.error.status === 401) {
         setActionMessage('Нужна авторизация: войдите, чтобы работать с привычками.');
       } else {
-        setActionMessage('Не удалось загрузить список привычек.');
+        setActionMessage('Не удалось загрузить данные панели привычек.');
       }
     }
-  }, [habitsQuery.error]);
+  }, [dashboardQuery.error]);
 
   const areaOptions = useMemo(() => buildAreaOptions(areasQuery.data ?? []), [areasQuery.data]);
 
@@ -226,24 +252,11 @@ export default function HabitsModule() {
     return result;
   }, [projectsQuery.data]);
 
-  const filteredHabits = useMemo(() => {
-    if (!habitsQuery.data) {
-      return [] as Habit[];
-    }
-    if (!filters.areaId) {
-      return habitsQuery.data;
-    }
-    const areaId = Number(filters.areaId);
-    return habitsQuery.data.filter((habit) => {
-      if (habit.project_id) {
-        const project = projectById.get(habit.project_id);
-        if (project) {
-          return project.area_id === areaId;
-        }
-      }
-      return habit.area_id === areaId;
-    });
-  }, [filters.areaId, habitsQuery.data, projectById]);
+  const filteredHabits = useMemo(() => dashboardQuery.data?.habits ?? [], [dashboardQuery.data?.habits]);
+
+  const dashboardDailies = useMemo(() => dashboardQuery.data?.dailies ?? [], [dashboardQuery.data?.dailies]);
+
+  const dashboardRewards = useMemo(() => dashboardQuery.data?.rewards ?? [], [dashboardQuery.data?.rewards]);
 
   const filteredProjects = useMemo(() => {
     if (!form.areaId) {
@@ -252,6 +265,15 @@ export default function HabitsModule() {
     const id = Number(form.areaId);
     return projectsByArea.get(id) ?? [];
   }, [form.areaId, projectsByArea]);
+
+  const filterProjects = useMemo(() => {
+    if (filters.areaId) {
+      return projectsByArea.get(Number(filters.areaId)) ?? [];
+    }
+    return projectsQuery.data ?? [];
+  }, [filters.areaId, projectsByArea, projectsQuery.data]);
+
+  const stats = dashboardQuery.data?.stats;
 
   const handleFormChange = (field: keyof HabitFormState) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const value = event.target.value;
@@ -274,8 +296,7 @@ export default function HabitsModule() {
       setForm((prev) => ({ ...prev, name: '' }));
       setFormError(null);
       setActionMessage('Привычка создана.');
-      queryClient.invalidateQueries({ queryKey: ['habits'] });
-      statsQuery.refetch();
+      queryClient.invalidateQueries({ queryKey: ['habits', 'dashboard'] });
     },
     onError: (error: unknown) => {
       if (isTelegramRequired(error)) {
@@ -311,8 +332,7 @@ export default function HabitsModule() {
     },
     onSuccess: () => {
       setActionMessage('Привычка обновлена.');
-      queryClient.invalidateQueries({ queryKey: ['habits'] });
-      statsQuery.refetch();
+      queryClient.invalidateQueries({ queryKey: ['habits', 'dashboard'] });
     },
     onError: (error) => {
       if (isTelegramRequired(error)) {
@@ -339,8 +359,7 @@ export default function HabitsModule() {
     },
     onSuccess: () => {
       setActionMessage('Привычка удалена.');
-      queryClient.invalidateQueries({ queryKey: ['habits'] });
-      statsQuery.refetch();
+      queryClient.invalidateQueries({ queryKey: ['habits', 'dashboard'] });
     },
     onError: (error) => {
       if (isTelegramRequired(error)) {
@@ -383,9 +402,19 @@ export default function HabitsModule() {
     createMutation.mutate(payload);
   };
 
-  const handleFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleFilterAreaChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const value = event.target.value;
-    setFilters({ areaId: value });
+    setFilters((prev) => ({ areaId: value, projectId: '', includeSub: value ? prev.includeSub : false }));
+  };
+
+  const handleFilterProjectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = event.target.value;
+    setFilters((prev) => ({ ...prev, projectId: value }));
+  };
+
+  const handleIncludeSubChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = event.target.checked;
+    setFilters((prev) => ({ ...prev, includeSub: checked }));
   };
 
   const handleToggle = (habitId: number) => {
@@ -394,7 +423,7 @@ export default function HabitsModule() {
 
   const handleDelete = (habitId: number) => {
     const habitTitle = resolveHabitTitle(
-      habitsQuery.data?.find((h) => h.id === habitId) ?? { title: 'Привычка' },
+      dashboardQuery.data?.habits.find((h) => h.id === habitId) ?? { title: 'Привычка' },
     );
     const confirmed = window.confirm(`Удалить привычку «${habitTitle}»?`);
     if (!confirmed) {
@@ -404,8 +433,11 @@ export default function HabitsModule() {
   };
 
   const renderHabits = () => {
-    if (habitsQuery.isLoading) {
+    if (dashboardQuery.isLoading) {
       return <p className="text-sm text-muted">Загружаем привычки…</p>;
+    }
+    if (dashboardQuery.isError && !requiresTelegram) {
+      return <p className="text-sm text-muted">Не удалось загрузить привычки.</p>;
     }
     if (requiresTelegram) {
       return (
@@ -493,6 +525,112 @@ export default function HabitsModule() {
     );
   };
 
+  const renderDailies = () => {
+    if (dashboardQuery.isLoading) {
+      return <p className="text-sm text-muted">Загружаем ежедневки…</p>;
+    }
+    if (requiresTelegram) {
+      return (
+        <EmptyState
+          title="Свяжите Telegram"
+          description="Чтобы отмечать ежедневки, подключите Telegram-аккаунт в настройках."
+          action={
+            <Button variant="primary" onClick={() => router.push('/settings#telegram-linking')}>
+              Открыть настройки
+            </Button>
+          }
+        />
+      );
+    }
+    if (dashboardDailies.length === 0) {
+      return (
+        <EmptyState
+          title="Ежедневки не найдены"
+          description="Создайте ежедневку в клиенте или через Telegram-бота, чтобы отслеживать рутину."
+        />
+      );
+    }
+    return (
+      <div className="flex flex-col gap-3">
+        {dashboardDailies.map((daily) => {
+          const area = daily.area_id ? areaById.get(daily.area_id) : undefined;
+          const project = daily.project_id ? projectById.get(daily.project_id) : undefined;
+          return (
+            <Card key={daily.id} padded surface="soft" className="flex flex-col gap-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-sm font-semibold text-[var(--text-primary)]">{daily.title}</h3>
+                  <span className="text-xs text-muted">{formatAreaLabel(area?.name, project?.name)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {daily.frozen ? <Badge tone="neutral" size="sm">Пауза</Badge> : null}
+                  {daily.difficulty ? (
+                    <Badge tone="accent" size="sm">
+                      {daily.difficulty}
+                    </Badge>
+                  ) : null}
+                </div>
+              </div>
+              <div className="flex items-center justify-between text-xs text-muted">
+                <span>Серия: {daily.streak}</span>
+                <span>{daily.rrule}</span>
+              </div>
+              {daily.note ? <p className="text-xs text-muted">{daily.note}</p> : null}
+            </Card>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderRewards = () => {
+    if (dashboardQuery.isLoading) {
+      return <p className="text-sm text-muted">Загружаем награды…</p>;
+    }
+    if (requiresTelegram) {
+      return (
+        <EmptyState
+          title="Свяжите Telegram"
+          description="Чтобы покупать награды, подключите Telegram-аккаунт в настройках."
+          action={
+            <Button variant="primary" onClick={() => router.push('/settings#telegram-linking')}>
+              Открыть настройки
+            </Button>
+          }
+        />
+      );
+    }
+    if (dashboardRewards.length === 0) {
+      return (
+        <EmptyState
+          title="Награды пока не настроены"
+          description="Добавьте награду через приложение или Telegram-бота, чтобы тратить золото."
+        />
+      );
+    }
+    return (
+      <div className="flex flex-col gap-3">
+        {dashboardRewards.map((reward) => {
+          const area = reward.area_id ? areaById.get(reward.area_id) : undefined;
+          const project = reward.project_id ? projectById.get(reward.project_id) : undefined;
+          return (
+            <Card key={reward.id} padded surface="soft" className="flex flex-col gap-2">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-sm font-semibold text-[var(--text-primary)]">{reward.title}</h3>
+                  <span className="text-xs text-muted">{formatAreaLabel(area?.name, project?.name)}</span>
+                </div>
+                <Badge tone="warning" size="sm">
+                  {reward.cost_gold} золота
+                </Badge>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
     <PageLayout title={MODULE_TITLE} description={MODULE_DESCRIPTION} contentClassName="flex flex-col gap-6">
       <div className="flex flex-col gap-6">
@@ -505,31 +643,31 @@ export default function HabitsModule() {
           <div className="flex flex-col gap-1">
             <span className="text-xs uppercase tracking-[0.2em] text-muted">Уровень</span>
             <span className="text-2xl font-semibold text-[var(--text-primary)]">
-              {statsQuery.data ? statsQuery.data.level : '—'}
+              {stats ? stats.level : '—'}
             </span>
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs uppercase tracking-[0.2em] text-muted">Опыт / день</span>
             <span className="text-lg font-semibold text-[var(--text-primary)]">
-              {statsQuery.data ? `${statsQuery.data.xp} XP · +${statsQuery.data.daily_xp}` : '—'}
+              {stats ? `${stats.xp} XP · +${stats.daily_xp}` : '—'}
             </span>
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs uppercase tracking-[0.2em] text-muted">Золото</span>
             <span className="text-lg font-semibold text-[var(--text-primary)]">
-              {statsQuery.data ? `${statsQuery.data.gold} G · +${statsQuery.data.daily_gold}` : '—'}
+              {stats ? `${stats.gold} G · +${stats.daily_gold}` : '—'}
             </span>
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs uppercase tracking-[0.2em] text-muted">Здоровье</span>
             <span className="text-lg font-semibold text-[var(--text-primary)]">
-              {statsQuery.data ? `${statsQuery.data.hp} HP` : '—'}
+              {stats ? `${stats.hp} HP` : '—'}
             </span>
           </div>
           <div className="flex flex-col gap-1">
             <span className="text-xs uppercase tracking-[0.2em] text-muted">Карма</span>
             <span className="text-lg font-semibold text-[var(--text-primary)]">
-              {statsQuery.data ? `${statsQuery.data.kp} KP` : '—'}
+              {stats ? `${stats.kp} KP` : '—'}
             </span>
           </div>
           <div className="flex flex-col gap-1">
@@ -541,26 +679,47 @@ export default function HabitsModule() {
         </Card>
         <div className="grid gap-6 xl:grid-cols-[2fr_1fr]">
           <Card as="section" padded className="flex flex-col gap-6" aria-labelledby="habits-heading">
-            <header className="flex flex-col gap-3">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h2 id="habits-heading" className="text-lg font-semibold text-[var(--text-primary)]">
-                    Активные привычки
-                  </h2>
-                  <p className="text-sm text-muted">Фильтруйте по области, чтобы сфокусироваться на конкретном направлении.</p>
-                </div>
-                <div className="w-48">
-                  <Field label="Фильтр по области">
-                    <Select value={filters.areaId} onChange={handleFilterChange} aria-label="Фильтр по области">
-                      <option value="">Все области</option>
-                      {areaOptions.map((option) => (
-                        <option key={option.id} value={option.id}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </Select>
-                  </Field>
-                </div>
+            <header className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <h2 id="habits-heading" className="text-lg font-semibold text-[var(--text-primary)]">
+                  Активные привычки
+                </h2>
+                <p className="text-sm text-muted">
+                  Просматривайте привычки, ежедневки и награды в одном месте. Используйте фильтры, чтобы сфокусироваться на нужной области или проекте.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-end gap-4">
+                <Field label="Фильтр по области" className="w-48">
+                  <Select value={filters.areaId} onChange={handleFilterAreaChange} aria-label="Фильтр по области">
+                    <option value="">Все области</option>
+                    {areaOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Фильтр по проекту" className="w-48">
+                  <Select
+                    value={filters.projectId}
+                    onChange={handleFilterProjectChange}
+                    aria-label="Фильтр по проекту"
+                    disabled={filterProjects.length === 0}
+                  >
+                    <option value="">Все проекты</option>
+                    {filterProjects.map((project) => (
+                      <option key={project.id} value={project.id}>
+                        {project.name}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Поддерево" className="md:w-auto">
+                  <label className="flex items-center gap-2 text-sm text-muted">
+                    <Checkbox checked={filters.includeSub} onChange={handleIncludeSubChange} disabled={!filters.areaId} />
+                    <span>Включить поддерево</span>
+                  </label>
+                </Field>
               </div>
               <form onSubmit={handleCreateSubmit} className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-end">
                 <Field label="Новая привычка" className="md:col-span-1">
@@ -610,30 +769,27 @@ export default function HabitsModule() {
             {renderHabits()}
           </Card>
           <div className="flex flex-col gap-4">
-            <Card padded surface="soft" className="flex flex-col gap-3">
-              <Badge tone="success" size="sm">
-                Прогресс модернизации
-              </Badge>
-              <h3 className="text-base font-semibold text-[var(--text-primary)]">Next.js-версия /habits</h3>
-              <p className="text-sm text-muted">
-                Legacy-шаблон удалён, данные загружаются через React Query, а навигация AppShell ведёт на новый экран.
-              </p>
+            <Card padded surface="soft" className="flex flex-col gap-4" aria-labelledby="dailies-heading">
+              <div className="flex items-center justify-between gap-2">
+                <h3 id="dailies-heading" className="text-base font-semibold text-[var(--text-primary)]">
+                  Ежедневки
+                </h3>
+                <Badge tone="neutral" size="sm">
+                  Рутину вперёд
+                </Badge>
+              </div>
+              {renderDailies()}
             </Card>
-            <Card padded surface="soft" className="flex flex-col gap-3">
-              <Badge tone="neutral" size="sm">
-                Следующий шаг
-              </Badge>
-              <h3 className="text-base font-semibold text-[var(--text-primary)]">Ежедневки и награды</h3>
-              <p className="text-sm text-muted">
-                Добавим отдельные карточки для dailies и rewards (AC E16) после расширения API: потребуется список ежедневок и витрина наград.
-              </p>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => window.open('https://github.com/LeoTechRu/intData/blob/main/README.md#e16-habits', '_blank', 'noopener')}
-              >
-                Критерии E16
-              </Button>
+            <Card padded surface="soft" className="flex flex-col gap-4" aria-labelledby="rewards-heading">
+              <div className="flex items-center justify-between gap-2">
+                <h3 id="rewards-heading" className="text-base font-semibold text-[var(--text-primary)]">
+                  Награды
+                </h3>
+                <Badge tone="success" size="sm">
+                  Мотивация
+                </Badge>
+              </div>
+              {renderRewards()}
             </Card>
           </div>
         </div>

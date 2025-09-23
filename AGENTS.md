@@ -313,6 +313,22 @@ agent_sync:
     ttl_minutes: 120
     status: "In Progress"
     note: "Тюним AppShell: компактная mobile header, независимый скролл, адаптивные ModuleTabs и collapsible секции." 
+  - when_utc: "2025-09-23T16:31:48Z"
+    agent: "codex"
+    role: "fe"
+    branch: "feature/E16/habits-dailies-rewards-codex"
+    task: "TL-2025-09-23-habits-dailies-rewards"
+    epic_scope: "E16 / Habits"
+    files:
+      - "web/components/habits/HabitsModule.tsx"
+      - "web/components/habits/HabitsModule.test.tsx"
+      - "core/services/habits_service.py"
+      - "tests/web/test_habits_api.py"
+    pr: null
+    ac_link: "README.md#e16-habits"
+    ttl_minutes: 180
+    status: "In Progress"
+    note: "Расширение `/habits`: карточки Dailies/Rewards, фильтры проектов, HUD улучшения." 
   - when_utc: "2025-09-20T23:55:00Z"
     agent: "codex"
     role: "tw"

@@ -1,8 +1,8 @@
 {
   "version": 1,
   "dialect": "postgresql",
-  "generated_at": "2025-09-20T17:24:02Z",
-  "metadata_hash": "2709bb8e4e7939f7fd5d06d1db336caad24db633ce9705922bfcd19516e8bb4f",
+  "generated_at": "2025-09-23T19:02:45Z",
+  "metadata_hash": "3c080a70a4c7b70b6085f75ad5bb92af2889fefbbc3c95f11ab61bf75e64ec42",
   "enums": [
     {
       "name": "activitytype",
@@ -3157,7 +3157,7 @@
       "checks": [
         {
           "name": "ck_dailies_single_container",
-          "sql": "(project_id IS NOT NULL) <> (area_id IS NOT NULL)"
+          "sql": "(project_id IS NOT NULL) OR (area_id IS NOT NULL)"
         }
       ]
     },
@@ -4815,7 +4815,7 @@
       "checks": [
         {
           "name": "ck_habits_single_container",
-          "sql": "(project_id IS NOT NULL) <> (area_id IS NOT NULL)"
+          "sql": "(project_id IS NOT NULL) OR (area_id IS NOT NULL)"
         }
       ]
     },
@@ -6505,7 +6505,7 @@
       "checks": [
         {
           "name": "ck_rewards_single_container",
-          "sql": "(project_id IS NOT NULL) <> (area_id IS NOT NULL)"
+          "sql": "(project_id IS NOT NULL) OR (area_id IS NOT NULL)"
         }
       ]
     },

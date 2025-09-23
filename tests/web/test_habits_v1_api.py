@@ -7,7 +7,13 @@ from httpx import AsyncClient
 from base import Base
 import core.db as db
 from core.models import Area, Project
-from core.services.habits import metadata, habits
+from core.services.habits import (
+    metadata,
+    habits,
+    HabitsService,
+    DailiesService,
+    RewardsService,
+)
 from tests.utils.seeds import ensure_tg_user, ensure_user_stats, ensure_web_user
 
 try:
@@ -199,6 +205,136 @@ async def test_daily_and_cron(client: AsyncClient):
     resp = await client.post("/api/v1/habits/cron/run", cookies=cookies)
     assert resp.json()["ran"] is False
 
+
+@pytest.mark.asyncio
+async def test_dashboard_returns_sections(client: AsyncClient):
+    await _seed(owner_id=3, tg_id=3, area_id=3, project_id=30)
+    cookies = {"web_user_id": "3", "telegram_id": "3"}
+
+    async with HabitsService() as svc:
+        await svc.create_habit(
+            owner_id=3,
+            title="Morning Focus",
+            type="positive",
+            difficulty="easy",
+            project_id=30,
+        )
+
+    async with DailiesService() as svc:
+        await svc.create_daily(
+            owner_id=3,
+            title="Stretch",
+            rrule="FREQ=DAILY",
+            difficulty="easy",
+            area_id=3,
+        )
+
+    async with RewardsService() as svc:
+        await svc.create(
+            owner_id=3,
+            title="Coffee",
+            cost_gold=5,
+            area_id=3,
+        )
+
+    resp = await client.get("/api/v1/habits/dashboard", cookies=cookies)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data["habits"]) == 1
+    assert len(data["dailies"]) == 1
+    assert len(data["rewards"]) == 1
+    assert data["stats"]["level"] >= 1
+    assert set(data["stats"].keys()) == {
+        "level",
+        "xp",
+        "gold",
+        "hp",
+        "kp",
+        "daily_xp",
+        "daily_gold",
+    }
+
+
+@pytest.mark.asyncio
+async def test_dashboard_area_and_project_filters(client: AsyncClient):
+    await _seed(owner_id=5, tg_id=5, area_id=50)
+    cookies = {"web_user_id": "5", "telegram_id": "5"}
+
+    async with db.async_session() as session:  # type: ignore
+        async with session.begin():
+            root = await session.get(Area, 50)
+            assert root is not None
+            root.mp_path = "0001."
+            root.depth = 0
+            child = Area(
+                id=51,
+                owner_id=5,
+                name="Child",
+                title="Child",
+                parent_id=50,
+                mp_path="0001.0001.",
+                depth=1,
+            )
+            session.add(child)
+            project = Project(
+                id=500,
+                owner_id=5,
+                area_id=51,
+                name="Child Project",
+            )
+            session.add(project)
+
+    async with HabitsService() as svc:
+        await svc.create_habit(
+            owner_id=5,
+            title="Root Habit",
+            type="positive",
+            difficulty="easy",
+            area_id=50,
+        )
+        await svc.create_habit(
+            owner_id=5,
+            title="Child Habit",
+            type="positive",
+            difficulty="easy",
+            area_id=51,
+        )
+        await svc.create_habit(
+            owner_id=5,
+            title="Project Habit",
+            type="positive",
+            difficulty="easy",
+            project_id=500,
+        )
+
+    resp = await client.get("/api/v1/habits/dashboard?area_id=50", cookies=cookies)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data["habits"]) == 1
+
+    resp = await client.get(
+        "/api/v1/habits/dashboard?area_id=50&include_sub=1",
+        cookies=cookies,
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data["habits"]) == 3
+
+    resp = await client.get(
+        "/api/v1/habits/dashboard?project_id=500",
+        cookies=cookies,
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert len(data["habits"]) == 1
+    assert data["habits"][0]["project_id"] == 500
+
+    resp = await client.get(
+        "/api/v1/habits/dashboard?project_id=999", cookies=cookies
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["habits"] == []
 
 @pytest.mark.asyncio
 async def test_para_enforcement(client: AsyncClient):
