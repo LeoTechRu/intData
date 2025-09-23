@@ -210,6 +210,21 @@ gate:
 
 ```yaml
 agent_sync:
+  - when_utc: "2025-09-23T20:52:50Z"
+    agent: "codex"
+    role: "tl"
+    branch: "main"
+    task: "TL-2025-09-23-bitrix-menu"
+    epic_scope: "E17 / Frontend navigation"
+    files:
+      - "git (test/main fast-forward)"
+      - "README.md"
+      - "AGENTS.md"
+    pr: null
+    ac_link: "README.md#e17-frontend-modernization"
+    ttl_minutes: 0
+    status: "Done"
+    note: "FF feature/E17/bitrix-menu-codex -> test -> main, npm lint/test, готово к перезапуску web."
   - when_utc: "2025-09-23T20:11:26Z"
     agent: "codex"
     role: "fe"
@@ -227,7 +242,7 @@ agent_sync:
     pr: null
     ac_link: "README.md#e17-frontend-modernization"
     ttl_minutes: 0
-    status: "Review"
+    status: "Done"
     note: "Bitrix24-style модульное меню, NavIcon, страница Reminders; eslint/vitest ok."
   - when_utc: "2025-09-23T15:34:26Z"
     agent: "codex"
