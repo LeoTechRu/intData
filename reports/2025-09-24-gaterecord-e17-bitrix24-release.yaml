@@ -1,0 +1,11 @@
+gate:
+  stage: release
+  tl_check:
+    approved: true
+    by: "@teamlead"
+    when_utc: "2025-09-24T08:41:45Z"
+  notes: |
+    Fast-forward test->main for Bitrix24 shell redesign.
+    npm run lint && npm run test (vitest) on feature/test/main branches — green.
+    No additional QA blockers; InfoSec advisory pending next scheduled run (non-blocking).
+    Agent Sync updated to Done, locks cleared.
