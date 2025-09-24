@@ -125,7 +125,7 @@ export default function AppShell({
 
   const moduleMap = useMemo(() => new Map(navModules.map((module) => [module.id, module])), [navModules]);
 
-  const currentNavEntry = useMemo(() => {
+  const currentNavEntry = useMemo<SidebarNavItem | null>(() => {
     let best: SidebarNavItem | null = null;
     let bestLength = -1;
     navItems.forEach((item) => {
