@@ -16,10 +16,10 @@ from web.dependencies import get_current_tg_user, get_current_web_user
 from .index import render_next_page
 
 
-router = APIRouter(prefix="/calendar", tags=["calendar"])
+router = APIRouter(prefix="/calendar", tags=["Control Hub"])
 ui_router = APIRouter(
     prefix="/calendar",
-    tags=["calendar"],
+    tags=["Control Hub"],
     include_in_schema=False,
 )
 

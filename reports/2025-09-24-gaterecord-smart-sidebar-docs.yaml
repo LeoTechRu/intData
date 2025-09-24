@@ -1,0 +1,11 @@
+gate:
+  stage: docs
+  tl_check:
+    approved: true
+    by: '@teamlead'
+    when_utc: '2025-09-24T15:24:10Z'
+  notes: |
+    README Tasklist/Conventions обновлены: добавлен storage `nav_sidebar_layouts`, новые
+    REST endpoints `/api/v1/navigation/(user|global)-sidebar-layout`, follow-ups SEC-SS-001/002/003.
+    GateLog и Agent Sync актуализированы, QA/InfoSec отчёты линкуются из README. Документы
+    синхронизированы, ожидание fast-forward `test -> main`.

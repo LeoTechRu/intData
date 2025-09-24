@@ -8,24 +8,22 @@ def test_openapi_tags_present():
     r.raise_for_status()
     names = {t["name"] for t in r.json().get("tags", [])}
     expected = {
-        "tasks",
-        "calendar",
-        "notes",
-        "time",
-        "areas",
-        "projects",
-        "resources",
-        "inbox",
+        "Tasks & Projects",
+        "Control Hub",
+        "Users",
+        "Habits",
+        "Team Hub",
         "admin",
         "app-settings",
-        "auth",
-        "user",
-        "user-settings",
-        "Habits",
-        "Dailies",
-        "Rewards",
-        "Stats",
-        "Calendar",
+        "crm",
+        "cup",
+        "diagnostics",
+        "docs",
+        "integrations",
+        "navigation",
+        "pricing",
+        "products",
+        "profiles",
     }
     missing = expected - names
     assert not missing, f"Missing tags in OpenAPI: {missing}"

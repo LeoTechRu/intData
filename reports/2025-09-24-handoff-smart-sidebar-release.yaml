@@ -1,0 +1,26 @@
+handoff:
+  from: infosec
+  to: devops
+  initiative: E17 / Frontend navigation
+  task: DEVOPS-2025-09-24-smart-sidebar
+  context: |
+    QA и Infosec завершены (см. reports/test/2025-09-24-smart-sidebar.md, reports/infosec/2025-09-24-smart-sidebar.md).
+    SmartSidebar и ModuleTabsBar готовы к выпуску. Требуется подготовить release runbook, прогнать сборку,
+    smoke-check на /test, убедиться в отсутствии регрессий в layout merge и оптимистичных апдейтах.
+  artifacts:
+    - path: reports/test/2025-09-24-smart-sidebar.md
+      note: QA-сводка, сценарии drag/drop и hidden
+    - path: reports/infosec/2025-09-24-smart-sidebar.md
+      note: Advisory с follow-ups SEC-SS-001/002/003
+    - path: web/components/AppShell.tsx
+      note: Интеграция SmartSidebar/ModuleTabsBar
+    - path: web/lib/navigation-layout.ts
+      note: Клиентские утилиты, которые нужно учесть в smoke-тесте
+    - path: reports/runbooks/test-to-main.md
+      note: Шаблон release-runbook; дополнить шагами SmartSidebar
+  acceptance:
+    - Обновлён runbook test->main с шагами rebuild, cache busting и smoke-навигации
+    - Выполнен npm lint/test + prod build (Next.js) в release ветке
+    - Заполнен GateRecord release (build hash, rebuild, log check)
+  blockers:
+    - SEC-SS-001/002/003 в статусе follow-up (не блокируют выпуск, но требуют тикетов)

@@ -1,0 +1,65 @@
+gate_check:
+  - gate: 0
+    role_owner: tl
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "2025-09-24T09:16Z — intake оформлен, agent_sync обновлён, требования владельца зафиксированы."
+  - gate: 1
+    role_owner: architect
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "2025-09-24T09:59Z — ADR 2025-09-24-smart-sidebar утверждён, Conventions обновлены, handoff TL выполнен."
+  - gate: 2
+    role_owner: tl
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "2025-09-24T10:05Z — TaskCard'ы созданы, маршрутизация на роли подтверждена."
+  - gate: 3
+    role_owner: backend
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "2025-09-24T13:30Z — nav_sidebar_layouts и REST layout API реализованы, pytest navigation-layout зелёный, handoff FE."
+  - gate: 3
+    role_owner: frontend
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "2025-09-24T14:05Z — SmartSidebar/ModuleTabsBar интегрированы, lint и vitest пройдены, handoff QA."
+  - gate: qa
+    tl_check:
+      approved: true
+      by: '@teamlead'
+      when_utc: '2025-09-24T11:02:28Z'
+    notes: "QA-report 2025-09-24-smart-sidebar.md подтверждён, дефектов не выявлено; переходим к InfoSec advisory."
+  - gate: infosec
+    tl_check:
+      approved: true
+      by: '@teamlead'
+      when_utc: '2025-09-24T11:03:00Z'
+    notes: "SEC-SS-001/002/003: добавить payload limits, toast 409, аудит логов. Advisory сохранён."
+  - gate: release
+    tl_check:
+      approved: true
+      by: '@teamlead'
+      when_utc: '2025-09-24T15:12:45Z'
+    notes: "DevOps выполнил rebuild через scripts/rebuild_smart_sidebar.sh, ansible deploy и smoke (desktop/mobile), логи чистые; GateRecord release обновлён."
+  - gate: docs
+    tl_check:
+      approved: true
+      by: '@teamlead'
+      when_utc: '2025-09-24T18:05:00Z'
+    notes: "README и runbook обновлены (nav_sidebar_layouts, новые REST snapshot endpoints), Agent Sync закрыт, GateRecord release/docs приложен."

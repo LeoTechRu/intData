@@ -17,7 +17,7 @@ from core.services.telegram_user_service import TelegramUserService
 from core.services.web_user_service import WebUserService
 
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["Users"])
 
 
 class ExchangeIn(BaseModel):

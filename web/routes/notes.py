@@ -13,8 +13,8 @@ from core.services.para_service import ParaService
 from web.dependencies import get_current_tg_user, get_current_web_user
 from .index import render_next_page
 
-router = APIRouter(prefix="/notes", tags=["notes"])
-ui_router = APIRouter(prefix="/notes", tags=["notes"], include_in_schema=False)
+router = APIRouter(prefix="/notes", tags=["Tasks & Projects"])
+ui_router = APIRouter(prefix="/notes", tags=["Tasks & Projects"], include_in_schema=False)
 
 
 class NoteCreate(BaseModel):

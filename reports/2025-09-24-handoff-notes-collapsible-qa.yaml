@@ -1,0 +1,17 @@
+handoff:
+  from: qa
+  to: teamlead
+  initiative: E10/IB-08
+  task: TL-2025-09-24-notes-collapsible
+  context: |
+    Выполнен smoke-сценарий /notes после внедрения CollapsibleSection. Юнит-тесты зелёные, UX соответствует ожиданиям владельца (Bitrix24-паттерн).
+  artifacts:
+    - path: reports/test/2025-09-24-notes-collapsible.md
+      note: QA-отчёт с деталями проверки
+    - path: web/components/notes/NotesModule.test.tsx
+      note: Обновлённые unit-тесты, прошли витест
+  acceptance:
+    - Все проверки PASS, дефекты не обнаружены
+    - Handoff TL зафиксирован, gate-check обновлён
+  blockers:
+    - нет

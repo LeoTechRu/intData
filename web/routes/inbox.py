@@ -13,8 +13,8 @@ from web.dependencies import get_current_tg_user
 from .index import render_next_page
 
 
-router = APIRouter(prefix="/inbox", tags=["inbox"])
-ui_router = APIRouter(prefix="/inbox", tags=["inbox"], include_in_schema=False)
+router = APIRouter(prefix="/inbox", tags=["Control Hub"])
+ui_router = APIRouter(prefix="/inbox", tags=["Control Hub"], include_in_schema=False)
 
 
 class InboxNote(BaseModel):

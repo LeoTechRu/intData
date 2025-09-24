@@ -373,7 +373,7 @@ async def api_habits_dashboard(
     return payload
 
 
-@router.get("/habits/stats", tags=["Stats"], response_model=StatsOut)
+@router.get("/habits/stats", tags=["Habits"], response_model=StatsOut)
 async def api_stats(owner: OwnerCtx | None = Depends(get_current_owner)):
     if owner is None:
         raise HTTPException(status_code=401)
@@ -406,7 +406,7 @@ class DailyIn(BaseModel):
     project_id: Optional[int] = None
 
 
-@router.post("/dailies", tags=["Dailies"], status_code=201, responses=TG_RESP)
+@router.post("/dailies", tags=["Habits"], status_code=201, responses=TG_RESP)
 async def api_create_daily(
     payload: DailyIn,
     owner: OwnerCtx | None = Depends(get_current_owner),
@@ -435,7 +435,7 @@ async def api_create_daily(
 
 @router.post(
     "/dailies/{daily_id}/done",
-    tags=["Dailies"],
+    tags=["Habits"],
     responses=TG_RESP,
 )
 async def api_daily_done(
@@ -457,7 +457,7 @@ async def api_daily_done(
 
 @router.post(
     "/dailies/{daily_id}/undo",
-    tags=["Dailies"],
+    tags=["Habits"],
     responses=TG_RESP,
 )
 async def api_daily_undo(
@@ -487,7 +487,7 @@ class RewardIn(BaseModel):
     project_id: Optional[int] = None
 
 
-@router.post("/rewards", tags=["Rewards"], status_code=201, responses=TG_RESP)
+@router.post("/rewards", tags=["Habits"], status_code=201, responses=TG_RESP)
 async def api_create_reward(
     payload: RewardIn,
     owner: OwnerCtx | None = Depends(get_current_owner),
@@ -512,7 +512,7 @@ async def api_create_reward(
     return {"id": rid}
 
 
-@router.get("/rewards", tags=["Rewards"])
+@router.get("/rewards", tags=["Habits"])
 async def api_list_rewards(
     owner: OwnerCtx | None = Depends(get_current_owner),
 ):
@@ -525,7 +525,7 @@ async def api_list_rewards(
 
 @router.post(
     "/rewards/{reward_id}/buy",
-    tags=["Rewards"],
+    tags=["Habits"],
     responses=TG_RESP,
 )
 async def api_buy_reward(

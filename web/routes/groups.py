@@ -18,8 +18,8 @@ from web.dependencies import role_required
 
 from .index import render_next_page
 
-router = APIRouter(prefix="/groups", tags=["groups"])
-ui_router = APIRouter(prefix="/groups", tags=["groups"], include_in_schema=False)
+router = APIRouter(prefix="/groups", tags=["Team Hub"])
+ui_router = APIRouter(prefix="/groups", tags=["Team Hub"], include_in_schema=False)
 
 
 def _format_display_name(user: TgUser | None) -> str:
