@@ -1,4 +1,35 @@
 agent_sync:
+- when_utc: '2025-09-24T10:39:53Z'
+  agent: codex-cli::teamlead
+  role: tl
+  branch: main
+  task: TL-2025-09-24-notes-collapsible
+  epic_scope: E10 / Capture (Inbox)
+  files:
+  - git (test/main fast-forward)
+  - web/components/notes/NotesModule.tsx
+  - web/components/ui/CollapsibleSection.tsx
+  - reports/2025-09-24-gates-notes-collapsible.yaml
+  pr: null
+  ac_link: README.md#e10-capture-ботвеб-inbox
+  ttl_minutes: 0
+  status: Done
+  note: FF test->main, npm lint/test/build ранее, runbook готов к выполнению DevOps.
+- when_utc: '2025-09-24T10:37:00Z'
+  agent: codex-cli::teamlead
+  role: tl
+  branch: test
+  task: TL-2025-09-24-notes-collapsible
+  epic_scope: E10 / Capture (Inbox)
+  files:
+  - git (feature/E10/notes-collapsible-fe -> test)
+  - web/components/notes/NotesModule.tsx
+  - web/components/ui/CollapsibleSection.tsx
+  pr: null
+  ac_link: README.md#e10-capture-ботвеб-inbox
+  ttl_minutes: 0
+  status: Done
+  note: FF feature branch -> test; lint/test/build отработаны перед merge.
 - when_utc: '2025-09-24T10:33:40Z'
   agent: codex-cli::techwriter
   role: tw
