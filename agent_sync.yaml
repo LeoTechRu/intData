@@ -13,5 +13,5 @@ agent_sync:
     pr: null
     ac_link: "reports/2025-09-24-intake-bitrix24-shell.yaml"
     ttl_minutes: 180
-    status: "In Progress"
-    note: "Bitrix24-style AppShell overhaul; coordinating stage-gate flow"
+    status: "Review"
+    note: "Bitrix24-style AppShell overhaul; ветка готова к TL ревью"
