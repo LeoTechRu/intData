@@ -149,6 +149,21 @@ agent_sync:
   ttl_minutes: 45
   status: Handoff
   note: 'DevOps: GateRecord обновлён (UI hotfix, доп. действий не требуется); handoff → TL'
+- when_utc: '2025-09-24T22:10:12Z'
+  agent: codex-cli::teamlead
+  role: tl
+  branch: main
+  task: TL-2025-09-24-bitrix24-nav
+  epic_scope: E17 / Frontend navigation
+  files:
+  - git (merge feature/E17/bitrix24-shell-* -> test -> main)
+  - reports/test/2025-09-24-bitrix24-shell-hotfix.md
+  - reports/infosec/2025-09-24-bitrix24-shell-hotfix.md
+  pr: null
+  ac_link: README.md#e17-frontend-modernization
+  ttl_minutes: 0
+  status: Done
+  note: 'TL fast-forward выполнен, hotfix зафиксирован. Ожидаем CI Trivy и деплой по runbook.'
 - when_utc: '2025-09-24T19:33:18Z'
   agent: codex-cli::teamlead
   role: tl
