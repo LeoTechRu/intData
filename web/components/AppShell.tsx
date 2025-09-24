@@ -476,6 +476,7 @@ export default function AppShell({
           isCollapsed={isSidebarCollapsed}
           canConfigure={canConfigureSidebar}
           isLoading={isSidebarLoading}
+          onToggleCollapse={toggleSidebarCollapsed}
         />
         <div className="flex min-h-screen flex-1 flex-col bg-white">
           <TopNavBar
@@ -484,8 +485,6 @@ export default function AppShell({
             viewer={viewer}
             viewerLoading={viewerLoading}
             personaBundle={personaBundle}
-            onToggleSidebar={toggleSidebarCollapsed}
-            isSidebarCollapsed={isSidebarCollapsed}
           />
           <main className={mainClasses} aria-labelledby={headingId} aria-describedby={headingDescriptionId}>
             {showHeader ? (

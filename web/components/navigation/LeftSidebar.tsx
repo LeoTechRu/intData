@@ -2,7 +2,7 @@
 
 import clsx from 'clsx';
 import Link from 'next/link';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { NavIcon } from './NavIcon';
 import type { SidebarModuleGroup } from '../../lib/navigation-helpers';
@@ -18,6 +18,7 @@ interface LeftSidebarProps {
   isCollapsed: boolean;
   canConfigure: boolean;
   isLoading?: boolean;
+  onToggleCollapse: () => void;
 }
 
 export function LeftSidebar({
@@ -30,6 +31,7 @@ export function LeftSidebar({
   isCollapsed,
   canConfigure,
   isLoading,
+  onToggleCollapse,
 }: LeftSidebarProps) {
   const [isHiddenExpanded, setHiddenExpanded] = useState(false);
 
@@ -41,6 +43,12 @@ export function LeftSidebar({
     return activeModule.categories.flatMap(({ items }) => items.filter((item) => !item.hidden));
   }, [activeModule]);
 
+  useEffect(() => {
+    if (!isCollapsed && isHiddenExpanded) {
+      setHiddenExpanded(false);
+    }
+  }, [isCollapsed, isHiddenExpanded]);
+
   const sidebarClassName = clsx(
     'relative flex h-full min-h-screen flex-col border-r border-slate-200 bg-[#f5f7fa] transition-all duration-200 ease-out',
     isCollapsed ? 'w-[56px]' : 'w-[248px] shadow-[1px_0_0_rgba(15,23,42,0.06)]',
@@ -48,9 +56,25 @@ export function LeftSidebar({
 
   return (
     <aside className={sidebarClassName} aria-label="Основная навигация">
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex flex-1 flex-col overflow-y-auto">
+        <div className={clsx('flex items-center gap-3 px-2 pt-4', isCollapsed ? 'justify-center' : 'justify-between pr-3')}>
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className={clsx(
+              'inline-flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-100 hover:text-[#0b66ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200',
+              isCollapsed && 'h-10 w-10'
+            )}
+            aria-label={isCollapsed ? 'Развернуть левое меню' : 'Свернуть левое меню'}
+          >
+            <BurgerIcon />
+          </button>
+          {isCollapsed ? null : (
+            <span className="text-sm font-semibold uppercase tracking-wide text-slate-400">Меню</span>
+          )}
+        </div>
         <nav aria-label="Модули">
-          <ul className="flex flex-col gap-1 px-2 py-4">
+          <ul className="flex flex-col gap-1 px-2 pt-4 pb-4">
             {moduleGroups.map((module) => {
               const isActive = module.id === activeModuleId;
               return (
@@ -252,6 +276,14 @@ function HiddenIcon() {
       <circle cx="6" cy="12" r="1.6" />
       <circle cx="12" cy="12" r="1.6" />
       <circle cx="18" cy="12" r="1.6" />
+    </svg>
+  );
+}
+
+function BurgerIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6} aria-hidden>
+      <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

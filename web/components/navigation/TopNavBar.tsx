@@ -14,8 +14,6 @@ interface TopNavBarProps {
   viewer: ViewerProfileSummary | null;
   viewerLoading: boolean;
   personaBundle?: PersonaBundle;
-  onToggleSidebar: () => void;
-  isSidebarCollapsed: boolean;
 }
 
 export function TopNavBar({
@@ -24,24 +22,10 @@ export function TopNavBar({
   viewer,
   viewerLoading,
   personaBundle,
-  onToggleSidebar,
-  isSidebarCollapsed,
 }: TopNavBarProps) {
   return (
-    <header className="relative flex h-12 items-center gap-3 bg-[var(--header-bg,#0b66ff)] px-3 text-white shadow-sm">
-      <button
-        type="button"
-        onClick={onToggleSidebar}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full text-white transition-colors hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
-        aria-label={isSidebarCollapsed ? 'Развернуть меню' : 'Свернуть меню'}
-      >
-        <BurgerIcon />
-      </button>
-      <ModuleTabs
-        moduleLabel={moduleLabel}
-        items={tabs}
-        className="flex min-w-0 flex-1 items-center gap-1"
-      />
+    <header className="relative flex h-12 items-center gap-4 bg-[var(--header-bg,#0b66ff)] px-4 text-white shadow-sm">
+      <ModuleTabs moduleLabel={moduleLabel} items={tabs} className="flex min-w-0 flex-1 items-center gap-1" />
       <UserSummary viewer={viewer} isLoading={viewerLoading} personaBundle={personaBundle} />
     </header>
   );
@@ -96,14 +80,6 @@ function UserSummary({
         <span className="truncate text-[11px] text-white/70">{usernameLabel}</span>
       </span>
     </Link>
-  );
-}
-
-function BurgerIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6} aria-hidden>
-      <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   );
 }
 
