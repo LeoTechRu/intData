@@ -1,0 +1,17 @@
+agent_sync:
+  - when_utc: "2025-09-24T06:45:00Z"
+    agent: "codex-cli::teamlead"
+    role: "tl"
+    branch: "feature/E17/bitrix24-shell-fe"
+    task: "TL-2025-09-24-bitrix24-shell"
+    epic_scope: "E17 / Frontend navigation"
+    files:
+      - "web/components/AppShell.tsx"
+      - "web/components/navigation/ModuleTabs.tsx"
+      - "web/lib/useModuleTabs.ts"
+      - "web/lib/navigationFallback.ts"
+    pr: null
+    ac_link: "reports/2025-09-24-intake-bitrix24-shell.yaml"
+    ttl_minutes: 180
+    status: "In Progress"
+    note: "Bitrix24-style AppShell overhaul; coordinating stage-gate flow"

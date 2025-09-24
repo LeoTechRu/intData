@@ -9,7 +9,8 @@ import React, { ReactNode, useCallback, useEffect, useMemo, useRef, useState } f
 
 import { apiFetch, ApiError } from '../lib/api';
 import { fetchSidebarNav, updateGlobalSidebarLayout, updateUserSidebarLayout } from '../lib/navigation';
-import { groupSidebarItemsByModule, sortSidebarItems } from '../lib/navigation-helpers';
+import { groupSidebarItemsByModule } from '../lib/navigation-helpers';
+import { MODULE_FALLBACK, CATEGORY_FALLBACK, NAV_FALLBACK_ITEMS } from '../lib/navigationFallback';
 import {
   fetchPersonaBundle,
   getPersonaInfo,
@@ -17,10 +18,10 @@ import {
   DEFAULT_PERSONA_BUNDLE,
   type PersonaBundle,
 } from '../lib/persona';
+import { useModuleTabs } from '../lib/useModuleTabs';
 import type {
   SidebarCategoryDefinition,
   SidebarLayoutSettings,
-  SidebarModuleDefinition,
   SidebarNavItem,
   SidebarNavPayload,
   TimeEntry,
@@ -29,9 +30,11 @@ import type {
 import { formatClock, formatDateTime, normalizeTimerDescription, parseDateToUtc } from '../lib/time';
 import { TimezoneProvider, useTimezone } from '../lib/timezone';
 import { Button, Card, StatusIndicator, type StatusIndicatorKind } from './ui';
+import { Select } from './ui/Select';
 import { SidebarEditor } from './navigation/SidebarEditor';
 import { FavoriteToggle } from './navigation/FavoriteToggle';
 import { NavIcon } from './navigation/NavIcon';
+import { ModuleTabs } from './navigation/ModuleTabs';
 
 interface AppShellProps {
   title: string;
@@ -44,234 +47,14 @@ interface AppShellProps {
   mainClassName?: string;
 }
 
+const COMMUNITY_CHANNEL_URL = 'https://t.me/intDataHELP';
+const SUPPORT_CHANNEL_URL = 'https://t.me/HELPintData';
+const DEVELOPER_CONTACT_URL = 'https://t.me/leotechru';
 const NAV_STATUS_TOOLTIPS: Record<StatusIndicatorKind, string> = {
   new: 'Новый раздел на современном интерфейсе',
   wip: 'Раздел в активной разработке — возможны изменения',
   locked: 'Раздел доступен по расширенному тарифу',
 };
-
-const COMMUNITY_CHANNEL_URL = 'https://t.me/intDataHELP';
-const SUPPORT_CHANNEL_URL = 'https://t.me/HELPintData';
-const DEVELOPER_CONTACT_URL = 'https://t.me/leotechru';
-
-const STATIC_MODULES: SidebarModuleDefinition[] = [
-  { id: 'control', label: 'Control Hub', order: 1000, icon: 'module-control-hub' },
-  { id: 'tasks', label: 'Задачи и проекты', order: 2000, icon: 'module-tasks-projects' },
-  { id: 'knowledge', label: 'База знаний', order: 3000, icon: 'module-knowledge' },
-  { id: 'team', label: 'Команда', order: 4000, icon: 'module-team' },
-  { id: 'admin', label: 'Администрирование', order: 5000, icon: 'module-admin' },
-];
-
-const STATIC_CATEGORIES: SidebarCategoryDefinition[] = [
-  { id: 'overview', module_id: 'control', label: 'Обзор', order: 100 },
-  { id: 'inbox', module_id: 'control', label: 'Входящие', order: 110 },
-  { id: 'calendar', module_id: 'control', label: 'Календарь', order: 120 },
-  { id: 'time', module_id: 'control', label: 'Время', order: 130 },
-  { id: 'reminders', module_id: 'control', label: 'Напоминания', order: 140 },
-  { id: 'tasks', module_id: 'tasks', label: 'Задачи', order: 300 },
-  { id: 'projects', module_id: 'tasks', label: 'Проекты', order: 310 },
-  { id: 'areas', module_id: 'tasks', label: 'Области', order: 320 },
-  { id: 'resources', module_id: 'tasks', label: 'Ресурсы', order: 330 },
-  { id: 'knowledge', module_id: 'knowledge', label: 'База знаний', order: 400 },
-  { id: 'people', module_id: 'team', label: 'Команда', order: 500 },
-  { id: 'habits', module_id: 'team', label: 'Привычки', order: 520 },
-  { id: 'settings', module_id: 'admin', label: 'Настройки', order: 600 },
-  { id: 'admin_tools', module_id: 'admin', label: 'Администрирование', order: 610 },
-];
-
-const STATIC_NAV_FALLBACK: SidebarNavItem[] = [
-  {
-    key: 'overview',
-    label: 'Обзор',
-    href: '/',
-    hidden: true,
-    position: 1,
-    status: { kind: 'new' },
-    module: 'control',
-    section_order: 100,
-    category: 'overview',
-    icon: 'overview',
-  },
-  {
-    key: 'inbox',
-    label: 'Входящие',
-    href: '/inbox',
-    hidden: true,
-    position: 2,
-    module: 'control',
-    section_order: 110,
-    category: 'inbox',
-    icon: 'inbox',
-  },
-  {
-    key: 'calendar',
-    label: 'Календарь',
-    href: '/calendar',
-    hidden: true,
-    position: 3,
-    status: { kind: 'new' },
-    module: 'control',
-    section_order: 120,
-    category: 'calendar',
-    icon: 'calendar',
-  },
-  {
-    key: 'time',
-    label: 'Время',
-    href: '/time',
-    hidden: true,
-    position: 4,
-    status: { kind: 'new' },
-    module: 'control',
-    section_order: 130,
-    category: 'time',
-    icon: 'time',
-  },
-  {
-    key: 'reminders',
-    label: 'Напоминания',
-    href: '/reminders',
-    hidden: true,
-    position: 5,
-    status: { kind: 'new' },
-    module: 'control',
-    section_order: 140,
-    category: 'reminders',
-    icon: 'reminders',
-  },
-  {
-    key: 'tasks',
-    label: 'Задачи',
-    href: '/tasks',
-    hidden: true,
-    position: 6,
-    status: { kind: 'wip' },
-    module: 'tasks',
-    section_order: 300,
-    category: 'tasks',
-    icon: 'tasks',
-  },
-  {
-    key: 'projects',
-    label: 'Проекты',
-    href: '/projects',
-    hidden: true,
-    position: 7,
-    status: { kind: 'new' },
-    module: 'tasks',
-    section_order: 310,
-    category: 'projects',
-    icon: 'projects',
-  },
-  {
-    key: 'areas',
-    label: 'Области',
-    href: '/areas',
-    hidden: true,
-    position: 8,
-    status: { kind: 'new' },
-    module: 'tasks',
-    section_order: 320,
-    category: 'areas',
-    icon: 'areas',
-  },
-  {
-    key: 'resources',
-    label: 'Ресурсы',
-    href: '/resources',
-    hidden: true,
-    position: 9,
-    status: { kind: 'wip' },
-    module: 'tasks',
-    section_order: 330,
-    category: 'resources',
-    icon: 'resources',
-  },
-  {
-    key: 'notes',
-    label: 'Заметки',
-    href: '/notes',
-    hidden: true,
-    position: 10,
-    status: { kind: 'new' },
-    module: 'knowledge',
-    section_order: 400,
-    category: 'knowledge',
-    icon: 'notes',
-  },
-  {
-    key: 'products',
-    label: 'Продукты',
-    href: '/products',
-    hidden: true,
-    position: 11,
-    status: { kind: 'new' },
-    module: 'knowledge',
-    section_order: 410,
-    category: 'knowledge',
-    icon: 'products',
-  },
-  {
-    key: 'habits',
-    label: 'Привычки',
-    href: '/habits',
-    hidden: true,
-    position: 12,
-    status: { kind: 'locked', link: '/tariffs' },
-    module: 'team',
-    section_order: 500,
-    category: 'habits',
-    icon: 'habits',
-  },
-  {
-    key: 'team',
-    label: 'Команда',
-    href: '/users',
-    hidden: true,
-    position: 13,
-    status: { kind: 'new' },
-    module: 'team',
-    section_order: 510,
-    category: 'people',
-    icon: 'team',
-  },
-  {
-    key: 'groups',
-    label: 'Группы',
-    href: '/groups',
-    hidden: true,
-    position: 14,
-    status: { kind: 'new' },
-    module: 'team',
-    section_order: 520,
-    category: 'people',
-    icon: 'groups',
-  },
-  {
-    key: 'settings',
-    label: 'Настройки',
-    href: '/settings',
-    hidden: true,
-    position: 15,
-    status: { kind: 'new' },
-    module: 'admin',
-    section_order: 600,
-    category: 'settings',
-    icon: 'settings',
-  },
-  {
-    key: 'admin',
-    label: 'ЛК Админа',
-    href: '/admin',
-    hidden: true,
-    position: 16,
-    status: { kind: 'new' },
-    module: 'admin',
-    section_order: 610,
-    category: 'admin_tools',
-    icon: 'admin',
-  },
-];
 
 function getInitials(name: string): string {
   const parts = name
@@ -378,6 +161,10 @@ export default function AppShell({
   const headingId = titleId ?? 'app-shell-title';
   const headingDescriptionId = subtitle ? `${headingId}-description` : undefined;
   const queryClient = useQueryClient();
+  const shellThemeVars = useMemo(
+    () => ({ '--header-bg': '#0065ff', '--header-text': '#ffffff' }) as React.CSSProperties,
+    [],
+  );
 
   useEffect(() => {
     setIsMobileNavOpen(false);
@@ -506,15 +293,15 @@ export default function AppShell({
     );
   }, []);
 
-  const navItems: SidebarNavItem[] = navQuery.data?.items ?? STATIC_NAV_FALLBACK;
+  const navItems: SidebarNavItem[] = navQuery.data?.items ?? NAV_FALLBACK_ITEMS;
   const navModules = useMemo(() => {
     const payload = navQuery.data?.modules;
-    const source = payload && payload.length > 0 ? payload : STATIC_MODULES;
+    const source = payload && payload.length > 0 ? payload : MODULE_FALLBACK;
     return [...source].sort((a, b) => a.order - b.order);
   }, [navQuery.data?.modules]);
   const navCategories = useMemo(() => {
     const payload = navQuery.data?.categories;
-    const source = payload && payload.length > 0 ? payload : STATIC_CATEGORIES;
+    const source = payload && payload.length > 0 ? payload : CATEGORY_FALLBACK;
     return [...source].sort((a, b) => a.order - b.order || a.id.localeCompare(b.id, 'ru'));
   }, [navQuery.data?.categories]);
   const moduleMap = useMemo(() => new Map(navModules.map((section) => [section.id, section])), [navModules]);
@@ -656,6 +443,19 @@ export default function AppShell({
     'general';
   const activeModule =
     moduleMap.get(activeModuleId) ?? { id: activeModuleId, label: activeModuleId, order: 9000 };
+  const moduleTabs = useModuleTabs({ moduleId: activeModuleId, moduleGroups, pathname });
+  const activeTabsHref = moduleTabs.find((tab) => tab.active)?.href ?? moduleTabs[0]?.href ?? '';
+
+  const handleMobileTabChange = useCallback(
+    (event: React.ChangeEvent<HTMLSelectElement>) => {
+      const targetHref = event.target.value;
+      if (!targetHref || targetHref === pathname) {
+        return;
+      }
+      router.push(targetHref);
+    },
+    [pathname, router],
+  );
 
   const handleToggleFavorite = async () => {
     if (!currentNavEntry || saveUserLayoutMutation.isPending) {
@@ -763,10 +563,15 @@ export default function AppShell({
   };
 
   const sidebarClassName = clsx(
-    'fixed inset-y-0 left-0 z-50 flex w-72 transform border-r border-subtle bg-[var(--surface-0)] transition-transform duration-200 ease-out md:static md:h-full',
+    'fixed inset-y-0 left-0 z-50 flex w-72 transform border-r border-subtle bg-[var(--surface-0)] transition-[transform,width] duration-300 ease-out md:static md:h-screen md:w-72 md:translate-x-0 md:border-subtle/60 md:bg-[var(--surface-0)]/95',
     isMobileNavOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
     isSidebarCollapsed ? 'md:w-[88px]' : 'md:w-72',
   );
+  const iconRailClassName = clsx(
+    'hidden md:flex md:h-screen md:flex-col md:items-center md:gap-3 md:border-r md:border-[color-mix(in srgb, var(--header-bg) 18%, transparent)] md:bg-[color-mix(in srgb, var(--header-bg) 8%, transparent)] md:px-2 md:py-4 md:shadow-[inset_-1px_0_0_rgba(255,255,255,0.08)] md:transition-[width] md:duration-300 md:ease-out md:backdrop-blur',
+    isSidebarCollapsed ? 'md:w-16' : 'md:w-20',
+  );
+  const showModuleTabs = moduleTabs.length > 1;
 
   const computedMaxWidth = maxWidthClassName ?? 'max-w-[1400px]';
   const mainClasses = clsx(
@@ -780,7 +585,74 @@ export default function AppShell({
 
   return (
     <TimezoneProvider value={timezone}>
-      <div className="flex min-h-screen bg-surface" data-app-shell>
+      <div className="flex min-h-screen bg-surface" data-app-shell style={shellThemeVars}>
+        <nav className={iconRailClassName} aria-label="Панель модулей">
+          <button
+            type="button"
+            onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+            className={clsx(
+              'mt-1 flex h-11 w-11 items-center justify-center rounded-2xl text-white/80 transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[color-mix(in srgb, var(--header-bg) 8%, transparent)]',
+              isSidebarCollapsed ? 'bg-white/15 hover:bg-white/25' : 'bg-white/10 hover:bg-white/20',
+            )}
+            aria-label={isSidebarCollapsed ? 'Развернуть меню' : 'Свернуть меню'}
+            aria-pressed={isSidebarCollapsed}
+          >
+            <svg
+              aria-hidden
+              className="h-5 w-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.6}
+            >
+              {isSidebarCollapsed ? (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 6l-6 6 6 6" />
+              )}
+            </svg>
+          </button>
+          <div className="mt-4 flex w-full flex-1 flex-col items-center gap-2 overflow-hidden">
+            {navModules.map((module) => {
+              const moduleId = module.id;
+              const isActiveModule = activeModule.id === moduleId;
+              const tooltipId = `module-rail-${moduleId}`;
+              return (
+                <div key={moduleId} className="group relative flex w-full justify-center">
+                  <button
+                    type="button"
+                    aria-label={`Перейти в модуль ${module.label}`}
+                    aria-describedby={tooltipId}
+                    aria-current={isActiveModule ? 'page' : undefined}
+                    onClick={() => handleModuleNavigate(moduleId)}
+                    className={clsx(
+                      'relative flex h-12 w-12 items-center justify-center rounded-2xl text-white/75 transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color-mix(in srgb, var(--header-bg) 8%, transparent)]',
+                      isActiveModule
+                        ? 'bg-[color-mix(in srgb, var(--accent-primary) 22%, transparent)] text-[var(--accent-primary)]'
+                        : 'hover:bg-white/12 hover:text-white',
+                    )}
+                  >
+                    <span
+                      aria-hidden
+                      className={clsx(
+                        'absolute left-1 top-1 bottom-1 w-1 rounded-full bg-[var(--accent-primary)] transition-opacity',
+                        isActiveModule ? 'opacity-100' : 'opacity-0 group-hover:opacity-60',
+                      )}
+                    />
+                    <NavIcon name={module.icon ?? 'module-generic'} />
+                  </button>
+                  <span
+                    role="tooltip"
+                    id={tooltipId}
+                    className="pointer-events-none absolute left-[calc(100%+0.75rem)] top-1/2 z-50 -translate-y-1/2 rounded-lg border border-subtle bg-[var(--surface-0)] px-2 py-1 text-xs font-medium text-[var(--text-primary)] opacity-0 shadow-soft transition-opacity duration-150 ease-out group-hover:opacity-100 group-focus-within:opacity-100"
+                  >
+                    {module.label}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </nav>
         <aside
           className={sidebarClassName}
           aria-label="Главное меню"
@@ -1154,65 +1026,97 @@ export default function AppShell({
           />
         ) : null}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="flex flex-col gap-4 border-b border-subtle bg-[var(--surface-0)]/95 px-4 py-4 md:px-8 md:py-5" data-app-shell-toolbar>
-            <div className="flex items-start gap-3">
-              <button
-                type="button"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-surface-soft text-muted transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] md:hidden"
-                aria-label={toggleLabel}
-                aria-pressed={isMobileNavOpen}
-                onClick={handleToggleNav}
-              >
-                <span className="sr-only">Меню</span>
-                <svg
-                  aria-hidden
-                  className="h-5 w-5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  {isMobileNavOpen ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  ) : (
-                    <>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 12h18" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 18h18" />
-                    </>
-                  )}
-                </svg>
-              </button>
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">{activeModule.label}</span>
-                <h1
-                  id={headingId}
-                  className="text-xl font-semibold leading-tight text-[var(--text-primary)] md:text-2xl"
-                  aria-describedby={headingDescriptionId}
-                >
-                  {pageTitle}
-                </h1>
-                {subtitle ? (
-                  <p id={headingDescriptionId} className="text-sm text-muted">
-                    {subtitle}
-                  </p>
+          <div
+            className="flex flex-col gap-4 border-b border-[color-mix(in srgb, var(--header-text) 16%, transparent)]/35 bg-[var(--header-bg)]/98 px-4 py-4 text-[var(--header-text)] shadow-[0_1px_0_rgba(0,0,0,0.12)] md:px-8 md:py-5"
+            data-app-shell-toolbar
+          >
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-1 flex-col gap-3">
+                <div className="flex items-start gap-3">
+                  <button
+                    type="button"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 md:hidden"
+                    aria-label={toggleLabel}
+                    aria-pressed={isMobileNavOpen}
+                    onClick={handleToggleNav}
+                  >
+                    <span className="sr-only">Меню</span>
+                    <svg
+                      aria-hidden
+                      className="h-5 w-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.5}
+                    >
+                      {isMobileNavOpen ? (
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      ) : (
+                        <>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 12h18" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 18h18" />
+                        </>
+                      )}
+                    </svg>
+                  </button>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/75">
+                      {activeModule.label}
+                    </span>
+                    <h1
+                      id={headingId}
+                      className="text-xl font-semibold leading-tight text-[var(--header-text)] md:text-2xl"
+                      aria-describedby={headingDescriptionId}
+                    >
+                      {pageTitle}
+                    </h1>
+                    {subtitle ? (
+                      <p id={headingDescriptionId} className="text-sm text-white/80">
+                        {subtitle}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+                {showModuleTabs ? (
+                  <>
+                    <ModuleTabs
+                      moduleLabel={activeModule.label}
+                      items={moduleTabs}
+                      className="hidden md:flex flex-wrap items-center gap-2"
+                    />
+                    <div className="md:hidden">
+                      <Select
+                        value={activeTabsHref}
+                        onChange={handleMobileTabChange}
+                        aria-label="Навигация по модулю"
+                        className="w-full rounded-xl border border-white/25 bg-[var(--header-bg)]/85 px-3 py-2 text-sm font-medium text-[var(--header-text)] focus:border-white/45 focus:outline-none"
+                      >
+                        {moduleTabs.map((tab) => (
+                          <option key={tab.key} value={tab.href ?? ''}>
+                            {tab.label}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+                  </>
                 ) : null}
               </div>
-            </div>
-            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex flex-wrap items-center gap-2">
-                {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
-                {canToggleFavorite ? (
-                  <FavoriteToggle
-                    active={isFavorite}
-                    disabled={!canToggleFavorite || saveUserLayoutMutation.isPending}
-                    onToggle={handleToggleFavorite}
-                    labelAdd={favoriteLabelAdd}
-                    labelRemove={favoriteLabelRemove}
-                  />
-                ) : null}
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
+                <div className="flex flex-wrap items-center gap-2">
+                  {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+                  {canToggleFavorite ? (
+                    <FavoriteToggle
+                      active={isFavorite}
+                      disabled={!canToggleFavorite || saveUserLayoutMutation.isPending}
+                      onToggle={handleToggleFavorite}
+                      labelAdd={favoriteLabelAdd}
+                      labelRemove={favoriteLabelRemove}
+                    />
+                  ) : null}
+                </div>
+                <UserSummary viewer={viewer} isLoading={viewerLoading} personaBundle={personaBundle} />
               </div>
-              <UserSummary viewer={viewer} isLoading={viewerLoading} personaBundle={personaBundle} />
             </div>
           </div>
           <div className="flex min-h-0 flex-1 justify-center overflow-y-auto">
@@ -1600,7 +1504,7 @@ function UserSummary({
   personaBundle?: PersonaBundle;
 }) {
   if (isLoading && !viewer) {
-    return <div className="h-10 w-10 animate-pulse rounded-full bg-surface-soft" aria-hidden />;
+    return <div className="h-10 w-10 animate-pulse rounded-full bg-white/15" aria-hidden />;
   }
   if (!viewer) {
     return null;
@@ -1621,7 +1525,7 @@ function UserSummary({
           aria-haspopup="true"
           aria-describedby={tooltipId}
           aria-label={`Ваша роль: ${persona.label}`}
-          className="inline-flex items-center gap-1 rounded-full border border-subtle px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--accent-primary)] transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+          className="inline-flex items-center gap-1 rounded-full border border-white/30 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-white/85 transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[color-mix(in srgb, var(--header-bg) 12%, transparent)]"
         >
           {persona.label}
         </div>
@@ -1645,10 +1549,10 @@ function UserSummary({
       <Link
         href={profileHref}
         prefetch={false}
-        className="group/link inline-flex items-center gap-2 sm:gap-3 rounded-full border border-transparent px-2 py-1 transition-base hover:border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
+        className="group/link inline-flex items-center gap-2 sm:gap-3 rounded-full border border-white/15 px-2 py-1 transition-base hover:border-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[color-mix(in srgb, var(--header-bg) 12%, transparent)]"
         aria-label={`Профиль пользователя ${displayLabel}. Роль: ${persona.label}`}
       >
-        <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-surface-soft text-sm font-semibold text-[var(--text-primary)] ring-1 ring-[var(--border-subtle)]">
+        <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white/15 text-sm font-semibold text-white ring-1 ring-white/35">
           {viewer.avatar_url ? (
             <Image
               src={viewer.avatar_url}
@@ -1663,8 +1567,8 @@ function UserSummary({
           )}
         </span>
         <span className="hidden sm:flex min-w-0 flex-col leading-tight">
-          <span className="truncate text-sm font-medium text-[var(--text-primary)]">{displayLabel}</span>
-          <span className="truncate text-xs text-muted">{usernameLabel}</span>
+          <span className="truncate text-sm font-medium text-white">{displayLabel}</span>
+          <span className="truncate text-xs text-white/70">{usernameLabel}</span>
         </span>
         <span className="sr-only">{`Роль: ${persona.label}`}</span>
       </Link>

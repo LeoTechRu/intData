@@ -1,0 +1,33 @@
+gate_check:
+  - gate: 0
+    role_owner: tl
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "Intake оформлен, ветка создана."
+  - gate: 1
+    role_owner: architect
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "Архитектурные инварианты зафиксированы."
+  - gate: 3
+    role_owner: frontend
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "AppShell/ModuleTabs обновлены, тесты пройдены."
+  - gate: 5
+    role_owner: qa
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "Линт/тесты зелёные." 

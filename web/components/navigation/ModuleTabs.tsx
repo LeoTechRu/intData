@@ -28,10 +28,10 @@ export function ModuleTabs({ moduleLabel, items, className }: ModuleTabsProps) {
     <nav className={className} aria-label={`Навигация модуля ${moduleLabel}`}>
       {items.map((item) => {
         const baseClass =
-          'inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]';
+          'inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--header-bg,var(--surface-0))]';
         const variant = item.active
           ? 'bg-[var(--accent-primary)] text-[var(--accent-on-primary)] shadow-soft'
-          : 'bg-surface-soft text-muted hover:text-[var(--text-primary)]';
+          : 'bg-[color-mix(in srgb, var(--header-bg, var(--surface-0)) 12%, transparent)] text-[color-mix(in srgb, var(--header-text, var(--text-primary)) 80%, transparent)] hover:bg-[color-mix(in srgb, var(--accent-primary) 18%, transparent)] hover:text-[var(--header-text, var(--text-primary))] hover:underline decoration-2 underline-offset-8';
         const tabClassName = clsx(baseClass, variant);
 
         if (!item.href) {

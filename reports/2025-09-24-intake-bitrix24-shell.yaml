@@ -1,0 +1,23 @@
+intake:
+  source: owner
+  initiative: "E17/IB-24"
+  task: "TL-2025-09-24-bitrix24-shell"
+  goal: "Привести глобальную навигацию и верхнюю панель к визуальному стилю Bitrix24 с модульными вкладками"
+  acceptance:
+    - "Канал модулей разделён на икон-рейл и панель управления с заголовком"
+    - "Горизонтальные ModuleTabs активны для модулей с >1 категории"
+    - "Мобильная навигация использует селектор вкладок"
+  constraints:
+    - "Соблюсти stage-gate IntData и role-boundary-check"
+    - "Сохранить совместимость с existing SidebarEditor и FavoriteToggle"
+  artifacts_expected:
+    - path: web/components/AppShell.tsx
+      type: code
+    - path: web/components/navigation/ModuleTabs.tsx
+      type: code
+    - path: web/lib/useModuleTabs.ts
+      type: code
+    - path: web/lib/navigationFallback.ts
+      type: code
+    - path: reports/test/bitrix24-shell.md
+      type: test
