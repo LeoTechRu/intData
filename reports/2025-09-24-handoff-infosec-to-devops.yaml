@@ -1,0 +1,16 @@
+handoff:
+  from: infosec
+  to: devops
+  initiative: E17 / Frontend navigation
+  task: TL-2025-09-24-bitrix24-nav
+  context: |
+    Semgrep и Bandit без находок. Trivy недоступен локально (команда `trivy` отсутствует); просим выполнить fs-скан на CI.
+    Основной риск — предстоящая интеграция custom links API: важно валидировать payload и ограничить доступные иконки.
+  artifacts:
+    - path: reports/infosec/2025-09-24-bitrix24-nav.md
+      note: Результаты сканов и рекомендации (must/should/could)
+  acceptance:
+    - Запуск Trivy fs в CI на модуле `web/components/navigation` и `web/lib`
+    - Обновление GateRecord release после rebuild и лог-чека
+  blockers:
+    - Нет
