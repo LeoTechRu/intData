@@ -7,7 +7,7 @@ gate:
   notes: |
     DevOps выполнил rebuild SmartSidebar на commit 8ad330d: `npm ci`, `npm run lint`,
     `npm run test -- ModuleTabs.test.tsx`, `npm run build`, затем `bash scripts/rebuild_smart_sidebar.sh`
-    (доставка `.next` в `/var/www/intdata-test`, рестарт `intdata-test-web`). После ansible-таска
+    (доставка `.next` в `/var/www/intdata-test`, рестарт `intdata-web`). После ansible-таска
     `deploy/test.yml --tags=frontend` проведены smoke-проверки (desktop + mobile layouts, hidden pages,
-    optimistic locking). `journalctl -u intdata-test-web --since "15 minutes ago"` без ошибок. Gate-5 закрыт,
+    optimistic locking). `journalctl -u intdata-web --since "15 minutes ago"` без ошибок. Gate-5 закрыт,
     follow-ups SEC-SS-001/002/003 остаются в backlog.
