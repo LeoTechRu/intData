@@ -55,3 +55,15 @@
 ## Журнал
 - 2025-09-20 — добавлен автоматический деплой ветки `test` и runbook; ответственный codex.
 - 2025-09-23 — выполнен релизный fast-forward `test -> main` (коммит `d10c2a1`), подтверждён новый Trivy, GateRecord обновлён.
+- 2025-09-24 — SmartSidebar rebuild (commit `8ad330d`): `bash scripts/rebuild_smart_sidebar.sh`, smoke desktop/mobile, `journalctl -u intdata-test-web` без ошибок.
+
+### 2025-09-24 — SmartSidebar Release Addendum
+1. `npm ci && npm run lint && npm run test -- ModuleTabs.test.tsx && npm run build` — прогнать линты/тесты и собрать Next.js с обновлённым SmartSidebar.
+2. `bash scripts/rebuild_smart_sidebar.sh` — пересобрать артефакты и доставить `.next` в `/var/www/intdata-test`, перезапустить `intdata-test-web`.
+3. (Опционально) `ansible-playbook deploy/test.yml --tags=frontend` — использовать автоматизированный деплой, если сборка выполнялась на CI/локально.
+4. Smoke (desktop):
+   - Открыть `/` → проверить переключение модулей, drag/drop модулей и страниц.
+   - Убедиться, что скрытые страницы отображаются в блоке «Скрытые».
+5. Smoke (mobile viewport): DevTools width 375px → убедиться, что ModuleTabsBar скроллится, SmartSidebar свернут до бейджа.
+6. Пост-деплой: просмотреть `journalctl -u intdata-test-web --since "5 minutes ago"` на наличие ошибок drag/layout API.
+7. Записать GateRecord release (hash, время rebuild, кто выполнял smoke).

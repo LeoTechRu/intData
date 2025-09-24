@@ -897,6 +897,22 @@ CREATE TABLE user_settings (
 	FOREIGN KEY(user_id) REFERENCES users_web (id) ON DELETE CASCADE
 );
 
+CREATE TABLE nav_sidebar_layouts (
+	id SERIAL NOT NULL, 
+	scope VARCHAR(16) NOT NULL, 
+	owner_id INTEGER, 
+	version INTEGER DEFAULT 1 NOT NULL, 
+	payload JSONB DEFAULT '{}'::jsonb NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	CONSTRAINT ck_nav_sidebar_layouts_scope CHECK (scope IN ('user', 'global'))
+);
+
+CREATE UNIQUE INDEX uq_nav_sidebar_layouts_scope_owner ON nav_sidebar_layouts (scope, owner_id);
+
+CREATE INDEX ix_nav_sidebar_layouts_owner ON nav_sidebar_layouts (owner_id) WHERE owner_id IS NOT NULL;
+
 CREATE TABLE user_stats (
 	owner_id BIGINT NOT NULL, 
 	level INTEGER, 

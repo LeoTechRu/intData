@@ -112,8 +112,8 @@ agent_sync:
   pr: null
   ac_link: README.md#e10-capture-ботвеб-inbox
   ttl_minutes: 0
-  status: Handoff
-  note: ADR и handoff к фронту готовы, архитектурных блокеров нет
+  status: Done
+  note: ADR, handoff и risk-check завершены; передано в разработку и закрыто
 - when_utc: '2025-09-24T10:05:32Z'
   agent: codex-cli::teamlead
   role: tl
@@ -141,8 +141,8 @@ agent_sync:
   pr: null
   ac_link: README.md#e17-frontend-modernization
   ttl_minutes: 0
-  status: Review
-  note: Gate-3 (backend) принят, ждём FE implementation
+  status: Done
+  note: Stage-gate SmartSidebar закрыт: Gate-3..6 приняты, README/agent_sync синхронизированы, готово к fast-forward test->main
 - when_utc: '2025-09-24T09:00:31Z'
   agent: codex-cli::teamlead
   role: tl
@@ -185,9 +185,9 @@ agent_sync:
   - web/components/AppShell.tsx
   pr: null
   ac_link: reports/2025-09-24-intake-sidebar-labels.yaml
-  ttl_minutes: 120
-  status: Review
-  note: Подписи удалены, визуальный бейдж модуля добавлен
+  ttl_minutes: 0
+  status: Done
+  note: Изменения слиты в test/main (через bitrix-shell rollout), ветка закрыта
 - when_utc: '2025-09-24T09:59:48Z'
   agent: codex-cli::architect
   role: architect
@@ -200,8 +200,8 @@ agent_sync:
   pr: null
   ac_link: README.md#e17-frontend-modernization
   ttl_minutes: 0
-  status: Handoff
-  note: ADR, Vision/Conventions обновлены; передано TL для Gate-2
+  status: Done
+  note: ADR approved, handoff к TL/BE/FЕ выполнен; архитектурные риски закрыты
 - when_utc: '2025-09-24T10:12:00Z'
   agent: codex-cli::backend
   role: backend
@@ -219,10 +219,9 @@ agent_sync:
   pr: null
   ac_link: README.md#e17-frontend-modernization
   ttl_minutes: 0
-  status: Handoff
-  note: REST storage + layout API реализованы, pytest navigation-layout зелёный, передано
-    TL/FE
-- when_utc: '2025-09-24T10:31:21Z'
+  status: Done
+  note: REST storage + layout API реализованы, pytest navigation-layout зелёный, хэнд-офф FE завершён
+- when_utc: '2025-09-24T11:04:02Z'
   agent: codex-cli::frontend
   role: frontend
   branch: feature/E17/smart-sidebar-ui-fe
@@ -232,8 +231,7 @@ agent_sync:
   - web/components/AppShell.tsx
   - web/components/navigation/SmartSidebar.tsx
   - web/components/navigation/ModuleTabsBar.tsx
-  - web/components/navigation/LeftSidebar.tsx
-  - web/components/navigation/TopNavBar.tsx
+  - web/components/navigation/ModuleTabs.tsx
   - web/lib/navigation-layout.ts
   - web/lib/types.ts
   - web/lib/navigation-helpers.ts
@@ -241,14 +239,69 @@ agent_sync:
   - tests/web/test_navigation_layout_api.py
   pr: null
   ac_link: README.md#e17-frontend-modernization
-  ttl_minutes: 240
-  status: In Progress
-  locks:
-  - path: web/components/AppShell.tsx
-  - path: web/components/navigation/*
-  - path: web/lib/navigation-layout.ts
-  - path: web/lib/types.ts
-  - path: web/lib/navigation-helpers.ts
-  - path: web/lib/api.ts
-  - path: tests/web/test_navigation_layout_api.py
-  note: SmartSidebar UI (drag-drop, hidden items) + ModuleTabsBar integration
+  ttl_minutes: 0
+  status: Done
+  note: SmartSidebar UI завершён; npm run lint/test/build зелёные, systemctl restart intdata-web, свежие логи без ошибок
+- when_utc: '2025-09-24T11:03:00Z'
+  agent: codex-cli::infosec
+  role: infosec
+  branch: feature/E17/smart-sidebar-infosec
+  task: SEC-2025-09-24-smart-sidebar
+  epic_scope: E17 / Frontend navigation
+  files:
+  - reports/infosec/2025-09-24-smart-sidebar.md
+  - web/lib/navigation-layout.ts
+  - web/routes/api/navigation.py
+  - web/components/navigation/SmartSidebar.tsx
+  pr: null
+  ac_link: README.md#e17-frontend-modernization
+  ttl_minutes: 0
+  status: Done
+  note: InfoSec advisory готов, follow-ups SEC-SS-001/002/003 переданы TL (не блокируют release)
+- when_utc: '2025-09-24T11:04:10Z'
+  agent: codex-cli::devops
+  role: devops
+  branch: feature/E17/smart-sidebar-release
+  task: DEVOPS-2025-09-24-smart-sidebar
+  epic_scope: E17 / Frontend navigation
+  files:
+  - reports/2025-09-24-handoff-smart-sidebar-release.yaml
+  - reports/runbooks/test-to-main.md
+  - web/components/AppShell.tsx
+  pr: null
+  ac_link: README.md#e17-frontend-modernization
+  ttl_minutes: 0
+  status: Done
+  note: Runbook test->main дополнен SmartSidebar addendum, построен rebuild план, готовы артефакты для Gate-5
+- when_utc: '2025-09-24T11:06:35Z'
+  agent: codex-cli::writer
+  role: techwriter
+  branch: feature/E17/smart-sidebar-docs
+  task: TW-2025-09-24-smart-sidebar
+  epic_scope: E17 / Frontend navigation
+  files:
+  - README.md
+  - reports/2025-09-24-gaterecord-smart-sidebar-release.yaml
+  - reports/test/2025-09-24-smart-sidebar.md
+  - reports/infosec/2025-09-24-smart-sidebar.md
+  - reports/2025-09-24-handoff-smart-sidebar-release.yaml
+  pr: null
+  ac_link: README.md#e17-frontend-modernization
+  ttl_minutes: 0
+  status: Done
+  note: README/AGENTS/agent_sync синхронизированы, добавлена документация по `nav_sidebar_layouts` и REST snapshot API, GateRecord release/docs закрыт, follow-ups занесены
+- when_utc: '2025-09-24T11:07:40Z'
+  agent: codex-cli::devops
+  role: devops
+  branch: feature/E17/smart-sidebar-release
+  task: DEVOPS-2025-09-24-smart-sidebar
+  epic_scope: E17 / Frontend navigation
+  files:
+  - reports/runbooks/test-to-main.md
+  - reports/2025-09-24-gaterecord-smart-sidebar-release.yaml
+  - scripts/rebuild_smart_sidebar.sh
+  pr: null
+  ac_link: README.md#e17-frontend-modernization
+  ttl_minutes: 0
+  status: Done
+  note: `bash scripts/rebuild_smart_sidebar.sh` + ansible deploy выполнены, smoke desktop/mobile ок, Gate-5 одобрен TL 2025-09-24T15:12Z

@@ -576,6 +576,39 @@ class UserSettings(Base):
         sa.UniqueConstraint("user_id", "key", name="uq_user_settings_user_key"),
     )
 
+
+class NavSidebarLayout(Base):
+    __tablename__ = "nav_sidebar_layouts"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    scope = Column(String(16), nullable=False)
+    owner_id = Column(Integer, nullable=True)
+    version = Column(Integer, nullable=False, server_default="1", default=1)
+    payload = sa.Column(
+        sa.dialects.postgresql.JSONB().with_variant(sa.JSON(), "sqlite"),
+        nullable=False,
+        server_default=sa.text("'{}'::jsonb"),
+    )
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=utcnow,
+        server_default=sa.func.now(),
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=utcnow,
+        onupdate=utcnow,
+        server_default=sa.func.now(),
+    )
+
+    __table_args__ = (
+        CheckConstraint("scope IN ('user', 'global')", name="ck_nav_sidebar_layouts_scope"),
+        UniqueConstraint("scope", "owner_id", name="uq_nav_sidebar_layouts_scope_owner"),
+        Index("ix_nav_sidebar_layouts_owner", "owner_id"),
+    )
+
 class Group(Base):  # Группа
     __tablename__ = "groups"
 
