@@ -1,0 +1,19 @@
+handoff:
+  from: architect
+  to: frontend
+  initiative: E17 / Frontend navigation
+  task: TL-2025-09-24-bitrix24-nav
+  context: |
+    Базовая архитектура Bitrix24-стайл навигации утверждена. Требуется обновить AppShell, LeftSidebar,
+    TopNavBar, ModuleTabs и внедрить SidebarConfigurator с поддержкой drag-and-drop, primary tool и синхронизации
+    layout (user/global). См. подробности в reports/arch/2025-09-24-bitrix24-leftnav.md.
+  artifacts:
+    - path: reports/arch/2025-09-24-bitrix24-leftnav.md
+      note: Архитектурные решения и UX-паттерны
+  acceptance:
+    - AC-1..AC-9 выполняются в UI
+    - Левый бар отражает merged layout, hidden блок единый
+    - TopNavBar содержит только табы и профиль, без дубля заголовков
+    - SidebarConfigurator поддерживает user/global сохранение и custom links
+  blockers:
+    - Требуется подтверждение наличия backend-эндпоинтов /api/v1/ui/sidebar/layout (при отсутствии — временный bridge)
