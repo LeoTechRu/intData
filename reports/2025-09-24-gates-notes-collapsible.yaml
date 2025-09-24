@@ -1,0 +1,65 @@
+gate_check:
+  - gate: 0
+    role_owner: tl
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "2025-09-24T10:05Z — intake оформлен, README Tasklist дополнен, agent_sync обновлён для TL-2025-09-24-notes-collapsible."
+  - gate: 1
+    role_owner: architect
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "2025-09-24T10:09Z — ADR 2025-09-24-notes-collapsible утверждён, handoff к фронтенду оформлен без блокеров."
+  - gate: 2
+    role_owner: tl
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "2025-09-24T10:09Z — TaskCard'ы FE/QA зарегистрированы (reports/2025-09-24-taskcards-notes-collapsible.yaml), FE branch feature/E10/notes-collapsible-fe открыта."
+  - gate: 3
+    role_owner: frontend
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "2025-09-24T10:11Z — CollapsibleSection внедрён, NotesModule обновлён, vitest run NotesModule зелёный, handoff QA приложен."
+  - gate: 4
+    role_owner: qa
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "2025-09-24T10:26Z — QA отчёт reports/test/2025-09-24-notes-collapsible.md, vitest run NotesModule, manual smoke подтверждает UX."
+  - gate: 5
+    role_owner: infosec
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "2025-09-24T10:30Z — InfoSec advisory (reports/infosec/2025-09-24-notes-collapsible.md), нарушений не выявлено, рекомендации should/could зафиксированы."
+  - gate: 6
+    role_owner: devops
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "2025-09-24T10:32Z — Release checklist (reports/runbooks/2025-09-24-notes-collapsible.md), lint/test/build выполнены, план рестарта/rollback описан."
+  - gate: 7
+    role_owner: tw
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "2025-09-24T10:34Z — README Tasklist и GateLog обновлены, агент синхронизирован, доп. документация не требуется."

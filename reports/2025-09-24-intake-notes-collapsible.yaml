@@ -1,0 +1,22 @@
+intake:
+  source: owner
+  initiative: "E10/IB-08"
+  task: "TL-2025-09-24-notes-collapsible"
+  goal: "Свернуть формы быстрой заметки и фильтра на странице /notes в компактные раскрывающиеся секции"
+  acceptance:
+    - "В свернутом состоянии каждая форма занимает не более одной строки с CTA"
+    - "Раскрытие формы показывает все поля и не ломает существующую валидацию"
+    - "При сохранении заметок и применении фильтров поведение запросов не меняется"
+  constraints:
+    - "Соблюсти UX-договорённости Bitrix24-style навигации и Tailwind-паттерны"
+    - "Не трогать серверные эндпоинты и схемы данных"
+    - "Поддержать адаптивность: мобильный и десктопный сценарии"
+  artifacts_expected:
+    - path: web/components/notes/NotesModule.tsx
+      type: code
+    - path: web/components/ui/CollapsibleSection.tsx
+      type: code
+    - path: web/components/notes/NotesModule.test.tsx
+      type: test
+    - path: README.md
+      type: doc

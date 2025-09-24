@@ -209,6 +209,11 @@ describe('NotesModule', () => {
 
     renderWithClient(<NotesModule />);
 
+    expect(screen.queryByPlaceholderText('Фиксируйте мысли, ссылки и рабочие детали.')).not.toBeInTheDocument();
+
+    const quickToggle = await screen.findByRole('button', { name: /Создать заметку/i });
+    fireEvent.click(quickToggle);
+
     const textarea = await screen.findByPlaceholderText('Фиксируйте мысли, ссылки и рабочие детали.');
     fireEvent.change(textarea, { target: { value: 'Проверить интеграции и оффер.' } });
 
@@ -325,6 +330,9 @@ describe('NotesModule', () => {
     await waitFor(() => {
       expect(screen.getByText('Нет заметок')).toBeInTheDocument();
     });
+
+    const filterToggle = screen.getByRole('button', { name: /Фильтры/i });
+    fireEvent.click(filterToggle);
 
     const archiveToggle = screen.getByLabelText('Показать архив');
     fireEvent.click(archiveToggle);

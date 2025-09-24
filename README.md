@@ -242,6 +242,7 @@ Intelligent Data Pro — приватный продуктовый репози�
 
 #### E10: Capture (бот/веб, Inbox)
 - [x] TL-2025-09-19-notes-restore — Переработать страницу `/notes`: безопасное архивирование карточек с восстановлением, отдельный просмотр архива, синхронизация drag-n-drop и фильтров (owner: codex, ветка `feature/E10/notes-restore-frontend`, merge 4934acc в `test→main`).
+- [ ] TL-2025-09-24-notes-collapsible — Свернуть формы быстрой заметки и фильтров в раскрывающиеся секции на `/notes`, подготовить компонент CollapsibleSection и обновить тесты (owner: codex, intake `reports/2025-09-24-intake-notes-collapsible.yaml`, планируемая ветка `feature/E10/notes-collapsible-fe`).
 
 - [x] TL-2025-09-18-nav-blueprint — Расширить NAV_BLUEPRINT и API `/api/v1/navigation/sidebar*` полями модулей и секций (owner: codex, ветка `feature/E17/nav-blueprint-codex`, см. [E17](#e17-frontend-modernization)).
 - [x] TL-2025-09-18-appshell-modules — Перестроить AppShell и SidebarEditor: секции + collapsible, единый список избранных страниц без дублей (owner: codex, ветка `feature/E17/nav-blueprint-codex`).

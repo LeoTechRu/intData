@@ -1,0 +1,23 @@
+handoff:
+  from: architect
+  to: frontend
+  initiative: E10/IB-08
+  task: TL-2025-09-24-notes-collapsible
+  context: |
+    Владельцу нужен компактный /notes: формы «Быстрая заметка» и «Фильтры» скрываются за CTA-полосами, раскрываются по клику.
+    Данные остаются в NotesModule; бэкенд не трогаем. Компонент CollapsibleSection обеспечивает анимацию и доступность.
+  artifacts:
+    - path: reports/arch/2025-09-24-notes-collapsible-adr.md
+      note: Решение и тестовые требования
+    - path: web/components/ui/CollapsibleSection.tsx
+      note: Новый общий компонент для свертываемых секций
+    - path: web/components/notes/NotesModule.tsx
+      note: Внедрение двух секций с обновлённым UX
+    - path: web/components/notes/NotesModule.test.tsx
+      note: Юнит-тесты на раскрытие/сворачивание
+  acceptance:
+    - Секции скрыты при первичном рендере
+    - Быстрая заметка раскрывается по клику/фокусу и сворачивается после submit
+    - Заголовок фильтра отражает активные фильтры и чекбоксы
+  blockers:
+    - нет

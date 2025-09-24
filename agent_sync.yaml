@@ -1,44 +1,223 @@
 agent_sync:
-  - when_utc: "2025-09-24T09:00:31Z"
-    agent: "codex-cli::teamlead"
-    role: "tl"
-    branch: "main"
-    task: "TL-2025-09-24-owner-response-sla"
-    epic_scope: "Ops / Stage-Gate Playbook"
-    files:
-      - "AGENTS.md"
-      - "agent_sync.yaml"
-    pr: null
-    ac_link: "AGENTS.md#owner-communication-sla"
-    ttl_minutes: 0
-    status: "Done"
-    note: "AGENTS.md обновлён: owner ping = немедленная декомпозиция, вопросы только при необходимости уточнения целей."
-  - when_utc: "2025-09-24T08:41:13Z"
-    agent: "codex-cli::frontend"
-    role: "fe"
-    branch: "feature/E17/bitrix-menu-overhaul-fe"
-    task: "TL-2025-09-24-bitrix-menu-overhaul"
-    epic_scope: "E17 / Frontend navigation"
-    files:
-      - "web/components/AppShell.tsx"
-      - "web/components/navigation/LeftSidebar.tsx"
-      - "web/components/navigation/TopNavBar.tsx"
-      - "web/components/navigation/ModuleTabs.tsx"
-    pr: null
-    ac_link: "README.md#e17-frontend-modernization"
-    ttl_minutes: 0
-    status: "Done"
-    note: "2025-09-24 — merged to test/main; lint+vitest green; Bitrix24 rail/top bar live."
-  - when_utc: "2025-09-24T07:05:00Z"
-    agent: "codex-cli::teamlead"
-    role: "tl"
-    branch: "feature/E17/sidebar-label-cleanup-fe"
-    task: "TL-2025-09-24-sidebar-labels"
-    epic_scope: "E17 / Frontend navigation"
-    files:
-      - "web/components/AppShell.tsx"
-    pr: null
-    ac_link: "reports/2025-09-24-intake-sidebar-labels.yaml"
-    ttl_minutes: 120
-    status: "Review"
-    note: "Подписи удалены, визуальный бейдж модуля добавлен"
+- when_utc: '2025-09-24T10:33:40Z'
+  agent: codex-cli::techwriter
+  role: tw
+  branch: feature/E10/notes-collapsible-docs
+  task: TL-2025-09-24-notes-collapsible
+  epic_scope: E10 / Capture (Inbox)
+  files:
+  - README.md
+  - reports/2025-09-24-gates-notes-collapsible.yaml
+  pr: null
+  ac_link: README.md#e10-capture-ботвеб-inbox
+  ttl_minutes: 0
+  status: Done
+  note: README Tasklist обновлён, GateLog зафиксирован; AGENTS без изменений
+- when_utc: '2025-09-24T10:32:15Z'
+  agent: codex-cli::devops
+  role: devops
+  branch: feature/E10/notes-collapsible-release
+  task: TL-2025-09-24-notes-collapsible
+  epic_scope: E10 / Capture (Inbox)
+  files:
+  - reports/runbooks/2025-09-24-notes-collapsible.md
+  pr: null
+  ac_link: README.md#e10-capture-ботвеб-inbox
+  ttl_minutes: 0
+  status: Done
+  note: Release checklist обновлён; lint/test/build выполнены
+- when_utc: '2025-09-24T10:30:12Z'
+  agent: codex-cli::infosec
+  role: infosec
+  branch: feature/E10/notes-collapsible-infosec
+  task: TL-2025-09-24-notes-collapsible
+  epic_scope: E10 / Capture (Inbox)
+  files:
+  - reports/infosec/2025-09-24-notes-collapsible.md
+  pr: null
+  ac_link: README.md#e10-capture-ботвеб-inbox
+  ttl_minutes: 0
+  status: Done
+  note: 'Неблокирующий advisory: UI-only, нарушений нет'
+- when_utc: '2025-09-24T10:25:40Z'
+  agent: codex-cli::qa
+  role: qa
+  branch: feature/E10/notes-collapsible-qa
+  task: TL-2025-09-24-notes-collapsible
+  epic_scope: E10 / Capture (Inbox)
+  files:
+  - web/components/notes/NotesModule.test.tsx
+  - reports/test/2025-09-24-notes-collapsible.md
+  pr: null
+  ac_link: README.md#e10-capture-ботвеб-inbox
+  ttl_minutes: 0
+  status: Done
+  note: QA smoke завершён, отчёт reports/test/2025-09-24-notes-collapsible.md
+- when_utc: '2025-09-24T10:09:23Z'
+  agent: codex-cli::frontend
+  role: fe
+  branch: feature/E10/notes-collapsible-fe
+  task: TL-2025-09-24-notes-collapsible
+  epic_scope: E10 / Capture (Inbox)
+  files:
+  - web/components/ui/CollapsibleSection.tsx
+  - web/components/notes/NotesModule.tsx
+  - web/components/notes/NotesModule.test.tsx
+  - reports/2025-09-24-handoff-notes-collapsible-fe.yaml
+  pr: null
+  ac_link: README.md#e10-capture-ботвеб-inbox
+  ttl_minutes: 0
+  status: Done
+  note: Collapsible секции реализованы, unit-тесты обновлены, handoff QA приложен
+- when_utc: '2025-09-24T10:08:49Z'
+  agent: codex-cli::architect
+  role: architect
+  branch: feature/E10/notes-collapsible-arch
+  task: TL-2025-09-24-notes-collapsible
+  epic_scope: E10 / Capture (Inbox)
+  files:
+  - reports/arch/2025-09-24-notes-collapsible-adr.md
+  - reports/2025-09-24-handoff-notes-collapsible-arch.yaml
+  pr: null
+  ac_link: README.md#e10-capture-ботвеб-inbox
+  ttl_minutes: 0
+  status: Handoff
+  note: ADR и handoff к фронту готовы, архитектурных блокеров нет
+- when_utc: '2025-09-24T10:05:32Z'
+  agent: codex-cli::teamlead
+  role: tl
+  branch: main
+  task: TL-2025-09-24-notes-collapsible
+  epic_scope: E10 / Capture (Inbox)
+  files:
+  - reports/2025-09-24-intake-notes-collapsible.yaml
+  - README.md
+  - agent_sync.yaml
+  pr: null
+  ac_link: README.md#e10-capture-ботвеб-inbox
+  ttl_minutes: 0
+  status: Done
+  note: Gate-7 закрыт, подготовлено к merge в test
+- when_utc: '2025-09-24T09:16:37Z'
+  agent: codex-cli::teamlead
+  role: tl
+  branch: main
+  task: TL-2025-09-24-bitrix-smart-sidebar
+  epic_scope: E17 / Frontend navigation
+  files:
+  - reports/2025-09-24-intake-bitrix-smart-sidebar.yaml
+  - agent_sync.yaml
+  pr: null
+  ac_link: README.md#e17-frontend-modernization
+  ttl_minutes: 0
+  status: Review
+  note: Gate-3 (backend) принят, ждём FE implementation
+- when_utc: '2025-09-24T09:00:31Z'
+  agent: codex-cli::teamlead
+  role: tl
+  branch: main
+  task: TL-2025-09-24-owner-response-sla
+  epic_scope: Ops / Stage-Gate Playbook
+  files:
+  - AGENTS.md
+  - agent_sync.yaml
+  pr: null
+  ac_link: AGENTS.md#owner-communication-sla
+  ttl_minutes: 0
+  status: Done
+  note: 'AGENTS.md обновлён: owner ping = немедленная декомпозиция, вопросы только
+    при необходимости уточнения целей.'
+- when_utc: '2025-09-24T08:41:13Z'
+  agent: codex-cli::frontend
+  role: fe
+  branch: feature/E17/bitrix-menu-overhaul-fe
+  task: TL-2025-09-24-bitrix-menu-overhaul
+  epic_scope: E17 / Frontend navigation
+  files:
+  - web/components/AppShell.tsx
+  - web/components/navigation/LeftSidebar.tsx
+  - web/components/navigation/TopNavBar.tsx
+  - web/components/navigation/ModuleTabs.tsx
+  pr: null
+  ac_link: README.md#e17-frontend-modernization
+  ttl_minutes: 0
+  status: Done
+  note: 2025-09-24 — merged to test/main; lint+vitest green; Bitrix24 rail/top bar
+    live.
+- when_utc: '2025-09-24T07:05:00Z'
+  agent: codex-cli::teamlead
+  role: tl
+  branch: feature/E17/sidebar-label-cleanup-fe
+  task: TL-2025-09-24-sidebar-labels
+  epic_scope: E17 / Frontend navigation
+  files:
+  - web/components/AppShell.tsx
+  pr: null
+  ac_link: reports/2025-09-24-intake-sidebar-labels.yaml
+  ttl_minutes: 120
+  status: Review
+  note: Подписи удалены, визуальный бейдж модуля добавлен
+- when_utc: '2025-09-24T09:59:48Z'
+  agent: codex-cli::architect
+  role: architect
+  branch: feature/E17/smart-sidebar-arch
+  task: ARCH-2025-09-24-smart-sidebar
+  epic_scope: E17 / Frontend navigation
+  files:
+  - reports/2025-09-24-handoff-smart-sidebar-arch.yaml
+  - reports/arch/2025-09-24-smart-sidebar-adr.md
+  pr: null
+  ac_link: README.md#e17-frontend-modernization
+  ttl_minutes: 0
+  status: Handoff
+  note: ADR, Vision/Conventions обновлены; передано TL для Gate-2
+- when_utc: '2025-09-24T10:12:00Z'
+  agent: codex-cli::backend
+  role: backend
+  branch: feature/E17/smart-sidebar-layout-be
+  task: BE-2025-09-24-sidebar-layout
+  epic_scope: E17 / Frontend navigation
+  files:
+  - core/services/navigation_service.py
+  - web/routes/api/navigation.py
+  - core/models.py
+  - core/db/migrations/2025_09_24_nav_sidebar_layouts.sql
+  - tests/web/test_navigation_layout_api.py
+  - core/db/SCHEMA.sql
+  - core/db/SCHEMA.json
+  pr: null
+  ac_link: README.md#e17-frontend-modernization
+  ttl_minutes: 0
+  status: Handoff
+  note: REST storage + layout API реализованы, pytest navigation-layout зелёный, передано
+    TL/FE
+- when_utc: '2025-09-24T10:31:21Z'
+  agent: codex-cli::frontend
+  role: frontend
+  branch: feature/E17/smart-sidebar-ui-fe
+  task: FE-2025-09-24-smart-sidebar
+  epic_scope: E17 / Frontend navigation
+  files:
+  - web/components/AppShell.tsx
+  - web/components/navigation/SmartSidebar.tsx
+  - web/components/navigation/ModuleTabsBar.tsx
+  - web/components/navigation/LeftSidebar.tsx
+  - web/components/navigation/TopNavBar.tsx
+  - web/lib/navigation-layout.ts
+  - web/lib/types.ts
+  - web/lib/navigation-helpers.ts
+  - web/lib/api.ts
+  - tests/web/test_navigation_layout_api.py
+  pr: null
+  ac_link: README.md#e17-frontend-modernization
+  ttl_minutes: 240
+  status: In Progress
+  locks:
+  - path: web/components/AppShell.tsx
+  - path: web/components/navigation/*
+  - path: web/lib/navigation-layout.ts
+  - path: web/lib/types.ts
+  - path: web/lib/navigation-helpers.ts
+  - path: web/lib/api.ts
+  - path: tests/web/test_navigation_layout_api.py
+  note: SmartSidebar UI (drag-drop, hidden items) + ModuleTabsBar integration
