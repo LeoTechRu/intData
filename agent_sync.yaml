@@ -1,4 +1,99 @@
 agent_sync:
+- when_utc: '2025-09-24T19:52:38Z'
+  agent: codex-cli::architect
+  role: architect
+  branch: feature/E17/bitrix24-sidebar-arch
+  task: TL-2025-09-24-bitrix24-nav
+  epic_scope: E17 / Frontend navigation
+  files:
+  - reports/arch/2025-09-24-bitrix24-leftnav.md
+  - reports/2025-09-24-handoff-arch-to-fe.yaml
+  pr: null
+  ac_link: README.md#e17-frontend-modernization
+  ttl_minutes: 120
+  status: Handoff
+  note: 'Архитектура Bitrix24-стиля готова; handoff → frontend'
+- when_utc: '2025-09-24T19:56:11Z'
+  agent: codex-cli::fe
+  role: fe
+  branch: feature/E17/bitrix24-sidebar-fe
+  task: TL-2025-09-24-bitrix24-nav
+  epic_scope: E17 / Frontend navigation
+  files:
+  - web/components/AppShell.tsx
+  - web/components/navigation/LeftSidebar.tsx
+  - web/components/navigation/TopNavBar.tsx
+  - web/components/navigation/ModuleTabs.tsx
+  - web/components/navigation/SidebarConfigurator.tsx
+  - web/lib/navigation.ts
+  - web/lib/navigation-helpers.ts
+  - web/lib/navigation-layout.ts
+  - web/lib/useModuleTabs.ts
+  - reports/2025-09-24-handoff-fe-to-qa.yaml
+  pr: null
+  ac_link: README.md#e17-frontend-modernization
+  ttl_minutes: 180
+  status: Review
+  note: 'Bitrix24 левый бар + топ табы реализованы, handoff → QA (custom links ждут backend API)'
+- when_utc: '2025-09-24T20:21:02Z'
+  agent: codex-cli::qa
+  role: qa
+  branch: feature/E17/bitrix24-sidebar-qa
+  task: TL-2025-09-24-bitrix24-nav
+  epic_scope: E17 / Frontend navigation
+  files:
+  - tests/
+  - reports/test/2025-09-24-bitrix24-nav.md
+  pr: null
+  ac_link: README.md#e17-frontend-modernization
+  ttl_minutes: 120
+  status: Handoff
+  note: 'QA: AC-1..AC-9 пройдены, custom links помечены как should-fix; handoff → InfoSec'
+- when_utc: '2025-09-24T20:26:10Z'
+  agent: codex-cli::infosec
+  role: infosec
+  branch: feature/E17/bitrix24-sidebar-infosec
+  task: TL-2025-09-24-bitrix24-nav
+  epic_scope: E17 / Frontend navigation
+  files:
+  - web/components/navigation/
+  - web/lib/navigation-*.ts
+  - reports/infosec/2025-09-24-bitrix24-nav.md
+  pr: null
+  ac_link: README.md#e17-frontend-modernization
+  ttl_minutes: 120
+  status: Handoff
+  note: 'InfoSec: Semgrep/Bandit ok, Trivy недоступен локально — запрос CI скана; handoff → DevOps'
+- when_utc: '2025-09-24T20:33:27Z'
+  agent: codex-cli::devops
+  role: devops
+  branch: feature/E17/bitrix24-sidebar-devops
+  task: TL-2025-09-24-bitrix24-nav
+  epic_scope: E17 / Frontend navigation
+  files:
+  - .github/workflows/
+  - reports/runbooks/test-to-main.md
+  - reports/2025-09-24-gaterecord-bitrix24-nav-release.yaml
+  pr: null
+  ac_link: README.md#e17-frontend-modernization
+  ttl_minutes: 120
+  status: Handoff
+  note: 'Gate-5: npm ci/lint/test/build выполнены, Trivy ждёт CI; handoff → TL'
+- when_utc: '2025-09-24T21:17:19Z'
+  agent: codex-cli::teamlead
+  role: tl
+  branch: main
+  task: TL-2025-09-24-bitrix24-nav
+  epic_scope: E17 / Frontend navigation
+  files:
+  - git (merge feature/E17/bitrix24-sidebar-fe -> test -> main)
+  - reports/2025-09-24-gaterecord-bitrix24-nav-release.yaml
+  - reports/2025-09-24-handoff-devops-to-tl.yaml
+  pr: null
+  ac_link: README.md#e17-frontend-modernization
+  ttl_minutes: 60
+  status: Done
+  note: 'TL gate: GateRecord release утверждён, handoff DevOps→TL обработан; готово к fast-forward test->main'
 - when_utc: '2025-09-24T19:33:18Z'
   agent: codex-cli::teamlead
   role: tl
