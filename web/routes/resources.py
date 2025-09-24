@@ -13,8 +13,8 @@ from web.dependencies import get_current_tg_user
 from .index import render_next_page
 
 
-router = APIRouter(prefix="/resources", tags=["resources"])
-ui_router = APIRouter(prefix="/resources", tags=["resources"], include_in_schema=False)
+router = APIRouter(prefix="/resources", tags=["Tasks & Projects"])
+ui_router = APIRouter(prefix="/resources", tags=["Tasks & Projects"], include_in_schema=False)
 
 
 class ResourceCreate(BaseModel):

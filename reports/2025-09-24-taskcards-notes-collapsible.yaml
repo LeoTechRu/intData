@@ -1,0 +1,16 @@
+taskcards:
+  - role: frontend
+    branch: feature/E10/notes-collapsible-fe
+    card: FE-2025-09-24-notes-collapsible
+    focus: "Collapsible формы быстрой заметки и фильтра"
+    acceptance:
+      - "Форма быстрой заметки и фильтры скрыты по умолчанию и раскрываются через CollapsibleSection"
+      - "UX отражает текущие значения фильтров в хедере секции"
+      - "Обновлены unit-тесты NotesModule под новый UX"
+  - role: qa
+    branch: feature/E10/notes-collapsible-qa
+    card: QA-2025-09-24-notes-collapsible
+    focus: "Регрессия /notes после раскладывающихся форм"
+    acceptance:
+      - "Написан smoke-сценарий: проверка скрытых форм, создание заметки, фильтрация архивов"
+      - "Отчёт `reports/test/2025-09-24-notes-collapsible.md` приложен"

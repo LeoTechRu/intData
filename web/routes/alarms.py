@@ -13,7 +13,7 @@ from core.utils import utcnow
 from web.dependencies import get_current_tg_user
 
 
-router = APIRouter(tags=["calendar"])
+router = APIRouter(tags=["Control Hub"])
 
 
 class AlarmCreate(BaseModel):

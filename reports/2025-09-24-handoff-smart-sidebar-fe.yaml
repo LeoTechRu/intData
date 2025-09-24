@@ -1,0 +1,29 @@
+handoff:
+  from: frontend
+  to: qa
+  initiative: E17 / Frontend navigation
+  task: FE-2025-09-24-smart-sidebar
+  context: |
+    SmartSidebar заменяет LeftSidebar: drag-and-drop модулей и страниц через @dnd-kit, скрытие
+    страниц доступно из блока "Скрытые". ModuleTabsBar обновляет верхнюю панель: фиксированный
+    порядок вкладок, активная подсветка и профиль. Layout сохраняется через новый REST (`/navigation/*layout`).
+    Реализованы optimistic locking, react-query мутации и локальные утилиты `navigation-layout.ts`.
+  artifacts:
+    - path: web/components/navigation/SmartSidebar.tsx
+      note: UI компоненты с dnd-kit, hidden блок, mode switch
+    - path: web/components/navigation/ModuleTabsBar.tsx
+      note: Новый верхний бар без настройки пользователями
+    - path: web/lib/navigation-layout.ts
+      note: merge/drag helpers, REST client
+    - path: web/components/AppShell.tsx
+      note: Интеграция SmartSidebar/ModuleTabsBar, mutation pipelines
+    - path: tests/web/test_navigation_layout_api.py
+      note: Бэкенд pytest (регрессионные сценарии)
+    - path: reports/test/2025-09-24-smart-sidebar.md
+      note: QA чеклист с локальными проверками
+  acceptance:
+    - QA проводит drag/drop и hidden-case тесты (desktop + mobile breakpoint)
+    - Верифицировать optimistic locking (409) на API через интеграционный тест
+    - Залогировать результаты в GateRecord/QA report
+  blockers:
+    - нет

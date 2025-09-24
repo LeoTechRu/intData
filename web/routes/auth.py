@@ -24,7 +24,7 @@ from web.security.authlog import log_event
 from web.security.cookies import set_auth_cookies
 from .index import render_next_page
 
-router = APIRouter(tags=["auth"])
+router = APIRouter(tags=["Users"])
 
 # itsdangerous serializer for magic links and short-lived tokens
 serializer = URLSafeTimedSerializer(os.getenv("SECRET_KEY", S.TG_BOT_TOKEN or ""))

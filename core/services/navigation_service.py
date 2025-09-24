@@ -2,16 +2,21 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
+import sqlalchemy as sa
+from sqlalchemy.ext.asyncio import AsyncSession
+
+import core.db as db
 from core.logger import logger
+from core.models import NavSidebarLayout
 from core.services.access_control import EffectivePermissions
 from core.services.app_settings_service import (
     delete_settings_by_prefix,
     get_settings_by_prefix,
-    upsert_settings,
 )
 from core.services.user_settings_service import UserSettingsService
+from core.utils import utcnow
 
 NAV_VERSION = 1
 GLOBAL_LAYOUT_KEY = "ui.nav.sidebar.layout"
@@ -80,6 +85,21 @@ class NavBlueprintItem:
     category: str = 'general'
     icon: str = 'nav-generic'
     default_hidden: bool = False
+
+
+@dataclass
+class LayoutState:
+    layout: Dict
+    has_custom: bool
+    version: int
+    etag: str
+
+
+class LayoutConflict(Exception):
+    def __init__(self, *, current_version: int, etag: str) -> None:
+        super().__init__("layout version conflict")
+        self.current_version = current_version
+        self.etag = etag
 
 
 NAV_BLUEPRINT: Tuple[NavBlueprintItem, ...] = (
@@ -322,6 +342,179 @@ def _category_definition(module_id: str, category_id: str) -> Dict[str, object]:
     }
 
 
+def _make_etag(scope: str, owner_id: Optional[int], version: int) -> str:
+    owner_part = "global" if owner_id is None else str(owner_id)
+    return f"{scope}:{owner_part}:v{version}"
+
+
+def _layout_filters(scope: str, owner_id: Optional[int]) -> List[Any]:
+    filters: List[Any] = [NavSidebarLayout.scope == scope]
+    if owner_id is None:
+        filters.append(NavSidebarLayout.owner_id.is_(None))
+    else:
+        filters.append(NavSidebarLayout.owner_id == owner_id)
+    return filters
+
+
+async def _select_layout_record(
+    session: AsyncSession,
+    scope: str,
+    owner_id: Optional[int],
+) -> NavSidebarLayout | None:
+    stmt = sa.select(NavSidebarLayout).where(*_layout_filters(scope, owner_id)).limit(1)
+    res = await session.execute(stmt)
+    return res.scalar_one_or_none()
+
+
+async def _load_layout_state(
+    scope: str,
+    owner_id: Optional[int],
+    allowed_items: Sequence[NavBlueprintItem],
+) -> LayoutState:
+    allowed_keys = [item.key for item in allowed_items]
+    defaults = {item.key: item.default_hidden for item in allowed_items}
+    async with db.async_session() as session:
+        record = await _select_layout_record(session, scope, owner_id)
+    if record:
+        layout = _sanitize_layout(record.payload, allowed_keys, defaults)
+        return LayoutState(layout=layout, has_custom=True, version=record.version, etag=_make_etag(scope, owner_id, record.version))
+    default_layout = _sanitize_layout(None, allowed_keys, defaults)
+    return LayoutState(layout=default_layout, has_custom=False, version=0, etag=_make_etag(scope, owner_id, 0))
+
+
+async def _load_legacy_user_layout(user_id: int) -> Optional[Dict]:
+    async with UserSettingsService() as svc:
+        return await svc.get(user_id, "nav_sidebar")
+
+
+async def _clear_legacy_user_layout(user_id: int) -> None:
+    async with UserSettingsService() as svc:
+        await svc.delete(user_id, "nav_sidebar")
+
+
+async def _maybe_migrate_global_layout(allowed_items: Sequence[NavBlueprintItem]) -> Optional[LayoutState]:
+    stored = await get_settings_by_prefix(GLOBAL_PREFIX)
+    raw_value = stored.get(GLOBAL_LAYOUT_KEY)
+    if not raw_value:
+        return None
+    try:
+        data = json.loads(raw_value)
+    except json.JSONDecodeError:
+        logger.warning("navigation: invalid JSON in legacy global layout; skipping migration")
+        await delete_settings_by_prefix(GLOBAL_PREFIX)
+        return None
+    sanitized = sanitize_layout(data, allowed_items)
+    await _persist_layout('global', None, sanitized, expected_version=0)
+    await delete_settings_by_prefix(GLOBAL_PREFIX)
+    return await _load_layout_state('global', None, allowed_items)
+
+
+async def _load_global_layout_state(allowed_items: Sequence[NavBlueprintItem]) -> LayoutState:
+    state = await _load_layout_state('global', None, allowed_items)
+    if state.has_custom:
+        return state
+    migrated = await _maybe_migrate_global_layout(allowed_items)
+    if migrated:
+        return migrated
+    return state
+
+
+async def _load_user_layout_state(
+    user_id: int,
+    allowed_items: Sequence[NavBlueprintItem],
+) -> LayoutState:
+    state = await _load_layout_state('user', user_id, allowed_items)
+    if state.has_custom:
+        return state
+    legacy = await _load_legacy_user_layout(user_id)
+    if legacy is None:
+        return state
+    sanitized = sanitize_layout(legacy, allowed_items)
+    await _persist_layout('user', user_id, sanitized, expected_version=0)
+    await _clear_legacy_user_layout(user_id)
+    return await _load_layout_state('user', user_id, allowed_items)
+
+
+async def _resolve_layout_states(
+    user_id: Optional[int],
+    viewer_role: Optional[str],
+    effective: Optional[EffectivePermissions],
+) -> Tuple[
+    Sequence[NavBlueprintItem],
+    Dict,
+    LayoutState,
+    LayoutState,
+    Dict,
+]:
+    allowed_items = allowed_blueprint(effective, viewer_role)
+    default_layout = _default_layout(allowed_items)
+    global_state = await _load_global_layout_state(allowed_items)
+    if user_id is not None:
+        user_state = await _load_user_layout_state(user_id, allowed_items)
+    else:
+        user_state = LayoutState(
+            layout=default_layout,
+            has_custom=False,
+            version=0,
+            etag=_make_etag('user', None, 0),
+        )
+    merged_items = _merge_layouts(
+        default_layout,
+        global_state.layout,
+        user_state.layout,
+        user_has_custom=user_state.has_custom,
+    )
+    merged_layout = {"v": NAV_VERSION, "items": merged_items}
+    return allowed_items, default_layout, global_state, user_state, merged_layout
+
+
+async def _persist_layout(
+    scope: str,
+    owner_id: Optional[int],
+    layout: Dict,
+    *,
+    expected_version: Optional[int],
+) -> int:
+    async with db.async_session() as session:
+        async with session.begin():
+            record = await _select_layout_record(session, scope, owner_id)
+            if record is None:
+                if expected_version not in (None, 0):
+                    raise LayoutConflict(current_version=0, etag=_make_etag(scope, owner_id, 0))
+                new_record = NavSidebarLayout(
+                    scope=scope,
+                    owner_id=owner_id,
+                    version=1,
+                    payload=layout,
+                )
+                session.add(new_record)
+                await session.flush()
+                return new_record.version
+            if expected_version is not None and expected_version != record.version:
+                raise LayoutConflict(current_version=record.version, etag=_make_etag(scope, owner_id, record.version))
+            record.payload = layout
+            record.version = record.version + 1
+            record.updated_at = utcnow()
+            return record.version
+
+
+async def _delete_layout(
+    scope: str,
+    owner_id: Optional[int],
+    *,
+    expected_version: Optional[int],
+) -> None:
+    async with db.async_session() as session:
+        async with session.begin():
+            record = await _select_layout_record(session, scope, owner_id)
+            if record is None:
+                if expected_version not in (None, 0):
+                    raise LayoutConflict(current_version=0, etag=_make_etag(scope, owner_id, 0))
+                return
+            if expected_version is not None and expected_version != record.version:
+                raise LayoutConflict(current_version=record.version, etag=_make_etag(scope, owner_id, record.version))
+            await session.delete(record)
+
 def _sanitize_layout(
     raw: Optional[Dict],
     allowed_keys: Sequence[str],
@@ -416,25 +609,16 @@ def _merge_layouts(
 
 
 async def load_global_layout(allowed_items: Sequence[NavBlueprintItem]) -> Dict:
-    allowed_keys = [item.key for item in allowed_items]
-    defaults = {item.key: item.default_hidden for item in allowed_items}
-    stored = await get_settings_by_prefix(GLOBAL_PREFIX)
-    raw_value = stored.get(GLOBAL_LAYOUT_KEY)
-    data = None
-    if raw_value:
-        try:
-            data = json.loads(raw_value)
-        except json.JSONDecodeError:
-            logger.warning("navigation: invalid JSON in global layout, reverting to default")
-    return _sanitize_layout(data, allowed_keys, defaults)
+    state = await _load_global_layout_state(allowed_items)
+    return state.layout
 
 
 async def save_global_layout(layout: Dict) -> None:
-    payload = json.dumps(layout, ensure_ascii=False, separators=(",", ":"))
-    await upsert_settings({GLOBAL_LAYOUT_KEY: payload})
+    await _persist_layout('global', None, layout, expected_version=None)
 
 
 async def reset_global_layout() -> None:
+    await _delete_layout('global', None, expected_version=None)
     await delete_settings_by_prefix(GLOBAL_PREFIX)
 
 
@@ -442,21 +626,16 @@ async def load_user_layout(
     user_id: int,
     allowed_items: Sequence[NavBlueprintItem],
 ) -> Tuple[Dict, bool]:
-    allowed_keys = [item.key for item in allowed_items]
-    defaults = {item.key: item.default_hidden for item in allowed_items}
-    async with UserSettingsService() as svc:
-        raw = await svc.get(user_id, "nav_sidebar")
-    return _sanitize_layout(raw, allowed_keys, defaults), raw is not None
+    state = await _load_user_layout_state(user_id, allowed_items)
+    return state.layout, state.has_custom
 
 
 async def save_user_layout(user_id: int, layout: Dict) -> None:
-    async with UserSettingsService() as svc:
-        await svc.upsert(user_id, "nav_sidebar", layout)
+    await _persist_layout('user', user_id, layout, expected_version=None)
 
 
 async def delete_user_layout(user_id: int) -> None:
-    async with UserSettingsService() as svc:
-        await svc.delete(user_id, "nav_sidebar")
+    await _delete_layout('user', user_id, expected_version=None)
 
 
 def sanitize_layout(raw: Optional[Dict], allowed_items: Sequence[NavBlueprintItem]) -> Dict:
@@ -473,20 +652,12 @@ async def build_navigation_payload(
     legacy_base: Optional[str],
     expose_global: bool,
 ) -> Dict:
-    allowed_items = allowed_blueprint(effective, viewer_role)
-    allowed_keys = [item.key for item in allowed_items]
-    default_layout = _default_layout(allowed_items)
-    global_layout = await load_global_layout(allowed_items)
-    if user_id is not None:
-        user_layout, user_has_custom = await load_user_layout(user_id, allowed_items)
-    else:
-        user_layout, user_has_custom = _default_layout(allowed_items), False
-    merged_items = _merge_layouts(
-        default_layout,
-        global_layout,
-        user_layout,
-        user_has_custom=user_has_custom,
+    allowed_items, default_layout, global_state, user_state, merged_layout = await _resolve_layout_states(
+        user_id,
+        viewer_role,
+        effective,
     )
+    merged_items = merged_layout["items"]
 
     base = legacy_base.rstrip("/") if legacy_base else None
     blueprint_map = {item.key: item for item in allowed_items}
@@ -556,8 +727,8 @@ async def build_navigation_payload(
         "modules": modules_payload,
         "categories": categories_payload,
         "layout": {
-            "user": user_layout,
-            "global": global_layout if expose_global else None,
+            "user": user_state.layout if user_state.has_custom else None,
+            "global": global_state.layout if (expose_global and global_state.has_custom) else None,
         },
         "can_edit_global": expose_global,
     }
@@ -578,4 +749,81 @@ __all__ = [
     "save_user_layout",
     "delete_user_layout",
     "build_navigation_payload",
+    "get_user_sidebar_snapshot",
+    "get_global_sidebar_snapshot",
+    "mutate_user_sidebar_layout",
+    "mutate_global_sidebar_layout",
+    "LayoutConflict",
 ]
+
+
+async def get_user_sidebar_snapshot(
+    *,
+    user_id: int,
+    viewer_role: Optional[str],
+    effective: Optional[EffectivePermissions],
+) -> Dict[str, Any]:
+    (
+        _allowed_items,
+        _default_layout,
+        global_state,
+        user_state,
+        merged_layout,
+    ) = await _resolve_layout_states(user_id, viewer_role, effective)
+    return {
+        "layout": user_state.layout if user_state.has_custom else None,
+        "version": user_state.version,
+        "hasCustom": user_state.has_custom,
+        "merged": merged_layout,
+        "navVersion": NAV_VERSION,
+        "globalVersion": global_state.version,
+        "globalHasCustom": global_state.has_custom,
+        "etag": user_state.etag,
+        "globalEtag": global_state.etag,
+    }
+
+
+async def get_global_sidebar_snapshot(
+    *,
+    viewer_role: Optional[str],
+    effective: Optional[EffectivePermissions],
+) -> Dict[str, Any]:
+    allowed_items = allowed_blueprint(effective, viewer_role)
+    global_state = await _load_global_layout_state(allowed_items)
+    return {
+        "layout": global_state.layout if global_state.has_custom else None,
+        "version": global_state.version,
+        "hasCustom": global_state.has_custom,
+        "navVersion": NAV_VERSION,
+        "etag": global_state.etag,
+    }
+
+
+async def mutate_user_sidebar_layout(
+    *,
+    user_id: int,
+    payload: Optional[Dict],
+    reset: bool,
+    expected_version: Optional[int],
+    allowed_items: Sequence[NavBlueprintItem],
+) -> None:
+    if reset or payload is None:
+        await _delete_layout('user', user_id, expected_version=expected_version)
+        return
+    sanitized = sanitize_layout(payload, allowed_items)
+    await _persist_layout('user', user_id, sanitized, expected_version=expected_version)
+
+
+async def mutate_global_sidebar_layout(
+    *,
+    payload: Optional[Dict],
+    reset: bool,
+    expected_version: Optional[int],
+    allowed_items: Sequence[NavBlueprintItem],
+) -> None:
+    if reset or payload is None:
+        await _delete_layout('global', None, expected_version=expected_version)
+        await delete_settings_by_prefix(GLOBAL_PREFIX)
+        return
+    sanitized = sanitize_layout(payload, allowed_items)
+    await _persist_layout('global', None, sanitized, expected_version=expected_version)

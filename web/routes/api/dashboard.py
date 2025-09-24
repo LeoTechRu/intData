@@ -7,7 +7,7 @@ from core.services.dashboard_service import build_dashboard_overview
 from web.dependencies import get_current_web_user
 
 
-router = APIRouter(prefix="/dashboard", tags=["dashboard"])
+router = APIRouter(prefix="/dashboard", tags=["Control Hub"])
 
 
 @router.get("/overview")

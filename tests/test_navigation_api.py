@@ -1,7 +1,7 @@
 import pytest
 import pytest_asyncio
 from fastapi import FastAPI
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
@@ -81,7 +81,8 @@ async def test_navigation_user_layout(monkeypatch, async_session):
         async with session.begin():
             session.add(WebUser(id=1, username="nav_user", role="single"))
 
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         res = await client.get("/api/v1/navigation/sidebar")
         assert res.status_code == 200
         body = res.json()
@@ -95,32 +96,52 @@ async def test_navigation_user_layout(monkeypatch, async_session):
         assert all("module" in item and "section_order" in item for item in body["items"])
         assert all("category" in item for item in body["items"])
 
-        payload = {
-            "layout": {
+        snapshot = await client.get("/api/v1/navigation/user-sidebar-layout")
+        assert snapshot.status_code == 200
+        snapshot_body = snapshot.json()
+        assert snapshot_body["version"] == 0
+        assert snapshot_body["hasCustom"] is False
+        assert snapshot_body["canEditGlobal"] is False
+        assert snapshot_body["navVersion"] == 1
+
+        mutation_payload = {
+            "payload": {
                 "v": 1,
                 "items": [
                     {"key": "projects", "position": 1, "hidden": False},
                     {"key": "overview", "position": 2, "hidden": False},
                     {"key": "habits", "position": 3, "hidden": True},
                 ],
-            }
+            },
+            "version": snapshot_body["version"],
         }
-        res = await client.put("/api/v1/navigation/sidebar/user", json=payload)
+        res = await client.post("/api/v1/navigation/user-sidebar-layout", json=mutation_payload)
         assert res.status_code == 200
-        updated = res.json()["payload"]
-        assert updated["items"][0]["key"] == "projects"
-        hidden_map = {item["key"]: item["hidden"] for item in updated["items"]}
+        updated_snapshot = res.json()
+        assert updated_snapshot["version"] == 1
+        assert updated_snapshot["hasCustom"] is True
+        assert updated_snapshot["layout"]["items"][0]["key"] == "projects"
+        hidden_map = {item["key"]: item["hidden"] for item in updated_snapshot["layout"]["items"]}
         assert hidden_map["habits"] is True
-        assert updated["modules"][0]["id"] == modules[0]["id"]
-        assert updated["categories"][0]["module_id"] == modules[0]["id"]
 
-        res = await client.put("/api/v1/navigation/sidebar/user", json={"reset": True})
-        assert res.status_code == 200
-        reset_payload = res.json()["payload"]
-        assert reset_payload["items"][0]["key"] == "overview"
-        hidden_map = {item["key"]: item["hidden"] for item in reset_payload["items"]}
-        assert hidden_map.get("habits") is False
-        assert reset_payload["modules"][0]["label"] == modules[0]["label"]
+        conflict_payload = {
+            "payload": mutation_payload["payload"],
+            "version": snapshot_body["version"],
+        }
+        conflict = await client.post("/api/v1/navigation/user-sidebar-layout", json=conflict_payload)
+        assert conflict.status_code == 409
+        conflict_body = conflict.json()
+        assert conflict_body["detail"]["currentVersion"] == updated_snapshot["version"]
+
+        reset_payload = {
+            "reset": True,
+            "version": updated_snapshot["version"],
+        }
+        reset_res = await client.post("/api/v1/navigation/user-sidebar-layout", json=reset_payload)
+        assert reset_res.status_code == 200
+        reset_body = reset_res.json()
+        assert reset_body["hasCustom"] is False
+        assert reset_body["version"] == 0
 
 
 @pytest.mark.asyncio
@@ -149,30 +170,38 @@ async def test_navigation_global_requires_permission(monkeypatch, async_session)
         async with session.begin():
             session.add(WebUser(id=2, username="nav_admin", role="admin"))
 
-    async with AsyncClient(app=app, base_url="http://test") as client:
-        # Without settings permission, even admin role must be true to pass
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         perms_state.update({"admin": False, "allow_settings": False})
-        res = await client.put(
-            "/api/v1/navigation/sidebar/global",
-            json={"layout": {"v": 1, "items": []}},
-        )
-        assert res.status_code == 403
+        forbidden = await client.get("/api/v1/navigation/global-sidebar-layout")
+        assert forbidden.status_code == 403
 
-        # Allow settings permission
         perms_state.update({"admin": False, "allow_settings": True})
-        payload = {
-            "layout": {
+        snapshot = await client.get("/api/v1/navigation/global-sidebar-layout")
+        assert snapshot.status_code == 200
+        assert snapshot.json()["version"] == 0
+
+        mutation = {
+            "payload": {
                 "v": 1,
                 "items": [
                     {"key": "tasks", "position": 1, "hidden": False},
                     {"key": "overview", "position": 2, "hidden": False},
                 ],
-            }
+            },
+            "version": snapshot.json()["version"],
         }
-        res = await client.put("/api/v1/navigation/sidebar/global", json=payload)
-        assert res.status_code == 200
+        update = await client.post("/api/v1/navigation/global-sidebar-layout", json=mutation)
+        assert update.status_code == 200
+        updated = update.json()
+        assert updated["version"] == 1
+        assert updated["hasCustom"] is True
 
         res = await client.get("/api/v1/navigation/sidebar")
         assert res.status_code == 200
         keys = [item["key"] for item in res.json()["items"]]
         assert keys[0] == "tasks"
+
+        conflict = await client.post("/api/v1/navigation/global-sidebar-layout", json=mutation)
+        assert conflict.status_code == 409
+        assert conflict.json()["detail"]["currentVersion"] == updated["version"]

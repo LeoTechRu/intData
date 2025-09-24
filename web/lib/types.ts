@@ -422,9 +422,9 @@ export interface SidebarNavPayload {
   items: SidebarNavItem[];
   modules: SidebarModuleDefinition[];
   categories: SidebarCategoryDefinition[];
-  widgets: SidebarWidgetItem[];
+  widgets?: SidebarWidgetItem[];
   layout: {
-    user: SidebarLayoutSettings;
+    user?: SidebarLayoutSettings | null;
     global?: SidebarLayoutSettings | null;
   };
   can_edit_global: boolean;

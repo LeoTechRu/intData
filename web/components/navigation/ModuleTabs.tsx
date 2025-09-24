@@ -27,13 +27,16 @@ export function ModuleTabs({ moduleLabel, items, className }: ModuleTabsProps) {
   }
 
   return (
-    <nav className={clsx('flex flex-wrap items-center gap-2', className)} aria-label={`Навигация модуля ${moduleLabel}`}>
+    <nav
+      className={clsx('flex flex-1 items-center gap-2 overflow-x-auto', className)}
+      aria-label={`Навигация модуля ${moduleLabel}`}
+    >
       {entries.map((item) => {
         const baseClass =
-          'inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-blue-600';
+          'inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200';
         const variant = item.active
-          ? 'bg-white text-blue-600 shadow-sm'
-          : 'text-white/80 hover:bg-white/15 hover:text-white';
+          ? 'bg-blue-100 text-blue-600 shadow-sm'
+          : 'text-slate-500 hover:bg-slate-100';
         const hiddenVariant = item.hidden ? 'opacity-70 hover:opacity-90' : '';
         const tabClassName = clsx(baseClass, variant, hiddenVariant);
 

@@ -38,6 +38,7 @@ import {
   Badge,
   Button,
   Card,
+  CollapsibleSection,
   EmptyState,
   Field,
   Input,
@@ -164,12 +165,54 @@ export default function NotesModule() {
   const [editorError, setEditorError] = useState<string | null>(null);
   const [isEditorOpen, setEditorOpen] = useState(false);
   const [listError, setListError] = useState<string | null>(null);
+  const [isQuickOpen, setQuickOpen] = useState(false);
+  const [isFilterOpen, setFilterOpen] = useState(false);
 
   const notesQuery = useNotes(filters);
   const isArchiveView = filters.includeArchived;
 
   const areaOptions = useMemo(() => buildAreaOptions(areasQuery.data ?? []), [areasQuery.data]);
   const projectsByArea = useMemo(() => mapProjectsByArea(projectsQuery.data ?? []), [projectsQuery.data]);
+  const areaLabelMap = useMemo(() => {
+    const map = new Map<string, string>();
+    areaOptions.forEach((area) => {
+      map.set(area.id.toString(), area.label);
+    });
+    return map;
+  }, [areaOptions]);
+  const projectLabelMap = useMemo(() => {
+    const map = new Map<string, string>();
+    (projectsQuery.data ?? []).forEach((project) => {
+      map.set(project.id.toString(), project.name);
+    });
+    return map;
+  }, [projectsQuery.data]);
+  const filterSummary = useMemo(() => {
+    const areaLabel = filters.areaId ? areaLabelMap.get(filters.areaId) ?? 'Выбранная область' : 'Все области';
+    const projectLabel = filters.projectId ? projectLabelMap.get(filters.projectId) ?? 'Выбранный проект' : 'Все проекты';
+    return `${areaLabel}, ${projectLabel}`;
+  }, [areaLabelMap, filters.areaId, filters.projectId, projectLabelMap]);
+  const filterBadges = useMemo(() => {
+    const items: { key: string; label: string }[] = [];
+    const search = filters.search.trim();
+    if (search) {
+      items.push({ key: 'search', label: `Поиск: «${search}»` });
+    }
+    if (filters.onlyPinned) {
+      items.push({ key: 'pinned', label: 'Только закреплённые' });
+    }
+    if (filters.includeArchived) {
+      items.push({ key: 'archive', label: 'Архив включён' });
+    }
+    return items;
+  }, [filters.includeArchived, filters.onlyPinned, filters.search]);
+  const quickSectionHint = useMemo(() => {
+    const preview = quickNote.content.trim() || quickNote.title.trim();
+    if (!preview) {
+      return 'Нажмите, чтобы записать идею';
+    }
+    return preview.length > 64 ? `${preview.slice(0, 64)}…` : preview;
+  }, [quickNote.content, quickNote.title]);
 
   useEffect(() => {
     if (!quickNote.areaId && areaOptions.length > 0) {
@@ -180,6 +223,12 @@ export default function NotesModule() {
       }
     }
   }, [areaOptions, areasQuery.data, quickNote.areaId]);
+
+  useEffect(() => {
+    if (quickError) {
+      setQuickOpen(true);
+    }
+  }, [quickError]);
 
   const filteredProjectsForFilters = useMemo(() => {
     if (!filtersDraft.areaId) {
@@ -229,6 +278,7 @@ export default function NotesModule() {
       setQuickNote((prev) => ({ ...prev, title: '', content: '', pinned: false }));
       setQuickError(null);
       setListError(null);
+      setQuickOpen(false);
       queryClient.invalidateQueries({ queryKey: ['notes'] });
     },
     onError: (error) => {
@@ -327,6 +377,7 @@ export default function NotesModule() {
     event.preventDefault();
     setListError(null);
     setFilters(filtersDraft);
+    setFilterOpen(false);
   };
 
   const handleOpenEditor = useCallback(
@@ -440,7 +491,12 @@ export default function NotesModule() {
   return (
     <PageLayout title={MODULE_TITLE} description={MODULE_DESCRIPTION}>
       <div className="grid gap-6">
-        <Card surface="soft" padded className="flex flex-col gap-4">
+        <CollapsibleSection
+          open={isQuickOpen}
+          onToggle={() => setQuickOpen((prev) => !prev)}
+          title="Создать заметку"
+          subtitle={isQuickOpen ? 'Быстрая форма создания заметки' : quickSectionHint}
+        >
           <form className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]" onSubmit={handleQuickSubmit}>
             <div className="flex flex-col gap-4">
               <Field label="Заголовок">
@@ -524,10 +580,24 @@ export default function NotesModule() {
               </div>
             </div>
           </form>
-        </Card>
+        </CollapsibleSection>
 
-        <Card padded={false}>
-          <form onSubmit={handleFiltersSubmit} className="space-y-4 p-6">
+        <CollapsibleSection
+          open={isFilterOpen}
+          onToggle={() => setFilterOpen((prev) => !prev)}
+          title="Фильтры"
+          subtitle={
+            <div className="flex flex-wrap items-center gap-2">
+              <span>{filterSummary}</span>
+              {filterBadges.map((badge) => (
+                <Badge key={badge.key} tone="neutral" size="sm" uppercase={false}>
+                  {badge.label}
+                </Badge>
+              ))}
+            </div>
+          }
+        >
+          <form onSubmit={handleFiltersSubmit} className="space-y-4">
             <Toolbar className="gap-4 flex-col lg:flex-row" justify="between">
               <div className="flex flex-wrap items-center gap-3">
                 <Field label="Область" className="min-w-[220px]">
@@ -604,11 +674,11 @@ export default function NotesModule() {
               </div>
             </Toolbar>
           </form>
-          {listError ? (
-            <div className="px-6 pb-4 text-sm text-[var(--accent-danger)]">{listError}</div>
-          ) : null}
-          <div className="border-t border-subtle" />
-          <div className="p-6">
+        </CollapsibleSection>
+
+        <Card padded={false}>
+          <div className="space-y-4 p-6">
+            {listError ? <div className="text-sm text-[var(--accent-danger)]">{listError}</div> : null}
             {isLoading ? (
               <div className="flex justify-center py-24 text-muted">Загружаем заметки…</div>
             ) : notes.length === 0 ? (

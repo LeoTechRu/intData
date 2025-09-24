@@ -1,0 +1,21 @@
+handoff:
+  from: frontend
+  to: qa
+  initiative: E10/IB-08
+  task: TL-2025-09-24-notes-collapsible
+  context: |
+    CollapsibleSection добавлен для скрытия быстрых форм. Quick note и фильтр раскрываются по клику, показывают текущие значения и закрываются после submit.
+    Обновлены unit-тесты Vitest, чтобы проверять раскрытие и работу фильтрации.
+  artifacts:
+    - path: web/components/ui/CollapsibleSection.tsx
+      note: Универсальный компонент аккордеона
+    - path: web/components/notes/NotesModule.tsx
+      note: Использует две секции (создание заметки и фильтры)
+    - path: web/components/notes/NotesModule.test.tsx
+      note: Тесты проверяют скрытие/раскрытие и UX действий
+  acceptance:
+    - Быстрая форма скрыта по умолчанию, открывается кнопкой «Создать заметку»
+    - Фильтр скрыт по умолчанию, заголовок отображает выбранные значения
+    - После сохранения заметки и применения фильтров секции сворачиваются
+  blockers:
+    - нет

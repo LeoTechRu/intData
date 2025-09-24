@@ -14,8 +14,8 @@ from web.dependencies import get_current_tg_user
 from .index import render_next_page
 
 
-router = APIRouter(prefix="/areas", tags=["areas"])
-ui_router = APIRouter(prefix="/areas", tags=["areas"], include_in_schema=False)
+router = APIRouter(prefix="/areas", tags=["Tasks & Projects"])
+ui_router = APIRouter(prefix="/areas", tags=["Tasks & Projects"], include_in_schema=False)
 
 
 class AreaCreate(BaseModel):

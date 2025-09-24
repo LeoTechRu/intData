@@ -14,8 +14,8 @@ from web.dependencies import get_current_tg_user
 from .index import render_next_page
 
 
-router = APIRouter(prefix="/tasks", tags=["tasks"])
-ui_router = APIRouter(prefix="/tasks", tags=["tasks"], include_in_schema=False)
+router = APIRouter(prefix="/tasks", tags=["Tasks & Projects"])
+ui_router = APIRouter(prefix="/tasks", tags=["Tasks & Projects"], include_in_schema=False)
 
 
 class TaskCreate(BaseModel):

@@ -98,10 +98,10 @@ Intelligent Data Pro — приватный продуктовый репози�
   2. Внутри выбранного модуля пользователь переключается между связанными страницами через верхние вкладки, не покидая контекста.
   3. На любой странице пользователь отмечает её звёздочкой, чтобы добавить в персональное избранное и мгновенно добраться до неё из левого меню.
 - **Технический подход**
-- `NAV_BLUEPRINT` содержит поля `module`, `category`, `section_order`; API `/api/v1/navigation/sidebar*` возвращает `modules`, `categories` и пометки `module`/`category` в пунктах меню.
+- `NAV_BLUEPRINT` содержит поля `module`, `category`, `section_order`; API `/api/v1/navigation/sidebar` отдаёт группировки, а snapshot endpoints `/api/v1/navigation/(user|global)-sidebar-layout` управляют пресетами и версиями.
 - `AppShell`: боковое меню группирует страницы по модулям и категориям с собственными заголовками, collapsible‑логикой и быстрым доступом к скрытым пунктам; верхняя панель использует `ModuleTabs` (категории текущего модуля).
 - `SidebarEditor`: drag-n-drop и toggle работают внутри категорий; редактор показывает заголовки модулей и секций, синхронизируется с пользовательским/глобальным layout.
-- `FavoriteToggle` управляет видимостью текущей страницы через `user_settings.nav_sidebar`, без создания дубликатов.
+- `FavoriteToggle` управляет видимостью текущей страницы через snapshot API `/api/v1/navigation/user-sidebar-layout` (storage `nav_sidebar_layouts`), без создания дубликатов.
 - Тесты: `tests/test_navigation_api.py` (категории/модули), витесты (`navigation-helpers`, `ModuleTabs`), UI smoke в каталогах.
 - **Ограничения и риски**
   - Необходимо сохранить обратную совместимость для пользователей без новых настроек (fallback к плоскому списку).
@@ -242,6 +242,13 @@ Intelligent Data Pro — приватный продуктовый репози�
 
 #### E10: Capture (бот/веб, Inbox)
 - [x] TL-2025-09-19-notes-restore — Переработать страницу `/notes`: безопасное архивирование карточек с восстановлением, отдельный просмотр архива, синхронизация drag-n-drop и фильтров (owner: codex, ветка `feature/E10/notes-restore-frontend`, merge 4934acc в `test→main`).
+- [x] TL-2025-09-24-notes-collapsible — Свернуть формы быстрой заметки и фильтров в раскрывающиеся секции на `/notes`, подготовить компонент CollapsibleSection и обновить тесты (owner: codex, intake `reports/2025-09-24-intake-notes-collapsible.yaml`).
+  - [x] ARCH-2025-09-24-notes-collapsible — ADR и технические рамки для раскрывающихся секций, handoff FE (owner: architect, ветка `feature/E10/notes-collapsible-arch`).
+  - [x] FE-2025-09-24-notes-collapsible — Компонент `CollapsibleSection`, обновлённый `NotesModule`, unit-тесты (owner: frontend, ветка `feature/E10/notes-collapsible-fe`).
+  - [x] QA-2025-09-24-notes-collapsible — Smoke и vitest на `/notes`, отчёт `reports/test/2025-09-24-notes-collapsible.md` (owner: qa).
+  - [x] SEC-2025-09-24-notes-collapsible — Advisory (UI only, нарушений нет) зафиксирован в `reports/infosec/2025-09-24-notes-collapsible.md` (owner: infosec).
+  - [x] DEVOPS-2025-09-24-notes-collapsible — Runbook обновлён, lint/test/build прогнаны, готов к fast-forward (owner: devops, ветка `feature/E10/notes-collapsible-release`).
+  - [x] TW-2025-09-24-notes-collapsible — README/Agent Sync синхронизированы, GateLog закрыт (owner: tech writer, ветка `feature/E10/notes-collapsible-docs`).
 
 - [x] TL-2025-09-18-nav-blueprint — Расширить NAV_BLUEPRINT и API `/api/v1/navigation/sidebar*` полями модулей и секций (owner: codex, ветка `feature/E17/nav-blueprint-codex`, см. [E17](#e17-frontend-modernization)).
 - [x] TL-2025-09-18-appshell-modules — Перестроить AppShell и SidebarEditor: секции + collapsible, единый список избранных страниц без дублей (owner: codex, ветка `feature/E17/nav-blueprint-codex`).
@@ -252,6 +259,13 @@ Intelligent Data Pro — приватный продуктовый репози�
 - [x] TL-2025-09-18-support — Обновить лендинг `/tariffs` (кликабельное сообщество, упоминания поддержки) и добавить условные кнопки поддержки в AppShell (agent: codex, ветка `feature/E17/groups-products-ui-codex`).
 - [x] TL-2025-09-18-legacy-final — Завершить перенос legacy-страниц: включить `/products` и `/groups` в AppShell, перевести `/ban` и `/cup/admin-embed` на Next.js, удалить Jinja-шаблоны и статические JS/CSS (agent: codex, ветка `feature/E17/legacy-migration-codex`).
 - [x] TL-2025-09-18-mobile-ui — Подточить мобильную адаптивность AppShell и дашборда (`/`): убрать чип роли на узких экранах, перестроить сетку шапки, скрыть редактор дашборда (agent: codex, ветка `feature/E17/mobile-responsive-ui-codex`).
+- [x] TL-2025-09-24-bitrix-smart-sidebar — Stage-gate SmartSidebar (drag-and-drop, скрытия, глобальные/персональные layout) и ModuleTabsBar без пользовательских правок; оформить ADR/layout API, TaskCards и gate-логи (owner: teamlead, ветка `main`, intake `reports/2025-09-24-intake-bitrix-smart-sidebar.yaml`).
+  - [x] BE-2025-09-24-sidebar-layout — Бэкенд: таблица `nav_sidebar_layouts`, REST `GET/POST` layout, merge-утилиты, pytest `tests/web/test_navigation_layout_api.py` (owner: backend, ветка `feature/E17/smart-sidebar-layout-be`).
+  - [x] FE-2025-09-24-smart-sidebar — SmartSidebar UI (drag-and-drop, скрытие/возврат страниц) и ModuleTabsBar Bitrix24-like (owner: frontend, ветка `feature/E17/smart-sidebar-ui-fe`).
+  - [x] QA-2025-09-24-smart-sidebar — Drag/drop, hidden block и optimistic locking проверены, отчёт `reports/test/2025-09-24-smart-sidebar.md`, path-guard `qa:test-only` подтверждён (owner: qa).
+  - [x] SEC-2025-09-24-smart-sidebar — Advisory SEC-SS-001/002/003 оформлен (owner: infosec, ветка `feature/E17/smart-sidebar-infosec`).
+  - [x] DEVOPS-2025-09-24-smart-sidebar — Rebuild через `scripts/rebuild_smart_sidebar.sh`, ansible deploy тестового стора, smoke desktop/mobile и лог-чек `intdata-test-web` (owner: devops, ветка `feature/E17/smart-sidebar-release`).
+  - [x] TW-2025-09-24-smart-sidebar — README/Agent Sync синхронизированы, GateRecord release/docs закрыт, follow-ups занесены (owner: tech writer, ветка `feature/E17/smart-sidebar-docs`).
 
 #### E18: CRM Knowledge Hub
 - [x] TL-2025-09-18-crm-blueprint — Подготовить архитектурный план CRM (PARA × Zettelkasten), описать автоматизации и данные в [Vision Deck](#-vision-deck) (owner: codex, epic E18).
@@ -259,6 +273,9 @@ Intelligent Data Pro — приватный продуктовый репози�
 - [x] TL-2025-09-19-crm-services — Реализовать `core/services/crm` (products, deals, accounts, subscriptions, automations) с поддержкой upgrade/downgrade потоков (owner: codex).
 - [x] TL-2025-09-19-crm-ui — Собрать модуль `/crm` (deals канбан, accounts, products с тарифами/потоками, analytics), перенести legacy `/products` и добавить knowledge panel (owner: codex).
 - [x] TL-2025-09-19-auth-multichannel — Обновить авторизацию (username/email/телефон) и UI-автодетект режима, синхронизировать API/бот (owner: codex).
+- [ ] SEC-2025-09-24-smart-sidebar-limits — Ограничить jsonb layout payload (max 256 ключей) в Pydantic/бэкенде согласно advisory SEC-SS-001 (owner: backend, follow-up `reports/infosec/2025-09-24-smart-sidebar.md`).
+- [ ] SEC-2025-09-24-smart-sidebar-toast — Показать пользователю ошибку 409 и повторно загружать snapshot layout при конфликте версий (owner: frontend, follow-up SEC-SS-002).
+- [ ] SEC-2025-09-24-smart-sidebar-audit — Логировать изменения layout (scope, user_id, версии) в audit trail (owner: backend, follow-up SEC-SS-003).
 
 
 ## 🗺️ Roadmap & Epics
@@ -778,7 +795,7 @@ Reference: см. архивный отчёт `reports/archive/report_frontend_mo
 - [x] P0•S — Публичный лендинг `/bot` на Next.js с CTA на @intDataBot, сценариями автоматизации и ссылками на тарифы/документацию.
 - [x] P0•S — FastAPI-роут `/bot` отдаёт статическую Next.js страницу и остаётся в списке публичных маршрутов без редиректа на `/auth`.
 - [x] P1•S — Завершить аудит оставшихся legacy-шаблонов и зафиксировать план миграции после переноса ЦУП/админки.
-- [x] P1•M — Левая панель нового UI поддерживает drag-n-drop редактор меню: порядок и видимость пунктов сохраняются в `user_settings.nav_sidebar` и глобальном пресете.
+- [x] P1•M — Левая панель нового UI поддерживает drag-n-drop редактор меню: порядок и видимость пунктов сохраняются в `nav_sidebar_layouts` (scopes `user`/`global`) через `/api/v1/navigation/(user|global)-sidebar-layout`.
 
 **User Stories**
 1. Как разработчик, я хочу единый современный фронтенд‑стек, чтобы страницы собирались одним тулчейном.
@@ -867,6 +884,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- SmartSidebar: гибкая левая панель с drag-and-drop модулей/страниц, блоком «Скрытые», переключателем личного/глобального режима и Bitrix24-подобной верхней панелью `ModuleTabsBar`; layout сохраняется через `/api/v1/navigation/(user|global)-sidebar-layout`, отчёты QA/InfoSec: `reports/test/2025-09-24-smart-sidebar.md`, `reports/infosec/2025-09-24-smart-sidebar.md`.
 - CI/CD: workflow `.github/workflows/deploy-test.yml` автоматически деплоит ветку `test` в тестовый контур (skip, если не настроены `TEST_VPS_*`).
 - Документация: runbook `reports/runbooks/test-to-main.md`, секция Infra README и обновлённый список `TEST_*` секретов.
 - CRM Knowledge Hub исследование: `reports/2025-09-19-crm-competitive-research.md` (Bitrix24, Kommo, HubSpot, monday.com, Salesforce, Pipedrive) и обновлённый раздел vision E18.
@@ -920,7 +938,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API `/api/v1/user/settings` to read and write settings.
 - Repair step to migrate legacy favorites into user_settings.
 - Возможность управлять избранными пунктами меню на странице `/settings`.
-- Редактор левого меню нового UI: drag-n-drop порядок и скрытие пунктов с персональными и глобальными пресетами (`GET/PUT /api/v1/navigation/sidebar*`).
+- Редактор левого меню нового UI: drag-n-drop порядок и скрытие пунктов с персональными и глобальными пресетами (`GET/POST /api/v1/navigation/(user|global)-sidebar-layout`, storage `nav_sidebar_layouts`).
 - Панель «Области жизни» на странице `/settings` с деревом PARA, быстрым созданием, переименованием и перемещением областей.
 - Простые SQL-миграции и раннер `core/db/migrate.py` с таблицами календаря и уведомлений.
 - Асинхронный бэкенд на aiogram + SQLAlchemy с подключением к PostgreSQL.

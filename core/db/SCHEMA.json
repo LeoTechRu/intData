@@ -8727,6 +8727,109 @@
       ],
       "indexes": [],
       "checks": []
+    },
+    "nav_sidebar_layouts": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "scope",
+          "type": "VARCHAR(16)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "version",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": "1",
+          "comment": ""
+        },
+        {
+          "name": "payload",
+          "type": "JSONB",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": "'{}'::jsonb",
+          "comment": ""
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": "now()",
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": "now()",
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [],
+      "unique_constraints": [
+        {
+          "name": "uq_nav_sidebar_layouts_scope_owner",
+          "columns": [
+            "scope",
+            "owner_id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_nav_sidebar_layouts_owner",
+          "columns": [
+            "owner_id"
+          ],
+          "unique": false
+        }
+      ],
+      "checks": [
+        {
+          "name": "ck_nav_sidebar_layouts_scope",
+          "sql": "(scope IN ('user', 'global'))"
+        }
+      ]
     }
   }
 }
