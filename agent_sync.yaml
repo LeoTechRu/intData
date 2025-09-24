@@ -110,6 +110,19 @@ agent_sync:
   ttl_minutes: 120
   status: Review
   note: 'FE hotfix готов: бургер переехал в LeftSidebar, TopNavBar содержит только вкладки; ждём QA подтверждения'
+- when_utc: '2025-09-24T22:03:52Z'
+  agent: codex-cli::qa
+  role: qa
+  branch: feature/E17/bitrix24-shell-qa
+  task: TL-2025-09-24-bitrix24-nav
+  epic_scope: E17 / Frontend navigation
+  files:
+  - reports/test/2025-09-24-bitrix24-shell-hotfix.md
+  pr: null
+  ac_link: README.md#e17-frontend-modernization
+  ttl_minutes: 60
+  status: Handoff
+  note: 'QA: бургер в левом меню подтверждён, верхний бар только вкладки; handoff → TL'
 - when_utc: '2025-09-24T19:33:18Z'
   agent: codex-cli::teamlead
   role: tl
