@@ -1,0 +1,25 @@
+gate_check:
+  - gate: 0
+    role_owner: tl
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "Intake и agent_sync созданы."
+  - gate: 3
+    role_owner: frontend
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "Подписи удалены, визуальная метка модуля сохранена."
+  - gate: 5
+    role_owner: qa
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "Линт/тесты зелёные."

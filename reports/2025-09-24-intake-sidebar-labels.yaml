@@ -1,0 +1,16 @@
+intake:
+  source: owner
+  initiative: "E17/IB-24"
+  task: "TL-2025-09-24-sidebar-labels"
+  goal: "Очистить левое меню от подписей 'Текущий модуль' и 'Меню разделов', полагаясь на визуальные элементы"
+  acceptance:
+    - "В икон-рейле и основном сайдбаре нет текстовых заголовков 'Текущий модуль' и 'Меню разделов'"
+    - "Интерфейс остаётся с понятными визуальными индикаторами активного модуля"
+  constraints:
+    - "Не нарушить работу SidebarEditor и состояния свертывания"
+    - "Соблюсти stage-gate flow и синхронизацию agent_sync"
+  artifacts_expected:
+    - path: web/components/AppShell.tsx
+      type: code
+    - path: reports/test/sidebar-labels.md
+      type: test

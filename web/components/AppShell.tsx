@@ -741,18 +741,14 @@ export default function AppShell({
                 </button>
               </div>
               {!isSidebarCollapsed ? (
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">Текущий модуль</span>
-                  <span className="text-sm font-semibold text-[var(--text-primary)]" title={activeModule.label}>
+                <div className="flex w-full items-center justify-center">
+                  <span className="rounded-full bg-surface-soft px-3 py-1 text-sm font-semibold text-[var(--text-primary)] shadow-soft" title={activeModule.label}>
                     {activeModule.label}
                   </span>
                 </div>
               ) : null}
             </div>
             <div className={clsx('flex items-center justify-end gap-2', isSidebarCollapsed ? 'px-1' : 'px-0')}>
-              {!isSidebarCollapsed ? (
-                <span className="text-xs font-semibold uppercase tracking-wide text-muted">Меню разделов</span>
-              ) : null}
               <button
                 type="button"
                 onClick={() => setIsNavEditorOpen(true)}
