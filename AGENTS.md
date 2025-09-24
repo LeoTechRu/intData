@@ -1,7 +1,7 @@
 # AGENTS - Stage-Gate Playbook IntData
 
 ## TL;DR
-- AGENTS Spec v1.2 (2025-09-19): Intake (TL) -> Архитектура -> Реализация -> PR в `test` (merge делает TL) -> QA на `test` (PR с path-guard) -> InfoSec advisory (неблокирующий) -> DevOps release (TL fast-forward `test->main`) -> Tech Writer.
+- AGENTS Spec v1.2 (2025-09-19): Intake (TL) -> Архитектура -> Реализация -> PR в `test` (merge делает TL) -> QA на `test` (PR с path-guard) -> InfoSec advisory (неблокирующий) -> DevOps release (обязательный ребилд + рестарт + проверка логов, TL fast-forward `test->main`) -> Tech Writer.
 - Лучшие практики IntBridge (router, handoff, role-boundary-check, YAML `agent_sync` с TTL) совмещаем с git-потоком IntData (`feature/*` -> PR -> `test` -> fast-forward -> `main`).
 - QA работает только в общей ветке `test`; InfoSec выдаёт неблокирующие рекомендации between QA и DevOps; на каждом gate присутствует двойной контроль TL.
 - Все роли поддерживают README-вортонку (idea -> vision -> conventions -> tasklist -> workflow), фиксируют handoff и GateRecord, обновляют `agent_sync`.
@@ -22,7 +22,7 @@
 4. **Implementation / TL-Gate-3** - BE/FE работают в своих путях, покрывают тестами, создают PR в `feature/*`, TL делает code review.
 5. **Merge to test & QA** - TL мержит одобренные PR в `test`; QA работает через PR в `test` с лейблом `qa:test-only` (path-guard `tests/**`, `reports/test/**`).
 6. **InfoSec Advisory / TL-Gate-4** - InfoSec запускает SAST/SCA/Secrets/DAST, публикует отчёт и рекомендации.
-7. **DevOps Release / TL-Gate-5** - DevOps готовит runbook, миграции, smoke; TL fast-forward `test->main`.
+7. **DevOps Release / TL-Gate-5** - DevOps готовит runbook, миграции, smoke, выполняет обязательный ребилд (build-артефакт), перезапускает сервисы и проверяет логи после завершения QA/InfoSec; gate закрывается только после этих финальных действий, затем TL fast-forward `test->main`.
 8. **Documentation / TL-Gate-6** - Tech Writer обновляет README/Changelog/Workflow, фиксирует ссылки и заключает итерацию.
 
 ## Ролевые каталоги и системные промпты
@@ -72,7 +72,7 @@
 - **Зона:** `.github/**`, `config/**`, docker/compose, scripts/deploy, observability.
 - **Промпт:**
 > Вы - DevOps/SRE IntData. Настраиваете CI/CD, окружения, runbook, готовите выпуск `test->main`, обеспечиваете бэкапы и мониторинг.
-- **DoD:** пайплайны зелёные, runbook и smoke-checklist заполнены, миграции idempotent, GateRecord `release` подписан.
+- **DoD:** пайплайны зелёные, runbook и smoke-checklist заполнены, миграции idempotent, GateRecord `release` подписан, обязательный ребилд выполнен, сервисы перезапущены, логи проверены и зафиксированы как финальный чек.
 
 ### Tech Writer
 - **Зона:** `README.md`, `reports/**` (кроме infosec), Changelog.
