@@ -373,10 +373,22 @@ export interface SidebarLayoutItem {
   hidden?: boolean;
 }
 
+export interface SidebarCustomLink {
+  key: string;
+  label: string;
+  href?: string | null;
+  icon?: string | null;
+  module?: string | null;
+  order?: number | null;
+  hidden?: boolean;
+}
+
 export interface SidebarLayoutSettings {
   v: number;
   items: SidebarLayoutItem[];
   widgets?: SidebarLayoutItem[];
+  primaryModule?: string | null;
+  customLinks?: SidebarCustomLink[];
 }
 
 export interface SidebarNavItem {
@@ -392,6 +404,7 @@ export interface SidebarNavItem {
   section_order?: number;
   category?: string;
   icon?: string;
+  custom?: boolean;
 }
 
 export interface SidebarWidgetItem {

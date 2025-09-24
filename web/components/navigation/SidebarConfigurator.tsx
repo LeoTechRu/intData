@@ -17,14 +17,16 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import clsx from 'clsx';
-import React, { memo, useMemo, useState, type CSSProperties } from 'react';
+import React, { memo, useEffect, useMemo, useState, type CSSProperties } from 'react';
 
 import type { SidebarLayoutMode } from '../../lib/navigation-layout';
 import type { SidebarModuleGroup } from '../../lib/navigation-helpers';
 import type { SidebarNavItem } from '../../lib/types';
 import NavIcon from './NavIcon';
 
-interface SmartSidebarProps {
+interface SidebarConfiguratorProps {
+  open: boolean;
+  onClose: () => void;
   moduleGroups: SidebarModuleGroup<SidebarNavItem>[];
   activeModuleId: string;
   onModuleSelect: (moduleId: string) => void;
@@ -36,9 +38,16 @@ interface SmartSidebarProps {
   canEditGlobal: boolean;
   isLoading?: boolean;
   isSaving?: boolean;
+  primaryModule?: string | null;
+  onPrimaryModuleChange?: (moduleId: string) => void;
+  onAddCustomLink?: () => void;
+  onApplyForEveryone?: () => Promise<void>;
+  onSavePersonal?: () => Promise<void>;
 }
 
-export function SmartSidebar({
+export function SidebarConfigurator({
+  open,
+  onClose,
   moduleGroups,
   activeModuleId,
   onModuleSelect,
@@ -50,8 +59,19 @@ export function SmartSidebar({
   canEditGlobal,
   isLoading,
   isSaving,
-}: SmartSidebarProps) {
+  primaryModule,
+  onPrimaryModuleChange,
+  onAddCustomLink,
+  onApplyForEveryone,
+  onSavePersonal,
+}: SidebarConfiguratorProps) {
   const [openHiddenModule, setOpenHiddenModule] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      setOpenHiddenModule(null);
+    }
+  }, [open]);
 
   const moduleOrder = useMemo(() => moduleGroups.map((group) => group.id), [moduleGroups]);
 
@@ -158,48 +178,172 @@ export function SmartSidebar({
     </div>
   ) : null;
 
+  if (!open) {
+    return null;
+  }
+
   return (
-    <aside
-      className="relative flex h-full min-h-screen w-[300px] flex-col border-r border-slate-100 bg-slate-50/80 px-3 py-4 backdrop-blur"
-      aria-label="Основная навигация"
-    >
-      <div className="mb-4 flex items-center justify-between gap-2">
-        <div className="text-sm font-semibold text-slate-600">Навигация</div>
-        {layoutModeSwitcher}
-      </div>
-      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-        <SortableContext items={moduleSortableIds} strategy={verticalListSortingStrategy}>
-          <div className="flex flex-col gap-3">
-            {moduleGroups.map((module) => (
-              <SortableModuleSection
-                key={module.id}
-                module={module}
-                active={module.id === activeModuleId}
-                onSelect={onModuleSelect}
-                moduleItems={itemsByModule.get(module.id) ?? { visible: [], hidden: [] }}
-                sortableIds={moduleItemSortableIds[module.id] ?? []}
-                onReorderModuleItems={onReorderModuleItems}
-                onToggleHidden={onToggleHidden}
-                openHiddenModule={openHiddenModule}
-                setOpenHiddenModule={setOpenHiddenModule}
-                layoutMode={layoutMode}
-                isSaving={isSaving}
-              />
-            ))}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center" role="dialog" aria-modal="true">
+      <div
+        className="absolute inset-0 bg-slate-900/50"
+        role="presentation"
+        onClick={onClose}
+        aria-hidden
+      />
+      <div className="relative flex h-[90vh] w-full max-w-5xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+        <aside
+          className="flex h-full w-[320px] flex-col border-r border-slate-200 bg-slate-50/90 px-4 py-5 backdrop-blur"
+          aria-label="Настройка навигации"
+        >
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <div>
+              <div className="text-sm font-semibold text-slate-700">Настройка меню</div>
+              <div className="text-xs text-slate-400">Drag-and-drop, скрытие, primary tool</div>
+            </div>
+            {layoutModeSwitcher}
           </div>
-        </SortableContext>
-      </DndContext>
-      <div className="mt-auto pt-4 text-[11px] text-slate-400">
-        {layoutMode === 'global'
-          ? 'Вы меняете глобальный порядок пунктов. Пользовательские настройки будут поверх.'
-          : 'Порядок и видимость сохраняются только для вас.'}
+          <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+            <SortableContext items={moduleSortableIds} strategy={verticalListSortingStrategy}>
+              <div className="flex flex-1 flex-col gap-3 overflow-y-auto pr-1">
+                {moduleGroups.map((module) => (
+                  <SortableModuleSection
+                    key={module.id}
+                    module={module}
+                    active={module.id === activeModuleId}
+                    onSelect={onModuleSelect}
+                    moduleItems={itemsByModule.get(module.id) ?? { visible: [], hidden: [] }}
+                    sortableIds={moduleItemSortableIds[module.id] ?? []}
+                    onReorderModuleItems={onReorderModuleItems}
+                    onToggleHidden={onToggleHidden}
+                    openHiddenModule={openHiddenModule}
+                    setOpenHiddenModule={setOpenHiddenModule}
+                    layoutMode={layoutMode}
+                    isSaving={isSaving}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+          <div className="mt-4 rounded-xl bg-white p-3 text-[11px] text-slate-400 shadow-sm">
+            {layoutMode === 'global'
+              ? 'Вы меняете глобальный порядок пунктов. Пользовательские настройки будут поверх.'
+              : 'Порядок и видимость сохраняются только для вас.'}
+          </div>
+        </aside>
+        <section className="flex flex-1 flex-col bg-white">
+          <header className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-800">Layout</h2>
+              <p className="text-sm text-slate-500">
+                Выберите основной модуль, управляйте кастомными ссылками и сохранением раскладки.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
+              aria-label="Закрыть настройку меню"
+            >
+              <CloseIcon />
+            </button>
+          </header>
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-slate-700">Primary tool</h3>
+              <p className="text-xs text-slate-500">
+                Выбранный модуль будет отображаться первым в левой колонке.
+              </p>
+              <div className="mt-3 grid gap-2 md:grid-cols-2">
+                {moduleGroups.map((module) => {
+                  const selected = primaryModule ? primaryModule === module.id : module.id === moduleGroups[0]?.id;
+                  return (
+                    <button
+                      key={module.id}
+                      type="button"
+                      onClick={() => onPrimaryModuleChange?.(module.id)}
+                      className={clsx(
+                        'flex items-center justify-between rounded-xl border px-3 py-2 text-left transition-colors',
+                        selected
+                          ? 'border-[#0b66ff] bg-[rgba(11,102,255,0.12)] text-[#0b66ff]'
+                          : 'border-slate-200 text-slate-600 hover:border-[#0b66ff]/60 hover:text-[#0b66ff]',
+                      )}
+                      aria-pressed={selected}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                          <NavIcon name={module.icon ?? 'module-generic'} className="h-4 w-4" />
+                        </span>
+                        <span className="truncate text-sm">{module.label}</span>
+                      </span>
+                      {selected ? <CheckIcon /> : null}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="mb-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-slate-700">Custom links</h3>
+                <button
+                  type="button"
+                  onClick={onAddCustomLink}
+                  disabled={!onAddCustomLink}
+                  className={clsx(
+                    'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200',
+                    onAddCustomLink
+                      ? 'bg-[#0b66ff] text-white hover:bg-[#095ae0]'
+                      : 'cursor-not-allowed bg-slate-200 text-slate-400'
+                  )}
+                >
+                  Добавить ссылку
+                </button>
+              </div>
+              <p className="text-xs text-slate-500">
+                Кастомные ссылки появляются в выбранном модуле или в корне. Редактируйте через список ниже.
+              </p>
+              {/* TODO: внедрить список кастомных ссылок */}
+              <div className="mt-3 rounded-xl border border-dashed border-slate-200 p-4 text-xs text-slate-400">
+                Управление кастомными ссылками появится после подключения API.
+              </div>
+            </div>
+          </div>
+          <footer className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-6 py-4">
+            <div className="text-xs text-slate-500">
+              Все изменения сохраняются немедленно. Для применения глобально нажмите «Для всех».
+            </div>
+            <div className="flex items-center gap-2">
+              {canEditGlobal && onApplyForEveryone ? (
+                <button
+                  type="button"
+                  onClick={onApplyForEveryone}
+                  className="inline-flex items-center gap-2 rounded-full border border-[#0b66ff] px-4 py-2 text-sm font-semibold text-[#0b66ff] transition-colors hover:bg-[#0b66ff]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
+                >
+                  Применить для всех
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={onSavePersonal}
+                disabled={!onSavePersonal}
+                className={clsx(
+                  'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-200',
+                  onSavePersonal
+                    ? 'bg-[#0b66ff] text-white hover:bg-[#095ae0]'
+                    : 'cursor-not-allowed bg-slate-200 text-slate-400'
+                )}
+              >
+                Сохранить персонально
+              </button>
+            </div>
+          </footer>
+        </section>
+        {isLoading ? (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-white/60">
+            <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#0b66ff] border-t-transparent" />
+          </div>
+        ) : null}
       </div>
-      {isLoading ? (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-white/60">
-          <div className="h-9 w-9 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-        </div>
-      ) : null}
-    </aside>
+    </div>
   );
 }
 
@@ -481,3 +625,21 @@ function ChevronIcon({ expanded }: { expanded: boolean }) {
     </svg>
   );
 }
+
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.6} aria-hidden>
+      <path d="m7 7 10 10m0-10-10 10" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+      <path d="m6 12.5 4 4L18 8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export default SidebarConfigurator;

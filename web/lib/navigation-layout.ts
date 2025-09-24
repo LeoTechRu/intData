@@ -1,5 +1,6 @@
 import { apiFetch } from './api';
 import type {
+  SidebarCustomLink,
   SidebarLayoutItem,
   SidebarLayoutSettings,
   SidebarNavItem,
@@ -87,13 +88,28 @@ export function deriveModuleItemKeys(items: SidebarNavItem[]): Record<string, st
   return Object.fromEntries(bucket.entries());
 }
 
+function cloneCustomLinks(links?: SidebarCustomLink[] | null): SidebarCustomLink[] | undefined {
+  if (!links || links.length === 0) {
+    return undefined;
+  }
+  return links.map((link) => ({ ...link }));
+}
+
 function cloneLayout(layout: SidebarLayoutSettings | null | undefined): SidebarLayoutSettings {
   if (!layout || !Array.isArray(layout.items)) {
-    return { v: layout?.v ?? 1, items: [] };
+    return {
+      v: layout?.v ?? 1,
+      items: [],
+      primaryModule: layout?.primaryModule ?? null,
+      customLinks: cloneCustomLinks(layout?.customLinks),
+    };
   }
   return {
     v: layout.v ?? 1,
     items: layout.items.map((item) => ({ ...item })),
+    widgets: Array.isArray(layout.widgets) ? layout.widgets.map((item) => ({ ...item })) : undefined,
+    primaryModule: layout.primaryModule ?? null,
+    customLinks: cloneCustomLinks(layout.customLinks),
   };
 }
 
@@ -219,5 +235,14 @@ export function ensureLayoutContainsKeys(
         layout.items.push({ key: item.key, position, hidden: item.hidden });
       }
     });
+  return layout;
+}
+
+export function setLayoutPrimaryModule(
+  layoutSource: SidebarLayoutSettings | null | undefined,
+  moduleId: string,
+): SidebarLayoutSettings {
+  const layout = cloneLayout(layoutSource);
+  layout.primaryModule = moduleId;
   return layout;
 }

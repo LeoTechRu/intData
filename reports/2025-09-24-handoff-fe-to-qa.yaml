@@ -1,0 +1,30 @@
+handoff:
+  from: frontend
+  to: qa
+  initiative: E17 / Frontend navigation
+  task: TL-2025-09-24-bitrix24-nav
+  context: |
+    Обновлён AppShell под Bitrix24 UX: новый TopNavBar (только вкладки + профиль), переработанный LeftSidebar с
+    collapsed/expanded режимами, единым блоком «Скрытые страницы» и запуском SidebarConfigurator. Конфигуратор вынесен
+    в модальное окно, поддерживает DnD модулей/страниц, переключение режима (личный/глобальный) и выбор primary tool.
+    Состояние коллапса меню сохраняется в localStorage.
+  artifacts:
+    - path: web/components/AppShell.tsx
+      note: основная интеграция TopNavBar/LeftSidebar/SidebarConfigurator
+    - path: web/components/navigation/LeftSidebar.tsx
+      note: модульная навигация, скрытые страницы, кнопка «Настроить»
+    - path: web/components/navigation/TopNavBar.tsx
+      note: новый верхний бар, бургер, ModuleTabs
+    - path: web/components/navigation/SidebarConfigurator.tsx
+      note: модальное окно настройки меню, DnD
+    - path: web/components/navigation/ModuleTabs.tsx
+      note: горизонтальный скролл, roving focus
+    - path: web/components/navigation/ModuleTabs.test.tsx
+      note: обновлённые тесты на поведение вкладок
+  acceptance:
+    - AC-1..AC-4: проверить свёртывание/развёртывание, стили активных модулей, drag-and-drop и скрытие в конфигураторе
+    - AC-5: в UI кнопка «Добавить ссылку» пока заглушка (ожидает API); зафиксировать как дефект или принять допущение
+    - AC-6: доступность переключателя «Применить для всех» только для viewer.role=admin (см. SidebarConfigurator)
+    - AC-7..AC-9: убедиться, что TopNavBar отображает только вкладки и профиль, мобильный скролл и клавиатура работают
+  blockers:
+    - Нет API для custom links (POST /api/v1/ui/sidebar/layout ещё не доступен) — требуется решение с backend/TL

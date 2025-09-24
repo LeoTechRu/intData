@@ -17,6 +17,7 @@ import {
   saveGlobalSidebarLayout,
   saveUserSidebarLayout,
   setLayoutItemHidden,
+  setLayoutPrimaryModule,
   type SidebarLayoutMode,
 } from '../lib/navigation-layout';
 import { CATEGORY_FALLBACK, MODULE_FALLBACK, NAV_FALLBACK_ITEMS } from '../lib/navigationFallback';
@@ -35,8 +36,9 @@ import type {
   ViewerProfileSummary,
 } from '../lib/types';
 import { TimezoneProvider } from '../lib/timezone';
-import { SmartSidebar } from './navigation/SmartSidebar';
-import { ModuleTabsBar } from './navigation/ModuleTabsBar';
+import { LeftSidebar } from './navigation/LeftSidebar';
+import { SidebarConfigurator } from './navigation/SidebarConfigurator';
+import { TopNavBar } from './navigation/TopNavBar';
 
 interface AppShellProps {
   title: string;
@@ -85,6 +87,8 @@ export default function AppShell({
 
   const queryClient = useQueryClient();
   const [layoutMode, setLayoutMode] = useState<SidebarLayoutMode>('user');
+  const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isConfiguratorOpen, setConfiguratorOpen] = useState(false);
 
   const personaQuery = useQuery<PersonaBundle>({
     queryKey: ['persona-bundle'],
@@ -129,6 +133,23 @@ export default function AppShell({
     }
   }, [canEditGlobalLayout, layoutMode]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const stored = window.localStorage.getItem('intdata.sidebar.collapsed');
+    if (stored === '1') {
+      setSidebarCollapsed(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    window.localStorage.setItem('intdata.sidebar.collapsed', isSidebarCollapsed ? '1' : '0');
+  }, [isSidebarCollapsed]);
+
   const navQuery = useQuery<SidebarNavPayload>({
     queryKey: ['navigation', 'sidebar'],
     staleTime: 120_000,
@@ -168,6 +189,7 @@ export default function AppShell({
 
   const canEditPersonalLayout = Boolean(viewer);
   const activeLayoutMode: SidebarLayoutMode = canEditPersonalLayout ? layoutMode : 'user';
+  const canConfigureSidebar = canEditPersonalLayout || canEditGlobalLayout;
 
   const navCategories = useMemo(() => {
     const payload = navQuery.data?.categories;
@@ -264,6 +286,20 @@ export default function AppShell({
     [moduleTabsRaw],
   );
 
+  const allHiddenItems = useMemo(() => {
+    const uniq = new Map<string, SidebarNavItem>();
+    orderedModuleGroups.forEach((group) => {
+      group.categories.forEach((category) => {
+        category.items.forEach((item) => {
+          if (item.hidden && !uniq.has(item.key)) {
+            uniq.set(item.key, item);
+          }
+        });
+      });
+    });
+    return Array.from(uniq.values());
+  }, [orderedModuleGroups]);
+
   const getLayoutWithKeys = (): SidebarLayoutSettings =>
     ensureLayoutContainsKeys(
       activeLayoutMode === 'global' ? globalLayoutQuery.data?.layout : userLayoutQuery.data?.layout,
@@ -310,6 +346,34 @@ export default function AppShell({
     await submitLayout(nextLayout);
   };
 
+  const handleUnhideItem = async (key: string) => {
+    await handleToggleHiddenItem(key, false);
+  };
+
+  const handlePrimaryModuleChange = async (moduleId: string) => {
+    const baseLayout = getLayoutWithKeys();
+    const nextLayout = setLayoutPrimaryModule(baseLayout, moduleId);
+    await submitLayout(nextLayout);
+  };
+
+  const handleSavePersonalLayout = async () => {
+    if (!canEditPersonalLayout) {
+      return;
+    }
+    const layout = getLayoutWithKeys();
+    const version = userLayoutQuery.data?.version ?? 0;
+    await saveUserLayoutMutation.mutateAsync({ layout, version });
+  };
+
+  const handleApplyGlobalLayout = async () => {
+    if (!canEditGlobalLayout) {
+      return;
+    }
+    const layout = getLayoutWithKeys();
+    const version = globalLayoutQuery.data?.version ?? 0;
+    await saveGlobalLayoutMutation.mutateAsync({ layout, version });
+  };
+
   const isSidebarSaving = saveUserLayoutMutation.isPending || saveGlobalLayoutMutation.isPending;
   const isSidebarLoading =
     navQuery.isLoading ||
@@ -319,6 +383,25 @@ export default function AppShell({
 
   const activeModule = moduleMap.get(activeModuleId) ?? moduleMap.get(derivedModuleId) ?? navModules[0];
   const activeModuleLabel = activeModule?.label ?? 'Модуль';
+
+  const currentPrimaryModule = useMemo(() => {
+    const userPrimary = userLayoutQuery.data?.layout?.primaryModule;
+    const globalPrimary = globalLayoutQuery.data?.layout?.primaryModule;
+    if (canEditPersonalLayout && userPrimary) {
+      return userPrimary;
+    }
+    if (globalPrimary) {
+      return globalPrimary;
+    }
+    return moduleOrderFromLayout[0] ?? orderedModuleGroups[0]?.id ?? navModules[0]?.id ?? 'control';
+  }, [
+    userLayoutQuery.data?.layout?.primaryModule,
+    globalLayoutQuery.data?.layout?.primaryModule,
+    canEditPersonalLayout,
+    moduleOrderFromLayout,
+    orderedModuleGroups,
+    navModules,
+  ]);
 
   const defaultTimezone = useMemo(() => {
     if (typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function') {
@@ -370,32 +453,42 @@ export default function AppShell({
     }
   };
 
+  const toggleSidebarCollapsed = () => {
+    setSidebarCollapsed((prev) => !prev);
+  };
+
+  const showHeader = Boolean((title || subtitle || actions) && moduleTabs.length === 0);
+
   return (
     <TimezoneProvider value={timezone}>
-      <div className="flex min-h-screen w-full bg-surface text-[var(--text-primary)]" data-app-shell>
-        <SmartSidebar
+      <div
+        className="flex min-h-screen w-full bg-surface text-[var(--text-primary)]"
+        data-app-shell
+        data-sidebar-collapsed={isSidebarCollapsed}
+      >
+        <LeftSidebar
           moduleGroups={orderedModuleGroups}
           activeModuleId={activeModuleId}
           onModuleSelect={handleModuleSelect}
-          onReorderModules={handleReorderModules}
-          onReorderModuleItems={handleReorderModuleItems}
-          onToggleHidden={handleToggleHiddenItem}
-          layoutMode={activeLayoutMode}
-          onLayoutModeChange={canEditGlobalLayout ? setLayoutMode : undefined}
-          canEditGlobal={canEditGlobalLayout}
+          hiddenItems={allHiddenItems}
+          onUnhide={handleUnhideItem}
+          onConfigure={() => setConfiguratorOpen(true)}
+          isCollapsed={isSidebarCollapsed}
+          canConfigure={canConfigureSidebar}
           isLoading={isSidebarLoading}
-          isSaving={isSidebarSaving}
         />
         <div className="flex min-h-screen flex-1 flex-col bg-white">
-          <ModuleTabsBar
+          <TopNavBar
             moduleLabel={activeModuleLabel}
             tabs={moduleTabs}
             viewer={viewer}
             viewerLoading={viewerLoading}
             personaBundle={personaBundle}
+            onToggleSidebar={toggleSidebarCollapsed}
+            isSidebarCollapsed={isSidebarCollapsed}
           />
           <main className={mainClasses} aria-labelledby={headingId} aria-describedby={headingDescriptionId}>
-            {(title || subtitle || actions) && (
+            {showHeader ? (
               <header className="flex flex-col gap-4 border-b border-slate-100 pb-6">
                 <div className="flex flex-col gap-1">
                   {title ? (
@@ -411,12 +504,32 @@ export default function AppShell({
                 </div>
                 {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
               </header>
-            )}
+            ) : null}
             <section className={clsx('flex flex-1 flex-col gap-6', contentVariant === 'card' && 'pb-10')}>
               {children}
             </section>
           </main>
         </div>
+        <SidebarConfigurator
+          open={isConfiguratorOpen}
+          onClose={() => setConfiguratorOpen(false)}
+          moduleGroups={orderedModuleGroups}
+          activeModuleId={activeModuleId}
+          onModuleSelect={setActiveModuleId}
+          onReorderModules={handleReorderModules}
+          onReorderModuleItems={handleReorderModuleItems}
+          onToggleHidden={handleToggleHiddenItem}
+          layoutMode={activeLayoutMode}
+          onLayoutModeChange={canEditGlobalLayout ? setLayoutMode : undefined}
+          canEditGlobal={canEditGlobalLayout}
+          isLoading={isSidebarLoading}
+          isSaving={isSidebarSaving}
+          primaryModule={currentPrimaryModule}
+          onPrimaryModuleChange={handlePrimaryModuleChange}
+          onAddCustomLink={undefined}
+          onApplyForEveryone={canEditGlobalLayout ? handleApplyGlobalLayout : undefined}
+          onSavePersonal={canEditPersonalLayout ? handleSavePersonalLayout : undefined}
+        />
       </div>
     </TimezoneProvider>
   );
