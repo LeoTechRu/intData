@@ -899,6 +899,7 @@ Reference: Bitrix24 CRM (модули продаж, контакт-центр, �
 - **Follow-ups:**
   - OPS-503-FU1 — разобраться с 307 redirect на `/healthz` (сейчас возвращаемся на `/auth`).
   - OPS-503-FU2 — подавить `LocalProtocolError: Too much data for declared Content-Length` (требует анализа ответов Next.js).
+  - OPS-503-FU3 — обновить `aiohttp` до 3.12.14 (GHSA-9548-qrrj-x5pj), прогнать async-смоук.
 
 ## 📰 Changelog
 All notable changes to this project will be documented in this file.

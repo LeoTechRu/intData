@@ -12,15 +12,14 @@ gate_check:
 ---
 gate_check:
   gate: 4
-  role_owner: qa
+  role_owner: infosec
   tl_checklist:
     - AC закрыты
     - границы роли соблюдены (role-boundary-check)
     - README/agent_sync обновлены
   status: pass
   notes: |
-    Smoke: curl https://intdata.pro/ → 302, systemctl active, journalctl без критичных ошибок,
-    pytest отчёт приложен.
+    pip-audit зафиксировал GHSA-9548-qrrj-x5pj (aiohttp 3.11.18); follow-up OPS-503-FU3 на апдейт до 3.12.14.
 ---
 gate_check:
   gate: 5
@@ -41,3 +40,4 @@ gate:
     when_utc: "2025-09-24T19:24:30Z"
   notes: |
     INC-503 закрыт: venv rebuild, opentelemetry instrumentation, settings.py fix, rebuild script, runbook addendum.
+    QA smoke (curl/systemctl/journalctl) подтверждён, pytest settings page пройден, follow-ups OPS-503-FU1/FU2/FU3 занесены.

@@ -61,3 +61,17 @@ agent_sync:
   status: Done
   note: 'QA smoke: curl https://intdata.pro/, systemctl status, journalctl (-5m),
     pytest settings page green'
+- when_utc: '2025-09-24T19:25:30Z'
+  agent: codex-cli::infosec
+  role: infosec
+  branch: feature/Ops/503-recovery-devops
+  task: TL-2025-09-24-503-recovery
+  epic_scope: Ops / Incident Response
+  files:
+  - reports/infosec/2025-09-24-503-recovery.md
+  pr: null
+  ac_link: README.md#ops-incident-response
+  ttl_minutes: 120
+  status: Done
+  note: pip-audit выявил GHSA-9548-qrrj-x5pj (aiohttp 3.11.18); follow-up OPS-503-FU3
+    на апгрейд
