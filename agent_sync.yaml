@@ -1,4 +1,18 @@
 agent_sync:
+  - when_utc: "2025-09-24T09:00:31Z"
+    agent: "codex-cli::teamlead"
+    role: "tl"
+    branch: "main"
+    task: "TL-2025-09-24-owner-response-sla"
+    epic_scope: "Ops / Stage-Gate Playbook"
+    files:
+      - "AGENTS.md"
+      - "agent_sync.yaml"
+    pr: null
+    ac_link: "AGENTS.md#owner-communication-sla"
+    ttl_minutes: 0
+    status: "Done"
+    note: "AGENTS.md обновлён: owner ping = немедленная декомпозиция, вопросы только при необходимости уточнения целей."
   - when_utc: "2025-09-24T08:41:13Z"
     agent: "codex-cli::frontend"
     role: "fe"
