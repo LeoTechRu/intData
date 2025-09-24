@@ -1,0 +1,25 @@
+handoff:
+  from: backend
+  to: devops
+  initiative: Ops/INC-503
+  task: TL-2025-09-24-503-recovery
+  context: |
+    venv пересобрана на python3.11 (`python3 -m venv venv`), зависимости установлены из `requirements.txt`,
+    добавлены пакеты opentelemetry instrumentation. Исправлен `web/routes/settings.py` (f-string),
+    локально `uvicorn web:app --port 5800` стартует и отдаёт 200 на корень/health. pytest для настроек прошёл.
+  artifacts:
+    - path: requirements.txt
+      note: добавлены opentelemetry-instrumentation пакеты
+    - path: web/routes/settings.py
+      note: фикс f-string для Python 3.11
+    - path: reports/2025-09-24-handoff-503-recovery-tl.yaml
+      note: intake + контекст
+    - path: reports/test/2025-09-24-503-recovery-backend.txt
+      note: лог pytest `tests/web/test_settings_page.py`
+  acceptance:
+    - Systemd сервис `intdata-web` запускается с новой venv
+    - `curl https://intdata.pro/healthz` возвращает 200/"ok"
+    - Логи после рестарта без ошибок уровня ERROR за 10 минут
+    - Runbook дополнен шагами восстановления venv
+  blockers:
+    - нет

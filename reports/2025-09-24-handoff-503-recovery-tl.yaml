@@ -1,0 +1,18 @@
+handoff:
+  from: teamlead
+  to: backend
+  initiative: Ops/INC-503
+  task: TL-2025-09-24-503-recovery
+  context: |
+    Сервис https://intdata.pro отдаёт 503 из-за упавшего systemd юнита `intdata-web`. Логи показали, что
+    venv сломался (python3.13 → python3.11), поэтому uvicorn и pip отсутствовали. Нужно пересобрать окружение
+    и убедиться, что backend стартует локально. Stage-gate Zero-Wait, поэтому сразу после фикса — handoff DevOps.
+  artifacts:
+    - path: reports/2025-09-24-intake-503-outage.yaml
+      note: Intake с AC/constraints
+  acceptance:
+    - Пересобранная venv на python3.11 c зависимостями, включая opentelemetry instrumentation
+    - Backend стартует локально `uvicorn web:app --port 5800`
+    - Исправлены синтаксические ошибки, появившиеся при пересборке (Python 3.11)
+  blockers:
+    - нет

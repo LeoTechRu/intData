@@ -1,0 +1,43 @@
+gate_check:
+  gate: 3
+  role_owner: backend
+  tl_checklist:
+    - AC закрыты
+    - границы роли соблюдены (role-boundary-check)
+    - README/agent_sync обновлены
+  status: pass
+  notes: |
+    requirements.txt дополнен opentelemetry instrumentation, settings.py исправлен под python3.11,
+    pytest `tests/web/test_settings_page.py` зелёный; venv пересобрана.
+---
+gate_check:
+  gate: 4
+  role_owner: qa
+  tl_checklist:
+    - AC закрыты
+    - границы роли соблюдены (role-boundary-check)
+    - README/agent_sync обновлены
+  status: pass
+  notes: |
+    Smoke: curl https://intdata.pro/ → 302, systemctl active, journalctl без критичных ошибок,
+    pytest отчёт приложен.
+---
+gate_check:
+  gate: 5
+  role_owner: devops
+  tl_checklist:
+    - AC закрыты
+    - границы роли соблюдены (role-boundary-check)
+    - README/agent_sync обновлены
+  status: pass
+  notes: |
+    scripts/rebuild_service.sh выполнен, service restarted, logs зафиксированы.
+---
+gate:
+  stage: release
+  tl_check:
+    approved: true
+    by: "@teamlead"
+    when_utc: "2025-09-24T19:24:30Z"
+  notes: |
+    INC-503 закрыт: venv rebuild, opentelemetry instrumentation, settings.py fix, rebuild script, runbook addendum.

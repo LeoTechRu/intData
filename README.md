@@ -200,7 +200,12 @@ Intelligent Data Pro — приватный продуктовый репози�
 - После урегулирования переложите lessons learned в [Conventions Catalog](#-conventions-catalog).
 
 ### Инциденты
-- *(пока пусто)*
+- **2025-09-24 · INC-503** — Продакшен `https://intdata.pro` отдавал 503 из-за сломанной `venv`
+  (создана под python3.13, на сервере остался 3.11). Systemd не находил `uvicorn`,
+  сервис падал при старте. Решение: пересобрали `venv` на python3.11, добавили
+  зависимость `opentelemetry-instrumentation-{fastapi,requests}`, починили f-string в
+  `web/routes/settings.py`, оформили скрипт `scripts/rebuild_service.sh` и обновили
+  runbook (см. [Ops / Incident Response](#ops-incident-response)).
 
 ## 📝 Tasklist
 Раздел отражает конкретные задачи, вытекающие из текущего [Vision Deck](#-vision-deck). Это «оперативный» список для планирования.
@@ -229,6 +234,9 @@ Intelligent Data Pro — приватный продуктовый репози�
 - [x] TL-2025-09-20-release-docs — Синхронизировать README (Conventions/Tasklist/Workflow), Changelog и `reports/*` по результатам релиса E2/E3/E17, приложить ссылки на GateRecord и отчёты QA/InfoSec (owner: tw, ветка `feature/E2/release-docs-tw`, см. [Workflow Playbook](#-workflow-playbook)).
 - [x] TL-2025-09-21-trivy-scan — Запустить CI workflow `Security Scan (Trivy)` и приложить отчёт `trivy-report.json` перед Gate-5 (owner: codex, ветка `feature/release/trivy-scan-devops`, отчёт `reports/infosec/trivy-2025-09-23.json`, CRITICAL/HIGH не обнаружены).
 - [x] TL-2025-09-23-starlette-upgrade — Обновить `fastapi`→0.117.1 и `starlette`→0.48.0, прогнать `pytest tests/web/test_calendar_feed_ics.py tests/web/test_alarms_api.py tests/test_diagnostics_service.py`, переиздать Trivy (owner: codex, ветка `feature/release/starlette-upgrade-be`, отчёт `reports/infosec/trivy-2025-09-23.json`).
+
+#### Ops: Incident Response
+- [ ] TL-2025-09-24-503-recovery — Восстановить доступность `https://intdata.pro` (owner: tl→devops Zero-Wait конвейер, intake `reports/2025-09-24-intake-503-outage.yaml`, см. [Ops / Incident Response](#ops-incident-response)).
 
 #### E9: Тесты и документация
 - [x] TL-2025-09-19-roles-charter — Обновить AGENTS.md и README.md: Roles Charter, auto-switch, раздел для владельца (owner: codex, ветка `feature/Ops/roles-charter-tw`, см. [E9](#e9-%D1%82%D0%B5%D1%81%D1%82%D1%8B-%D0%B8-%D0%B4%D0%BE%D0%BA%D1%83%D0%BC%D0%B5%D0%BD%D1%82%D0%B0%D1%86%D0%B8%D1%8F-%D1%84%D0%B8%D1%87%D0%B5%D1%84%D0%BB%D0%B0%D0%B3)).
@@ -874,6 +882,24 @@ Reference: Bitrix24 CRM (модули продаж, контакт-центр, �
 
 
 
+## 🛡️ Ops / Incident Response
+
+### INC-503 · 24 сентября 2025 (https://intdata.pro → 503)
+- **Симптом:** systemd юнит `intdata-web` падал сразу после запуска, public сайт отдавал 503.
+- **Причина:** виртуальное окружение собирали под python3.13, на проде доступен python3.11 → отсутствовали `uvicorn`, `pip`, opentelemetry instrumentation.
+- **Действия:**
+  1. Пересобрали `venv` на python3.11 (`python3 -m venv venv`), добавили недостающие пакеты `opentelemetry-instrumentation-fastapi/requests`.
+  2. Починили f-string в `web/routes/settings.py` (python3.11).
+  3. Создали скрипт `scripts/rebuild_service.sh` (остановка сервиса → rebuild venv → установка зависимостей → restart + tail журналов).
+  4. Обновили runbook `reports/runbooks/test-to-main.md` (раздел "Incident 503 Recovery"), задокументировали шаги и smoke.
+  5. Прогнали `pytest tests/web/test_settings_page.py` и зафиксировали вывод в `reports/test/2025-09-24-503-recovery-backend.txt`.
+  6. Запустили `bash scripts/rebuild_service.sh`, убедились что `systemctl status intdata-web` → active, собрали логи `logs/intdata-web-restart-2025-09-24.txt`.
+- **Проверки:** `systemctl status intdata-web`, `curl -I https://intdata.pro/` (302 в логин вместо 503), `journalctl -u intdata-web --since '-5 minutes'` без CRITICAL (есть известный `LocalProtocolError` — вынесен в follow-up), pytest settings page.
+- **Артефакты:** `reports/2025-09-24-intake-503-outage.yaml`, `reports/2025-09-24-handoff-503-recovery-*.yaml`, `reports/runbooks/test-to-main.md`, `reports/test/2025-09-24-503-recovery-backend.txt`, `logs/intdata-web-restart-2025-09-24.txt`.
+- **Follow-ups:**
+  - OPS-503-FU1 — разобраться с 307 redirect на `/healthz` (сейчас возвращаемся на `/auth`).
+  - OPS-503-FU2 — подавить `LocalProtocolError: Too much data for declared Content-Length` (требует анализа ответов Next.js).
+
 ## 📰 Changelog
 All notable changes to this project will be documented in this file.
 
@@ -1062,6 +1088,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Главный экран переименован в «ЦУП» с подсказкой «Центр Управления Полётами», поправлены пункты меню и тултипы.
 
 ### Fixed
+- Продакшен `intdata-web` снова стартует: пересобрана `venv` на python3.11, добавлены `opentelemetry-instrumentation-{fastapi,requests}`, исправлен `web/routes/settings.py`, оформлен `scripts/rebuild_service.sh` и обновлён runbook incident 503.
 - `tests/test_diagnostics_service.py` снова зелёный на PostgreSQL: фикстура коммитит сиды, service избегает ленивой загрузки профиля и подготавливает диагностические шаблоны, устраняя `MissingGreenlet` и FK-ошибки.
 - PostgreSQL-переезд закрыт: профили обновляют гранты, Telegram-сервисы сидят пользователей, таймеры и watcher'ы больше не падают по FK, `user_settings` чинит миграцию избранного и API работает через `AsyncClient`.
 - Исправлен `DetachedInstanceError` при вызове `POST /api/v1/notes/{id}/assign`: ответ снова включает связанные `area` и `project` без повторных запросов (эпик [E3](#e3-api-calendar-calendaritems-calendaragenda-calendarfeedics-projectsidnotifications)).

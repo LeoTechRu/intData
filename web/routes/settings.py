@@ -36,8 +36,9 @@ async def settings_page(
     response = render_next_page("settings")
     role = getattr(current_user, "role", None)
     is_admin = role == UserRole.admin.name if role else False
+    role_marker = "admin" if is_admin else "user"
     marker_html = (
-        f'<span data-testid="settings-admin-marker" data-role="{'admin' if is_admin else 'user'}" '
+        f'<span data-testid="settings-admin-marker" data-role="{role_marker}" '
         f'class="hidden" aria-hidden="true"></span>'
         f'<span data-testid="settings-theme-scope" data-global="{str(is_admin).lower()}" '
         'class="hidden" aria-hidden="true"></span>'

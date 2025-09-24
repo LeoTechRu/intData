@@ -56,6 +56,7 @@
 - 2025-09-20 — добавлен автоматический деплой ветки `test` и runbook; ответственный codex.
 - 2025-09-23 — выполнен релизный fast-forward `test -> main` (коммит `d10c2a1`), подтверждён новый Trivy, GateRecord обновлён.
 - 2025-09-24 — SmartSidebar rebuild (commit `8ad330d`): `bash scripts/rebuild_smart_sidebar.sh`, smoke desktop/mobile, `journalctl -u intdata-web` без ошибок.
+- 2025-09-24 — Incident 503 recovery: пересобран `venv` на python3.11, добавлены opentelemetry instrumentation, `intdata-web` перезапущен (см. раздел ниже).
 
 ### 2025-09-24 — SmartSidebar Release Addendum
 1. `npm ci && npm run lint && npm run test -- ModuleTabs.test.tsx && npm run build` — прогнать линты/тесты и собрать Next.js с обновлённым SmartSidebar.
@@ -67,3 +68,9 @@
 5. Smoke (mobile viewport): DevTools width 375px → убедиться, что ModuleTabsBar скроллится, SmartSidebar свернут до бейджа.
 6. Пост-деплой: просмотреть `journalctl -u intdata-web --since "5 minutes ago"` на наличие ошибок drag/layout API.
 7. Записать GateRecord release (hash, время rebuild, кто выполнял smoke).
+
+### 2025-09-24 — Incident 503 Recovery (venv rebuild)
+1. `sudo bash scripts/rebuild_service.sh` — пересоздать `venv`, установить зависимости, перезапустить `intdata-web`.
+2. `curl -f https://intdata.pro/healthz` — убедиться, что API возвращает `{"status":"ok"}`.
+3. Просмотреть `journalctl -u intdata-web -n 200` и убедиться в отсутствии записей уровня `ERROR`/`TRACEBACK`.
+4. Сохранить выдержку логов в `logs/intdata-web-restart-YYYY-MM-DD.txt` и приложить к GateRecord.

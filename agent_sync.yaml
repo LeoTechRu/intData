@@ -1,0 +1,63 @@
+agent_sync:
+- when_utc: '2025-09-24T19:02:29Z'
+  agent: codex-cli::teamlead
+  role: tl
+  branch: main
+  task: TL-2025-09-24-503-recovery
+  epic_scope: Ops / Incident Response
+  files:
+  - README.md
+  - AGENTS.md
+  - agent_sync.yaml
+  - reports/2025-09-24-intake-503-outage.yaml
+  pr: null
+  ac_link: README.md#ops-incident-response
+  ttl_minutes: 120
+  status: Handoff
+  note: Intake оформлен, Tasklist обновлён, передано backend для Zero-Wait восстановления
+- when_utc: '2025-09-24T19:09:59Z'
+  agent: codex-cli::backend
+  role: be
+  branch: feature/Ops/503-recovery-be
+  task: TL-2025-09-24-503-recovery
+  epic_scope: Ops / Incident Response
+  files:
+  - requirements.txt
+  - web/routes/settings.py
+  - reports/2025-09-24-handoff-503-recovery-tl.yaml
+  pr: null
+  ac_link: README.md#ops-incident-response
+  ttl_minutes: 120
+  status: Handoff
+  note: Venv rebuilt (python3.11), opentelemetry instrumentation добавлены, pytest
+    settings page зелёный; передаю DevOps
+- when_utc: '2025-09-24T19:14:39Z'
+  agent: codex-cli::devops
+  role: devops
+  branch: feature/Ops/503-recovery-devops
+  task: TL-2025-09-24-503-recovery
+  epic_scope: Ops / Incident Response
+  files:
+  - scripts/rebuild_service.sh
+  - reports/runbooks/test-to-main.md
+  - logs/intdata-web-restart-2025-09-24.txt
+  pr: null
+  ac_link: README.md#ops-incident-response
+  ttl_minutes: 120
+  status: Handoff
+  note: scripts/rebuild_service.sh выполнен, venv пересоздан, intdata-web активен,
+    логи сохранены
+- when_utc: '2025-09-24T19:23:00Z'
+  agent: codex-cli::qa
+  role: qa
+  branch: feature/Ops/503-recovery-devops
+  task: TL-2025-09-24-503-recovery
+  epic_scope: Ops / Incident Response
+  files:
+  - reports/test/2025-09-24-503-recovery-qa.md
+  pr: null
+  ac_link: README.md#ops-incident-response
+  ttl_minutes: 120
+  status: Done
+  note: 'QA smoke: curl https://intdata.pro/, systemctl status, journalctl (-5m),
+    pytest settings page green'
