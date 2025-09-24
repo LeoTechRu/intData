@@ -1,40 +1,30 @@
 'use client';
 
 import clsx from 'clsx';
-import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import React, { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import React, { ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { apiFetch, ApiError } from '../lib/api';
-import { fetchSidebarNav, updateGlobalSidebarLayout, updateUserSidebarLayout } from '../lib/navigation';
+import { fetchSidebarNav } from '../lib/navigation';
 import { groupSidebarItemsByModule } from '../lib/navigation-helpers';
-import { MODULE_FALLBACK, CATEGORY_FALLBACK, NAV_FALLBACK_ITEMS } from '../lib/navigationFallback';
+import { CATEGORY_FALLBACK, MODULE_FALLBACK, NAV_FALLBACK_ITEMS } from '../lib/navigationFallback';
 import {
-  fetchPersonaBundle,
-  getPersonaInfo,
-  getPreferredLocale,
   DEFAULT_PERSONA_BUNDLE,
+  fetchPersonaBundle,
+  getPreferredLocale,
   type PersonaBundle,
 } from '../lib/persona';
 import { useModuleTabs } from '../lib/useModuleTabs';
 import type {
-  SidebarCategoryDefinition,
-  SidebarLayoutSettings,
   SidebarNavItem,
   SidebarNavPayload,
-  TimeEntry,
+  SidebarModuleDefinition,
   ViewerProfileSummary,
 } from '../lib/types';
-import { formatClock, formatDateTime, normalizeTimerDescription, parseDateToUtc } from '../lib/time';
-import { TimezoneProvider, useTimezone } from '../lib/timezone';
-import { Button, Card, StatusIndicator, type StatusIndicatorKind } from './ui';
-import { Select } from './ui/Select';
-import { SidebarEditor } from './navigation/SidebarEditor';
-import { FavoriteToggle } from './navigation/FavoriteToggle';
-import { NavIcon } from './navigation/NavIcon';
-import { ModuleTabs } from './navigation/ModuleTabs';
+import { TimezoneProvider } from '../lib/timezone';
+import { LeftSidebar } from './navigation/LeftSidebar';
+import { TopNavBar } from './navigation/TopNavBar';
 
 interface AppShellProps {
   title: string;
@@ -47,97 +37,7 @@ interface AppShellProps {
   mainClassName?: string;
 }
 
-const COMMUNITY_CHANNEL_URL = 'https://t.me/intDataHELP';
-const SUPPORT_CHANNEL_URL = 'https://t.me/HELPintData';
-const DEVELOPER_CONTACT_URL = 'https://t.me/leotechru';
-const NAV_STATUS_TOOLTIPS: Record<StatusIndicatorKind, string> = {
-  new: 'Новый раздел на современном интерфейсе',
-  wip: 'Раздел в активной разработке — возможны изменения',
-  locked: 'Раздел доступен по расширенному тарифу',
-};
-
-function getInitials(name: string): string {
-  const parts = name
-    .split(/\s+/)
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .slice(0, 2);
-  if (parts.length === 0) {
-    return 'ID';
-  }
-  return parts
-    .map((part) => part.charAt(0).toUpperCase())
-    .join('')
-    .padEnd(2, '•');
-}
-
-function layoutFromItems(version: number, items: SidebarNavItem[]): SidebarLayoutSettings {
-  return {
-    v: version,
-    items: items.map((item, index) => ({
-      key: item.key,
-      position: index + 1,
-      hidden: item.hidden,
-    })),
-  };
-}
-
-function renderPersonaTooltip(md: string): React.ReactNode[] {
-  const result: React.ReactNode[] = [];
-  const linkPattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-
-  while ((match = linkPattern.exec(md))) {
-    if (match.index > lastIndex) {
-      result.push(md.slice(lastIndex, match.index));
-    }
-    result.push(
-      <a
-        key={`${match[2]}-${match.index}`}
-        href={match[2]}
-        target="_blank"
-        rel="noreferrer noopener"
-        className="text-[var(--accent-primary)] underline decoration-dotted"
-      >
-        {match[1]}
-      </a>,
-    );
-    lastIndex = linkPattern.lastIndex;
-  }
-
-  if (lastIndex < md.length) {
-    result.push(md.slice(lastIndex));
-  }
-
-  if (result.length === 0) {
-    return [md];
-  }
-
-  return result;
-}
-
-function getTimerElapsedSeconds(entry: TimeEntry, now: number): number {
-  let total = entry.active_seconds ?? 0;
-  if (entry.is_running && entry.last_started_at) {
-    const lastStart = parseDateToUtc(entry.last_started_at)?.getTime() ?? NaN;
-    if (!Number.isNaN(lastStart)) {
-      total += Math.max(0, Math.floor((now - lastStart) / 1000));
-    }
-  } else if (entry.end_time && total === 0) {
-    const start = parseDateToUtc(entry.start_time)?.getTime() ?? NaN;
-    const end = parseDateToUtc(entry.end_time)?.getTime() ?? NaN;
-    if (!Number.isNaN(start) && !Number.isNaN(end)) {
-      total = Math.max(0, Math.floor((end - start) / 1000));
-    }
-  } else if (!entry.end_time && !entry.is_running && total === 0) {
-    const start = parseDateToUtc(entry.start_time)?.getTime() ?? NaN;
-    if (!Number.isNaN(start)) {
-      total = Math.max(0, Math.floor((now - start) / 1000));
-    }
-  }
-  return total;
-}
+const BITRIX_MODULE_ORDER = ['control', 'tasks', 'knowledge', 'team', 'admin'];
 
 export default function AppShell({
   title,
@@ -149,88 +49,10 @@ export default function AppShell({
   maxWidthClassName,
   mainClassName,
 }: AppShellProps) {
-  const pathname = usePathname();
   const router = useRouter();
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
-  const [isNavEditorOpen, setIsNavEditorOpen] = useState(false);
-  const [expandedHiddenSections, setExpandedHiddenSections] = useState<string[]>([]);
-  const sidebarStorageRef = useRef<Storage | null>(null);
-  const headingId = titleId ?? 'app-shell-title';
-  const headingDescriptionId = subtitle ? `${headingId}-description` : undefined;
-  const queryClient = useQueryClient();
-  const shellThemeVars = useMemo(
-    () => ({ '--header-bg': '#0065ff', '--header-text': '#ffffff' }) as React.CSSProperties,
-    [],
-  );
-
-  useEffect(() => {
-    setIsMobileNavOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-      return;
-    }
-    const mediaQuery = window.matchMedia('(min-width: 768px)');
-    setIsDesktop(mediaQuery.matches);
-    const listener = (event: MediaQueryListEvent) => {
-      setIsDesktop(event.matches);
-      if (event.matches) {
-        setIsMobileNavOpen(false);
-      }
-    };
-    if (typeof mediaQuery.addEventListener === 'function') {
-      mediaQuery.addEventListener('change', listener);
-      return () => mediaQuery.removeEventListener('change', listener);
-    }
-    mediaQuery.addListener(listener);
-    return () => mediaQuery.removeListener(listener);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-    setIsHydrated(true);
-    try {
-      sidebarStorageRef.current = window.localStorage;
-    } catch (error) {
-      sidebarStorageRef.current = null;
-      console.warn('Локальное хранилище меню недоступно, пропускаем восстановление состояния', error);
-      return;
-    }
-    const storage = sidebarStorageRef.current;
-    if (!storage) {
-      return;
-    }
-    try {
-      const persisted = storage.getItem('appShell.sidebarCollapsed');
-      if (persisted === '1') {
-        setIsSidebarCollapsed(true);
-      }
-    } catch (error) {
-      console.warn('Не удалось прочитать флаг свернутого меню', error);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!isHydrated) {
-      return;
-    }
-    const storage = sidebarStorageRef.current;
-    if (!storage) {
-      return;
-    }
-    try {
-      storage.setItem('appShell.sidebarCollapsed', isSidebarCollapsed ? '1' : '0');
-    } catch (error) {
-      sidebarStorageRef.current = null;
-      console.warn('Не удалось сохранить состояние бокового меню', error);
-    }
-  }, [isSidebarCollapsed, isHydrated]);
+  const pathname = usePathname();
+  const [activeModuleId, setActiveModuleId] = useState<string>('control');
+  const [hiddenExpanded, setHiddenExpanded] = useState(false);
 
   const viewerQuery = useQuery<ViewerProfileSummary | null>({
     queryKey: ['viewer-profile-summary'],
@@ -261,7 +83,7 @@ export default function AppShell({
     queryFn: () => fetchPersonaBundle(getPreferredLocale()),
   });
 
-  const personaBundle = personaQuery.data;
+  const personaBundle = personaQuery.data ?? DEFAULT_PERSONA_BUNDLE;
 
   const navQuery = useQuery<SidebarNavPayload>({
     queryKey: ['navigation', 'sidebar'],
@@ -271,106 +93,117 @@ export default function AppShell({
     queryFn: fetchSidebarNav,
   });
 
-  const toggleLabel = isDesktop
-    ? isSidebarCollapsed
-      ? 'Показать меню'
-      : 'Скрыть меню'
-    : isMobileNavOpen
-    ? 'Скрыть меню'
-    : 'Показать меню';
-
-  const handleToggleNav = () => {
-    if (isDesktop) {
-      setIsSidebarCollapsed((prev) => !prev);
-      return;
-    }
-    setIsMobileNavOpen((prev) => !prev);
-  };
-
-  const toggleHiddenSection = useCallback((moduleId: string) => {
-    setExpandedHiddenSections((prev) =>
-      prev.includes(moduleId) ? prev.filter((id) => id !== moduleId) : [...prev, moduleId],
-    );
-  }, []);
-
   const navItems: SidebarNavItem[] = navQuery.data?.items ?? NAV_FALLBACK_ITEMS;
-  const navModules = useMemo(() => {
+
+  const navModules: SidebarModuleDefinition[] = useMemo(() => {
     const payload = navQuery.data?.modules;
     const source = payload && payload.length > 0 ? payload : MODULE_FALLBACK;
-    return [...source].sort((a, b) => a.order - b.order);
+    const map = new Map<string, SidebarModuleDefinition>();
+    source.forEach((module) => {
+      if (BITRIX_MODULE_ORDER.includes(module.id)) {
+        map.set(module.id, module);
+      }
+    });
+    MODULE_FALLBACK.forEach((module) => {
+      if (BITRIX_MODULE_ORDER.includes(module.id) && !map.has(module.id)) {
+        map.set(module.id, module);
+      }
+    });
+    return BITRIX_MODULE_ORDER.map((moduleId) => map.get(moduleId)).filter(Boolean) as SidebarModuleDefinition[];
   }, [navQuery.data?.modules]);
+
   const navCategories = useMemo(() => {
     const payload = navQuery.data?.categories;
     const source = payload && payload.length > 0 ? payload : CATEGORY_FALLBACK;
     return [...source].sort((a, b) => a.order - b.order || a.id.localeCompare(b.id, 'ru'));
   }, [navQuery.data?.categories]);
-  const moduleMap = useMemo(() => new Map(navModules.map((section) => [section.id, section])), [navModules]);
+
   const moduleGroups = useMemo(
     () => groupSidebarItemsByModule(navItems, navModules, navCategories),
     [navItems, navModules, navCategories],
   );
-  const navSections = useMemo(() => {
-    return moduleGroups.map((group) => {
-      const pinned: {
-        item: SidebarNavItem;
-        active: boolean;
-        category: SidebarCategoryDefinition;
-      }[] = [];
-      const hidden: { item: SidebarNavItem; category: SidebarCategoryDefinition }[] = [];
-      const allItems: SidebarNavItem[] = [];
 
-      group.categories.forEach(({ category, items }) => {
-        items.forEach((item) => {
-          const href = item.href;
-          const active = href && pathname ? pathname === href || pathname.startsWith(`${href}/`) : false;
-          allItems.push(item);
-          if (item.hidden) {
-            hidden.push({ item, category });
-          } else {
-            pinned.push({ item, active, category });
-          }
-        });
-      });
+  const moduleMap = useMemo(() => new Map(navModules.map((module) => [module.id, module])), [navModules]);
 
-      return {
-        module: group,
-        pinned,
-        hidden,
-        allItems,
-      };
+  const currentNavEntry = useMemo(() => {
+    let best: SidebarNavItem | null = null;
+    let bestLength = -1;
+    navItems.forEach((item) => {
+      const href = item.href;
+      if (!href) {
+        return;
+      }
+      if (pathname === href || pathname.startsWith(`${href}/`)) {
+        const length = href.length;
+        if (length > bestLength) {
+          best = item;
+          bestLength = length;
+        }
+      }
     });
-  }, [moduleGroups, pathname]);
+    return best;
+  }, [navItems, pathname]);
+
+  const derivedModuleId = useMemo(() => {
+    if (currentNavEntry?.module && moduleMap.has(currentNavEntry.module)) {
+      return currentNavEntry.module;
+    }
+    const firstGroup = moduleGroups[0]?.id;
+    if (firstGroup) {
+      return firstGroup;
+    }
+    return navModules[0]?.id ?? 'control';
+  }, [currentNavEntry?.module, moduleGroups, navModules, moduleMap]);
+
+  useEffect(() => {
+    setActiveModuleId(derivedModuleId);
+    setHiddenExpanded(false);
+  }, [derivedModuleId]);
 
   const moduleDefaultTargets = useMemo(() => {
     const map = new Map<string, string>();
-    navSections.forEach((section) => {
-      const pinnedTarget = section.pinned.find((entry) => entry.item.href && !entry.item.disabled)?.item.href;
-      const fallbackTarget = section.allItems.find((item) => item.href && !item.disabled)?.href;
-      const target = pinnedTarget ?? fallbackTarget;
+    moduleGroups.forEach((group) => {
+      const visible = group.categories
+        .flatMap(({ items }) => items)
+        .find((item) => item.href && !item.hidden && !item.disabled)?.href;
+      const fallback = group.categories
+        .flatMap(({ items }) => items)
+        .find((item) => item.href && !item.disabled)?.href;
+      const target = visible ?? fallback;
       if (target) {
-        map.set(section.module.id, target);
+        map.set(group.id, target.startsWith('/') ? target : `/${target}`);
       }
     });
     return map;
-  }, [navSections]);
+  }, [moduleGroups]);
 
-  const handleModuleNavigate = useCallback(
-    (moduleId: string) => {
-      const target = moduleDefaultTargets.get(moduleId);
-      if (target) {
-        router.push(target);
-        if (!isDesktop) {
-          setIsMobileNavOpen(false);
-        }
-      }
-    },
-    [isDesktop, moduleDefaultTargets, router],
+  const moduleTabsRaw = useModuleTabs({ moduleId: activeModuleId, moduleGroups, pathname });
+  const moduleTabs = useMemo(
+    () => moduleTabsRaw.filter((tab) => !tab.hidden),
+    [moduleTabsRaw],
   );
 
-  const viewerRole = viewer?.role?.toLowerCase() ?? null;
-  const hasPaidSupport = Boolean(viewer) && viewerRole !== 'single' && viewerRole !== 'suspended';
-  const hasDeveloperContact =
-    Boolean(viewer) && (viewerRole === 'moderator' || viewerRole === 'admin' || viewerRole === 'superuser');
+  const activeHiddenItems = useMemo(
+    () => {
+      const group = moduleGroups.find((candidate) => candidate.id === activeModuleId);
+      if (!group) {
+        return [];
+      }
+      const unique = new Map<string, SidebarNavItem>();
+      group.categories.forEach(({ items }) => {
+        items.forEach((item) => {
+          if (item.hidden && !unique.has(item.key)) {
+            unique.set(item.key, item);
+          }
+        });
+      });
+      return Array.from(unique.values());
+    },
+    [activeModuleId, moduleGroups],
+  );
+
+  const activeModule = moduleMap.get(activeModuleId) ?? moduleMap.get(derivedModuleId) ?? navModules[0];
+  const activeModuleLabel = activeModule?.label ?? 'Модуль';
 
   const defaultTimezone = useMemo(() => {
     if (typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function') {
@@ -403,1171 +236,78 @@ export default function AppShell({
 
   const timezone = viewer ? timezoneQuery.data ?? defaultTimezone : defaultTimezone;
 
-  const navVersion = navQuery.data?.v ?? 1;
-  const userLayout = navQuery.data?.layout?.user ?? layoutFromItems(navVersion, navItems);
-  const globalLayout = navQuery.data?.layout?.global ?? null;
-  const canEditGlobal = Boolean(navQuery.data?.can_edit_global);
-
-  const currentNavEntry = useMemo<SidebarNavItem | null>(() => {
-    let best: SidebarNavItem | null = null;
-    let bestLength = -1;
-    navItems.forEach((item) => {
-      const href = item.href;
-      if (!href) {
-        return;
-      }
-      if (pathname === href || pathname.startsWith(`${href}/`)) {
-        const length = href.length;
-        if (length > bestLength) {
-          best = item;
-          bestLength = length;
-        }
-      }
-    });
-    return best;
-  }, [navItems, pathname]);
-
-  const canToggleFavorite = Boolean(viewer && currentNavEntry);
-  const isFavorite = currentNavEntry ? !currentNavEntry.hidden : false;
-  const favoriteLabelAdd = currentNavEntry
-    ? `Закрепить страницу «${currentNavEntry.label}» в меню`
-    : 'Закрепить страницу в меню';
-  const favoriteLabelRemove = currentNavEntry
-    ? `Убрать страницу «${currentNavEntry.label}» из меню`
-    : 'Убрать страницу из меню';
-
-  const activeModuleId =
-    currentNavEntry?.module ??
-    moduleGroups[0]?.id ??
-    navModules[0]?.id ??
-    'general';
-  const activeModule =
-    moduleMap.get(activeModuleId) ?? { id: activeModuleId, label: activeModuleId, order: 9000 };
-  const moduleTabs = useModuleTabs({ moduleId: activeModuleId, moduleGroups, pathname });
-  const activeTabsHref = moduleTabs.find((tab) => tab.active)?.href ?? moduleTabs[0]?.href ?? '';
-
-  const handleMobileTabChange = useCallback(
-    (event: React.ChangeEvent<HTMLSelectElement>) => {
-      const targetHref = event.target.value;
-      if (!targetHref || targetHref === pathname) {
-        return;
-      }
-      router.push(targetHref);
-    },
-    [pathname, router],
-  );
-
-  const handleToggleFavorite = async () => {
-    if (!currentNavEntry || saveUserLayoutMutation.isPending) {
-      return;
-    }
-    if (!viewer) {
-      router.push('/auth');
-      return;
-    }
-    const nextHidden = isFavorite;
-    const layout: SidebarLayoutSettings = {
-      v: navVersion,
-      items: navItems.map((item, index) => ({
-        key: item.key,
-        position: index + 1,
-        hidden: item.key === currentNavEntry.key ? nextHidden : item.hidden,
-      })),
-    };
-    try {
-      await handleSaveUserLayout(layout);
-    } catch (error) {
-      console.error('Failed to toggle favorite', error);
-    }
-  };
-
-  const handleStatusNavigate = (
-    status: SidebarNavItem['status'] | undefined,
-    event?: React.MouseEvent<HTMLSpanElement>,
-  ) => {
-    if (!status?.link) {
-      return;
-    }
-    const link = status.link;
-    event?.preventDefault();
-    event?.stopPropagation();
-    router.push(link);
-  };
-
-  const saveUserLayoutMutation = useMutation({
-    mutationFn: (layout: SidebarLayoutSettings) => updateUserSidebarLayout({ layout }),
-    onSuccess: (payload: SidebarNavPayload) => {
-      queryClient.setQueryData(['navigation', 'sidebar'], payload);
-    },
-  });
-
-  const resetUserLayoutMutation = useMutation({
-    mutationFn: () => updateUserSidebarLayout({ reset: true }),
-    onSuccess: (payload: SidebarNavPayload) => {
-      queryClient.setQueryData(['navigation', 'sidebar'], payload);
-    },
-  });
-
-  const saveGlobalLayoutMutation = useMutation({
-    mutationFn: (layout: SidebarLayoutSettings) => updateGlobalSidebarLayout({ layout }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['navigation', 'sidebar'] });
-    },
-  });
-
-  const resetGlobalLayoutMutation = useMutation({
-    mutationFn: () => updateGlobalSidebarLayout({ reset: true }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['navigation', 'sidebar'] });
-    },
-  });
-
-  const handleSaveUserLayout = async (layout: SidebarLayoutSettings) => {
-    await saveUserLayoutMutation.mutateAsync(layout);
-  };
-  const handleResetUserLayout = async () => {
-    await resetUserLayoutMutation.mutateAsync();
-  };
-  const handleSaveGlobalLayout = async (layout: SidebarLayoutSettings) => {
-    await saveGlobalLayoutMutation.mutateAsync(layout);
-  };
-  const handleResetGlobalLayout = async () => {
-    await resetGlobalLayoutMutation.mutateAsync();
-  };
-
-  const userSaving = saveUserLayoutMutation.isPending || resetUserLayoutMutation.isPending;
-  const globalSaving = saveGlobalLayoutMutation.isPending || resetGlobalLayoutMutation.isPending;
-  const canOpenEditor = Boolean(navQuery.data);
-
-  const handleToggleNavItemVisibility = async (target: SidebarNavItem, nextHidden: boolean) => {
-    if (userSaving) {
-      return;
-    }
-    if (!viewer) {
-      router.push('/auth');
-      return;
-    }
-    const layout: SidebarLayoutSettings = {
-      v: navVersion,
-      items: navItems.map((item, index) => ({
-        key: item.key,
-        position: index + 1,
-        hidden: item.key === target.key ? nextHidden : item.hidden,
-      })),
-    };
-    try {
-      await handleSaveUserLayout(layout);
-    } catch (error) {
-      console.error('Failed to toggle navigation item visibility', error);
-    }
-  };
-
-  const sidebarClassName = clsx(
-    'fixed inset-y-0 left-0 z-50 flex w-72 transform border-r border-subtle bg-[var(--surface-0)] transition-[transform,width] duration-300 ease-out md:static md:h-screen md:w-72 md:translate-x-0 md:border-subtle/60 md:bg-[var(--surface-0)]/95',
-    isMobileNavOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
-    isSidebarCollapsed ? 'md:w-[88px]' : 'md:w-72',
-  );
-  const iconRailClassName = clsx(
-    'hidden md:flex md:h-screen md:flex-col md:items-center md:gap-3 md:border-r md:border-[color-mix(in srgb, var(--header-bg) 18%, transparent)] md:bg-[color-mix(in srgb, var(--header-bg) 8%, transparent)] md:px-2 md:py-4 md:shadow-[inset_-1px_0_0_rgba(255,255,255,0.08)] md:transition-[width] md:duration-300 md:ease-out md:backdrop-blur',
-    isSidebarCollapsed ? 'md:w-16' : 'md:w-20',
-  );
-  const showModuleTabs = moduleTabs.length > 1;
+  const headingId = titleId ?? 'app-shell-title';
+  const headingDescriptionId = subtitle ? `${headingId}-description` : undefined;
 
   const computedMaxWidth = maxWidthClassName ?? 'max-w-[1400px]';
   const mainClasses = clsx(
-    'relative z-10 flex w-full flex-col gap-6 px-4 py-6 md:px-8 md:py-10',
+    'relative z-10 mx-auto flex w-full flex-1 flex-col gap-6 px-4 py-6 md:px-8 md:py-10',
     contentVariant === 'flat' && 'md:px-10 lg:px-12',
     computedMaxWidth,
     mainClassName,
   );
 
-  const pageTitle = title ?? currentNavEntry?.label ?? activeModule.label;
+  const handleModuleSelect = (moduleId: string) => {
+    setActiveModuleId(moduleId);
+    setHiddenExpanded(false);
+    const target = moduleDefaultTargets.get(moduleId);
+    if (target && target !== pathname) {
+      router.push(target);
+    }
+  };
+
+  const handleToggleHidden = () => {
+    setHiddenExpanded((prev) => !prev);
+  };
 
   return (
     <TimezoneProvider value={timezone}>
-      <div className="flex min-h-screen bg-surface" data-app-shell style={shellThemeVars}>
-        <nav className={iconRailClassName} aria-label="Панель модулей">
-          <button
-            type="button"
-            onClick={() => setIsSidebarCollapsed((prev) => !prev)}
-            className={clsx(
-              'mt-1 flex h-11 w-11 items-center justify-center rounded-2xl text-white/80 transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[color-mix(in srgb, var(--header-bg) 8%, transparent)]',
-              isSidebarCollapsed ? 'bg-white/15 hover:bg-white/25' : 'bg-white/10 hover:bg-white/20',
-            )}
-            aria-label={isSidebarCollapsed ? 'Развернуть меню' : 'Свернуть меню'}
-            aria-pressed={isSidebarCollapsed}
-          >
-            <svg
-              aria-hidden
-              className="h-5 w-5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.6}
-            >
-              {isSidebarCollapsed ? (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 6l-6 6 6 6" />
-              )}
-            </svg>
-          </button>
-          <div className="mt-4 flex w-full flex-1 flex-col items-center gap-2 overflow-hidden">
-            {navModules.map((module) => {
-              const moduleId = module.id;
-              const isActiveModule = activeModule.id === moduleId;
-              const tooltipId = `module-rail-${moduleId}`;
-              return (
-                <div key={moduleId} className="group relative flex w-full justify-center">
-                  <button
-                    type="button"
-                    aria-label={`Перейти в модуль ${module.label}`}
-                    aria-describedby={tooltipId}
-                    aria-current={isActiveModule ? 'page' : undefined}
-                    onClick={() => handleModuleNavigate(moduleId)}
-                    className={clsx(
-                      'relative flex h-12 w-12 items-center justify-center rounded-2xl text-white/75 transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color-mix(in srgb, var(--header-bg) 8%, transparent)]',
-                      isActiveModule
-                        ? 'bg-[color-mix(in srgb, var(--accent-primary) 22%, transparent)] text-[var(--accent-primary)]'
-                        : 'hover:bg-white/12 hover:text-white',
-                    )}
-                  >
-                    <span
-                      aria-hidden
-                      className={clsx(
-                        'absolute left-1 top-1 bottom-1 w-1 rounded-full bg-[var(--accent-primary)] transition-opacity',
-                        isActiveModule ? 'opacity-100' : 'opacity-0 group-hover:opacity-60',
-                      )}
-                    />
-                    <NavIcon name={module.icon ?? 'module-generic'} />
-                  </button>
-                  <span
-                    role="tooltip"
-                    id={tooltipId}
-                    className="pointer-events-none absolute left-[calc(100%+0.75rem)] top-1/2 z-50 -translate-y-1/2 rounded-lg border border-subtle bg-[var(--surface-0)] px-2 py-1 text-xs font-medium text-[var(--text-primary)] opacity-0 shadow-soft transition-opacity duration-150 ease-out group-hover:opacity-100 group-focus-within:opacity-100"
-                  >
-                    {module.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </nav>
-        <aside
-          className={sidebarClassName}
-          aria-label="Главное меню"
-          aria-hidden={isSidebarCollapsed && !isMobileNavOpen}
-        >
-          <div
-            className={clsx(
-              'flex h-full w-full flex-col gap-4',
-              isSidebarCollapsed ? 'px-2 py-4 md:px-3 md:py-6' : 'px-4 py-6 md:px-5 md:py-8',
-            )}
-          >
-            <div
-              className={clsx(
-                'sticky top-0 z-10 flex flex-col gap-3 border-b border-subtle/60 pb-3 backdrop-blur',
-                isSidebarCollapsed ? 'items-center' : 'items-start',
-              )}
-            >
-              <div
-                className={clsx(
-                  'flex w-full items-center gap-2',
-                  isSidebarCollapsed ? 'justify-center' : 'justify-start',
-                )}
-              >
-                <button
-                  type="button"
-                  onClick={() => setIsSidebarCollapsed((prev) => !prev)}
-                  className={clsx(
-                    'hidden md:inline-flex h-9 w-9 items-center justify-center rounded-full text-muted transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]',
-                    isSidebarCollapsed ? 'bg-surface-soft/70' : 'bg-surface-soft',
-                  )}
-                  aria-label={isSidebarCollapsed ? 'Развернуть меню' : 'Свернуть меню'}
-                >
-                  <svg
-                    aria-hidden
-                    className="h-4 w-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.6}
-                  >
-                    {isSidebarCollapsed ? (
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
-                    ) : (
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 6l-6 6 6 6" />
-                    )}
-                  </svg>
-                </button>
-                <Link
-                  href="/"
-                  prefetch={false}
-                  className={clsx(
-                    'group inline-flex items-center gap-2 rounded-full border border-transparent px-2 py-1 transition-base hover:border-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]',
-                    isSidebarCollapsed ? 'justify-center' : 'justify-start',
-                  )}
-                  aria-label="Intelligent Data Pro — на главную"
-                >
-                  <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl shadow-soft">
-                    <Image
-                      src="/static/img/brand/mark.svg"
-                      alt="Логотип Intelligent Data Pro"
-                      width={28}
-                      height={28}
-                      className="h-7 w-7"
-                      priority
-                      unoptimized
-                    />
-                  </span>
-                  {isSidebarCollapsed ? null : (
-                    <span className="flex flex-col leading-tight">
-                      <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-                        Intelligent Data Pro
-                      </span>
-                      <span className="text-sm font-semibold text-[var(--text-primary)]">Control Hub</span>
-                    </span>
-                  )}
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => setIsMobileNavOpen(false)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted transition-base hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] md:hidden"
-                  aria-label="Скрыть меню"
-                >
-                  <svg aria-hidden className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              {!isSidebarCollapsed ? (
-                <div className="flex w-full items-center justify-center">
-                  <span className="rounded-full bg-surface-soft px-3 py-1 text-sm font-semibold text-[var(--text-primary)] shadow-soft" title={activeModule.label}>
-                    {activeModule.label}
-                  </span>
-                </div>
-              ) : null}
-            </div>
-            <div className={clsx('flex items-center justify-end gap-2', isSidebarCollapsed ? 'px-1' : 'px-0')}>
-              <button
-                type="button"
-                onClick={() => setIsNavEditorOpen(true)}
-                disabled={!canOpenEditor}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted transition-base hover:bg-surface-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:opacity-50"
-                aria-label="Настроить меню"
-              >
-                <svg aria-hidden className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M6 12h12M10 17h4" />
-                </svg>
-              </button>
-            </div>
-            <nav
-              className={clsx(
-                'flex-1 overflow-y-auto',
-                isSidebarCollapsed ? 'space-y-2 pr-1' : 'space-y-3 pr-2',
-              )}
-              aria-label="Основные модули"
-            >
-              {navSections.map((section) => {
-                const moduleId = section.module.id;
-                const hiddenOpen = expandedHiddenSections.includes(moduleId);
-                const hiddenCount = section.hidden.length;
-                const isActiveModule = activeModuleId === moduleId;
-                const moduleIcon = section.module.icon ?? 'module-generic';
-                const pinnedItems = section.pinned;
-        
-                return (
-                  <div
-                    key={moduleId}
-                    className={clsx(
-                      'rounded-2xl border border-transparent px-1 py-0.5 transition-base',
-                      isActiveModule && !isSidebarCollapsed
-                        ? 'bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)]'
-                        : 'bg-transparent',
-                    )}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => handleModuleNavigate(moduleId)}
-                      className={clsx(
-                        'flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]',
-                        isActiveModule
-                          ? 'text-[var(--text-primary)]'
-                          : 'text-muted hover:bg-surface-soft hover:text-[var(--text-primary)]',
-                      )}
-                      title={section.module.label}
-                      aria-label={section.module.label}
-                    >
-                      <NavIcon
-                        name={moduleIcon}
-                        className={clsx(
-                          'h-5 w-5',
-                          isActiveModule ? 'text-[var(--accent-primary)]' : 'text-muted',
-                        )}
-                      />
-                      {!isSidebarCollapsed ? (
-                        <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
-                          <span className="truncate text-sm font-semibold">{section.module.label}</span>
-                          {hiddenCount > 0 ? (
-                            <span className="rounded-full bg-surface-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted">
-                              {hiddenCount}
-                            </span>
-                          ) : null}
-                        </span>
-                      ) : null}
-                    </button>
-                    {!isSidebarCollapsed && pinnedItems.length > 0 ? (
-                      <div className="mt-1 flex flex-col gap-1 pl-9 pr-2">
-                        {pinnedItems.map(({ item, active }) => {
-                          const status = item.status;
-                          const statusKind = status?.kind as StatusIndicatorKind | undefined;
-                          const statusTooltip = statusKind ? NAV_STATUS_TOOLTIPS[statusKind] : undefined;
-                          const removeDisabled = userSaving;
-                          const removeLabel = `Убрать «${item.label}» из меню`;
-        
-                          const content = (
-                            <span className="flex flex-1 items-center gap-2 truncate">
-                              <NavIcon name={item.icon ?? 'nav-generic'} className="h-4 w-4 text-muted" />
-                              <span className="truncate text-sm font-medium">{item.label}</span>
-                              {statusKind ? (
-                                status?.link ? (
-                                  <span
-                                    role="button"
-                                    tabIndex={0}
-                                    className="ml-1 inline-flex"
-                                    onClick={(event) => handleStatusNavigate(status, event)}
-                                    onKeyDown={(event) => {
-                                      if (event.key === 'Enter' || event.key === ' ') {
-                                        event.preventDefault();
-                                        event.stopPropagation();
-                                        router.push(status.link!);
-                                      }
-                                    }}
-                                  >
-                                    <StatusIndicator kind={statusKind} className="h-1.5 w-1.5" />
-                                    <span className="sr-only">{statusTooltip}</span>
-                                  </span>
-                                ) : (
-                                  <StatusIndicator
-                                    kind={statusKind}
-                                    className="ml-1 h-1.5 w-1.5"
-                                    tooltip={statusTooltip}
-                                  />
-                                )
-                              ) : null}
-                            </span>
-                          );
-        
-                          const itemNode = !item.href || item.disabled ? (
-                            <span
-                              key={item.key}
-                              className="group flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted"
-                              aria-disabled
-                            >
-                              {content}
-                            </span>
-                          ) : (
-                            <Link
-                              key={item.key}
-                              href={item.href}
-                              prefetch={false}
-                              className={clsx(
-                                'flex flex-1 items-center gap-2 rounded-lg px-3 py-2 text-sm transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]',
-                                active
-                                  ? 'bg-[var(--accent-primary)]/15 text-[var(--text-primary)]'
-                                  : 'text-muted hover:bg-surface-soft hover:text-[var(--text-primary)]',
-                              )}
-                              aria-current={active ? 'page' : undefined}
-                              onClick={() => {
-                                if (!isDesktop) {
-                                  setIsMobileNavOpen(false);
-                                }
-                              }}
-                            >
-                              {content}
-                            </Link>
-                          );
-        
-                          return (
-                            <div key={item.key} className="group flex items-center gap-2">
-                              {itemNode}
-                              <button
-                                type="button"
-                                onClick={() => handleToggleNavItemVisibility(item, true)}
-                                disabled={removeDisabled}
-                                className="inline-flex h-7 w-7 flex-none items-center justify-center rounded-full text-muted transition-base hover:bg-surface-soft hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:opacity-40"
-                                aria-label={removeLabel}
-                                title={removeLabel}
-                              >
-                                <svg aria-hidden className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 12h12" />
-                                </svg>
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : null}
-                    {!isSidebarCollapsed && hiddenCount > 0 ? (
-                      <div className="mt-2 space-y-2 rounded-xl border border-dashed border-subtle bg-surface-soft/60 px-3 py-3">
-                        <button
-                          type="button"
-                          onClick={() => toggleHiddenSection(moduleId)}
-                          className="flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wide text-muted transition-base hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
-                          aria-expanded={hiddenOpen}
-                        >
-                          <span>Скрытые страницы</span>
-                          <svg
-                            aria-hidden
-                            className={clsx('h-3 w-3 transition-transform duration-150', hiddenOpen ? 'rotate-180' : 'rotate-0')}
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={1.6}
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 10l4 4 4-4" />
-                          </svg>
-                        </button>
-                        <div className={clsx('flex flex-col gap-1', !hiddenOpen && 'hidden')}>
-                          {section.hidden.map(({ item }) => {
-                            const addDisabled = userSaving;
-                            const addLabel = `Вернуть «${item.label}» в меню`;
-                            return (
-                              <button
-                                key={item.key}
-                                type="button"
-                                onClick={() => handleToggleNavItemVisibility(item, false)}
-                                disabled={addDisabled}
-                                className="flex items-center justify-between rounded-lg border border-dashed border-subtle bg-[var(--surface-0)] px-3 py-2 text-sm font-medium text-muted transition-base hover:border-[var(--accent-primary)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] disabled:opacity-40"
-                                aria-label={addLabel}
-                                title={addLabel}
-                              >
-                                <span className="flex items-center gap-2 truncate">
-                                  <NavIcon name={item.icon ?? 'nav-generic'} className="h-4 w-4" />
-                                  <span className="truncate">{item.label}</span>
-                                </span>
-                                <svg
-                                  aria-hidden
-                                  className="h-4 w-4"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth={1.6}
-                                >
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
-                                </svg>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </nav>
-            {!isSidebarCollapsed && viewer ? (
-              <div className="space-y-2 rounded-2xl border border-subtle bg-surface-soft p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted">Поддержка</p>
-                <a
-                  href={COMMUNITY_CHANNEL_URL}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--accent-primary)] hover:bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
-                >
-                  Сообщество
-                  <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
-                  </svg>
-                </a>
-                {hasPaidSupport ? (
-                  <a
-                    href={SUPPORT_CHANNEL_URL}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--accent-primary)] hover:bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
-                  >
-                    Техподдержка
-                    <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
-                    </svg>
-                  </a>
-                ) : null}
-                {hasDeveloperContact ? (
-                  <a
-                    href={DEVELOPER_CONTACT_URL}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[var(--accent-primary)] hover:bg-[color-mix(in srgb, var(--accent-primary) 12%, transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]"
-                  >
-                    Связь с разработчиком
-                    <svg aria-hidden className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10v10" />
-                    </svg>
-                  </a>
-                ) : null}
-              </div>
-            ) : null}
-            {!isSidebarCollapsed ? <MiniTimerWidget viewer={viewer} /> : null}
-          </div>
-        </aside>
-        {isMobileNavOpen ? (
-          <div
-            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden"
-            role="presentation"
-            onClick={() => setIsMobileNavOpen(false)}
+      <div className="flex min-h-screen w-full bg-surface text-[var(--text-primary)]" data-app-shell>
+        <LeftSidebar
+          modules={navModules}
+          activeModuleId={activeModuleId}
+          onModuleSelect={handleModuleSelect}
+          hiddenItems={activeHiddenItems.map((item) => ({
+            key: item.key,
+            label: item.label,
+            href: item.href,
+            disabled: item.disabled,
+          }))}
+          hiddenExpanded={hiddenExpanded}
+          onToggleHidden={handleToggleHidden}
+        />
+        <div className="flex min-h-screen flex-1 flex-col bg-white">
+          <TopNavBar
+            moduleLabel={activeModuleLabel}
+            tabs={moduleTabs}
+            viewer={viewer}
+            viewerLoading={viewerLoading}
+            personaBundle={personaBundle}
           />
-        ) : null}
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div
-            className="flex flex-col gap-4 border-b border-[color-mix(in srgb, var(--header-text) 16%, transparent)]/35 bg-[var(--header-bg)]/98 px-4 py-4 text-[var(--header-text)] shadow-[0_1px_0_rgba(0,0,0,0.12)] md:px-8 md:py-5"
-            data-app-shell-toolbar
-          >
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="flex flex-1 flex-col gap-3">
-                <div className="flex items-start gap-3">
-                  <button
-                    type="button"
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 md:hidden"
-                    aria-label={toggleLabel}
-                    aria-pressed={isMobileNavOpen}
-                    onClick={handleToggleNav}
-                  >
-                    <span className="sr-only">Меню</span>
-                    <svg
-                      aria-hidden
-                      className="h-5 w-5"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                    >
-                      {isMobileNavOpen ? (
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                      ) : (
-                        <>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 12h18" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 18h18" />
-                        </>
-                      )}
-                    </svg>
-                  </button>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/75">
-                      {activeModule.label}
-                    </span>
-                    <h1
-                      id={headingId}
-                      className="text-xl font-semibold leading-tight text-[var(--header-text)] md:text-2xl"
-                      aria-describedby={headingDescriptionId}
-                    >
-                      {pageTitle}
+          <main className={mainClasses} aria-labelledby={headingId} aria-describedby={headingDescriptionId}>
+            {(title || subtitle || actions) && (
+              <header className="flex flex-col gap-4 border-b border-slate-100 pb-6">
+                <div className="flex flex-col gap-1">
+                  {title ? (
+                    <h1 id={headingId} className="text-2xl font-semibold text-slate-900">
+                      {title}
                     </h1>
-                    {subtitle ? (
-                      <p id={headingDescriptionId} className="text-sm text-white/80">
-                        {subtitle}
-                      </p>
-                    ) : null}
-                  </div>
-                </div>
-                {showModuleTabs ? (
-                  <>
-                    <ModuleTabs
-                      moduleLabel={activeModule.label}
-                      items={moduleTabs}
-                      className="hidden md:flex flex-wrap items-center gap-2"
-                    />
-                    <div className="md:hidden">
-                      <Select
-                        value={activeTabsHref}
-                        onChange={handleMobileTabChange}
-                        aria-label="Навигация по модулю"
-                        className="w-full rounded-xl border border-white/25 bg-[var(--header-bg)]/85 px-3 py-2 text-sm font-medium text-[var(--header-text)] focus:border-white/45 focus:outline-none"
-                      >
-                        {moduleTabs.map((tab) => (
-                          <option key={tab.key} value={tab.href ?? ''}>
-                            {tab.label}
-                          </option>
-                        ))}
-                      </Select>
-                    </div>
-                  </>
-                ) : null}
-              </div>
-              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
-                <div className="flex flex-wrap items-center gap-2">
-                  {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
-                  {canToggleFavorite ? (
-                    <FavoriteToggle
-                      active={isFavorite}
-                      disabled={!canToggleFavorite || saveUserLayoutMutation.isPending}
-                      onToggle={handleToggleFavorite}
-                      labelAdd={favoriteLabelAdd}
-                      labelRemove={favoriteLabelRemove}
-                    />
+                  ) : null}
+                  {subtitle ? (
+                    <p id={headingDescriptionId} className="text-sm text-slate-500">
+                      {subtitle}
+                    </p>
                   ) : null}
                 </div>
-                <UserSummary viewer={viewer} isLoading={viewerLoading} personaBundle={personaBundle} />
-              </div>
-            </div>
-          </div>
-          <div className="flex min-h-0 flex-1 justify-center overflow-y-auto">
-            <main className={mainClasses}>
-              {contentVariant === 'card' ? (
-                <div className="rounded-2xl border border-subtle bg-[var(--surface-0)] p-0 shadow-soft">
-                  {children}
-                </div>
-              ) : (
-                <div className="w-full" data-app-shell-surface>
-                  {children}
-                </div>
-              )}
-            </main>
-          </div>
+                {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+              </header>
+            )}
+            <section className={clsx('flex flex-1 flex-col gap-6', contentVariant === 'card' && 'pb-10')}>
+              {children}
+            </section>
+          </main>
         </div>
-
-      <SidebarEditor
-        open={isNavEditorOpen}
-        version={navVersion}
-        items={navItems}
-        modules={navModules}
-        categories={navCategories}
-        userLayout={userLayout}
-        globalLayout={globalLayout}
-        canEditGlobal={canEditGlobal}
-        onClose={() => setIsNavEditorOpen(false)}
-        onSaveUser={handleSaveUserLayout}
-        onResetUser={handleResetUserLayout}
-        onSaveGlobal={canEditGlobal ? handleSaveGlobalLayout : undefined}
-        onResetGlobal={canEditGlobal ? handleResetGlobalLayout : undefined}
-        savingUser={userSaving}
-        savingGlobal={globalSaving}
-      />
       </div>
     </TimezoneProvider>
-  );
-}
-
-function MiniTimerWidget({ viewer }: { viewer: ViewerProfileSummary | null }) {
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const [now, setNow] = useState(() => Date.now());
-  const timezone = useTimezone();
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-    const id = window.setInterval(() => {
-      setNow(Date.now());
-    }, 1000);
-    return () => window.clearInterval(id);
-  }, []);
-
-  const enabled = Boolean(viewer);
-
-  const runningQuery = useQuery<TimeEntry | null, ApiError>({
-    queryKey: ['time', 'running'],
-    enabled,
-    staleTime: 5_000,
-    gcTime: 60_000,
-    retry: false,
-    queryFn: () => apiFetch<TimeEntry | null>('/api/v1/time/running'),
-  });
-
-  const startMutation = useMutation({
-    mutationFn: () =>
-      apiFetch<TimeEntry>('/api/v1/time/start', {
-        method: 'POST',
-        body: JSON.stringify({ description: null, task_id: null }),
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['time'] });
-    },
-  });
-
-  const pauseMutation = useMutation({
-    mutationFn: (entryId: number) =>
-      apiFetch<TimeEntry>(`/api/v1/time/${entryId}/pause`, {
-        method: 'POST',
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['time'] });
-    },
-  });
-
-  const resumeMutation = useMutation({
-    mutationFn: (entryId: number) =>
-      apiFetch<TimeEntry>(`/api/v1/time/${entryId}/resume`, {
-        method: 'POST',
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['time'] });
-    },
-  });
-
-  const stopMutation = useMutation({
-    mutationFn: (entryId: number) =>
-      apiFetch<TimeEntry>(`/api/v1/time/${entryId}/stop`, {
-        method: 'POST',
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['time'] });
-    },
-  });
-
-  const activeEntry = runningQuery.data && !runningQuery.data.end_time ? runningQuery.data : null;
-  const isRunning = Boolean(activeEntry?.is_running);
-  const isPaused = Boolean(activeEntry?.is_paused && !activeEntry?.is_running);
-  const elapsedSeconds = activeEntry ? getTimerElapsedSeconds(activeEntry, now) : 0;
-  const isLoading =
-    runningQuery.isFetching ||
-    startMutation.isPending ||
-    pauseMutation.isPending ||
-    resumeMutation.isPending ||
-    stopMutation.isPending;
-
-  const ensureAuth = () => {
-    if (viewer) {
-      return true;
-    }
-    router.push('/auth');
-    return false;
-  };
-
-  const handleStart = () => {
-    if (!ensureAuth()) {
-      return;
-    }
-    startMutation.mutate();
-  };
-
-  const handlePause = (entry: TimeEntry) => {
-    pauseMutation.mutate(entry.id);
-  };
-
-  const handleResume = (entry: TimeEntry) => {
-    resumeMutation.mutate(entry.id);
-  };
-
-  const handleStop = (entry: TimeEntry) => {
-    stopMutation.mutate(entry.id);
-  };
-
-  const stateTone = isRunning ? 'running' : isPaused ? 'paused' : 'idle';
-
-  const gradientClass = clsx(
-    'absolute inset-0 pointer-events-none transition-opacity duration-300',
-    stateTone === 'running'
-      ? 'bg-gradient-to-br from-emerald-500/18 via-emerald-500/10 to-transparent'
-      : stateTone === 'paused'
-      ? 'bg-gradient-to-br from-amber-500/18 via-amber-500/10 to-transparent'
-      : 'bg-gradient-to-br from-[var(--accent-primary)]/14 via-[var(--accent-primary)]/6 to-transparent',
-  );
-
-  const cardClass = 'group relative mt-6 cursor-pointer transition-shadow duration-200 hover:shadow-xl';
-
-  const tooltip = (() => {
-    if (!viewer) {
-      return 'Авторизуйтесь, чтобы вести учёт времени';
-    }
-    if (isRunning) {
-      return `Таймер запущен с ${formatDateTime(activeEntry?.start_time ?? '', timezone)}`;
-    }
-    if (isPaused) {
-      return `Таймер на паузе с ${formatDateTime(activeEntry?.paused_at ?? activeEntry?.start_time ?? '', timezone)}`;
-    }
-    return 'Нажмите, чтобы запустить быструю сессию';
-  })();
-  const description = normalizeTimerDescription(activeEntry?.description);
-
-  const primaryLabel = !viewer
-    ? 'Войти'
-    : isRunning
-      ? 'Пауза'
-      : isPaused
-      ? 'Продолжить'
-      : 'Запустить';
-
-  const primaryIcon = isLoading ? <LoaderIcon /> : isRunning ? <PauseIcon /> : <PlayIcon />;
-
-  const primaryButtonClass = clsx(
-    'inline-flex h-16 w-16 items-center justify-center rounded-full text-white shadow-lg transition-transform duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-0)]',
-    isRunning
-      ? 'bg-emerald-500 hover:bg-emerald-400 focus-visible:ring-emerald-500'
-      : isPaused
-      ? 'bg-amber-500 hover:bg-amber-400 focus-visible:ring-amber-500'
-      : 'bg-[var(--accent-primary)] hover:opacity-90 focus-visible:ring-[var(--accent-primary)]',
-    isLoading && 'opacity-70',
-  );
-
-  const openDetails = () => router.push('/time');
-
-  const onContainerClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    const target = event.target as HTMLElement;
-    if (target.closest('button') || target.closest('a')) {
-      return;
-    }
-    openDetails();
-  };
-
-  const onContainerKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.defaultPrevented) {
-      return;
-    }
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      openDetails();
-    }
-  };
-
-  const primaryAction = () => {
-    if (!viewer) {
-      router.push('/auth');
-      return;
-    }
-    if (activeEntry) {
-      if (isRunning) {
-        handlePause(activeEntry);
-      } else if (isPaused) {
-        handleResume(activeEntry);
-      }
-    } else {
-      handleStart();
-    }
-  };
-
-  const liveMessage = isRunning
-    ? `Таймер запущен, прошло ${formatClock(elapsedSeconds)}.`
-    : isPaused
-    ? 'Таймер на паузе.'
-    : 'Таймер готов к запуску.';
-
-  return (
-    <Card
-      as="section"
-      data-widget="quick-timer"
-      className={cardClass}
-      tabIndex={0}
-      aria-label="Таймер"
-      onClick={onContainerClick}
-      onKeyDown={onContainerKeyDown}
-      title={tooltip}
-    >
-      <div className={gradientClass} aria-hidden />
-      <div className="relative flex items-start gap-4">
-        <div className="flex flex-col items-center gap-2">
-          <button
-            type="button"
-            className={primaryButtonClass}
-            onClick={(event) => {
-              event.stopPropagation();
-              primaryAction();
-            }}
-            disabled={isLoading}
-            title={primaryLabel}
-            aria-label={primaryLabel}
-          >
-            {primaryIcon}
-          </button>
-          {viewer && activeEntry ? (
-            <div className="flex items-center gap-1.5">
-              <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                className="text-red-600 hover:bg-red-500/10 focus-visible:ring-red-500 dark:text-red-400"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  handleStop(activeEntry);
-                }}
-                disabled={isLoading || stopMutation.isPending}
-                aria-label="Завершить сессию"
-                title="Завершить сессию"
-              >
-                {stopMutation.isPending ? <LoaderIcon /> : <StopIcon />}
-              </Button>
-              {activeEntry.task_id ? (
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    router.push(`/tasks?task=${activeEntry.task_id}`);
-                  }}
-                  disabled={isLoading}
-                  aria-label={`Открыть задачу #${activeEntry.task_id}`}
-                  title={`Открыть задачу #${activeEntry.task_id}`}
-                >
-                  <TaskIcon />
-                </Button>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wide text-muted">Таймер</span>
-            {activeEntry ? (
-              <span className="relative inline-flex h-2.5 w-2.5">
-                <span
-                  aria-hidden
-                  className={clsx(
-                    'absolute inset-0 rounded-full transition-colors duration-200',
-                    isRunning ? 'bg-emerald-500' : 'bg-amber-500',
-                  )}
-                />
-                <span className="sr-only">{isRunning ? 'Таймер активен' : 'Таймер на паузе'}</span>
-              </span>
-            ) : null}
-          </div>
-          <div className="mt-2 font-mono text-3xl font-semibold tracking-tight text-[var(--text-primary)]">
-            {formatClock(elapsedSeconds)}
-          </div>
-          <p className="mt-1 text-xs text-muted">
-            {activeEntry
-              ? isRunning
-                ? `Запущен ${formatDateTime(activeEntry.start_time, timezone)}`
-                : `Пауза с ${formatDateTime(activeEntry.paused_at ?? activeEntry.start_time, timezone)}`
-              : 'Таймер готов к запуску'}
-          </p>
-          {description ? (
-            <p className="mt-2 text-sm text-[var(--text-secondary)] line-clamp-2">{description}</p>
-          ) : null}
-        </div>
-      </div>
-      <span className="sr-only" aria-live="polite">
-        {liveMessage}
-      </span>
-    </Card>
-  );
-}
-
-function PlayIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6}>
-      <path d="M7 5.5v13l11-6.5-11-6.5z" fill="currentColor" />
-    </svg>
-  );
-}
-
-function PauseIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6}>
-      <rect x="7" y="5" width="3.5" height="14" rx="1.2" fill="currentColor" />
-      <rect x="13.5" y="5" width="3.5" height="14" rx="1.2" fill="currentColor" />
-    </svg>
-  );
-}
-
-function StopIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6}>
-      <rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor" />
-    </svg>
-  );
-}
-
-function TaskIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.6}>
-      <path d="M9 11l2 2 4-4" strokeLinecap="round" strokeLinejoin="round" />
-      <rect x="4" y="4" width="16" height="16" rx="3" />
-    </svg>
-  );
-}
-
-function LoaderIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5 animate-spin" fill="none" stroke="currentColor" strokeWidth={1.6}>
-      <path d="M12 3a9 9 0 1 0 9 9" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function UserSummary({
-  viewer,
-  isLoading,
-  personaBundle,
-}: {
-  viewer: ViewerProfileSummary | null;
-  isLoading: boolean;
-  personaBundle?: PersonaBundle;
-}) {
-  if (isLoading && !viewer) {
-    return <div className="h-10 w-10 animate-pulse rounded-full bg-white/15" aria-hidden />;
-  }
-  if (!viewer) {
-    return null;
-  }
-  const displayLabel = viewer.display_name || viewer.username || 'Пользователь';
-  const initials = getInitials(displayLabel);
-  const persona = getPersonaInfo(personaBundle ?? DEFAULT_PERSONA_BUNDLE, viewer.role);
-  const tooltipId = `role-tooltip-${viewer.user_id}`;
-  const profileSlug = viewer.profile_slug || viewer.username || '';
-  const profileHref = profileSlug ? `/users/${profileSlug}` : '/users';
-  const usernameLabel = viewer.username ? `@${viewer.username}` : '—';
-  return (
-    <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-      <div className="relative hidden lg:block group/role">
-        <div
-          tabIndex={0}
-          role="button"
-          aria-haspopup="true"
-          aria-describedby={tooltipId}
-          aria-label={`Ваша роль: ${persona.label}`}
-          className="inline-flex items-center gap-1 rounded-full border border-white/30 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-white/85 transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[color-mix(in srgb, var(--header-bg) 12%, transparent)]"
-        >
-          {persona.label}
-        </div>
-        <div
-          role="tooltip"
-          id={tooltipId}
-          className="pointer-events-none absolute left-0 top-full z-40 mt-2 w-max max-w-xs origin-top-left scale-95 rounded-xl border border-subtle bg-[var(--surface-0)] p-3 text-left text-xs text-[var(--text-primary)] opacity-0 shadow-soft transition-all duration-150 ease-out group-hover/role:scale-100 group-hover/role:opacity-100 group-focus-within/role:scale-100 group-focus-within/role:opacity-100"
-        >
-          <div className="text-sm font-semibold text-[var(--text-primary)]">{persona.label}</div>
-          {viewer.headline ? (
-            <p className="mt-1 text-xs text-[var(--text-primary)]">{viewer.headline}</p>
-          ) : null}
-          <p className="mt-1 leading-relaxed text-muted">{renderPersonaTooltip(persona.tooltipMd)}</p>
-          {persona.slogan ? (
-            <p className="mt-2 text-[0.65rem] font-semibold uppercase tracking-wide text-muted">
-              {persona.slogan}
-            </p>
-          ) : null}
-        </div>
-      </div>
-      <Link
-        href={profileHref}
-        prefetch={false}
-        className="group/link inline-flex items-center gap-2 sm:gap-3 rounded-full border border-white/15 px-2 py-1 transition-base hover:border-white/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[color-mix(in srgb, var(--header-bg) 12%, transparent)]"
-        aria-label={`Профиль пользователя ${displayLabel}. Роль: ${persona.label}`}
-      >
-        <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white/15 text-sm font-semibold text-white ring-1 ring-white/35">
-          {viewer.avatar_url ? (
-            <Image
-              src={viewer.avatar_url}
-              alt="Аватар пользователя"
-              width={40}
-              height={40}
-              className="h-10 w-10 object-cover"
-              unoptimized
-            />
-          ) : (
-            initials
-          )}
-        </span>
-        <span className="hidden sm:flex min-w-0 flex-col leading-tight">
-          <span className="truncate text-sm font-medium text-white">{displayLabel}</span>
-          <span className="truncate text-xs text-white/70">{usernameLabel}</span>
-        </span>
-        <span className="sr-only">{`Роль: ${persona.label}`}</span>
-      </Link>
-    </div>
   );
 }

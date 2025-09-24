@@ -1,4 +1,23 @@
 agent_sync:
+  - when_utc: "2025-09-24T08:34:39Z"
+    agent: "codex-cli::frontend"
+    role: "fe"
+    branch: "feature/E17/bitrix-menu-overhaul-fe"
+    task: "TL-2025-09-24-bitrix-menu-overhaul"
+    epic_scope: "E17 / Frontend navigation"
+    files:
+      - "web/components/AppShell.tsx"
+      - "web/components/navigation/LeftSidebar.tsx"
+      - "web/components/navigation/TopNavBar.tsx"
+      - "web/components/navigation/ModuleTabs.tsx"
+    locks:
+      - path: "web/components/AppShell.tsx"
+      - path: "web/components/navigation/*"
+    pr: null
+    ac_link: "README.md#e17-frontend-modernization"
+    ttl_minutes: 0
+    status: "Review"
+    note: "Bitrix24 rail/top bar ready; AppShell slimmed, new LeftSidebar/TopNavBar, npm run lint/test ok."
   - when_utc: "2025-09-24T07:05:00Z"
     agent: "codex-cli::teamlead"
     role: "tl"

@@ -20,19 +20,22 @@ interface ModuleTabsProps {
 }
 
 export function ModuleTabs({ moduleLabel, items, className }: ModuleTabsProps) {
-  if (!items || items.length <= 1) {
+  const entries = Array.isArray(items) ? items : [];
+
+  if (entries.length <= 1) {
     return null;
   }
 
   return (
-    <nav className={className} aria-label={`Навигация модуля ${moduleLabel}`}>
-      {items.map((item) => {
+    <nav className={clsx('flex flex-wrap items-center gap-2', className)} aria-label={`Навигация модуля ${moduleLabel}`}>
+      {entries.map((item) => {
         const baseClass =
-          'inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--header-bg,var(--surface-0))]';
+          'inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-blue-600';
         const variant = item.active
-          ? 'bg-[var(--accent-primary)] text-[var(--accent-on-primary)] shadow-soft'
-          : 'bg-[color-mix(in srgb, var(--header-bg, var(--surface-0)) 12%, transparent)] text-[color-mix(in srgb, var(--header-text, var(--text-primary)) 80%, transparent)] hover:bg-[color-mix(in srgb, var(--accent-primary) 18%, transparent)] hover:text-[var(--header-text, var(--text-primary))] hover:underline decoration-2 underline-offset-8';
-        const tabClassName = clsx(baseClass, variant);
+          ? 'bg-white text-blue-600 shadow-sm'
+          : 'text-white/80 hover:bg-white/15 hover:text-white';
+        const hiddenVariant = item.hidden ? 'opacity-70 hover:opacity-90' : '';
+        const tabClassName = clsx(baseClass, variant, hiddenVariant);
 
         if (!item.href) {
           return (

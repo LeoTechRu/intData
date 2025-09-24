@@ -23,6 +23,14 @@ gate_check:
       - README/agent_sync обновлены
     status: pass
     notes: "AppShell/ModuleTabs обновлены, тесты пройдены."
+  - gate: 3
+    role_owner: frontend
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "2025-09-24T08:37:48Z — Bitrix rail/top bar реворк, npm run lint/test зелёные, agent_sync в Review."
   - gate: 5
     role_owner: qa
     tl_checklist:
