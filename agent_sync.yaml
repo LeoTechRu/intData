@@ -13,8 +13,8 @@ agent_sync:
   pr: null
   ac_link: README.md#ops-incident-response
   ttl_minutes: 120
-  status: Handoff
-  note: Intake оформлен, Tasklist обновлён, передано backend для Zero-Wait восстановления
+  status: Done
+  note: Intake + Tasklist + GateLog обновлены, конвейер закрыт
 - when_utc: '2025-09-24T19:09:59Z'
   agent: codex-cli::backend
   role: be
@@ -28,9 +28,9 @@ agent_sync:
   pr: null
   ac_link: README.md#ops-incident-response
   ttl_minutes: 120
-  status: Handoff
+  status: Done
   note: Venv rebuilt (python3.11), opentelemetry instrumentation добавлены, pytest
-    settings page зелёный; передаю DevOps
+    settings page зелёный
 - when_utc: '2025-09-24T19:14:39Z'
   agent: codex-cli::devops
   role: devops
@@ -44,9 +44,8 @@ agent_sync:
   pr: null
   ac_link: README.md#ops-incident-response
   ttl_minutes: 120
-  status: Handoff
-  note: scripts/rebuild_service.sh выполнен, venv пересоздан, intdata-web активен,
-    логи сохранены
+  status: Done
+  note: Rebuild script выполнен, systemctl active, логи приложены; Gate-5 pass
 - when_utc: '2025-09-24T19:23:00Z'
   agent: codex-cli::qa
   role: qa
