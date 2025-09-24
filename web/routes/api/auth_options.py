@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request
 
 from web.routes.auth import get_auth_public_options
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["Users"])
 
 
 @router.get("/options", name="api:auth_options")

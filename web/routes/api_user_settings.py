@@ -13,7 +13,7 @@ from core.services.user_settings_service import UserSettingsService
 from web.dependencies import get_current_web_user, get_effective_permissions
 from .settings import FAVORITE_PAGES
 
-router = APIRouter(prefix="/user/settings", tags=["user-settings"])
+router = APIRouter(prefix="/user/settings", tags=["Users"])
 
 DEFAULT_KEYS = ["dashboard_layout", "favorites", "timezone"]
 DEFAULT_TIMEZONE = os.getenv("DEFAULT_TIMEZONE", "Europe/Moscow")

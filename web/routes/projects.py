@@ -19,8 +19,8 @@ from web.dependencies import get_current_tg_user
 from .index import render_next_page
 
 
-router = APIRouter(prefix="/projects", tags=["projects"])
-ui_router = APIRouter(prefix="/projects", tags=["projects"], include_in_schema=False)
+router = APIRouter(prefix="/projects", tags=["Tasks & Projects"])
+ui_router = APIRouter(prefix="/projects", tags=["Tasks & Projects"], include_in_schema=False)
 
 
 class ProjectCreate(BaseModel):

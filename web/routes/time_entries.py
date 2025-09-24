@@ -14,8 +14,8 @@ from web.dependencies import get_current_tg_user
 from .index import render_next_page
 
 
-router = APIRouter(prefix="/time", tags=["time"])
-ui_router = APIRouter(prefix="/time", tags=["time"], include_in_schema=False)
+router = APIRouter(prefix="/time", tags=["Control Hub"])
+ui_router = APIRouter(prefix="/time", tags=["Control Hub"], include_in_schema=False)
 
 
 class StartPayload(BaseModel):

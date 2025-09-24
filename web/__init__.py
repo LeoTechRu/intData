@@ -116,26 +116,37 @@ async def lifespan(app: FastAPI):
 
 
 tags_metadata = [
-    {"name": "tasks", "description": "Task management API"},
-    {"name": "calendar", "description": "Calendar events API"},
-    {"name": "notes", "description": "Notes CRUD API"},
-    {"name": "time", "description": "Time tracking API"},
-    {"name": "areas", "description": "PARA Areas API"},
-    {"name": "projects", "description": "PARA Projects API"},
-    {"name": "resources", "description": "PARA Resources API"},
-    {"name": "inbox", "description": "Inbox API"},
-    {"name": "admin", "description": "Admin operations (requires admin role)"},
-    {"name": "app-settings", "description": "Application settings API"},
-    {"name": "auth", "description": "Authentication API"},
-    {"name": "user", "description": "User favorites API"},
-    {"name": "user-settings", "description": "User settings API"},
-    {"name": "habits", "description": "Habits API"},
-    {"name": "Habits", "description": "Habits API"},
-    {"name": "Dailies", "description": "Dailies API"},
-    {"name": "Rewards", "description": "Rewards API"},
-    {"name": "Stats", "description": "Habits statistics API"},
-    {"name": "Calendar", "description": "Calendar API"},
-    {"name": "groups", "description": "Telegram group CRM"},
+    {
+        "name": "Tasks & Projects",
+        "description": "PARA planning endpoints covering tasks, projects, areas, resources, and notes.",
+    },
+    {
+        "name": "Control Hub",
+        "description": "Personal effectiveness suite: inbox, reminders, calendar, dashboard, and time tracking.",
+    },
+    {
+        "name": "Users",
+        "description": "Authentication, user preferences, and account management APIs.",
+    },
+    {
+        "name": "Habits",
+        "description": "Habitica-inspired habit, daily, reward, and stats endpoints.",
+    },
+    {
+        "name": "Team Hub",
+        "description": "Group and team collaboration tools, including Telegram group CRM.",
+    },
+    {"name": "admin", "description": "Admin operations (requires admin role)."},
+    {"name": "app-settings", "description": "Application settings API."},
+    {"name": "crm", "description": "Customer relationship management endpoints."},
+    {"name": "cup", "description": "Internal admin UI helpers."},
+    {"name": "diagnostics", "description": "Diagnostics and health-check APIs."},
+    {"name": "docs", "description": "Public documentation routes."},
+    {"name": "integrations", "description": "External integrations APIs."},
+    {"name": "navigation", "description": "Navigation layout customization endpoints."},
+    {"name": "pricing", "description": "Pricing and plans APIs."},
+    {"name": "products", "description": "Product catalogue APIs."},
+    {"name": "profiles", "description": "Profile and public page management APIs."},
 ]
 
 app = FastAPI(
