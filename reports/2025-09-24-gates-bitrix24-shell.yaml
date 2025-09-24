@@ -38,4 +38,12 @@ gate_check:
       - границы роли соблюдены (role-boundary-check)
       - README/agent_sync обновлены
     status: pass
-    notes: "Линт/тесты зелёные." 
+    notes: "Линт/тесты зелёные."
+  - gate: 5
+    role_owner: qa
+    tl_checklist:
+      - AC закрыты
+      - границы роли соблюдены (role-boundary-check)
+      - README/agent_sync обновлены
+    status: pass
+    notes: "2025-09-24T08:38:55Z — npm run lint + npm run test (vitest) после merge в test, без падений."
