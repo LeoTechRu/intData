@@ -1,0 +1,19 @@
+handoff:
+  from: devops
+  to: teamlead
+  initiative: E17 / Frontend navigation
+  task: TL-2025-09-24-bitrix24-nav
+  context: |
+    Фронтенд Bitrix24 shell собран: `npm ci`, `npm run lint`, `npm run test -- ModuleTabs`, `npm run build`. Локально запустить
+    Trivy не удалось (бинарь отсутствует). InfoSec просит выполнить `trivy fs` на CI для каталогов `web/components/navigation`
+    и `web/lib`. Runbook обновлён новым разделом. GateRecord release создан и ожидает TL одобрения.
+  artifacts:
+    - path: reports/runbooks/test-to-main.md
+      note: Добавлен раздел Bitrix24 Shell Release
+    - path: reports/2025-09-24-gaterecord-bitrix24-nav-release.yaml
+      note: GateRecord stage=release (ожидает TL approval)
+  acceptance:
+    - Подтвердить CI Trivy (или выполнить вручную) перед fast-forward
+    - После smoke приложить выдержку `journalctl -u intdata-web`
+  blockers:
+    - Отсутствие `trivy` в локальном окружении (ждёт CI)

@@ -69,6 +69,12 @@
 6. Пост-деплой: просмотреть `journalctl -u intdata-web --since "5 minutes ago"` на наличие ошибок drag/layout API.
 7. Записать GateRecord release (hash, время rebuild, кто выполнял smoke).
 
+### 2025-09-24 — Bitrix24 Shell Release
+1. `npm ci && npm run lint && npm run test -- ModuleTabs && npm run build` — локальный rebuild фронтенда (выполнено Codex DevOps).
+2. `trivy fs --security-checks vuln,secret,config web/components/navigation web/lib` — выполнить на CI (локально `trivy` отсутствует, см. InfoSec отчёт).
+3. Smoke (staging): проверить сворачивание/разворачивание сайдбара, работу вкладок, drag-and-drop через SidebarConfigurator.
+4. После успешного деплоя собрать выдержку `journalctl -u intdata-web --since "10 minutes ago"` и приложить к GateRecord.
+
 ### 2025-09-24 — Incident 503 Recovery (venv rebuild)
 1. `sudo bash scripts/rebuild_service.sh` — пересоздать `venv`, установить зависимости, перезапустить `intdata-web`.
 2. `curl -f https://intdata.pro/healthz` — убедиться, что API возвращает `{"status":"ok"}`.

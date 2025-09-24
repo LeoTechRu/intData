@@ -1,0 +1,10 @@
+gate:
+  stage: release
+  tl_check:
+    approved: true
+    by: "@teamlead"
+    when_utc: "2025-09-24T21:17:37Z"
+  notes: |
+    TL подтверждает Gate-5: build/testы зелёные, InfoSec/DevOps handoffs закрыты. Trivy fs требуется выполнить в CI
+    (локально бинарь отсутствует) — зафиксировано как follow-up в DevOps runbook. После деплоя приложить журнал `journalctl`
+    согласно runbook.
