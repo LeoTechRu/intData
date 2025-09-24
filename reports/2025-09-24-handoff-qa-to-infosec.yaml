@@ -1,0 +1,18 @@
+handoff:
+  from: qa
+  to: infosec
+  initiative: E17 / Frontend navigation
+  task: TL-2025-09-24-bitrix24-nav
+  context: |
+    QA подтвердила Bitrix24 shell: сайдбар/топбар работают, drag-and-drop и скрытые пункты без регрессий.
+    Единственная открытая точка — функциональность кастомных ссылок ожидает backend API; кнопка «Добавить ссылку»
+    задизейблена. Просьба прогнать стандартные SAST/SCA/Secrets для обновлённых компонентов и зафиксировать рекомендации.
+  artifacts:
+    - path: reports/test/2025-09-24-bitrix24-nav.md
+      note: QA-отчёт по AC-1..AC-9 с should-fix на кастомные ссылки
+  acceptance:
+    - Semgrep/Bandit/Trivy по web/components/navigation/** и web/lib/navigation-*.ts
+    - Подтвердить отсутствие новых секретов/уровень риска
+    - Задокументировать рекомендации (must/should/could)
+  blockers:
+    - Нет
