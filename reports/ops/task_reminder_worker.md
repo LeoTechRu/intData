@@ -26,7 +26,7 @@
    WorkingDirectory=/srv/intdata
    Environment="PYTHONPATH=/srv/intdata"
    EnvironmentFile=/srv/intdata/.env
-   ExecStart=/srv/intdata/venv/bin/python utils/run_task_reminder_worker.py
+   ExecStart=/srv/intdata/venv/bin/python scripts/run_task_reminder_worker.py
    Restart=always
    RestartSec=5
 
@@ -43,7 +43,7 @@
 Если systemd недоступен, можно добавить cron-задание, запускающее воркер в
 режиме одиночного цикла:
 ```cron
-* * * * * cd /srv/intdata && source venv/bin/activate && ENABLE_SCHEDULER=0 TASK_REMINDER_INTERVAL=60 python utils/run_task_reminder_worker.py >> /var/log/intdata-task-reminder.log 2>&1
+* * * * * cd /srv/intdata && source venv/bin/activate && ENABLE_SCHEDULER=0 TASK_REMINDER_INTERVAL=60 python scripts/run_task_reminder_worker.py >> /var/log/intdata-task-reminder.log 2>&1
 ```
 Cron будет каждые 60 секунд стартовать воркер. Такой вариант менее надёжен,
 поэтому рекомендуем использовать systemd.

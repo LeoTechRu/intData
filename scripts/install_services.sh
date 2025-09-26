@@ -23,8 +23,8 @@ python3 -m venv "$PROJECT_VENV" >/dev/null 2>&1 || true
 "$PROJECT_VENV/bin/pip" install -r requirements.txt
 
 # 3) Установка unit-файлов (только если изменились)
-#install -m 0644 -D "$PROJECT_ROOT/utils/systemd/intdata-bot.service" /etc/systemd/system/intdata-bot.service
-#install -m 0644 -D "$PROJECT_ROOT/utils/systemd/intdata-web.service" /etc/systemd/system/intdata-web.service
+#install -m 0644 -D "$PROJECT_ROOT/scripts/systemd/intdata-bot.service" /etc/systemd/system/intdata-bot.service
+#install -m 0644 -D "$PROJECT_ROOT/scripts/systemd/intdata-web.service" /etc/systemd/system/intdata-web.service
 
 # 4) Проверка синтаксиса и перезагрузка конфигурации systemd
 systemd-analyze verify /etc/systemd/system/intdata-*.service
