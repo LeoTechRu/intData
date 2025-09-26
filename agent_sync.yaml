@@ -5,9 +5,10 @@ agent_sync:
   paths:
   - reports/arch/2025-09-24-bitrix24-leftnav.md
   - reports/2025-09-24-handoff-arch-to-fe.yaml
-  ttl: 120
-  status: Handoff
-  note: Архитектура Bitrix24-стиля готова; handoff → frontend
+  ttl: 0
+  status: Done
+  note: 'Архитектура Bitrix24-стиля готова; handoff → frontend | Cleanup 2025-09-26:
+    branch merged into main/test and deleted; lock cleared.'
 - since: '2025-09-24T19:56:11Z'
   owner: codex-cli::fe
   branch: feature/E17/bitrix24-sidebar-fe
@@ -22,20 +23,21 @@ agent_sync:
   - web/lib/navigation-layout.ts
   - web/lib/useModuleTabs.ts
   - reports/2025-09-24-handoff-fe-to-qa.yaml
-  ttl: 180
-  status: Review
-  note: Bitrix24 левый бар + топ табы реализованы, handoff → QA (custom links ждут
-    backend API)
+  ttl: 0
+  status: Done
+  note: 'Bitrix24 левый бар + топ табы реализованы, handoff → QA (custom links ждут
+    backend API) | Cleanup 2025-09-26: branch merged into main/test and deleted; lock
+    cleared.'
 - since: '2025-09-24T20:21:02Z'
   owner: codex-cli::qa
   branch: feature/E17/bitrix24-sidebar-qa
   paths:
   - tests/
   - reports/test/2025-09-24-bitrix24-nav.md
-  ttl: 120
-  status: Handoff
+  ttl: 0
+  status: Done
   note: 'QA: AC-1..AC-9 пройдены, custom links помечены как should-fix; handoff →
-    InfoSec'
+    InfoSec | Cleanup 2025-09-26: branch merged into main/test and deleted; lock cleared.'
 - since: '2025-09-24T20:26:10Z'
   owner: codex-cli::infosec
   branch: feature/E17/bitrix24-sidebar-infosec
@@ -43,10 +45,11 @@ agent_sync:
   - web/components/navigation/
   - web/lib/navigation-*.ts
   - reports/infosec/2025-09-24-bitrix24-nav.md
-  ttl: 120
-  status: Handoff
+  ttl: 0
+  status: Done
   note: 'InfoSec: Semgrep/Bandit ok, Trivy недоступен локально — запрос CI скана;
-    handoff → DevOps'
+    handoff → DevOps | Cleanup 2025-09-26: branch merged into main/test and deleted;
+    lock cleared.'
 - since: '2025-09-24T20:33:27Z'
   owner: codex-cli::devops
   branch: feature/E17/bitrix24-sidebar-devops
@@ -54,9 +57,10 @@ agent_sync:
   - .github/workflows/
   - reports/runbooks/test-to-main.md
   - reports/2025-09-24-gaterecord-bitrix24-nav-release.yaml
-  ttl: 120
-  status: Handoff
-  note: 'Gate-5: npm ci/lint/test/build выполнены, Trivy ждёт CI; handoff → TL'
+  ttl: 0
+  status: Done
+  note: 'Gate-5: npm ci/lint/test/build выполнены, Trivy ждёт CI; handoff → TL | Cleanup
+    2025-09-26: branch merged into main/test and deleted; lock cleared.'
 - since: '2025-09-24T21:17:19Z'
   owner: codex-cli::teamlead
   branch: main
@@ -76,36 +80,38 @@ agent_sync:
   - web/components/navigation/LeftSidebar.tsx
   - web/components/navigation/TopNavBar.tsx
   - web/components/navigation/ModuleTabs.tsx
-  ttl: 120
-  status: Review
+  ttl: 0
+  status: Done
   note: 'FE hotfix готов: бургер переехал в LeftSidebar, TopNavBar содержит только
-    вкладки; ждём QA подтверждения'
+    вкладки; ждём QA подтверждения | Cleanup 2025-09-26: branch merged into main/test
+    and deleted; lock cleared.'
 - since: '2025-09-24T22:03:52Z'
   owner: codex-cli::qa
   branch: feature/E17/bitrix24-shell-qa
   paths:
   - reports/test/2025-09-24-bitrix24-shell-hotfix.md
-  ttl: 60
-  status: Handoff
+  ttl: 0
+  status: Done
   note: 'QA: бургер в левом меню подтверждён, верхний бар только вкладки; handoff
-    → TL'
+    → TL | Cleanup 2025-09-26: branch merged into main/test and deleted; lock cleared.'
 - since: '2025-09-24T22:06:01Z'
   owner: codex-cli::infosec
   branch: feature/E17/bitrix24-shell-infosec
   paths:
   - reports/infosec/2025-09-24-bitrix24-shell-hotfix.md
-  ttl: 45
-  status: Handoff
-  note: 'InfoSec: UI-only, новых рисков нет; Trivy остаётся на CI. handoff → DevOps'
+  ttl: 0
+  status: Done
+  note: 'InfoSec: UI-only, новых рисков нет; Trivy остаётся на CI. handoff → DevOps
+    | Cleanup 2025-09-26: branch merged into main/test and deleted; lock cleared.'
 - since: '2025-09-24T22:06:58Z'
   owner: codex-cli::devops
   branch: feature/E17/bitrix24-shell-devops
   paths:
   - reports/2025-09-24-gaterecord-bitrix24-nav-release.yaml
-  ttl: 45
-  status: Handoff
+  ttl: 0
+  status: Done
   note: 'DevOps: GateRecord обновлён (UI hotfix, доп. действий не требуется); handoff
-    → TL'
+    → TL | Cleanup 2025-09-26: branch merged into main/test and deleted; lock cleared.'
 - since: '2025-09-24T22:10:12Z'
   owner: codex-cli::teamlead
   branch: main
