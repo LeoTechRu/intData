@@ -4068,14 +4068,14 @@ SCHEMA.json является единой «точкой истины» стру
 - При любых изменениях в `/bot` обязательно актуализируй динамическую справку `/start`, чтобы она отражала доступные команды и уровни доступа.
 - Миграции БД: idempotent DDL в `/backend/db/ddl/*.sql` + `repair`; если в проекте уже используется другая технология, следуем действующей и фиксируем это здесь, НЕ меняя платформу миграций в рамках правки AGENTS.
 - Экспорт схемы (`backend.db.schema_export`) обновлять при изменении моделей.
-- Все API — под `/api/v1/*`; обновить `/api/openapi.json`.
+- Все API — под `/api/v1/*`; обновить `/backend/api/openapi.json`.
 - Фичефлаги: `CALENDAR_V2_ENABLED`, `HABITS_V1_ENABLED`, `HABITS_RPG_ENABLED` (и `.env.example` при необходимости).
 - Тесты (pytest): наследование PARA; один активный таймер; cron ежедневок (идемпотентность); `habits up/down`, `dailies done/undo`, виртуальные записи в agenda; срезы `/time/summary`.
 - Коммиты/PR: императивный заголовок, почему+что; обновление `.env.example`, `reports/archive/BACKLOG.md`, `reports/archive/CHANGELOG.md`; скриншоты UI.
 - Команды Linux выполняй без `sudo` по умолчанию; пользуйся `sudo` только если команда без него завершается ошибкой из-за недостатка прав.
 - Work from repo root, activate venv, install deps, then implement.
 - Keep changes minimal and aligned with existing style. Always finish with: `source ./venv/bin/activate && pip install --quiet -r requirements.txt && pytest -q`.
-- Changes to note models or endpoints require updating `backend/db/SCHEMA.*` via `python -m backend.db.schema_export generate`; OpenAPI is served at `/api/openapi.json` and used in tests.
+- Changes to note models or endpoints require updating `backend/db/SCHEMA.*` via `python -m backend.db.schema_export generate`; OpenAPI is served at `/backend/api/openapi.json` and used in tests.
 
 ### Multi-agent Coordination (codex-cli)
 - Каждый экземпляр codex-cli работает в собственной рабочей копии: отдельный `git clone` или `git worktree add ../<agent-branch>`. Запрещено вести параллельную работу из одного каталога.
@@ -4440,7 +4440,7 @@ async def swagger_docs_redirect():
     return RedirectResponse("/api", status_code=307)
 
 
-@app.get("/api/openapi.json", include_in_schema=False)
+@app.get("/backend/api/openapi.json", include_in_schema=False)
 async def openapi_json() -> Response:
     data = app.openapi()
     text = json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True)
@@ -4516,7 +4516,7 @@ async def auth_middleware(request: Request, call_next):
     if (
         path == "/api"
         or path == "/api/docs"  # back-compat path
-        or path == "/api/openapi.json"
+        or path == "/backend/api/openapi.json"
         or path == "/api/v1/auth/tg-webapp/exchange"
     ):
         return await call_next(request)
@@ -4524,7 +4524,7 @@ async def auth_middleware(request: Request, call_next):
     if path.startswith("/api/swagger-ui"):
         return await call_next(request)
 
-    if path.startswith("/api/") and not path.startswith("/api/v1/") and path != "/api/openapi.json":
+    if path.startswith("/api/") and not path.startswith("/api/v1/") and path != "/backend/api/openapi.json":
         dest = f"/api/v1/{path[5:]}"
         if request.url.query:
             dest += f"?{request.url.query}"

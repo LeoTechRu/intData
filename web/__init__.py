@@ -239,7 +239,7 @@ def _build_openapi_response() -> Response:
     return Response(text, media_type="application/json")
 
 
-@app.get("/api/openapi.json", include_in_schema=False)
+@app.get("/backend/api/openapi.json", include_in_schema=False)
 async def openapi_json() -> Response:
     return _build_openapi_response()
 
@@ -322,7 +322,7 @@ async def auth_middleware(request: Request, call_next):
     if (
         path == "/api"
         or path == "/api/docs"  # back-compat path
-        or path == "/api/openapi.json"
+        or path == "/backend/api/openapi.json"
         or path == "/api/v1/openapi.json"
         or path == "/api/v1/auth/tg-webapp/exchange"
     ):
@@ -331,7 +331,7 @@ async def auth_middleware(request: Request, call_next):
     if path.startswith("/api/swagger-ui"):
         return await call_next(request)
 
-    if path.startswith("/api/") and not path.startswith("/api/v1/") and path != "/api/openapi.json":
+    if path.startswith("/api/") and not path.startswith("/api/v1/") and path != "/backend/api/openapi.json":
         dest = f"/api/v1/{path[5:]}"
         if request.url.query:
             dest += f"?{request.url.query}"
