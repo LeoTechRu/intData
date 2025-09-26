@@ -22,7 +22,7 @@ ENV_VARS = {
 def reload_legacy(monkeypatch, **env):
     for name in ENV_VARS:
         monkeypatch.delenv(name, raising=False)
-    module = importlib.import_module("core.db.legacy")
+    module = importlib.import_module("backend.db.legacy")
     module = importlib.reload(module)
     for name in ENV_VARS:
         monkeypatch.delenv(name, raising=False)

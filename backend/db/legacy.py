@@ -83,10 +83,20 @@ class DBConfig:
         track_modifications = False
         project_path = Path(os.getenv("PROJECT_PATH") or os.getcwd())
 
-        schema_path = Path(
-            os.getenv("SCHEMA_PATH")
-            or project_path / "core" / "sql" / "main.sql"
-        )
+        env_schema = os.getenv("SCHEMA_PATH")
+        if env_schema:
+            schema_path = Path(env_schema)
+        else:
+            candidates = [
+                project_path / "backend" / "db" / "SCHEMA.sql",
+                project_path / "backend" / "sql" / "main.sql",
+            ]
+            for candidate in candidates:
+                if candidate.exists():
+                    schema_path = candidate
+                    break
+            else:
+                schema_path = candidates[0]
         logging_level = os.getenv("LOGGING_LEVEL", "INFO")
         log_path = Path(
             os.getenv("LOG_PATH")

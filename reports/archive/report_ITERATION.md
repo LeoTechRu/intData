@@ -6,8 +6,8 @@
 - OpenAPI snapshot updated with error models and kept in sync with runtime.
 
 ## Test Summary
-- `python -m core.db.migrate` – failed (no PostgreSQL).
-- `python -m core.db.repair` – ran (no output).
+- `python -m backend.db.migrate` – failed (no PostgreSQL).
+- `python -m backend.db.repair` – ran (no output).
 - `pytest -q` – 107 passed.
 
 ## SSoT Parity
@@ -24,8 +24,8 @@
 - E13 Tasks & Time: bare timer auto-creates Inbox task; task creation enforces project/area with inheritance.
 
 ## Test Summary
-- `python -m core.db.migrate` – failed (no PostgreSQL).
-- `python -m core.db.repair` – ran (no output).
+- `python -m backend.db.migrate` – failed (no PostgreSQL).
+- `python -m backend.db.repair` – ran (no output).
 - `pytest -q` – 109 passed.
 
 ## SSoT Parity

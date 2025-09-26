@@ -48,14 +48,14 @@ Areas — управляемое дерево без ограничения гл
 **Воспроизведение:** открыть `/habits` при включённом фича‑флаге `HABITS_V1_ENABLED`.
 
 **Исправление:** добавлены отношения в модели, DDL гарантирует FK на `areas`/`projects`,
-`core.db.repair` наследует `area_id` от проекта и логирует случаи, когда оба идентификатора отсутствуют.
+`backend.db.repair` наследует `area_id` от проекта и логирует случаи, когда оба идентификатора отсутствуют.
 См. эпики [E16](../../README.md#e16-habits), [E12](../../README.md#e12-calendaralarms-fusion-сегодня--общий-список)
 и [E13](../../README.md#e13-tasks--time-para-first).
 
 ### DB bootstrap / repair
 
 ```bash
-python -m core.db.migrate && python -m core.db.repair
+python -m backend.db.migrate && python -m backend.db.repair
 ```
 
 ## OpenAPI SSoT & export
@@ -77,7 +77,7 @@ python -m web.openapi_export
 
 ### Post-deploy checklist
 
-- [ ] `python -m core.db.migrate && python -m core.db.repair`
+- [ ] `python -m backend.db.migrate && python -m backend.db.repair`
 - [ ] Войти под web-пользователем без TG → `/habits` 200 OK, баннер CTA без блокирующего текста.
 - [ ] Привязать TG → `/habits` показывает HUD; up/down работают.
 - [ ] Два быстрых клика по привычке → второй запрос 429 с `Retry-After`, UI показывает обратный отсчёт.

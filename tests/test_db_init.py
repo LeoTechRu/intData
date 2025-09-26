@@ -4,7 +4,7 @@ from sqlalchemy import inspect
 import importlib
 
 import backend.db as db
-db_engine = importlib.import_module("core.db.engine")
+db_engine = importlib.import_module("backend.db.engine")
 
 
 @pytest.mark.asyncio

@@ -65,9 +65,9 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
 fi
 
 # 6) Миграции базы данных (если есть скрипт)
-if python -c "import importlib; importlib.import_module('core.db.migrate')" >/dev/null 2>&1; then
-  echo "[i] running core.db.migrate"
-  python -m core.db.migrate || echo "[i] migration script skipped/failed"
+if python -c "import importlib; importlib.import_module('backend.db.migrate')" >/dev/null 2>&1; then
+  echo "[i] running backend.db.migrate"
+  python -m backend.db.migrate || echo "[i] migration script skipped/failed"
 fi
 
 # 7) Тесты

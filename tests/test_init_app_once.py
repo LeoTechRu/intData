@@ -11,8 +11,8 @@ from backend.env import env
 from backend.db import bootstrap
 
 
-db_engine = importlib.import_module("core.db.engine")
-init_app = importlib.import_module("core.db.init_app")
+db_engine = importlib.import_module("backend.db.engine")
+init_app = importlib.import_module("backend.db.init_app")
 
 
 @pytest.fixture()

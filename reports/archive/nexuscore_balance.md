@@ -25,9 +25,9 @@
   функциональность покрывает `backend/db/schema_export.py` и `backend/db/repair.py`.
 
 ## Как запускать привычные операции
-- Проверка конфигурации БД: `python -c "from core.db import validate_config; print(validate_config())"`.
-- Получение сырых соединений: `from core.db import get_raw_connection`.
-- Инициализация ролей и прав: `python -m core.services.access_control` (см. `seed_presets`).
+- Проверка конфигурации БД: `python -c "from backend.db import validate_config; print(validate_config())"`.
+- Получение сырых соединений: `from backend.db import get_raw_connection`.
+- Инициализация ролей и прав: `python -m backend.services.access_control` (см. `seed_presets`).
 - Просмотр аудита: `curl -H "Authorization: Bearer <token>" http://localhost:8000/api/v1/admin/audit/logs`.
 
 ## Дополнительные материалы

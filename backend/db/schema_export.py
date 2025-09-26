@@ -213,7 +213,9 @@ def check(out_dir: str | Path = DEFAULT_OUT_DIR) -> bool:
     json_path = out_dir / "SCHEMA.json"
     sql_path = out_dir / "SCHEMA.sql"
     if not json_path.exists() or not sql_path.exists():
-        print("Schema files are missing. Run: python -m core.db.schema_export generate")
+        print(
+            "Schema files are missing. Run: python -m backend.db.schema_export generate"
+        )
         return False
     with TemporaryDirectory() as tmp:
         tmp_dir = Path(tmp)
@@ -230,7 +232,7 @@ def check(out_dir: str | Path = DEFAULT_OUT_DIR) -> bool:
             ok = False
         if not ok:
             print(
-                "DB schema is out of date with models. Run: python -m core.db.schema_export generate"
+                "DB schema is out of date with models. Run: python -m backend.db.schema_export generate"
             )
         return ok
 
@@ -252,4 +254,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

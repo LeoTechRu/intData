@@ -12,12 +12,12 @@ fmt:
 	isort .
 
 typecheck:
-	mypy core web
+	mypy backend web
 
 audit:
 	- pip-audit || true
-	- bandit -q -r core web || true
+	- bandit -q -r backend web || true
 
 smoke:
-	python -m core.db.migrate
-	python -m core.db.repair
+	python -m backend.db.migrate
+	python -m backend.db.repair

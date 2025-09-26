@@ -51,7 +51,7 @@ def postgres_sync_engine():
 async def postgres_db(postgres_engine):
     import importlib
 
-    importlib.import_module("core.models")
+    importlib.import_module("backend.models")
     session_factory = sessionmaker(postgres_engine, expire_on_commit=False, class_=AsyncSession)
 
     async with postgres_engine.begin() as conn:

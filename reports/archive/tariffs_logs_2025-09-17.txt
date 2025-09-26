@@ -204,7 +204,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Страница `/habits` на Next.js: HUD с XP/Gold/KP, фильтр по областям и управление привычками через React Query.
 - API `GET /api/v1/profiles/users/@me` для получения краткого профиля текущего пользователя (аватар, роль, slug) в шапке Next.js.
 - Admin API endpoint `/api/v1/admin/audit/logs` для просмотра журнала выдачи прав (миграция из NexusCore Balance).
-- Модуль совместимости `core.db.legacy` c `DBConfig`, `validate_config` и `get_raw_connection` для сценариев старого Flask-приложения.
+- Модуль совместимости `backend.db.legacy` c `DBConfig`, `validate_config` и `get_raw_connection` для сценариев старого Flask-приложения.
 - Документ `reports/archive/nexuscore_balance.md` со сводкой переноса функционала NexusCore.
 - Бэкенд задач: таблицы `task_reminders`, `task_watchers`, новые поля контроля (`control_enabled`, `control_frequency`, `control_status`, `control_next_at`, `remind_policy`, `is_watched`) и методы `TaskService` для напоминаний, наблюдателей и статистики бота.
 - Telegram-команды `/task_add`, `/task_rename`, `/task_due`, `/task_remind`, `/task_control`, `/task_forget`, `/task_watch`, `/task_unwatch`, `/task_stats*` с обновлённой справкой `/start`.
@@ -1240,7 +1240,7 @@ Function output:
 - Страница `/habits` на Next.js: HUD с XP/Gold/KP, фильтр по областям и управление привычками через React Query.
 - API `GET /api/v1/profiles/users/@me` для получения краткого профиля текущего пользователя (аватар, роль, slug) в шапке Next.js.
 - Admin API endpoint `/api/v1/admin/audit/logs` для просмотра журнала выдачи прав (миграция из NexusCore Balance).
-- Модуль совместимости `core.db.legacy` c `DBConfig`, `validate_config` и `get_raw_connection` для сценариев старого Flask-приложения.
+- Модуль совместимости `backend.db.legacy` c `DBConfig`, `validate_config` и `get_raw_connection` для сценариев старого Flask-приложения.
 - Документ `reports/archive/nexuscore_balance.md` со сводкой переноса функционала NexusCore.
 - Бэкенд задач: таблицы `task_reminders`, `task_watchers`, новые поля контроля (`control_enabled`, `control_frequency`, `control_status`, `control_next_at`, `remind_policy`, `is_watched`) и методы `TaskService` для напоминаний, наблюдателей и статистики бота.
 - Telegram-команды `/task_add`, `/task_rename`, `/task_due`, `/task_remind`, `/task_control`, `/task_forget`, `/task_watch`, `/task_unwatch`, `/task_stats*` с обновлённой справкой `/start`.
@@ -4048,11 +4048,11 @@ Message text:
 - Любые изменения `backend/models.py` или Alembic-миграций **требуют** обновления схемы БД.
 - Генерация:
 ```bash
-  python -m core.db.schema_export generate
+  python -m backend.db.schema_export generate
   git add backend/db/SCHEMA.json backend/db/SCHEMA.sql
   git commit -m "chore(db): update SCHEMA after model changes"
 ```
-- CI проверяет актуальность командой `python -m core.db.schema_export check`. PR не пройдёт, если забыли обновить.
+- CI проверяет актуальность командой `python -m backend.db.schema_export check`. PR не пройдёт, если забыли обновить.
 
 SCHEMA.json является единой «точкой истины» структуры БД (таблицы, поля, индексы, констрейнты, enum).
 
@@ -4067,7 +4067,7 @@ SCHEMA.json является единой «точкой истины» стру
 - Бизнес-логика — только в `/backend/services/*`. `/web` и `/bot` — тонкие слои.
 - При любых изменениях в `/bot` обязательно актуализируй динамическую справку `/start`, чтобы она отражала доступные команды и уровни доступа.
 - Миграции БД: idempotent DDL в `/backend/db/ddl/*.sql` + `repair`; если в проекте уже используется другая технология, следуем действующей и фиксируем это здесь, НЕ меняя платформу миграций в рамках правки AGENTS.
-- Экспорт схемы (`core.db.schema_export`) обновлять при изменении моделей.
+- Экспорт схемы (`backend.db.schema_export`) обновлять при изменении моделей.
 - Все API — под `/api/v1/*`; обновить `/api/openapi.json`.
 - Фичефлаги: `CALENDAR_V2_ENABLED`, `HABITS_V1_ENABLED`, `HABITS_RPG_ENABLED` (и `.env.example` при необходимости).
 - Тесты (pytest): наследование PARA; один активный таймер; cron ежедневок (идемпотентность); `habits up/down`, `dailies done/undo`, виртуальные записи в agenda; срезы `/time/summary`.
@@ -4075,7 +4075,7 @@ SCHEMA.json является единой «точкой истины» стру
 - Команды Linux выполняй без `sudo` по умолчанию; пользуйся `sudo` только если команда без него завершается ошибкой из-за недостатка прав.
 - Work from repo root, activate venv, install deps, then implement.
 - Keep changes minimal and aligned with existing style. Always finish with: `source ./venv/bin/activate && pip install --quiet -r requirements.txt && pytest -q`.
-- Changes to note models or endpoints require updating `backend/db/SCHEMA.*` via `python -m core.db.schema_export generate`; OpenAPI is served at `/api/openapi.json` and used in tests.
+- Changes to note models or endpoints require updating `backend/db/SCHEMA.*` via `python -m backend.db.schema_export generate`; OpenAPI is served at `/api/openapi.json` and used in tests.
 
 ### Multi-agent Coordination (codex-cli)
 - Каждый экземпляр codex-cli работает в собственной рабочей копии: отдельный `git clone` или `git worktree add ../<agent-branch>`. Запрещено вести параллельную работу из одного каталога.
@@ -4647,7 +4647,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Страница `/habits` на Next.js: HUD с XP/Gold/KP, фильтр по областям и управление привычками через React Query.
 - API `GET /api/v1/profiles/users/@me` для получения краткого профиля текущего пользователя (аватар, роль, slug) в шапке Next.js.
 - Admin API endpoint `/api/v1/admin/audit/logs` для просмотра журнала выдачи прав (миграция из NexusCore Balance).
-- Модуль совместимости `core.db.legacy` c `DBConfig`, `validate_config` и `get_raw_connection` для сценариев старого Flask-приложения.
+- Модуль совместимости `backend.db.legacy` c `DBConfig`, `validate_config` и `get_raw_connection` для сценариев старого Flask-приложения.
 - Документ `reports/archive/nexuscore_balance.md` со сводкой переноса функционала NexusCore.
 - Бэкенд задач: таблицы `task_reminders`, `task_watchers`, новые поля контроля (`control_enabled`, `control_frequency`, `control_status`, `control_next_at`, `remind_policy`, `is_watched`) и методы `TaskService` для напоминаний, наблюдателей и статистики бота.
 - Telegram-команды `/task_add`, `/task_rename`, `/task_due`, `/task_remind`, `/task_control`, `/task_forget`, `/task_watch`, `/task_unwatch`, `/task_stats*` с обновлённой справкой `/start`.
