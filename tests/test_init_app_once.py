@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 from tests.utils import db as db_utils
 
-from core.env import env
-from core.db import bootstrap
+from backend.env import env
+from backend.db import bootstrap
 
 
 db_engine = importlib.import_module("core.db.engine")

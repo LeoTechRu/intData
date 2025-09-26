@@ -3,11 +3,11 @@ import pytest_asyncio
 from httpx import AsyncClient
 
 from base import Base
-from core.models import WebUser, UserRole
-import core.db as db
+from backend.models import WebUser, UserRole
+import backend.db as db
 
 try:
-    from core.main import app  # type: ignore
+    from backend.main import app  # type: ignore
 except ModuleNotFoundError:  # pragma: no cover
     from main import app  # type: ignore
 

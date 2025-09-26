@@ -9,10 +9,10 @@ from fastapi import Request, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from core.models import WebUser, TgUser
-from core.services.web_user_service import WebUserService
-from core.services.telegram_user_service import TelegramUserService
-from core.services.access_control import (
+from backend.models import WebUser, TgUser
+from backend.services.web_user_service import WebUserService
+from backend.services.telegram_user_service import TelegramUserService
+from backend.services.access_control import (
     AccessControlService,
     AccessScope,
     EffectivePermissions,

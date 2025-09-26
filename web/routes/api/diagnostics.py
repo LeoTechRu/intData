@@ -6,8 +6,8 @@ from urllib.parse import parse_qsl
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
-from core.models import DiagnosticClient, DiagnosticResult, WebUser
-from core.services.diagnostics_service import DiagnosticsService
+from backend.models import DiagnosticClient, DiagnosticResult, WebUser
+from backend.services.diagnostics_service import DiagnosticsService
 from web.dependencies import get_current_web_user
 
 router = APIRouter(tags=["diagnostics"])

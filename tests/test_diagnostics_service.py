@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from base import Base
-from core.services.access_control import AccessControlService
-from core.services.diagnostics_service import DiagnosticsService
+from backend.services.access_control import AccessControlService
+from backend.services.diagnostics_service import DiagnosticsService
 
 
 @pytest_asyncio.fixture
@@ -20,7 +20,7 @@ async def session(postgres_engine):
         async with AccessControlService(sess) as access:
             await access.seed_presets()
             from sqlalchemy import select
-            from core.models import AuthPermission, DiagnosticTemplate, Role
+            from backend.models import AuthPermission, DiagnosticTemplate, Role
 
             perm_defs = [
                 {

@@ -6,8 +6,8 @@ from typing import Dict, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
-from core.models import WebUser
-from core.services.navigation_service import (
+from backend.models import WebUser
+from backend.services.navigation_service import (
     NAV_BLUEPRINT,
     LayoutConflict,
     allowed_blueprint,

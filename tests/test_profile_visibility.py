@@ -1,8 +1,8 @@
 import pytest
 from sqlalchemy import select
 
-from core.models import WebUser, EntityProfile, EntityProfileGrant
-from core.services.profile_service import ProfileService
+from backend.models import WebUser, EntityProfile, EntityProfileGrant
+from backend.services.profile_service import ProfileService
 
 
 @pytest.mark.asyncio

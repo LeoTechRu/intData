@@ -7,8 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, model_validator
 
-from core.models import Task, TaskStatus, TgUser
-from core.services.task_service import TaskService
+from backend.models import Task, TaskStatus, TgUser
+from backend.services.task_service import TaskService
 from web.dependencies import get_current_tg_user
 
 from .index import render_next_page
@@ -108,7 +108,7 @@ async def list_tasks_today(
         tasks = await service.list_tasks(owner_id=current_user.telegram_id)
 
     from datetime import UTC
-    from core.utils import utcnow
+    from backend.utils import utcnow
 
     now = utcnow()
     if getattr(now, "tzinfo", None) is None:
@@ -154,7 +154,7 @@ async def list_tasks(
     async with TaskService() as service:
         tasks = await service.list_tasks_by_area(owner_id=current_user.telegram_id, area_id=area_id, include_sub=True) if (area_id is not None and include_sub) else await service.list_tasks(owner_id=current_user.telegram_id, project_id=project_id, area_id=area_id)
         # Enrich with time tracking info
-        from core.services.time_service import TimeService
+        from backend.services.time_service import TimeService
         time_svc = TimeService(service.session)
         enriched: list[TaskResponse] = []
         for t in tasks:
@@ -213,7 +213,7 @@ async def mark_task_done(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     # on done we still may return time aggregates
     mins = await TaskService(service.session).total_tracked_minutes(task.id)
-    from core.services.time_service import TimeService
+    from backend.services.time_service import TimeService
     running = await TimeService(service.session).get_running_entry(owner_id=current_user.telegram_id, task_id=task.id)
     return TaskResponse.from_model(task, tracked_minutes=mins, running_entry_id=getattr(running, 'id', None))
 
@@ -227,7 +227,7 @@ async def start_timer_for_task(task_id: int, current_user: TgUser | None = Depen
         task = await service.session.get(Task, task_id)
         if task is None or task.owner_id != current_user.telegram_id:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-        from core.services.time_service import TimeService
+        from backend.services.time_service import TimeService
         time_svc = TimeService(service.session)
         try:
             await time_svc.start_timer(owner_id=current_user.telegram_id, task_id=task_id, description=task.title, create_task_if_missing=False)
@@ -246,7 +246,7 @@ async def stop_timer_for_task(task_id: int, current_user: TgUser | None = Depend
         task = await service.session.get(Task, task_id)
         if task is None or task.owner_id != current_user.telegram_id:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-        from core.services.time_service import TimeService
+        from backend.services.time_service import TimeService
         time_svc = TimeService(service.session)
         running = await time_svc.get_running_entry(owner_id=current_user.telegram_id, task_id=task_id)
         if not running:

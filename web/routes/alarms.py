@@ -7,9 +7,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import select
 
-from core.models import TgUser, Alarm, CalendarItem, Area
-from core.services.alarm_service import AlarmService
-from core.utils import utcnow
+from backend.models import TgUser, Alarm, CalendarItem, Area
+from backend.services.alarm_service import AlarmService
+from backend.utils import utcnow
 from web.dependencies import get_current_tg_user
 
 

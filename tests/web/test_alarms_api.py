@@ -4,10 +4,10 @@ from datetime import timedelta
 from httpx import AsyncClient
 
 from base import Base
-import core.db as db
-from core.models import Area, CalendarItem
-from core.services.alarm_service import AlarmService
-from core.utils import utcnow_aware
+import backend.db as db
+from backend.models import Area, CalendarItem
+from backend.services.alarm_service import AlarmService
+from backend.utils import utcnow_aware
 from tests.utils.seeds import ensure_tg_user
 
 try:

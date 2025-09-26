@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-from core.models import Resource, TgUser
-from core.services.para_service import ParaService
+from backend.models import Resource, TgUser
+from backend.services.para_service import ParaService
 from web.dependencies import get_current_tg_user
 
 from .index import render_next_page

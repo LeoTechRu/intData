@@ -1,8 +1,8 @@
 import pytest
 import pytest_asyncio
 
-from core.services.app_settings_service import get_settings_by_prefix, upsert_settings
-import core.db as db
+from backend.services.app_settings_service import get_settings_by_prefix, upsert_settings
+import backend.db as db
 
 
 @pytest_asyncio.fixture

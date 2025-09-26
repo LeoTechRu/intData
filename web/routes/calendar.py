@@ -8,10 +8,10 @@ import os
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Response
 from pydantic import BaseModel, model_validator
 
-from core.models import CalendarEvent, TgUser, WebUser, CalendarItem
-from core.services.calendar_service import CalendarService
-from core.services.para_repository import CalendarItemRepository
-from core.services.telegram_user_service import TelegramUserService
+from backend.models import CalendarEvent, TgUser, WebUser, CalendarItem
+from backend.services.calendar_service import CalendarService
+from backend.services.para_repository import CalendarItemRepository
+from backend.services.telegram_user_service import TelegramUserService
 from web.dependencies import get_current_tg_user, get_current_web_user
 from .index import render_next_page
 
@@ -76,7 +76,7 @@ async def list_events_today(
         events = await service.list_events(owner_id=current_user.telegram_id)
 
     from datetime import UTC
-    from core.utils import utcnow
+    from backend.utils import utcnow
 
     now = utcnow()
     if getattr(now, "tzinfo", None) is None:
@@ -347,7 +347,7 @@ def _append_valarms(lines: list[str], item: CalendarItem) -> None:
 def _generate_ics(items: list[CalendarItem]) -> str:
     """Create a minimal iCalendar feed for events and tasks."""
 
-    from core.utils import utcnow
+    from backend.utils import utcnow
 
     now = _format_ics_datetime(utcnow())
     lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//intData//EN"]

@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import inspect
 import importlib
 
-import core.db as db
+import backend.db as db
 db_engine = importlib.import_module("core.db.engine")
 
 

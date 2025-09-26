@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from base import Base
-from core.models import WebUser, Area, Project, TgUser
-from core.services.access_control import AccessControlService, AccessScope
+from backend.models import WebUser, Area, Project, TgUser
+from backend.services.access_control import AccessControlService, AccessScope
 
 
 @pytest_asyncio.fixture

@@ -7,11 +7,11 @@ from typing import Any, Dict, Callable
 from aiogram import BaseMiddleware
 from aiogram.types import Message, Update
 
-from core.logger import logger
-from core.models import GroupType
-from core.services.telegram_user_service import TelegramUserService
-from core.services.group_moderation_service import GroupModerationService
-from core.utils import utcnow
+from backend.logger import logger
+from backend.models import GroupType
+from backend.services.telegram_user_service import TelegramUserService
+from backend.services.group_moderation_service import GroupModerationService
+from backend.utils import utcnow
 
 
 class GroupActivityMiddleware(BaseMiddleware):

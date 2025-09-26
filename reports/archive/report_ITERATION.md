@@ -12,7 +12,7 @@
 
 ## SSoT Parity
 - `api/openapi.json` regenerated – in sync.
-- `core/db/SCHEMA.*` – no changes.
+- `backend/db/SCHEMA.*` – no changes.
 
 ## Risks & TODOs
 - Database migration scripts require running PostgreSQL instance.
@@ -30,7 +30,7 @@
 
 ## SSoT Parity
 - `api/openapi.json` regenerated – in sync.
-- `core/db/SCHEMA.*` – no changes.
+- `backend/db/SCHEMA.*` – no changes.
 
 ## Risks & TODOs
 - API clients must provide `area_id` or `project_id` when creating tasks.

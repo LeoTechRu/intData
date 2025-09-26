@@ -7,10 +7,10 @@ import pytest_asyncio
 from httpx import AsyncClient
 
 from base import Base
-import core.db as db
+import backend.db as db
 from main import app
-import core.models  # ensure models are loaded
-import core.settings_store as settings_store
+import backend.models  # ensure models are loaded
+import backend.settings_store as settings_store
 
 
 @pytest_asyncio.fixture

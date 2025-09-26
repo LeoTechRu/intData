@@ -1,5 +1,5 @@
 import sqlalchemy as sa
-from core.db import repair
+from backend.db import repair
 
 
 def test_backfill_habits_area_from_project(postgres_sync_engine):

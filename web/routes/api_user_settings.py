@@ -8,8 +8,8 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
-from core.models import WebUser
-from core.services.user_settings_service import UserSettingsService
+from backend.models import WebUser
+from backend.services.user_settings_service import UserSettingsService
 from web.dependencies import get_current_web_user, get_effective_permissions
 from .settings import FAVORITE_PAGES
 

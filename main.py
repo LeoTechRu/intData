@@ -14,7 +14,7 @@ import uvicorn
 
 from bot.main import main as bot_main
 from web import app as fastapi_app
-from core.logger import logger
+from backend.logger import logger
 
 # Expose FastAPI app for tests
 app = fastapi_app

@@ -4,14 +4,14 @@ from httpx import AsyncClient
 from datetime import timedelta
 
 from base import Base
-import core.db as db
-from core.models import Alarm, Area, CalendarItem, CalendarItemStatus
-from core.services.telegram_user_service import TelegramUserService
-from core.utils import utcnow
+import backend.db as db
+from backend.models import Alarm, Area, CalendarItem, CalendarItemStatus
+from backend.services.telegram_user_service import TelegramUserService
+from backend.utils import utcnow
 from tests.utils.seeds import ensure_tg_user
 
 try:
-    from core.main import app  # type: ignore
+    from backend.main import app  # type: ignore
 except ModuleNotFoundError:  # pragma: no cover
     from main import app  # type: ignore
 

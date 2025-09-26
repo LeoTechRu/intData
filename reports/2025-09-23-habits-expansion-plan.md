@@ -7,7 +7,7 @@ TL-2025-09-23-habits-dailies-rewards (E16). Expand `/habits` to expose all habit
 - HUD improvements (HP/XP/Level/Gold/KP).
 
 ## Backend To-Dos
-1. **Service layer**: confirm `core/services/habits_service.py` exists; extend to fetch combined payload: habits, dailies, rewards, stats.
+1. **Service layer**: confirm `backend/services/habits_service.py` exists; extend to fetch combined payload: habits, dailies, rewards, stats.
 2. **API**:
    - GET `/api/v1/habits/dashboard?area_id=&project_id=&include_sub=` returns sections `{ habits: [], dailies: [], rewards: [], stats }`.
    - Support POST/PUT for dailies/rewards endpoints if not already (validate project/area inheritance).

@@ -4,10 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from base import Base
-from core.models import Task, TaskStatus, Area, TgUser
-from core.services.time_service import TimeService
-from core.services.task_service import TaskService
-from core.utils import utcnow
+from backend.models import Task, TaskStatus, Area, TgUser
+from backend.services.time_service import TimeService
+from backend.services.task_service import TaskService
+from backend.utils import utcnow
 
 
 @pytest_asyncio.fixture

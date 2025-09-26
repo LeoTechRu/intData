@@ -4,9 +4,9 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
-from core.services.note_service import NoteService
-from core.services.para_service import ParaService
-from core.models import ContainerType
+from backend.services.note_service import NoteService
+from backend.services.para_service import ParaService
+from backend.models import ContainerType
 
 
 router = Router()

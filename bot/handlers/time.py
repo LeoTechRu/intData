@@ -2,15 +2,15 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from core.utils import utcnow
+from backend.utils import utcnow
 
 from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 from sqlalchemy import select
 
-from core.models import TimeEntry
-from core.services.time_service import TimeService
+from backend.models import TimeEntry
+from backend.services.time_service import TimeService
 
 
 router = Router()

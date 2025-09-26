@@ -3,7 +3,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import bot.main as bot_main
-from core.models import LogLevel
+from backend.models import LogLevel
 
 
 def test_bot_reports_restart(monkeypatch):

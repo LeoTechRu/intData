@@ -1,4 +1,4 @@
-from core.env import ENV_FILE, PROJECT_ROOT
+from backend.env import ENV_FILE, PROJECT_ROOT
 
 
 def test_env_file_in_project_root():

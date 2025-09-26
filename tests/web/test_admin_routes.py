@@ -3,15 +3,15 @@ import pytest_asyncio
 from httpx import AsyncClient
 
 from base import Base
-from core.models import WebUser, UserRole, TgUser, WebTgLink
-from core.services.audit_log import AuditLogService
-from core.services.profile_service import ProfileService
+from backend.models import WebUser, UserRole, TgUser, WebTgLink
+from backend.services.audit_log import AuditLogService
+from backend.services.profile_service import ProfileService
 from sqlalchemy import select
-import core.db as db
+import backend.db as db
 from tests.utils.seeds import ensure_tg_user
 
 try:
-    from core.main import app  # type: ignore
+    from backend.main import app  # type: ignore
 except ModuleNotFoundError:  # pragma: no cover
     from main import app  # type: ignore
 

@@ -2,7 +2,7 @@
   "errors": [],
   "generated_at": "2025-09-21T08:26:02Z",
   "metrics": {
-    "./core/db/repair.py": {
+    "./backend/db/repair.py": {
       "CONFIDENCE.HIGH": 6,
       "CONFIDENCE.LOW": 1,
       "CONFIDENCE.MEDIUM": 0,
@@ -554,7 +554,7 @@
       "code": "104             rows = conn.execute(\n105                 sa.text(f\"SELECT DISTINCT owner_id FROM {table}\")\n106             ).fetchall()\n",
       "col_offset": 26,
       "end_col_offset": 56,
-      "filename": "./core/db/repair.py",
+      "filename": "./backend/db/repair.py",
       "issue_confidence": "LOW",
       "issue_cwe": {
         "id": 89,
@@ -574,7 +574,7 @@
       "code": "107             owners.update(r[0] for r in rows if r[0] is not None)\n108         except Exception:\n109             continue\n110     created = 0\n",
       "col_offset": 8,
       "end_col_offset": 20,
-      "filename": "./core/db/repair.py",
+      "filename": "./backend/db/repair.py",
       "issue_confidence": "HIGH",
       "issue_cwe": {
         "id": 703,
@@ -595,7 +595,7 @@
       "code": "290             updated_limit = res.rowcount or 0\n291         except Exception:\n292             pass\n293         try:\n",
       "col_offset": 8,
       "end_col_offset": 16,
-      "filename": "./core/db/repair.py",
+      "filename": "./backend/db/repair.py",
       "issue_confidence": "HIGH",
       "issue_cwe": {
         "id": 703,
@@ -616,7 +616,7 @@
       "code": "300             updated_cd = res.rowcount or 0\n301         except Exception:\n302             pass\n303 \n",
       "col_offset": 8,
       "end_col_offset": 16,
-      "filename": "./core/db/repair.py",
+      "filename": "./backend/db/repair.py",
       "issue_confidence": "HIGH",
       "issue_cwe": {
         "id": 703,
@@ -637,7 +637,7 @@
       "code": "322             updated_val = len(rows)\n323         except Exception:\n324             pass\n325 \n",
       "col_offset": 8,
       "end_col_offset": 16,
-      "filename": "./core/db/repair.py",
+      "filename": "./backend/db/repair.py",
       "issue_confidence": "HIGH",
       "issue_cwe": {
         "id": 703,
@@ -658,7 +658,7 @@
       "code": "606                 )\n607             except Exception:\n608                 pass\n609             try:\n",
       "col_offset": 12,
       "end_col_offset": 20,
-      "filename": "./core/db/repair.py",
+      "filename": "./backend/db/repair.py",
       "issue_confidence": "HIGH",
       "issue_cwe": {
         "id": 703,
@@ -679,7 +679,7 @@
       "code": "616                 )\n617             except Exception:\n618                 pass\n619             conn.execute(\n",
       "col_offset": 12,
       "end_col_offset": 20,
-      "filename": "./core/db/repair.py",
+      "filename": "./backend/db/repair.py",
       "issue_confidence": "HIGH",
       "issue_cwe": {
         "id": 703,

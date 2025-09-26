@@ -6,11 +6,11 @@ from typing import Any, Literal, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
-from core.models import WebUser
-from core.services.web_user_service import WebUserService
-from core.services.profile_service import ProfileService, ProfileAccess
+from backend.models import WebUser
+from backend.services.web_user_service import WebUserService
+from backend.services.profile_service import ProfileService, ProfileAccess
 from web.dependencies import get_current_web_user
-from core.utils import utcnow
+from backend.utils import utcnow
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 

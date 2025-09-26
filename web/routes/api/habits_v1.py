@@ -4,9 +4,9 @@ from typing import Optional, Literal
 from fastapi import APIRouter, Body, Depends, HTTPException, Response, Query
 from pydantic import BaseModel, Field
 
-from core.auth.owner import OwnerCtx, get_current_owner
-from core.services.errors import CooldownError, InsufficientGoldError
-from core.services.habits import (
+from backend.auth.owner import OwnerCtx, get_current_owner
+from backend.services.errors import CooldownError, InsufficientGoldError
+from backend.services.habits import (
     HabitsService,
     DailiesService,
     RewardsService,
@@ -15,7 +15,7 @@ from core.services.habits import (
     HabitsDashboardService,
     habits,
 )
-from core.services.nexus_service import HabitService
+from backend.services.nexus_service import HabitService
 from sqlalchemy import select
 
 router = APIRouter()

@@ -5,7 +5,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 
-from core.models import WebUser, UserRole
+from backend.models import WebUser, UserRole
 from web.dependencies import get_current_web_user
 from .index import render_next_page
 

@@ -2,7 +2,7 @@ import json
 import os
 from pathlib import Path
 
-from core.utils import utcnow
+from backend.utils import utcnow
 
 LOG_PATH = Path(os.getenv("AUTH_LOG_PATH", "/sd/intdata/.logs/auth.log"))
 

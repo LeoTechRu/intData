@@ -3,17 +3,17 @@ import asyncio
 import logging
 
 from aiogram.exceptions import TelegramNetworkError
-from core.db import bot, dp
-from core.db.init_app import init_app_once
-from core.db.engine import ENGINE_MODE
-from core.env import env
+from backend.db import bot, dp
+from backend.db.init_app import init_app_once
+from backend.db.engine import ENGINE_MODE
+from backend.env import env
 from bot.handlers.telegram import user_router, group_router, router
 from bot.handlers.note import router as note_router
 from bot.handlers.task import router as task_router
 from bot.handlers.habit import router as habit_router
-from core.logger import LoggerMiddleware
-from core.models import LogLevel
-from core.services.telegram_user_service import TelegramUserService
+from backend.logger import LoggerMiddleware
+from backend.models import LogLevel
+from backend.services.telegram_user_service import TelegramUserService
 from bot.middleware import GroupActivityMiddleware
 
 

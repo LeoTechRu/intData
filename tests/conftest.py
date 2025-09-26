@@ -16,10 +16,10 @@ os.environ.setdefault('TG_BOT_TOKEN', 'TEST_TOKEN')
 os.environ.setdefault('TG_BOT_USERNAME', 'testbot')
 
 from base import Base  # noqa: E402
-import core.db as db  # noqa: E402
-from core.models import TgUser  # noqa: E402
-from core.services.habits import metadata as habits_metadata  # noqa: E402
-from core.services.access_control import AccessControlService  # noqa: E402
+import backend.db as db  # noqa: E402
+from backend.models import TgUser  # noqa: E402
+from backend.services.habits import metadata as habits_metadata  # noqa: E402
+from backend.services.access_control import AccessControlService  # noqa: E402
 from tests.utils import db as db_utils
 from sqlalchemy import event, text
 

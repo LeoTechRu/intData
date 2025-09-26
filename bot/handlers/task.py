@@ -8,17 +8,17 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message
 
-from core.services.task_service import TaskService
-from core.services.task_notification_service import TaskNotificationService
-from core.services.telegram_user_service import TelegramUserService
-from core.models import (
+from backend.services.task_service import TaskService
+from backend.services.task_notification_service import TaskNotificationService
+from backend.services.telegram_user_service import TelegramUserService
+from backend.models import (
     Task,
     TaskStatus,
     TaskControlStatus,
     TaskRefuseReason,
     TaskWatcherLeftReason,
 )
-from core.utils import utcnow
+from backend.utils import utcnow
 
 router = Router()
 

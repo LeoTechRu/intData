@@ -208,7 +208,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Документ `reports/archive/nexuscore_balance.md` со сводкой переноса функционала NexusCore.
 - Бэкенд задач: таблицы `task_reminders`, `task_watchers`, новые поля контроля (`control_enabled`, `control_frequency`, `control_status`, `control_next_at`, `remind_policy`, `is_watched`) и методы `TaskService` для напоминаний, наблюдателей и статистики бота.
 - Telegram-команды `/task_add`, `/task_rename`, `/task_due`, `/task_remind`, `/task_control`, `/task_forget`, `/task_watch`, `/task_unwatch`, `/task_stats*` с обновлённой справкой `/start`.
-- TaskReminderWorker (`core/services/task_reminder_worker.py`) и TaskNotificationService для доставки напоминаний и оповещений наблюдателям.
+- TaskReminderWorker (`backend/services/task_reminder_worker.py`) и TaskNotificationService для доставки напоминаний и оповещений наблюдателям.
 - Tasks (Next.js): статистика по статусам, колонки контроля/наблюдения, обновлённые таблицы и интеграция с новым API `/tasks/stats`.
 - Поддержка профилей продуктов (`/products/{slug}`) с каталогом и контролем доступа.
 - Режим настройки ЦУПа с drag-n-drop, скрытием и панелью скрытых виджетов.
@@ -224,7 +224,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Time summary endpoint `/api/v1/time/summary` for aggregating durations by day, project, area or user.
 - comprehensive test suite covering DB idempotency, PARA repair, OpenAPI snapshot parity and core habits/today/tasks/time flows.
 - Epic E17 "Frontend Modernization" в `reports/archive/BACKLOG.md` (Next.js/Vite выбор, TS+Tailwind, перенос страниц, очистка legacy).
-- Машиночитаемая схема БД (`core/db/SCHEMA.*`) и утилита `tools.schema_export` с проверкой в CI.
+- Машиночитаемая схема БД (`backend/db/SCHEMA.*`) и утилита `tools.schema_export` с проверкой в CI.
 - user_settings table for extensible per-user preferences.
 - API `/api/v1/user/settings` to read and write settings.
 - Repair step to migrate legacy favorites into user_settings.
@@ -1244,7 +1244,7 @@ Function output:
 - Документ `reports/archive/nexuscore_balance.md` со сводкой переноса функционала NexusCore.
 - Бэкенд задач: таблицы `task_reminders`, `task_watchers`, новые поля контроля (`control_enabled`, `control_frequency`, `control_status`, `control_next_at`, `remind_policy`, `is_watched`) и методы `TaskService` для напоминаний, наблюдателей и статистики бота.
 - Telegram-команды `/task_add`, `/task_rename`, `/task_due`, `/task_remind`, `/task_control`, `/task_forget`, `/task_watch`, `/task_unwatch`, `/task_stats*` с обновлённой справкой `/start`.
-- TaskReminderWorker (`core/services/task_reminder_worker.py`) и TaskNotificationService для доставки напоминаний и оповещений наблюдателям.
+- TaskReminderWorker (`backend/services/task_reminder_worker.py`) и TaskNotificationService для доставки напоминаний и оповещений наблюдателям.
 - Tasks (Next.js): статистика по статусам, колонки контроля/наблюдения, обновлённые таблицы и интеграция с новым API `/tasks/stats`.
 - Поддержка профилей продуктов (`/products/{slug}`) с каталогом и контролем доступа.
 - Режим настройки ЦУПа с drag-n-drop, скрытием и панелью скрытых виджетов.
@@ -3905,7 +3905,7 @@ Message text:
 ## Sources of Truth (SSoT)
 1. **AGENTS.md** — правила и приоритеты.
 2. **reports/archive/BACKLOG.md** — дорожная карта и критерии приёмки.
-3. **core/db/SCHEMA.* + core/db/ddl/*.sql** — источник истины по БД.
+3. **backend/db/SCHEMA.* + backend/db/ddl/*.sql** — источник истины по БД.
 4. **api/openapi.json** — снимок API (экспорт рантайма).
 5. **reports/archive/CHANGELOG.md** — публичная история изменений.
 
@@ -3919,7 +3919,7 @@ Message text:
 - Особое внимание: E1 (PARA), E12 (единый «Сегодня»), E13 (Tasks & Time), E16 (Habits).
 
 ## Project Structure & Module Organization
-- `core/`: shared models, services, utils, logging. All logic reused by bot and web lives here.
+- `backend/`: shared models, services, utils, logging. All logic reused by bot and web lives here.
 - /core - директория для общего переиспользуемого кода приложения (основного бэкенда) к которому может обращаться как фронтенд (/web), так и Telegram-бот (/bot).
 - `bot/`: Telegram bot (aiogram) handlers, FSM states, routers. Import business logic from `core`, do not duplicate it.
 - /bot - директория (модуль) Telegram-бота независимый от логики фронтенда приложения, который можно запустить отдельно от фронтенда.
@@ -3931,7 +3931,7 @@ Message text:
 - Runtime boundaries (жёстко):
   - Всё, что обязательно для работы на рантайме, живёт в **/core** (модели, сервисы, валидаторы, резолверы, инициализация БД).
   - `utils/` — только опциональные скрипты (линтеры, проверки, дампы). Удаление `utils/` не должно ломать приложение. Директории `tools/` в проекте не используется.
-  - `web/` и `bot/` импортируют бизнес-логику только из `core/services`.
+  - `web/` и `bot/` импортируют бизнес-логику только из `backend/services`.
 
 ### Frontend Guidelines
 - Базовый стек: **Next.js + TypeScript + Tailwind**; допустимо **React + Vite**, если стандарт соблюдён.
@@ -3957,13 +3957,13 @@ Message text:
 - Материалы для продаж (скриншоты, конкурентные сравнения, отзывы) храним в `/web/static/marketing`; при добавлении новых — документируем источник и дату в BACKLOG.
 
 ## Инициализация БД (без Alembic)
-- Источник правды по схеме: идемпотентные DDL в **`core/db/ddl/*.sql`** (только `CREATE/ALTER/INDEX IF NOT EXISTS`).
-- Единый фасад: **`core/db/init_app.py:init_app_once(env)`** — вызывается и в `web`, и в `bot` до регистрации роутов/старта бота.
+- Источник правды по схеме: идемпотентные DDL в **`backend/db/ddl/*.sql`** (только `CREATE/ALTER/INDEX IF NOT EXISTS`).
+- Единый фасад: **`backend/db/init_app.py:init_app_once(env)`** — вызывается и в `web`, и в `bot` до регистрации роутов/старта бота.
 - Порядок внутри `init_app_once`: `run_bootstrap_sql()` → `run_repair()` → *(опционально)* `create_models_for_dev()` (только при `DEV_INIT_MODELS=1` и если не шёл bootstrap).
 - Защита от гонок: PostgreSQL advisory-lock.
 - ENV-флаги:
   ```
-  DB_BOOTSTRAP=1        # прогон core/db/ddl/*.sql
+  DB_BOOTSTRAP=1        # прогон backend/db/ddl/*.sql
   DB_REPAIR=1           # backfill/наследование/миграции данных
   DEV_INIT_MODELS=0     # только для локалки/тестов; не заменяет DDL
   ```
@@ -3992,7 +3992,7 @@ Message text:
 
 ## User-Settings (кастомизация дашборда)
 - Одна расширяемая таблица **`user_settings`** (K/V JSONB): ключи `dashboard_layout`, `favorites` и др. в будущем.
-- Перенос `users_favorites` → `user_settings` (`key='favorites'`) выполняется в **`core/db/repair.py`** (идемпотентно).
+- Перенос `users_favorites` → `user_settings` (`key='favorites'`) выполняется в **`backend/db/repair.py`** (идемпотентно).
 - API: `GET /api/v1/user/settings`, `GET/PUT /api/v1/user/settings/{key}`.
 - UI: кнопка «Настроить дашборд» в Обзоре включает drag-n-drop (через DnD-kit) и скрытие/возврат виджетов. `layout.widgets` хранит порядок видимых карточек, `layout.hidden` — скрытые. Дефолт — все виджеты в порядке `web/components/dashboard/OverviewDashboard.tsx`.
 - `theme_preferences` хранит персональный пресет темы (`mode`, `primary`, `accent`, `surface`, `gradient{from,to}`) и применяется через `theme-utils.js` (CSS-переменные). Пустой объект = используем глобальный пресет.
@@ -4005,7 +4005,7 @@ Message text:
 - Lint: `flake8` (if configured)
 - Frontend changes (`web/`) require `npm run lint` and `npm test`
 - Перед запуском сервисов вызывается `init_app_once(env)` в entrypoints `web` и `bot`.
-- После изменения схемы обновляйте DDL-файлы (`core/db/ddl/*`) и прогоняйте тесты: `pytest -q`.
+- После изменения схемы обновляйте DDL-файлы (`backend/db/ddl/*`) и прогоняйте тесты: `pytest -q`.
 
 ## Security & Configuration
 - Use `.env` (see `.env.example`) and never commit secrets.
@@ -4024,7 +4024,7 @@ Message text:
 
 ## Coding Style & Naming Conventions
 - Python, async/await where used; prefer f-strings; add type hints.
-- Keep shared logic in `core/services` and import in `bot`/`web`.
+- Keep shared logic in `backend/services` and import in `bot`/`web`.
 - Table names: prefix by module; user-related tables use `users_` (e.g., `users_tg`).
 - Branding: use “Intelligent Data Pro” for product/headers; bot is “@intDataBot”. Default links to `https://intdata.pro/` and bot to `https://intdata.pro/bot`.
 - Language: prioritize Russian-speaking users. All user-facing texts (bot/web) default to Russian; keep code identifiers/comments in English. Add i18n only when needed, with Russian as the primary locale.
@@ -4045,11 +4045,11 @@ Message text:
 
 ## Обязательное правило: схема БД (source of truth)
 
-- Любые изменения `core/models.py` или Alembic-миграций **требуют** обновления схемы БД.
+- Любые изменения `backend/models.py` или Alembic-миграций **требуют** обновления схемы БД.
 - Генерация:
 ```bash
   python -m core.db.schema_export generate
-  git add core/db/SCHEMA.json core/db/SCHEMA.sql
+  git add backend/db/SCHEMA.json backend/db/SCHEMA.sql
   git commit -m "chore(db): update SCHEMA after model changes"
 ```
 - CI проверяет актуальность командой `python -m core.db.schema_export check`. PR не пройдёт, если забыли обновить.
@@ -4058,15 +4058,15 @@ SCHEMA.json является единой «точкой истины» стру
 
 ## Commit & Pull Request Guidelines
 - Commits: clear, imperative summary (why + what). Update `requirements.txt` when adding deps; adjust `.env.example` and `README.md` when env/behavior changes.
-- Типы коммитов: `feat(core/db|services)`, `feat(web|bot)`, `chore(core/db/ddl|env)`, `docs(backlog|changelog)`.
+- Типы коммитов: `feat(backend/db|services)`, `feat(web|bot)`, `chore(backend/db/ddl|env)`, `docs(backlog|changelog)`.
 - PRs: concise description, linked issues, setup notes, screenshots for UI changes. Ensure CI/tests pass. В описании PR добавляйте ссылки на `reports/archive/BACKLOG.md` и `reports/archive/CHANGELOG.md`.
 - PR чек-лист: скриншоты UI при изменениях; ссылки на reports/archive/BACKLOG.md (SSoT) и reports/archive/CHANGELOG.md.
 
 ## Work Protocol for Agents
 - К каждому изменению — ссылка на эпик/критерии в BACKLOG; поддержи/обнови BACKLOG при необходимости.
-- Бизнес-логика — только в `/core/services/*`. `/web` и `/bot` — тонкие слои.
+- Бизнес-логика — только в `/backend/services/*`. `/web` и `/bot` — тонкие слои.
 - При любых изменениях в `/bot` обязательно актуализируй динамическую справку `/start`, чтобы она отражала доступные команды и уровни доступа.
-- Миграции БД: idempotent DDL в `/core/db/ddl/*.sql` + `repair`; если в проекте уже используется другая технология, следуем действующей и фиксируем это здесь, НЕ меняя платформу миграций в рамках правки AGENTS.
+- Миграции БД: idempotent DDL в `/backend/db/ddl/*.sql` + `repair`; если в проекте уже используется другая технология, следуем действующей и фиксируем это здесь, НЕ меняя платформу миграций в рамках правки AGENTS.
 - Экспорт схемы (`core.db.schema_export`) обновлять при изменении моделей.
 - Все API — под `/api/v1/*`; обновить `/api/openapi.json`.
 - Фичефлаги: `CALENDAR_V2_ENABLED`, `HABITS_V1_ENABLED`, `HABITS_RPG_ENABLED` (и `.env.example` при необходимости).
@@ -4075,7 +4075,7 @@ SCHEMA.json является единой «точкой истины» стру
 - Команды Linux выполняй без `sudo` по умолчанию; пользуйся `sudo` только если команда без него завершается ошибкой из-за недостатка прав.
 - Work from repo root, activate venv, install deps, then implement.
 - Keep changes minimal and aligned with existing style. Always finish with: `source ./venv/bin/activate && pip install --quiet -r requirements.txt && pytest -q`.
-- Changes to note models or endpoints require updating `core/db/SCHEMA.*` via `python -m core.db.schema_export generate`; OpenAPI is served at `/api/openapi.json` and used in tests.
+- Changes to note models or endpoints require updating `backend/db/SCHEMA.*` via `python -m core.db.schema_export generate`; OpenAPI is served at `/api/openapi.json` and used in tests.
 
 ### Multi-agent Coordination (codex-cli)
 - Каждый экземпляр codex-cli работает в собственной рабочей копии: отдельный `git clone` или `git worktree add ../<agent-branch>`. Запрещено вести параллельную работу из одного каталога.
@@ -4087,10 +4087,10 @@ SCHEMA.json является единой «точкой истины» стру
 - Конфликты при `git rebase`/`merge` решает агент, начавший работу позже: обнови ветку, переиграй свои правки и только после этого пушь результат.
 
 ## Жёсткие архитектурные правила (не нарушать)
-- Вся логика и зависимости, без которых бэкенд не стартует, живут в `core/`.
-- Всё, что нужно только веб‑интерфейсу — в `web/` (тонкий слой UI и HTTP‑маршрутов, бизнес‑логика импортируется из `core/services`).
-- Всё, что нужно только Telegram‑боту — в `bot/` (обработчики, FSM, роутеры, бизнес‑логика из `core/services`).
-- Вспомогательные утилиты хранятся только в `utils/` и не используются рантаймом напрямую (никаких импортов из `utils/` внутри `core/`, `web/`, `bot/`).
+- Вся логика и зависимости, без которых бэкенд не стартует, живут в `backend/`.
+- Всё, что нужно только веб‑интерфейсу — в `web/` (тонкий слой UI и HTTP‑маршрутов, бизнес‑логика импортируется из `backend/services`).
+- Всё, что нужно только Telegram‑боту — в `bot/` (обработчики, FSM, роутеры, бизнес‑логика из `backend/services`).
+- Вспомогательные утилиты хранятся только в `utils/` и не используются рантаймом напрямую (никаких импортов из `utils/` внутри `backend/`, `web/`, `bot/`).
 - В `tests/` находятся только тесты; тесты не импортируют код из `utils/` на рантайме.
 - В `reports/` — исключительно документация (backlog/changelog/архитектура, без исходников).
 - В `logs/` — только логи. Содержимое каталога не коммитим, каталог игнорируется в VCS.
@@ -4651,7 +4651,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Документ `reports/archive/nexuscore_balance.md` со сводкой переноса функционала NexusCore.
 - Бэкенд задач: таблицы `task_reminders`, `task_watchers`, новые поля контроля (`control_enabled`, `control_frequency`, `control_status`, `control_next_at`, `remind_policy`, `is_watched`) и методы `TaskService` для напоминаний, наблюдателей и статистики бота.
 - Telegram-команды `/task_add`, `/task_rename`, `/task_due`, `/task_remind`, `/task_control`, `/task_forget`, `/task_watch`, `/task_unwatch`, `/task_stats*` с обновлённой справкой `/start`.
-- TaskReminderWorker (`core/services/task_reminder_worker.py`) и TaskNotificationService для доставки напоминаний и оповещений наблюдателям.
+- TaskReminderWorker (`backend/services/task_reminder_worker.py`) и TaskNotificationService для доставки напоминаний и оповещений наблюдателям.
 - Tasks (Next.js): статистика по статусам, колонки контроля/наблюдения, обновлённые таблицы и интеграция с новым API `/tasks/stats`.
 - Поддержка профилей продуктов (`/products/{slug}`) с каталогом и контролем доступа.
 - Режим настройки ЦУПа с drag-n-drop, скрытием и панелью скрытых виджетов.
@@ -4667,7 +4667,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Time summary endpoint `/api/v1/time/summary` for aggregating durations by day, project, area or user.
 - comprehensive test suite covering DB idempotency, PARA repair, OpenAPI snapshot parity and core habits/today/tasks/time flows.
 - Epic E17 "Frontend Modernization" в `reports/archive/BACKLOG.md` (Next.js/Vite выбор, TS+Tailwind, перенос страниц, очистка legacy).
-- Машиночитаемая схема БД (`core/db/SCHEMA.*`) и утилита `tools.schema_export` с проверкой в CI.
+- Машиночитаемая схема БД (`backend/db/SCHEMA.*`) и утилита `tools.schema_export` с проверкой в CI.
 - user_settings table for extensible per-user preferences.
 - API `/api/v1/user/settings` to read and write settings.
 - Repair step to migrate legacy favorites into user_settings.

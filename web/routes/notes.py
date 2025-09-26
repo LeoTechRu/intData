@@ -7,9 +7,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-from core.models import ContainerType, Note, TgUser
-from core.services.note_service import NoteService
-from core.services.para_service import ParaService
+from backend.models import ContainerType, Note, TgUser
+from backend.services.note_service import NoteService
+from backend.services.para_service import ParaService
 from web.dependencies import get_current_tg_user, get_current_web_user
 from .index import render_next_page
 

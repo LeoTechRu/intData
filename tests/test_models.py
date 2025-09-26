@@ -3,7 +3,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from base import Base
-from core.models import TgUser, WebUser, UserRole
+from backend.models import TgUser, WebUser, UserRole
 
 
 @pytest.fixture()
@@ -53,7 +53,7 @@ def test_web_user_flask_login_helpers(session):
 
 
 def test_group_type_enum_complete():
-    from core.models import GroupType
+    from backend.models import GroupType
 
     expected = {"private", "public", "group", "supergroup", "channel"}
     assert {g.value for g in GroupType} == expected

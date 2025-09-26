@@ -6,14 +6,14 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-from core.models import (
+from backend.models import (
     Project,
     TgUser,
     NotificationChannel,
     NotificationChannelKind,
     ProjectNotification,
 )
-from core.services.para_service import ParaService
+from backend.services.para_service import ParaService
 from web.dependencies import get_current_tg_user
 
 from .index import render_next_page

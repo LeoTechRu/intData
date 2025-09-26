@@ -3,7 +3,7 @@ import pytest_asyncio
 from httpx import AsyncClient
 
 from base import Base
-import core.db as db
+import backend.db as db
 from tests.utils.seeds import ensure_tg_user
 
 try:

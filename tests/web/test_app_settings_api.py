@@ -4,9 +4,9 @@ import pytest_asyncio
 from httpx import AsyncClient
 
 from base import Base
-import core.db as db
-from core.models import WebUser, UserRole
-from core.settings_store import metadata
+import backend.db as db
+from backend.models import WebUser, UserRole
+from backend.settings_store import metadata
 from main import app
 
 

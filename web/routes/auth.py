@@ -15,10 +15,10 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from sqlalchemy import select
 
-from core.logger import logger
-from core.models import WebUser
-from core.services.telegram_user_service import TelegramUserService
-from core.services.web_user_service import WebUserService
+from backend.logger import logger
+from backend.models import WebUser
+from backend.services.telegram_user_service import TelegramUserService
+from backend.services.web_user_service import WebUserService
 from web.config import S
 from web.security.authlog import log_event
 from web.security.cookies import set_auth_cookies

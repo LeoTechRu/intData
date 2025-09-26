@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from base import Base
-import core.db as db
-from core.services.area_service import AreaService
+import backend.db as db
+from backend.services.area_service import AreaService
 from tests.utils.seeds import ensure_tg_user
 
 try:

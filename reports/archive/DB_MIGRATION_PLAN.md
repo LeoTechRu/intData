@@ -10,7 +10,7 @@
 - Дополнительные ограничения (`ux_roles_slug`, `uq_user_roles_assignment`, `ck_user_roles_scope`) добавлены вручную для корректной работы ролей.
 
 ### 1.2 DDL/миграции в репозитории
-- Скрипты в `core/db/ddl/*.sql` и `core/db/migrations/*.sql` ориентированы на новую UUID-схему (`UUID`, `gen_random_uuid()`, индекс `WHERE stopped_at IS NULL`).
+- Скрипты в `backend/db/ddl/*.sql` и `backend/db/migrations/*.sql` ориентированы на новую UUID-схему (`UUID`, `gen_random_uuid()`, индекс `WHERE stopped_at IS NULL`).
 - При запуске bootstrap/repair (`DB_BOOTSTRAP=1`, `DB_REPAIR=1`) они выполняют несовместимые ALTER/INSERT, что приводит к падению сервиса.
 - Системы версионирования миграций нет (`schema_migrations` отсутствует), применяется последовательность SQL-файлов без учёта зависимостей.
 
@@ -34,7 +34,7 @@
 ## 4. Предлагаемый план
 1. **Инвентаризация**
    - Сделать `pg_dump --schema-only` и сохранить как baseline (`reports/archive/schema_baseline_legacy.sql`).
-   - Сравнить с моделями (`core/models.py`) и DDL, перечислить отличия (тип PK, отсутствующие колонки, индексы).
+   - Сравнить с моделями (`backend/models.py`) и DDL, перечислить отличия (тип PK, отсутствующие колонки, индексы).
 2. **Инициализация Alembic**
    - Создать конфигурацию `alembic/`, настроить подключение через `core.db.engine`.
    - Сгенерировать initial revision, отражающий текущее (legacy) состояние; установить флаг `branch_labels=()` и пометить ревизию как baseline.
@@ -42,7 +42,7 @@
    - Формализовать добавленные вручную объекты (колонки, таблицы, индексы) в Alembic-ревизии, чтобы новые среды поднимались без ручных команд.
 4. **Дальнейшие шаги**
    - Подготовить миграцию UUID (если принято) или обновить DDL на integer-схему.
-   - Перенести bootstrap на Alembic (`alembic upgrade head`) вместо запуска `core/db/ddl`.
+   - Перенести bootstrap на Alembic (`alembic upgrade head`) вместо запуска `backend/db/ddl`.
    - Обновить repair-скрипты, чтобы они проверяли типы колонок или использовать управляемые фоновые задачи вместо прямого SQL.
 5. **Верификация**
    - Завести тестовую PostgreSQL БД (docker-compose) и добавить в CI шаг `alembic upgrade head` + smoke-тест API.

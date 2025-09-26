@@ -18,7 +18,7 @@ handoff:
       note: Контент Control Hub для страницы напоминаний
     - path: web/app/reminders/page.tsx
       note: Маршрут новой страницы `/reminders`
-    - path: core/services/navigation_service.py
+    - path: backend/services/navigation_service.py
       note: Иконки модулей/страниц, default_hidden, модуль Control Hub
     - path: web/lib/types.ts
       note: Поля `icon` в `SidebarNavItem` и `SidebarModuleDefinition`

@@ -4,8 +4,8 @@ import pytest_asyncio
 from base import Base
 from datetime import datetime
 
-from core.services.time_service import TimeService
-from core.models import Project, Area, Task, TgUser
+from backend.services.time_service import TimeService
+from backend.models import Project, Area, Task, TgUser
 from sqlalchemy import func, select
 
 

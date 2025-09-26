@@ -7,13 +7,13 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
-from core.db import bot
-from core.models import Group, Product, ProductStatus, TgUser, WebUser
-from core.services.crm_service import CRMService
-from core.services.group_moderation_service import GroupModerationService
-from core.services.telegram_user_service import TelegramUserService
-from core.utils import utcnow
-from core.services.access_control import AccessControlService
+from backend.db import bot
+from backend.models import Group, Product, ProductStatus, TgUser, WebUser
+from backend.services.crm_service import CRMService
+from backend.services.group_moderation_service import GroupModerationService
+from backend.services.telegram_user_service import TelegramUserService
+from backend.utils import utcnow
+from backend.services.access_control import AccessControlService
 from web.dependencies import role_required
 
 from .index import render_next_page

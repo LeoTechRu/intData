@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from aiogram.types import CallbackQuery, Chat, Message, Update
 
-from core.logger import LoggerMiddleware, LogLevel, escape_markdown_v2
+from backend.logger import LoggerMiddleware, LogLevel, escape_markdown_v2
 
 
 def test_escape_markdown_v2():

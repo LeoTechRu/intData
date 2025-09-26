@@ -5,9 +5,9 @@ from datetime import date
 from httpx import AsyncClient
 
 from base import Base
-import core.db as db
-from core.models import Area, Project
-from core.services.habits import (
+import backend.db as db
+from backend.models import Area, Project
+from backend.services.habits import (
     metadata,
     habits,
     HabitsService,

@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from base import Base
-from core.services.calendar_service import CalendarService
+from backend.services.calendar_service import CalendarService
 from datetime import datetime
 
 

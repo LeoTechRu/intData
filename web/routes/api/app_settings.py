@@ -10,8 +10,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel
 
-from core.models import WebUser
-from core.services.app_settings_service import (
+from backend.models import WebUser
+from backend.services.app_settings_service import (
     delete_settings_by_prefix,
     get_settings_by_prefix,
     upsert_settings,

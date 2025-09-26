@@ -16,11 +16,11 @@ from aiogram.fsm.state import State, StatesGroup
 from datetime import datetime, date, timedelta, timezone
 from typing import Callable, Optional, Tuple, List, Set
 from decorators import role_required, group_required
-from core.db import bot as telegram_bot
-from core.models import GroupType, LogLevel, UserRole, ProductStatus, TgUser
-from core.services.telegram_user_service import TelegramUserService
-from core.services.crm_service import CRMService
-from core.services.group_moderation_service import GroupModerationService
+from backend.db import bot as telegram_bot
+from backend.models import GroupType, LogLevel, UserRole, ProductStatus, TgUser
+from backend.services.telegram_user_service import TelegramUserService
+from backend.services.crm_service import CRMService
+from backend.services.group_moderation_service import GroupModerationService
 from sqlalchemy.exc import SQLAlchemyError
 
 # Значение по умолчанию для статуса продукта задаём через enum,
@@ -950,7 +950,7 @@ async def unknown_message_handler(message: Message) -> None:
         return
 
     try:
-        from core.db import bot
+        from backend.db import bot
 
         meta_text = (
             f"||origin_chat_id:{message.chat.id}|origin_msg_id:{message.message_id}||"
@@ -976,9 +976,9 @@ async def handle_admin_reply(message: Message) -> None:
     if not log_chat_id or message.chat.id != log_chat_id or not message.reply_to_message:
         return
 
-    from core.db import bot
+    from backend.db import bot
     from aiogram.exceptions import TelegramAPIError
-    from core.logger import logger
+    from backend.logger import logger
 
     origin = forward_map.get(message.reply_to_message.message_id)
 

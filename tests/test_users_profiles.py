@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.testclient import TestClient
 
-from core.models import WebUser
+from backend.models import WebUser
 from web.routes import api_profiles
 from web.dependencies import get_current_web_user
 

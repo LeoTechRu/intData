@@ -4,8 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from base import Base
-from core.services.task_service import TaskService
-from core.models import (
+from backend.services.task_service import TaskService
+from backend.models import (
     TaskStatus,
     TaskWatcherState,
     TaskWatcherLeftReason,

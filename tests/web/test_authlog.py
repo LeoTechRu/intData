@@ -3,7 +3,7 @@ from datetime import datetime
 from importlib import reload
 from types import SimpleNamespace
 
-from core.utils import utcnow
+from backend.utils import utcnow
 
 
 def test_authlog_uses_utcnow(tmp_path, monkeypatch):

@@ -10,8 +10,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message
 
-from core.services.nexus_service import HabitService
-from core.utils.habit_utils import calc_progress
+from backend.services.nexus_service import HabitService
+from backend.utils.habit_utils import calc_progress
 
 
 router = Router()

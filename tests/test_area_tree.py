@@ -3,8 +3,8 @@ import pytest_asyncio
 from sqlalchemy.orm import sessionmaker
 
 from base import Base
-import core.db as db
-from core.services.area_service import AreaService
+import backend.db as db
+from backend.services.area_service import AreaService
 
 
 @pytest_asyncio.fixture

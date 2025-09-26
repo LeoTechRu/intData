@@ -3,13 +3,13 @@ import pytest_asyncio
 from httpx import AsyncClient
 
 from base import Base
-import core.db as db
-from core.models import TgUser, WebUser, UserRole
-from core.services.telegram_user_service import TelegramUserService
-from core.services.web_user_service import WebUserService
-from core.services.crm_service import CRMService
-from core.services.group_moderation_service import GroupModerationService
-from core.models import GroupType, ProductStatus
+import backend.db as db
+from backend.models import TgUser, WebUser, UserRole
+from backend.services.telegram_user_service import TelegramUserService
+from backend.services.web_user_service import WebUserService
+from backend.services.crm_service import CRMService
+from backend.services.group_moderation_service import GroupModerationService
+from backend.models import GroupType, ProductStatus
 
 try:
     from main import app  # type: ignore

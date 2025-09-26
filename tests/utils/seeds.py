@@ -3,7 +3,7 @@ from __future__ import annotations
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.models import TgUser, WebUser, UserStats
+from backend.models import TgUser, WebUser, UserStats
 
 
 async def ensure_tg_user(session: AsyncSession, telegram_id: int, **kwargs) -> TgUser:

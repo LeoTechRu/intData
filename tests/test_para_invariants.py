@@ -1,9 +1,9 @@
 import pytest
 from datetime import timedelta
 
-import core.db as db
+import backend.db as db
 from base import Base
-from core.models import (
+from backend.models import (
     Area,
     CalendarItem,
     Daily,
@@ -14,7 +14,7 @@ from core.models import (
     Task,
     TimeEntry,
 )
-from core.utils import utcnow
+from backend.utils import utcnow
 from sqlalchemy.exc import IntegrityError
 from tests.utils.seeds import ensure_tg_user
 

@@ -3,11 +3,11 @@ import pytest_asyncio
 from httpx import AsyncClient
 
 from base import Base
-import core.db as db
-from core.services.area_service import AreaService
-from core.services.para_service import ParaService
-from core.services.task_service import TaskService
-from core.services.note_service import NoteService
+import backend.db as db
+from backend.services.area_service import AreaService
+from backend.services.para_service import ParaService
+from backend.services.task_service import TaskService
+from backend.services.note_service import NoteService
 from tests.utils.seeds import ensure_tg_user
 
 try:

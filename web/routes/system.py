@@ -13,8 +13,8 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import PlainTextResponse
 from sqlalchemy import text
 
-from core.db import engine
-from core.metrics import metrics_response
+from backend.db import engine
+from backend.metrics import metrics_response
 
 logger = logging.getLogger(__name__)
 

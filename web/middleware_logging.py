@@ -8,8 +8,8 @@ from typing import Callable
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from core.logging import request_id_var, setup_logging
-from core.metrics import REQUEST_COUNT, REQUEST_LATENCY
+from backend.logging import request_id_var, setup_logging
+from backend.metrics import REQUEST_COUNT, REQUEST_LATENCY
 
 setup_logging()
 

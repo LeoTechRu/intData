@@ -3,11 +3,11 @@ from typing import Any
 from fastapi import APIRouter, Depends
 from fastapi.responses import HTMLResponse
 
-from core.models import WebUser
-from core.services.web_user_service import WebUserService
-from core.services.telegram_user_service import TelegramUserService
-from core.services.group_moderation_service import GroupModerationService
-from core.services.access_control import AccessControlService
+from backend.models import WebUser
+from backend.services.web_user_service import WebUserService
+from backend.services.telegram_user_service import TelegramUserService
+from backend.services.group_moderation_service import GroupModerationService
+from backend.services.access_control import AccessControlService
 from ..dependencies import role_required
 from .index import render_next_page
 

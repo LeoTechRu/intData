@@ -94,7 +94,7 @@ class EnvSettings(BaseSettings):
 
 # --- Runtime overrides from DB ---
 try:
-    from core.settings_store import SettingsStore  # type: ignore
+    from backend.settings_store import SettingsStore  # type: ignore
 except Exception:  # pragma: no cover - optional in tests
     class SettingsStore:  # type: ignore
         def reload(self):

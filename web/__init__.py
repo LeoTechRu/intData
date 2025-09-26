@@ -19,7 +19,7 @@ from .middleware_security import (
 from .security.csp import build_csp
 from .config import S
 from .middleware_rate_limit import RateLimitMiddleware
-from core.tracing import setup_tracing
+from backend.tracing import setup_tracing
 from .routes import system as system_routes
 
 from .routes import (
@@ -42,20 +42,20 @@ from .routes import (
     inbox,
     api_router,
 )
-from core.db import engine
-from core.db.engine import ENGINE_MODE
-from core.db.init_app import init_app_once
-from core.env import env
-from core.services.web_user_service import WebUserService
-from core.services.telegram_user_service import TelegramUserService
-from core.models import LogLevel
-from core.services.project_notification_worker import (
+from backend.db import engine
+from backend.db.engine import ENGINE_MODE
+from backend.db.init_app import init_app_once
+from backend.env import env
+from backend.services.web_user_service import WebUserService
+from backend.services.telegram_user_service import TelegramUserService
+from backend.models import LogLevel
+from backend.services.project_notification_worker import (
     ProjectNotificationWorker,
     is_scheduler_enabled,
 )
 from . import para_schemas  # noqa: F401
-from core.db.schema_export import check as check_schema
-from core.logging import setup_logging
+from backend.db.schema_export import check as check_schema
+from backend.logging import setup_logging
 
 setup_logging()
 logger = logging.getLogger(__name__)

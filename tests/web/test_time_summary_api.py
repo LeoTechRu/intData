@@ -4,8 +4,8 @@ from httpx import AsyncClient
 from datetime import datetime, timezone
 
 from base import Base
-import core.db as db
-from core.models import TimeEntry
+import backend.db as db
+from backend.models import TimeEntry
 from tests.utils.seeds import ensure_tg_user
 
 try:

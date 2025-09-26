@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from core.models import WebUser
-from core.services.dashboard_service import build_dashboard_overview
+from backend.models import WebUser
+from backend.services.dashboard_service import build_dashboard_overview
 from web.dependencies import get_current_web_user
 
 

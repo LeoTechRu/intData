@@ -12,9 +12,9 @@ from pydantic import BaseModel
 
 from web.config import S
 from web.security.cookies import set_auth_cookies
-from core.logger import logger
-from core.services.telegram_user_service import TelegramUserService
-from core.services.web_user_service import WebUserService
+from backend.logger import logger
+from backend.services.telegram_user_service import TelegramUserService
+from backend.services.web_user_service import WebUserService
 
 
 router = APIRouter(prefix="/auth", tags=["Users"])

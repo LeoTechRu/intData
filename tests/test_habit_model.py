@@ -1,5 +1,5 @@
 import pytest
-from core.models import Habit
+from backend.models import Habit
 
 
 def test_habit_relationships_present():

@@ -6,11 +6,11 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 
-import core.db as db
-from core.models import Group, TgUser, WebUser
-from core.services.web_user_service import WebUserService
-from core.services.telegram_user_service import TelegramUserService
-from core.services.audit_log import AuditLogService
+import backend.db as db
+from backend.models import Group, TgUser, WebUser
+from backend.services.web_user_service import WebUserService
+from backend.services.telegram_user_service import TelegramUserService
+from backend.services.audit_log import AuditLogService
 from ...dependencies import role_required
 from ..admin import load_admin_console_data
 

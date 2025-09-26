@@ -16,7 +16,7 @@
 
 ## Наблюдения
 - Pydantic deprecation (`config`, `json_encoders`) — известный технический долг E2/E3, требует миграции на ConfigDict.
-- `datetime.utcnow()` в `core/services/app_settings_service.py` — рекомендуется follow-up на timezone-aware datetime.
+- `datetime.utcnow()` в `backend/services/app_settings_service.py` — рекомендуется follow-up на timezone-aware datetime.
 - Vitest warning `Failed to fetch timezone setting` — ожидаемый из-за отсутствия моков AppShell, не влияет на AC.
 
 ## Вывод

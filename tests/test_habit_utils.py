@@ -1,4 +1,4 @@
-from core.utils.habit_utils import calc_progress
+from backend.utils.habit_utils import calc_progress
 
 
 def test_calc_progress_empty():

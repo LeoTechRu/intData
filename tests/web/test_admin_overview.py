@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from core.models import WebUser, TgUser, Group
+from backend.models import WebUser, TgUser, Group
 from web.routes.api import admin as admin_api
 
 

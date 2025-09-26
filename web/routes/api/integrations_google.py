@@ -3,9 +3,9 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse, Response
 
-from core.logger import logger
-from core.models import WebUser
-from core.services import (
+from backend.logger import logger
+from backend.models import WebUser
+from backend.services import (
     generate_auth_url,
     exchange_code,
     save_gcal_link,
@@ -47,8 +47,8 @@ async def disconnect(current_user: WebUser | None = Depends(get_current_web_user
     if not current_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     # Simple removal of link
-    from core import db
-    from core.models import GCalLink
+    from backend import db
+    from backend.models import GCalLink
     from sqlalchemy import delete
 
     async with db.async_session() as session:

@@ -4,9 +4,9 @@ import os
 
 from aiogram.types import Message
 
-from core.services.telegram_user_service import TelegramUserService
-from core.models import UserRole, GroupType
-from core.logger import logger
+from backend.services.telegram_user_service import TelegramUserService
+from backend.models import UserRole, GroupType
+from backend.logger import logger
 
 
 def role_required(role: UserRole):

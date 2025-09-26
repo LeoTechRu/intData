@@ -6,7 +6,7 @@ from typing import List, Literal, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
-from core.models import (
+from backend.models import (
     CRMAccountType,
     CRMProduct,
     CRMProductTariff,
@@ -14,8 +14,8 @@ from core.models import (
     CRMSubscriptionStatus,
     WebUser,
 )
-from core.services.crm_service import CRMService, CRMBillingType, CRMPricingMode
-from core.services.web_user_service import WebUserService
+from backend.services.crm_service import CRMService, CRMBillingType, CRMPricingMode
+from backend.services.web_user_service import WebUserService
 from web.dependencies import get_current_web_user
 
 router = APIRouter(prefix="/crm", tags=["crm"])

@@ -72,11 +72,11 @@
 ## MR‑план
 
 1) MR‑1 Foundations (миграции/модели)
-- Файлы: `core/db/migrations/20250829_02..06`, `core/models.py`
+- Файлы: `backend/db/migrations/20250829_02..06`, `backend/models.py`
 - DoD: миграции применяются; приложение поднимается; тесты не падают.
 
 2) MR‑2 Services (ядро PARA)
-- Файлы: `core/services/para_service.py`, обновления `note_service.py`, `task_service.py`, `time_service.py`
+- Файлы: `backend/services/para_service.py`, обновления `note_service.py`, `task_service.py`, `time_service.py`
 - DoD: assign/move/archive работают; корректная наследственность Area/Project в задачах и тайм‑логах.
 
 3) MR‑3 API (контракты)

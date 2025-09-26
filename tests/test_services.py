@@ -8,12 +8,12 @@ from aiogram.types import (
 )
 
 from base import Base
-from core.services.telegram_user_service import TelegramUserService
-from core.services.web_user_service import WebUserService
-from core.services.profile_service import ProfileService
-from core.services.crm_service import CRMService
-from core.services.group_moderation_service import GroupModerationService
-from core.models import (
+from backend.services.telegram_user_service import TelegramUserService
+from backend.services.web_user_service import WebUserService
+from backend.services.profile_service import ProfileService
+from backend.services.crm_service import CRMService
+from backend.services.group_moderation_service import GroupModerationService
+from backend.models import (
     WebUser,
     GroupType,
     ProductStatus,

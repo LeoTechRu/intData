@@ -8,14 +8,14 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-import core.db as db
+import backend.db as db
 from base import Base
-from core.services.user_settings_service import UserSettingsService
-from core.services.web_user_service import WebUserService
-from core.db.repair import run_repair
+from backend.services.user_settings_service import UserSettingsService
+from backend.services.web_user_service import WebUserService
+from backend.db.repair import run_repair
 from web.routes.api_user_settings import router as settings_router
 from web.dependencies import get_current_web_user
-from core.models import WebUser
+from backend.models import WebUser
 
 
 @pytest.mark.asyncio

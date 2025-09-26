@@ -7,9 +7,9 @@ import logging
 import os
 from signal import SIGINT, SIGTERM
 
-from core.env import env
-from core.db.init_app import init_app_once
-from core.services.task_reminder_worker import TaskReminderWorker
+from backend.env import env
+from backend.db.init_app import init_app_once
+from backend.services.task_reminder_worker import TaskReminderWorker
 
 logger = logging.getLogger("task_reminder_worker")
 

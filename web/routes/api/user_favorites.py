@@ -5,8 +5,8 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from pydantic import BaseModel
 
-from core.models import WebUser
-from core.services.favorite_service import FavoriteService
+from backend.models import WebUser
+from backend.services.favorite_service import FavoriteService
 from web.dependencies import get_current_web_user
 
 

@@ -5,10 +5,10 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-import core.db as db
+import backend.db as db
 from base import Base
-from core.models import UserSettings, WebUser
-from core.settings_store import metadata as settings_metadata
+from backend.models import UserSettings, WebUser
+from backend.settings_store import metadata as settings_metadata
 from web.routes.api.navigation import router as navigation_api
 from web.dependencies import get_current_web_user
 

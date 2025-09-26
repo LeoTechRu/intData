@@ -3,15 +3,15 @@ import pytest_asyncio
 import sqlalchemy as sa
 from datetime import date
 
-from core.services.habits import (
+from backend.services.habits import (
     DailiesService,
     HabitsCronService,
     HabitsService,
     dailies,
     habits,
 )
-from core.services.nexus_service import HabitService
-from core.models import Area, Project, Habit as HabitModel, TgUser
+from backend.services.nexus_service import HabitService
+from backend.models import Area, Project, Habit as HabitModel, TgUser
 from tests.utils.seeds import ensure_tg_user, ensure_web_user
 
 
@@ -23,7 +23,7 @@ async def session_factory(postgres_db):
 
 @pytest.mark.asyncio
 async def test_habit_up_down_and_para(session_factory, monkeypatch):
-    from core.config import config
+    from backend.config import config
     monkeypatch.setattr(config, "HABITS_ANTIFARM_ENABLED", True)
     monkeypatch.setattr(config, "HABITS_RPG_ENABLED", False)
     async with HabitsService() as svc:
@@ -57,7 +57,7 @@ async def test_habit_up_down_and_para(session_factory, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_antifarm_decay_and_limit(session_factory, monkeypatch):
-    from core.config import config
+    from backend.config import config
     monkeypatch.setattr(config, "HABITS_ANTIFARM_ENABLED", True)
     monkeypatch.setattr(config, "HABITS_RPG_ENABLED", False)
     async with HabitsService() as svc:
@@ -96,7 +96,7 @@ async def test_antifarm_decay_and_limit(session_factory, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_cooldown_enforced(session_factory, monkeypatch):
-    from core.config import config
+    from backend.config import config
     monkeypatch.setattr(config, "HABITS_ANTIFARM_ENABLED", True)
     async with HabitsService() as svc:
         owner_id = 6
@@ -113,14 +113,14 @@ async def test_cooldown_enforced(session_factory, monkeypatch):
             area_id=area.id,
         )
         await svc.up(hid, owner_id=owner_id)
-        from core.services.errors import CooldownError
+        from backend.services.errors import CooldownError
         with pytest.raises(CooldownError):
             await svc.up(hid, owner_id=owner_id)
 
 
 @pytest.mark.asyncio
 async def test_negative_bypass_limit(session_factory, monkeypatch):
-    from core.config import config
+    from backend.config import config
     monkeypatch.setattr(config, "HABITS_ANTIFARM_ENABLED", True)
     async with HabitsService() as svc:
         owner_id = 7

@@ -1,8 +1,8 @@
 import pytest
 import pytest_asyncio
 
-from core.services.note_service import NoteService
-from core.models import Area
+from backend.services.note_service import NoteService
+from backend.models import Area
 from tests.utils.seeds import ensure_tg_user
 
 

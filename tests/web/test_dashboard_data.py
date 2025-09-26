@@ -5,11 +5,11 @@ from types import SimpleNamespace
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from core.models import Alarm, CalendarItem, CalendarEvent, Task, TaskStatus, TimeEntry, WebUser, TgUser, UserRole
-from core.utils import utcnow
+from backend.models import Alarm, CalendarItem, CalendarEvent, Task, TaskStatus, TimeEntry, WebUser, TgUser, UserRole
+from backend.utils import utcnow
 from web.routes import api_router
 from web.dependencies import get_current_web_user
-from core.services import dashboard_service
+from backend.services import dashboard_service
 
 
 class FakeTaskService:

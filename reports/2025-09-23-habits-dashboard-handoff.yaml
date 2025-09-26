@@ -11,7 +11,7 @@ handoff:
   artifacts:
     - path: web/components/habits/HabitsModule.tsx
       note: UI с новыми фильтрами и секциями
-    - path: core/services/habits.py
+    - path: backend/services/habits.py
       note: HabitsDashboardService и проверка include_sub
     - path: tests/web/test_habits_v1_api.py
       note: Новые pytest кейсы для дашборда

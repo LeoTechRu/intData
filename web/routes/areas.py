@@ -6,9 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-from core.models import Area, TgUser
-from core.services.para_service import ParaService
-from core.services.area_service import AreaService
+from backend.models import Area, TgUser
+from backend.services.para_service import ParaService
+from backend.services.area_service import AreaService
 from web.dependencies import get_current_tg_user
 
 from .index import render_next_page
@@ -103,7 +103,7 @@ async def rename_area(area_id: int, payload: AreaRenamePayload, current_user: Tg
         if not area or area.owner_id != current_user.telegram_id:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         # rename by changing slug and rebuilding prefixes via move
-        from core.services.area_service import _slugify
+        from backend.services.area_service import _slugify
         new_slug = await svc._unique_slug(area.owner_id, _slugify(payload.name))
         area.name = payload.name
         area.slug = new_slug

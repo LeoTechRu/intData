@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
-from core.models import WebUser
+from backend.models import WebUser
 
 import web as web_app
 from web.routes.index import _load_next_html

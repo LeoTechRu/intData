@@ -7,10 +7,10 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 
-import core.db as db
+import backend.db as db
 from base import Base
-from core.services.telegram_user_service import TelegramUserService
-from core.services.web_user_service import WebUserService
+from backend.services.telegram_user_service import TelegramUserService
+from backend.services.web_user_service import WebUserService
 
 TG_BOT_TOKEN = "TEST_TOKEN"
 os.environ.setdefault("TG_BOT_TOKEN", TG_BOT_TOKEN)
@@ -18,7 +18,7 @@ os.environ.setdefault("TG_BOT_USERNAME", "testbot")
 from web.config import S  # noqa: E402
 
 try:
-    from core.main import app  # type: ignore
+    from backend.main import app  # type: ignore
 except ModuleNotFoundError:  # fallback if app located differently
     from main import app  # type: ignore
 
