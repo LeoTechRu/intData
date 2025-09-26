@@ -266,6 +266,10 @@ async def auth_middleware(request: Request, call_next):
     if path.startswith("/static") or path.startswith("/favicon") or path.startswith("/_next/"):
         return await call_next(request)
 
+    # Allow internal health/metrics probes without auth
+    if path in {"/healthz", "/readyz", "/metrics"}:
+        return await call_next(request)
+
     # Always allow the ban page itself
     if path == "/ban":
         return await call_next(request)

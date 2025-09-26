@@ -1,25 +1,17 @@
 agent_sync:
-- when_utc: '2025-09-24T19:52:38Z'
-  agent: codex-cli::architect
-  role: architect
+- since: '2025-09-24T19:52:38Z'
+  owner: codex-cli::architect
   branch: feature/E17/bitrix24-sidebar-arch
-  task: TL-2025-09-24-bitrix24-nav
-  epic_scope: E17 / Frontend navigation
-  files:
+  paths:
   - reports/arch/2025-09-24-bitrix24-leftnav.md
   - reports/2025-09-24-handoff-arch-to-fe.yaml
-  pr: null
-  ac_link: README.md#e17-frontend-modernization
-  ttl_minutes: 120
+  ttl: 120
   status: Handoff
-  note: 'Архитектура Bitrix24-стиля готова; handoff → frontend'
-- when_utc: '2025-09-24T19:56:11Z'
-  agent: codex-cli::fe
-  role: fe
+  note: Архитектура Bitrix24-стиля готова; handoff → frontend
+- since: '2025-09-24T19:56:11Z'
+  owner: codex-cli::fe
   branch: feature/E17/bitrix24-sidebar-fe
-  task: TL-2025-09-24-bitrix24-nav
-  epic_scope: E17 / Frontend navigation
-  files:
+  paths:
   - web/components/AppShell.tsx
   - web/components/navigation/LeftSidebar.tsx
   - web/components/navigation/TopNavBar.tsx
@@ -30,228 +22,160 @@ agent_sync:
   - web/lib/navigation-layout.ts
   - web/lib/useModuleTabs.ts
   - reports/2025-09-24-handoff-fe-to-qa.yaml
-  pr: null
-  ac_link: README.md#e17-frontend-modernization
-  ttl_minutes: 180
+  ttl: 180
   status: Review
-  note: 'Bitrix24 левый бар + топ табы реализованы, handoff → QA (custom links ждут backend API)'
-- when_utc: '2025-09-24T20:21:02Z'
-  agent: codex-cli::qa
-  role: qa
+  note: Bitrix24 левый бар + топ табы реализованы, handoff → QA (custom links ждут
+    backend API)
+- since: '2025-09-24T20:21:02Z'
+  owner: codex-cli::qa
   branch: feature/E17/bitrix24-sidebar-qa
-  task: TL-2025-09-24-bitrix24-nav
-  epic_scope: E17 / Frontend navigation
-  files:
+  paths:
   - tests/
   - reports/test/2025-09-24-bitrix24-nav.md
-  pr: null
-  ac_link: README.md#e17-frontend-modernization
-  ttl_minutes: 120
+  ttl: 120
   status: Handoff
-  note: 'QA: AC-1..AC-9 пройдены, custom links помечены как should-fix; handoff → InfoSec'
-- when_utc: '2025-09-24T20:26:10Z'
-  agent: codex-cli::infosec
-  role: infosec
+  note: 'QA: AC-1..AC-9 пройдены, custom links помечены как should-fix; handoff →
+    InfoSec'
+- since: '2025-09-24T20:26:10Z'
+  owner: codex-cli::infosec
   branch: feature/E17/bitrix24-sidebar-infosec
-  task: TL-2025-09-24-bitrix24-nav
-  epic_scope: E17 / Frontend navigation
-  files:
+  paths:
   - web/components/navigation/
   - web/lib/navigation-*.ts
   - reports/infosec/2025-09-24-bitrix24-nav.md
-  pr: null
-  ac_link: README.md#e17-frontend-modernization
-  ttl_minutes: 120
+  ttl: 120
   status: Handoff
-  note: 'InfoSec: Semgrep/Bandit ok, Trivy недоступен локально — запрос CI скана; handoff → DevOps'
-- when_utc: '2025-09-24T20:33:27Z'
-  agent: codex-cli::devops
-  role: devops
+  note: 'InfoSec: Semgrep/Bandit ok, Trivy недоступен локально — запрос CI скана;
+    handoff → DevOps'
+- since: '2025-09-24T20:33:27Z'
+  owner: codex-cli::devops
   branch: feature/E17/bitrix24-sidebar-devops
-  task: TL-2025-09-24-bitrix24-nav
-  epic_scope: E17 / Frontend navigation
-  files:
+  paths:
   - .github/workflows/
   - reports/runbooks/test-to-main.md
   - reports/2025-09-24-gaterecord-bitrix24-nav-release.yaml
-  pr: null
-  ac_link: README.md#e17-frontend-modernization
-  ttl_minutes: 120
+  ttl: 120
   status: Handoff
   note: 'Gate-5: npm ci/lint/test/build выполнены, Trivy ждёт CI; handoff → TL'
-- when_utc: '2025-09-24T21:17:19Z'
-  agent: codex-cli::teamlead
-  role: tl
+- since: '2025-09-24T21:17:19Z'
+  owner: codex-cli::teamlead
   branch: main
-  task: TL-2025-09-24-bitrix24-nav
-  epic_scope: E17 / Frontend navigation
-  files:
+  paths:
   - git (merge feature/E17/bitrix24-sidebar-fe -> test -> main)
   - reports/2025-09-24-gaterecord-bitrix24-nav-release.yaml
   - reports/2025-09-24-handoff-devops-to-tl.yaml
-  pr: null
-  ac_link: README.md#e17-frontend-modernization
-  ttl_minutes: 60
+  ttl: 60
   status: Done
-  note: 'TL gate: GateRecord release утверждён, handoff DevOps→TL обработан; готово к fast-forward test->main'
-- when_utc: '2025-09-24T21:51:30Z'
-  agent: codex-cli::fe
-  role: fe
+  note: 'TL gate: GateRecord release утверждён, handoff DevOps→TL обработан; готово
+    к fast-forward test->main'
+- since: '2025-09-24T21:51:30Z'
+  owner: codex-cli::fe
   branch: feature/E17/bitrix24-shell-tweaks
-  task: TL-2025-09-24-bitrix24-nav
-  epic_scope: E17 / Frontend navigation
-  files:
+  paths:
   - web/components/AppShell.tsx
   - web/components/navigation/LeftSidebar.tsx
   - web/components/navigation/TopNavBar.tsx
   - web/components/navigation/ModuleTabs.tsx
-  pr: null
-  ac_link: README.md#e17-frontend-modernization
-  ttl_minutes: 120
+  ttl: 120
   status: Review
-  note: 'FE hotfix готов: бургер переехал в LeftSidebar, TopNavBar содержит только вкладки; ждём QA подтверждения'
-- when_utc: '2025-09-24T22:03:52Z'
-  agent: codex-cli::qa
-  role: qa
+  note: 'FE hotfix готов: бургер переехал в LeftSidebar, TopNavBar содержит только
+    вкладки; ждём QA подтверждения'
+- since: '2025-09-24T22:03:52Z'
+  owner: codex-cli::qa
   branch: feature/E17/bitrix24-shell-qa
-  task: TL-2025-09-24-bitrix24-nav
-  epic_scope: E17 / Frontend navigation
-  files:
+  paths:
   - reports/test/2025-09-24-bitrix24-shell-hotfix.md
-  pr: null
-  ac_link: README.md#e17-frontend-modernization
-  ttl_minutes: 60
+  ttl: 60
   status: Handoff
-  note: 'QA: бургер в левом меню подтверждён, верхний бар только вкладки; handoff → TL'
-- when_utc: '2025-09-24T22:06:01Z'
-  agent: codex-cli::infosec
-  role: infosec
+  note: 'QA: бургер в левом меню подтверждён, верхний бар только вкладки; handoff
+    → TL'
+- since: '2025-09-24T22:06:01Z'
+  owner: codex-cli::infosec
   branch: feature/E17/bitrix24-shell-infosec
-  task: TL-2025-09-24-bitrix24-nav
-  epic_scope: E17 / Frontend navigation
-  files:
+  paths:
   - reports/infosec/2025-09-24-bitrix24-shell-hotfix.md
-  pr: null
-  ac_link: README.md#e17-frontend-modernization
-  ttl_minutes: 45
+  ttl: 45
   status: Handoff
   note: 'InfoSec: UI-only, новых рисков нет; Trivy остаётся на CI. handoff → DevOps'
-- when_utc: '2025-09-24T22:06:58Z'
-  agent: codex-cli::devops
-  role: devops
+- since: '2025-09-24T22:06:58Z'
+  owner: codex-cli::devops
   branch: feature/E17/bitrix24-shell-devops
-  task: TL-2025-09-24-bitrix24-nav
-  epic_scope: E17 / Frontend navigation
-  files:
+  paths:
   - reports/2025-09-24-gaterecord-bitrix24-nav-release.yaml
-  pr: null
-  ac_link: README.md#e17-frontend-modernization
-  ttl_minutes: 45
+  ttl: 45
   status: Handoff
-  note: 'DevOps: GateRecord обновлён (UI hotfix, доп. действий не требуется); handoff → TL'
-- when_utc: '2025-09-24T22:10:12Z'
-  agent: codex-cli::teamlead
-  role: tl
+  note: 'DevOps: GateRecord обновлён (UI hotfix, доп. действий не требуется); handoff
+    → TL'
+- since: '2025-09-24T22:10:12Z'
+  owner: codex-cli::teamlead
   branch: main
-  task: TL-2025-09-24-bitrix24-nav
-  epic_scope: E17 / Frontend navigation
-  files:
+  paths:
   - git (merge feature/E17/bitrix24-shell-* -> test -> main)
   - reports/test/2025-09-24-bitrix24-shell-hotfix.md
   - reports/infosec/2025-09-24-bitrix24-shell-hotfix.md
-  pr: null
-  ac_link: README.md#e17-frontend-modernization
-  ttl_minutes: 0
+  ttl: 0
   status: Done
-  note: 'TL fast-forward выполнен, hotfix зафиксирован. Ожидаем CI Trivy и деплой по runbook.'
-- when_utc: '2025-09-24T19:33:18Z'
-  agent: codex-cli::teamlead
-  role: tl
+  note: TL fast-forward выполнен, hotfix зафиксирован. Ожидаем CI Trivy и деплой по
+    runbook.
+- since: '2025-09-24T19:33:18Z'
+  owner: codex-cli::teamlead
   branch: main
-  task: TL-2025-09-24-503-recovery
-  epic_scope: Ops / Incident Response
-  files:
+  paths:
   - git (feature/Ops/503-recovery-devops -> test -> main fast-forward)
   - README.md
   - agent_sync.yaml
   - reports/2025-09-24-gates-503-recovery.yaml
-  pr: null
-  ac_link: README.md#ops-incident-response
-  ttl_minutes: 0
+  ttl: 0
   status: Done
-  note: 'FF feature/Ops/503-recovery-devops -> test -> main; pushed, service up, follow-ups logged'
-- when_utc: '2025-09-24T19:02:29Z'
-  agent: codex-cli::teamlead
-  role: tl
+  note: FF feature/Ops/503-recovery-devops -> test -> main; pushed, service up, follow-ups
+    logged
+- since: '2025-09-24T19:02:29Z'
+  owner: codex-cli::teamlead
   branch: main
-  task: TL-2025-09-24-503-recovery
-  epic_scope: Ops / Incident Response
-  files:
+  paths:
   - README.md
   - AGENTS.md
   - agent_sync.yaml
   - reports/2025-09-24-intake-503-outage.yaml
-  pr: null
-  ac_link: README.md#ops-incident-response
-  ttl_minutes: 120
+  ttl: 120
   status: Done
   note: Intake + Tasklist + GateLog обновлены, конвейер закрыт
-- when_utc: '2025-09-24T19:09:59Z'
-  agent: codex-cli::backend
-  role: be
+- since: '2025-09-24T19:09:59Z'
+  owner: codex-cli::backend
   branch: feature/Ops/503-recovery-be
-  task: TL-2025-09-24-503-recovery
-  epic_scope: Ops / Incident Response
-  files:
+  paths:
   - requirements.txt
   - web/routes/settings.py
   - reports/2025-09-24-handoff-503-recovery-tl.yaml
-  pr: null
-  ac_link: README.md#ops-incident-response
-  ttl_minutes: 120
+  ttl: 120
   status: Done
   note: Venv rebuilt (python3.11), opentelemetry instrumentation добавлены, pytest
     settings page зелёный
-- when_utc: '2025-09-24T19:14:39Z'
-  agent: codex-cli::devops
-  role: devops
+- since: '2025-09-24T19:14:39Z'
+  owner: codex-cli::devops
   branch: feature/Ops/503-recovery-devops
-  task: TL-2025-09-24-503-recovery
-  epic_scope: Ops / Incident Response
-  files:
+  paths:
   - scripts/rebuild_service.sh
   - reports/runbooks/test-to-main.md
   - logs/intdata-web-restart-2025-09-24.txt
-  pr: null
-  ac_link: README.md#ops-incident-response
-  ttl_minutes: 120
+  ttl: 120
   status: Done
   note: Rebuild script выполнен, systemctl active, логи приложены; Gate-5 pass
-- when_utc: '2025-09-24T19:23:00Z'
-  agent: codex-cli::qa
-  role: qa
+- since: '2025-09-24T19:23:00Z'
+  owner: codex-cli::qa
   branch: feature/Ops/503-recovery-devops
-  task: TL-2025-09-24-503-recovery
-  epic_scope: Ops / Incident Response
-  files:
+  paths:
   - reports/test/2025-09-24-503-recovery-qa.md
-  pr: null
-  ac_link: README.md#ops-incident-response
-  ttl_minutes: 120
+  ttl: 120
   status: Done
   note: 'QA smoke: curl https://intdata.pro/, systemctl status, journalctl (-5m),
     pytest settings page green'
-- when_utc: '2025-09-24T19:25:30Z'
-  agent: codex-cli::infosec
-  role: infosec
+- since: '2025-09-24T19:25:30Z'
+  owner: codex-cli::infosec
   branch: feature/Ops/503-recovery-devops
-  task: TL-2025-09-24-503-recovery
-  epic_scope: Ops / Incident Response
-  files:
+  paths:
   - reports/infosec/2025-09-24-503-recovery.md
-  pr: null
-  ac_link: README.md#ops-incident-response
-  ttl_minutes: 120
+  ttl: 120
   status: Done
   note: pip-audit выявил GHSA-9548-qrrj-x5pj (aiohttp 3.11.18); follow-up OPS-503-FU3
     на апгрейд
