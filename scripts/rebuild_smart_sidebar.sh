@@ -6,5 +6,5 @@ npm ci
 npm run build
 popd >/dev/null
 
-rsync -az web/.next/ /var/www/intdata-test/.next/
+rsync -az apps/web/.next/ /var/www/intdata-test/.next/
 systemctl restart intdata-test-web

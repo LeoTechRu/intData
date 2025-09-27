@@ -3,7 +3,7 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from base import Base
+from backend.base import Base
 from backend.services.calendar_service import CalendarService
 from datetime import datetime
 

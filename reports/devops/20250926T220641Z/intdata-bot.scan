@@ -1,0 +1,22 @@
+intdata-bot.log: FOUND 52 pattern hits (ERROR|FATAL|CRITICAL|Traceback|Unhandled|panic|OOM|bind: address already in use|Migrations failed|connection refused)
+  line 16: сен 26 19:36:19 5293725-iz74058 python[811545]: asyncpg.exceptions.UndefinedTableError: relation "log_settings" does not exist
+  line 18: сен 26 19:36:19 5293725-iz74058 python[811545]: Traceback (most recent call last):
+  line 32: сен 26 19:36:19 5293725-iz74058 python[811545]:     self._handle_exception(error)
+  line 34: сен 26 19:36:19 5293725-iz74058 python[811545]:     self._adapt_connection._handle_exception(error)
+  line 36: сен 26 19:36:19 5293725-iz74058 python[811545]:     raise translated_error from error
+  line 37: сен 26 19:36:19 5293725-iz74058 python[811545]: sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.ProgrammingError: <class 'asyncpg.exceptions.UndefinedTableError'>: relation "log_settin
+  line 39: сен 26 19:36:19 5293725-iz74058 python[811545]: Traceback (most recent call last):
+  line 85: сен 26 19:36:19 5293725-iz74058 python[811545]:     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  line 99: сен 26 19:36:19 5293725-iz74058 python[811545]:     self._handle_exception(error)
+  line 101: сен 26 19:36:19 5293725-iz74058 python[811545]:     self._adapt_connection._handle_exception(error)
+  line 103: сен 26 19:36:19 5293725-iz74058 python[811545]:     raise translated_error from error
+  line 104: сен 26 19:36:19 5293725-iz74058 python[811545]: sqlalchemy.exc.ProgrammingError: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.UndefinedTableError'>: relation "l
+  line 109: сен 26 19:36:19 5293725-iz74058 python[811545]: (Background on this error at: https://sqlalche.me/e/20/f405)
+  line 110: сен 26 19:36:19 5293725-iz74058 python[811545]: [2025-09-26 19:36:19] [CRITICAL] Критическая ошибка отправки лога в Telegram: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.
+  line 115: сен 26 19:36:19 5293725-iz74058 python[811545]: (Background on this error at: https://sqlalche.me/e/20/f405)
+  line 129: сен 26 20:36:58 5293725-iz74058 python[866777]: [2025-09-26 20:36:58] [ERROR] Ошибка отправки лога в Telegram: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.Unde
+  line 134: сен 26 20:36:58 5293725-iz74058 python[866777]: (Background on this error at: https://sqlalche.me/e/20/f405)
+  line 149: сен 26 21:12:55 5293725-iz74058 python[889100]: [2025-09-26 21:12:55] [ERROR] Ошибка отправки лога в Telegram: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.Unde
+  line 154: сен 26 21:12:55 5293725-iz74058 python[889100]: (Background on this error at: https://sqlalche.me/e/20/f405)
+  line 157: сен 26 21:13:01 5293725-iz74058 python[889100]: [2025-09-26 21:13:01] [ERROR] Failed to fetch updates - TelegramNetworkError: HTTP Client says - ClientOSError: [Errno 104] Connection reset by peer
+  ... ещё 32 совпадений

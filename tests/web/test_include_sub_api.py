@@ -1,8 +1,8 @@
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 
-from base import Base
+from backend.base import Base
 import backend.db as db
 from backend.services.area_service import AreaService
 from backend.services.para_service import ParaService
@@ -11,9 +11,9 @@ from backend.services.note_service import NoteService
 from tests.utils.seeds import ensure_tg_user
 
 try:
-    from main import app  # type: ignore
+    from orchestrator.main import app  # type: ignore
 except ModuleNotFoundError:  # pragma: no cover
-    from main import app  # type: ignore
+    from orchestrator.main import app  # type: ignore
 
 
 @pytest_asyncio.fixture
@@ -21,7 +21,7 @@ async def client(postgres_db):
     engine, _ = postgres_db
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
 

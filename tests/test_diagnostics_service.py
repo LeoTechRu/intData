@@ -5,7 +5,7 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from base import Base
+from backend.base import Base
 from backend.services.access_control import AccessControlService
 from backend.services.diagnostics_service import DiagnosticsService
 

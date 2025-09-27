@@ -10,12 +10,15 @@ from sqlalchemy import engine_from_config, pool
 # Ensure project root is importable
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, os.pardir))
-if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
+APPS_ROOT = os.path.join(PROJECT_ROOT, "apps")
+
+for path in (PROJECT_ROOT, APPS_ROOT):
+    if path not in sys.path:
+        sys.path.insert(0, path)
 
 from dotenv import load_dotenv
 
-from base import Base
+from backend.base import Base
 import backend.models  # noqa: F401
 
 config = context.config

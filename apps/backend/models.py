@@ -31,7 +31,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, ARRAY
 
-from base import Base
+from backend.base import Base
 
 __mapper_args__ = {
     "confirm_deleted_rows": False  # Для PostgreSQL

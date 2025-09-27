@@ -15,7 +15,7 @@ from sqlalchemy.dialects import postgresql
 def collect_metadata() -> MetaData:
     """Import models and return shared MetaData."""
     from backend import models  # noqa: F401  # ensure models imported
-    from base import Base
+    from backend.base import Base
 
     return Base.metadata
 

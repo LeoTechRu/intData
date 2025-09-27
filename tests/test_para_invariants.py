@@ -2,7 +2,7 @@ import pytest
 from datetime import timedelta
 
 import backend.db as db
-from base import Base
+from backend.base import Base
 from backend.models import (
     Area,
     CalendarItem,

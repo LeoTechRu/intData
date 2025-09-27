@@ -5,10 +5,10 @@ import time
 
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 
 import backend.db as db
-from base import Base
+from backend.base import Base
 from backend.services.telegram_user_service import TelegramUserService
 from backend.services.web_user_service import WebUserService
 
@@ -20,7 +20,7 @@ from web.config import S  # noqa: E402
 try:
     from backend.main import app  # type: ignore
 except ModuleNotFoundError:  # fallback if app located differently
-    from main import app  # type: ignore
+    from orchestrator.main import app  # type: ignore
 
 
 def _generate_hash(data: dict) -> str:
@@ -37,7 +37,7 @@ async def client(postgres_db):
         await conn.run_sync(Base.metadata.create_all)
     db.TG_BOT_TOKEN = TG_BOT_TOKEN
     S.TG_BOT_TOKEN = TG_BOT_TOKEN
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
 

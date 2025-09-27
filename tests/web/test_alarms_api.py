@@ -1,9 +1,9 @@
 import pytest
 import pytest_asyncio
 from datetime import timedelta
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 
-from base import Base
+from backend.base import Base
 import backend.db as db
 from backend.models import Area, CalendarItem
 from backend.services.alarm_service import AlarmService
@@ -11,9 +11,9 @@ from backend.utils import utcnow_aware
 from tests.utils.seeds import ensure_tg_user
 
 try:
-    from main import app  # type: ignore
+    from orchestrator.main import app  # type: ignore
 except ModuleNotFoundError:  # pragma: no cover
-    from main import app  # type: ignore
+    from orchestrator.main import app  # type: ignore
 
 
 @pytest_asyncio.fixture
@@ -22,7 +22,7 @@ async def client(postgres_db, monkeypatch):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     monkeypatch.setattr("web.routes.alarms.utcnow", utcnow_aware)
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
 

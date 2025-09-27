@@ -7,7 +7,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from base import Base
+from backend.base import Base
 
 load_dotenv()
 

@@ -2,7 +2,7 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.orm import sessionmaker
 
-from base import Base
+from backend.base import Base
 import backend.db as db
 from backend.services.area_service import AreaService
 

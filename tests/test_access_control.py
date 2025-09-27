@@ -4,7 +4,7 @@ import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from base import Base
+from backend.base import Base
 from backend.models import WebUser, Area, Project, TgUser
 from backend.services.access_control import AccessControlService, AccessScope
 

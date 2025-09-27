@@ -2,7 +2,7 @@ import bcrypt
 import pytest
 from sqlalchemy.orm import Session
 
-from base import Base
+from backend.base import Base
 from backend.models import TgUser, WebUser, UserRole
 
 

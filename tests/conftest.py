@@ -15,7 +15,7 @@ if str(ROOT) not in sys.path:
 os.environ.setdefault('TG_BOT_TOKEN', 'TEST_TOKEN')
 os.environ.setdefault('TG_BOT_USERNAME', 'testbot')
 
-from base import Base  # noqa: E402
+from backend.base import Base  # noqa: E402
 import backend.db as db  # noqa: E402
 from backend.models import TgUser  # noqa: E402
 from backend.services.habits import metadata as habits_metadata  # noqa: E402
@@ -57,6 +57,7 @@ async def postgres_db(postgres_engine):
     async with postgres_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await conn.run_sync(habits_metadata.create_all)
+        await conn.execute(text("TRUNCATE TABLE users_tg RESTART IDENTITY CASCADE"))
         await conn.execute(
             text(
                 "INSERT INTO users_tg (telegram_id, first_name, created_at, updated_at) "

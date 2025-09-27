@@ -1,0 +1,22 @@
+intdata-bot-recent.log: FOUND 21 pattern hits (ERROR|FATAL|CRITICAL|Traceback|Unhandled|panic|OOM|bind: address already in use|Migrations failed|connection refused)
+  line 2: сен 26 23:12:47 5293725-iz74058 python[906737]: [2025-09-26 23:12:47] [CRITICAL] Критическая ошибка отправки лога в Telegram: (sqlalchemy.dialects.postgresql.asyncpg.InterfaceError) <class 'asyncpg.ex
+  line 7: сен 26 23:12:47 5293725-iz74058 python[906737]: (Background on this error at: https://sqlalche.me/e/20/rvf5)
+  line 8: сен 26 23:12:47 5293725-iz74058 python[906737]: [2025-09-26 23:12:47] [ERROR] [База данных ошибка]: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.UndefinedTableE
+  line 13: сен 26 23:12:47 5293725-iz74058 python[906737]: (Background on this error at: https://sqlalche.me/e/20/f405)
+  line 14: сен 26 23:12:47 5293725-iz74058 python[906737]: Traceback (most recent call last):
+  line 31: сен 26 23:12:47 5293725-iz74058 python[906737]: asyncpg.exceptions.UndefinedTableError: relation "log_settings" does not exist
+  line 33: сен 26 23:12:47 5293725-iz74058 python[906737]: Traceback (most recent call last):
+  line 47: сен 26 23:12:47 5293725-iz74058 python[906737]:     self._handle_exception(error)
+  line 49: сен 26 23:12:47 5293725-iz74058 python[906737]:     self._adapt_connection._handle_exception(error)
+  line 51: сен 26 23:12:47 5293725-iz74058 python[906737]:     raise translated_error from error
+  line 52: сен 26 23:12:47 5293725-iz74058 python[906737]: sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.ProgrammingError: <class 'asyncpg.exceptions.UndefinedTableError'>: relation "log_settin
+  line 54: сен 26 23:12:47 5293725-iz74058 python[906737]: Traceback (most recent call last):
+  line 100: сен 26 23:12:47 5293725-iz74058 python[906737]:     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  line 114: сен 26 23:12:47 5293725-iz74058 python[906737]:     self._handle_exception(error)
+  line 116: сен 26 23:12:47 5293725-iz74058 python[906737]:     self._adapt_connection._handle_exception(error)
+  line 118: сен 26 23:12:47 5293725-iz74058 python[906737]:     raise translated_error from error
+  line 119: сен 26 23:12:47 5293725-iz74058 python[906737]: sqlalchemy.exc.ProgrammingError: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.UndefinedTableError'>: relation "l
+  line 124: сен 26 23:12:47 5293725-iz74058 python[906737]: (Background on this error at: https://sqlalche.me/e/20/f405)
+  line 125: сен 26 23:12:47 5293725-iz74058 python[906737]: [2025-09-26 23:12:47] [CRITICAL] Критическая ошибка отправки лога в Telegram: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.
+  line 130: сен 26 23:12:47 5293725-iz74058 python[906737]: (Background on this error at: https://sqlalche.me/e/20/f405)
+  ... ещё 1 совпадений

@@ -7,7 +7,7 @@ from aiogram.types import (
     User as AiogramUser,
 )
 
-from base import Base
+from backend.base import Base
 from backend.services.telegram_user_service import TelegramUserService
 from backend.services.web_user_service import WebUserService
 from backend.services.profile_service import ProfileService

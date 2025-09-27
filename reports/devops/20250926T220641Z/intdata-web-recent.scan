@@ -1,0 +1,22 @@
+intdata-web-recent.log: FOUND 30174 pattern hits (ERROR|FATAL|CRITICAL|Traceback|Unhandled|panic|OOM|bind: address already in use|Migrations failed|connection refused)
+  line 7: сен 26 22:07:37 5293725-iz74058 uvicorn[933840]: {"ts": "2025-09-26T19:07:37.858392+00:00", "level": "ERROR", "logger": "web", "message": "Lifespan startup failed with exception"}
+  line 9: сен 26 22:07:37 5293725-iz74058 uvicorn[933840]: ERROR:    Traceback (most recent call last):
+  line 26: сен 26 22:07:37 5293725-iz74058 uvicorn[933840]: asyncpg.exceptions.UndefinedTableError: relation "users_web" does not exist
+  line 28: сен 26 22:07:37 5293725-iz74058 uvicorn[933840]: Traceback (most recent call last):
+  line 42: сен 26 22:07:37 5293725-iz74058 uvicorn[933840]:     self._handle_exception(error)
+  line 44: сен 26 22:07:37 5293725-iz74058 uvicorn[933840]:     self._adapt_connection._handle_exception(error)
+  line 46: сен 26 22:07:37 5293725-iz74058 uvicorn[933840]:     raise translated_error from error
+  line 47: сен 26 22:07:37 5293725-iz74058 uvicorn[933840]: sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.ProgrammingError: <class 'asyncpg.exceptions.UndefinedTableError'>: relation "users_web
+  line 49: сен 26 22:07:37 5293725-iz74058 uvicorn[933840]: Traceback (most recent call last):
+  line 191: сен 26 22:07:37 5293725-iz74058 uvicorn[933840]:     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  line 205: сен 26 22:07:37 5293725-iz74058 uvicorn[933840]:     self._handle_exception(error)
+  line 207: сен 26 22:07:37 5293725-iz74058 uvicorn[933840]:     self._adapt_connection._handle_exception(error)
+  line 209: сен 26 22:07:37 5293725-iz74058 uvicorn[933840]:     raise translated_error from error
+  line 210: сен 26 22:07:37 5293725-iz74058 uvicorn[933840]: sqlalchemy.exc.ProgrammingError: (sqlalchemy.dialects.postgresql.asyncpg.ProgrammingError) <class 'asyncpg.exceptions.UndefinedTableError'>: relation "
+  line 215: сен 26 22:07:37 5293725-iz74058 uvicorn[933840]: (Background on this error at: https://sqlalche.me/e/20/f405)
+  line 216: сен 26 22:07:37 5293725-iz74058 uvicorn[933840]: ERROR:    Application startup failed. Exiting.
+  line 230: сен 26 22:07:44 5293725-iz74058 uvicorn[933933]: {"ts": "2025-09-26T19:07:44.237328+00:00", "level": "ERROR", "logger": "web", "message": "Lifespan startup failed with exception"}
+  line 232: сен 26 22:07:44 5293725-iz74058 uvicorn[933933]: ERROR:    Traceback (most recent call last):
+  line 249: сен 26 22:07:44 5293725-iz74058 uvicorn[933933]: asyncpg.exceptions.UndefinedTableError: relation "users_web" does not exist
+  line 251: сен 26 22:07:44 5293725-iz74058 uvicorn[933933]: Traceback (most recent call last):
+  ... ещё 30154 совпадений

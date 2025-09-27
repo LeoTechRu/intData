@@ -1,5 +1,7 @@
 .PHONY: setup-dev lint fmt typecheck audit smoke
 
+export PYTHONPATH := apps
+
 setup-dev:
 	pip install -r requirements-dev.txt
 	pre-commit install

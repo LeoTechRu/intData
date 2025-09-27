@@ -104,8 +104,8 @@ async def test_init_app_once_executes_after_failure(tmp_path, monkeypatch):
 
 
 def test_entrypoints_use_init_app_once():
-    bot_src = Path("bot/main.py").read_text()
-    web_src = Path("web/__init__.py").read_text()
+    bot_src = Path("apps/bot/main.py").read_text()
+    web_src = Path("apps/web/__init__.py").read_text()
     assert "init_app_once" in bot_src
     assert "run_bootstrap" not in bot_src
     assert "init_models" not in bot_src

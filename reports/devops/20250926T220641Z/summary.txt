@@ -1,0 +1,12 @@
+DevOps run (UTC): 2025-09-26T22:06:41Z
+OK pip install -r requirements.txt (venv)
+OK npm install (web)
+OK npm run build (web)
+OK systemctl restart intdata-web
+OK systemctl restart intdata-bot
+OK Logs captured to intdata-web.log/intdata-bot.log (see *_recent.* for post-restore)
+OK Smoke http://localhost:5800/healthz -> 200, http://localhost:5800/readyz -> 200
+Notes:
+- Updated /etc/systemd/system/intdata-web.service PATH to expose npm (daemon-reload + restart)
+- Added git safe.directory so /healthz resolves commit SHA
+- Historical ERROR entries remain before 2025-09-26T22:07Z; no errors on current PIDs 1056484 (web) and 1054354 (bot)

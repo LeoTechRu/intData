@@ -4,12 +4,12 @@ from pathlib import Path
 import pytest
 import sqlalchemy as sa
 from fastapi import FastAPI
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 import backend.db as db
-from base import Base
+from backend.base import Base
 from backend.services.user_settings_service import UserSettingsService
 from backend.services.web_user_service import WebUserService
 from backend.db.repair import run_repair
@@ -105,7 +105,7 @@ async def test_api_defaults_and_put(postgres_db, monkeypatch):
         "web.routes.api_user_settings.get_effective_permissions",
         fake_permissions,
     )
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         res = await client.get("/api/v1/user/settings")
         assert res.status_code == 200
         body = res.json()

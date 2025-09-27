@@ -1,0 +1,22 @@
+intdata-web.log: FOUND 46 pattern hits (ERROR|FATAL|CRITICAL|Traceback|Unhandled|panic|OOM|bind: address already in use|Migrations failed|connection refused)
+  line 111: сен 27 01:06:51 5293725-iz74058 uvicorn[1049938]: ERROR:    Exception in ASGI application
+  line 112: сен 27 01:06:51 5293725-iz74058 uvicorn[1049938]:   + Exception Group Traceback (most recent call last):
+  line 119: сен 27 01:06:51 5293725-iz74058 uvicorn[1049938]:   | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  line 121: сен 27 01:06:51 5293725-iz74058 uvicorn[1049938]:     | Traceback (most recent call last):
+  line 132: сен 27 01:06:51 5293725-iz74058 uvicorn[1049938]:     |   File "/sd/intdata/venv/lib/python3.11/site-packages/starlette/middleware/errors.py", line 186, in __call__
+  line 134: сен 27 01:06:51 5293725-iz74058 uvicorn[1049938]:     |   File "/sd/intdata/venv/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+  line 139: сен 27 01:06:51 5293725-iz74058 uvicorn[1049938]:     |     self.gen.throw(typ, value, traceback)
+  line 146: сен 27 01:06:51 5293725-iz74058 uvicorn[1049938]:     |   File "/sd/intdata/venv/lib/python3.11/site-packages/starlette/middleware/errors.py", line 161, in _send
+  line 159: сен 27 01:06:51 5293725-iz74058 uvicorn[1049938]:     |     raise LocalProtocolError("Too much data for declared Content-Length")
+  line 160: сен 27 01:06:51 5293725-iz74058 uvicorn[1049938]:     | h11._util.LocalProtocolError: Too much data for declared Content-Length
+  line 163: сен 27 01:06:51 5293725-iz74058 uvicorn[1049938]: Traceback (most recent call last):
+  line 174: сен 27 01:06:51 5293725-iz74058 uvicorn[1049938]:   File "/sd/intdata/venv/lib/python3.11/site-packages/starlette/middleware/errors.py", line 186, in __call__
+  line 176: сен 27 01:06:51 5293725-iz74058 uvicorn[1049938]:   File "/sd/intdata/venv/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+  line 181: сен 27 01:06:51 5293725-iz74058 uvicorn[1049938]:     self.gen.throw(typ, value, traceback)
+  line 188: сен 27 01:06:51 5293725-iz74058 uvicorn[1049938]:   File "/sd/intdata/venv/lib/python3.11/site-packages/starlette/middleware/errors.py", line 161, in _send
+  line 201: сен 27 01:06:51 5293725-iz74058 uvicorn[1049938]:     raise LocalProtocolError("Too much data for declared Content-Length")
+  line 202: сен 27 01:06:51 5293725-iz74058 uvicorn[1049938]: h11._util.LocalProtocolError: Too much data for declared Content-Length
+  line 205: сен 27 01:06:51 5293725-iz74058 uvicorn[1049938]: ERROR:    Exception in ASGI application
+  line 206: сен 27 01:06:51 5293725-iz74058 uvicorn[1049938]:   + Exception Group Traceback (most recent call last):
+  line 213: сен 27 01:06:51 5293725-iz74058 uvicorn[1049938]:   | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  ... ещё 26 совпадений

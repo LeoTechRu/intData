@@ -15,7 +15,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from datetime import datetime, date, timedelta, timezone
 from typing import Callable, Optional, Tuple, List, Set
-from decorators import role_required, group_required
+from bot.decorators import role_required, group_required
 from backend.db import bot as telegram_bot
 from backend.models import GroupType, LogLevel, UserRole, ProductStatus, TgUser
 from backend.services.telegram_user_service import TelegramUserService

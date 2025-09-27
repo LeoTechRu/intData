@@ -20,7 +20,7 @@ downloads/
 eggs/
 .eggs/
 lib/
-!web/lib/
+!apps/web/lib/
 lib64/
 parts/
 sdist/
@@ -229,8 +229,8 @@ __marimo__/
 
 # End of https://www.toptal.com/developers/gitignore/api/python
 # Frontend
-web/node_modules/
-web/.next/
+apps/web/node_modules/
+apps/web/.next/
 
 # Logs
 logs/

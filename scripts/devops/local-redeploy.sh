@@ -90,9 +90,9 @@ elif [[ "$MODE" == "systemd" ]]; then
   elif [[ -f "$ROOT/pyproject.toml" ]]; then
     run_cmd "Обновление Python-зависимостей" python3 -m pip install "$ROOT"
   fi
-  if [[ -f "$ROOT/web/package.json" ]]; then
-    run_cmd "npm install (web)" npm install --prefix "$ROOT/web"
-    run_cmd "npm build (web)" npm run --prefix "$ROOT/web" build
+  if [[ -f "$ROOT/apps/web/package.json" ]]; then
+    run_cmd "npm install (web)" npm install --prefix "$ROOT/apps/web"
+    run_cmd "npm build (web)" npm run --prefix "$ROOT/apps/web" build
   fi
   for unit in "${active_systemd_units[@]}"; do
     run_cmd "Restart systemd unit $unit" sudo -n systemctl restart "$unit"
@@ -135,14 +135,14 @@ elif [[ "$MODE" == "systemd" ]]; then
     fi
   done
 else
-  if [[ -d "$ROOT/logs" ]]; then
+  if [[ -d "$ROOT/var/logs" ]]; then
     while IFS= read -r file; do
       [[ -z "$file" ]] && continue
       logfile="$REPORT_ROOT/$(basename "$file")"
       if tail -n 400 "$file" >"$logfile" 2>/dev/null; then
         log_files+=("$logfile")
       fi
-    done < <(find "$ROOT/logs" -maxdepth 1 -type f)
+    done < <(find "$ROOT/var/logs" -maxdepth 1 -type f)
   fi
 fi
 

@@ -1,7 +1,7 @@
 import pytest
 import pytest_asyncio
 
-from base import Base
+from backend.base import Base
 from datetime import datetime
 
 from backend.services.time_service import TimeService

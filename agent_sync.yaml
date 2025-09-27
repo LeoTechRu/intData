@@ -13,15 +13,15 @@ agent_sync:
   owner: codex-cli::fe
   branch: feature/E17/bitrix24-sidebar-fe
   paths:
-  - web/components/AppShell.tsx
-  - web/components/navigation/LeftSidebar.tsx
-  - web/components/navigation/TopNavBar.tsx
-  - web/components/navigation/ModuleTabs.tsx
-  - web/components/navigation/SidebarConfigurator.tsx
-  - web/lib/navigation.ts
-  - web/lib/navigation-helpers.ts
-  - web/lib/navigation-layout.ts
-  - web/lib/useModuleTabs.ts
+  - apps/web/components/AppShell.tsx
+  - apps/web/components/navigation/LeftSidebar.tsx
+  - apps/web/components/navigation/TopNavBar.tsx
+  - apps/web/components/navigation/ModuleTabs.tsx
+  - apps/web/components/navigation/SidebarConfigurator.tsx
+  - apps/web/lib/navigation.ts
+  - apps/web/lib/navigation-helpers.ts
+  - apps/web/lib/navigation-layout.ts
+  - apps/web/lib/useModuleTabs.ts
   - reports/2025-09-24-handoff-fe-to-qa.yaml
   ttl: 0
   status: Done
@@ -42,8 +42,8 @@ agent_sync:
   owner: codex-cli::infosec
   branch: feature/E17/bitrix24-sidebar-infosec
   paths:
-  - web/components/navigation/
-  - web/lib/navigation-*.ts
+  - apps/web/components/navigation/
+  - apps/web/lib/navigation-*.ts
   - reports/infosec/2025-09-24-bitrix24-nav.md
   ttl: 0
   status: Done
@@ -76,10 +76,10 @@ agent_sync:
   owner: codex-cli::fe
   branch: feature/E17/bitrix24-shell-tweaks
   paths:
-  - web/components/AppShell.tsx
-  - web/components/navigation/LeftSidebar.tsx
-  - web/components/navigation/TopNavBar.tsx
-  - web/components/navigation/ModuleTabs.tsx
+  - apps/web/components/AppShell.tsx
+  - apps/web/components/navigation/LeftSidebar.tsx
+  - apps/web/components/navigation/TopNavBar.tsx
+  - apps/web/components/navigation/ModuleTabs.tsx
   ttl: 0
   status: Done
   note: 'FE hotfix готов: бургер переехал в LeftSidebar, TopNavBar содержит только
@@ -151,7 +151,7 @@ agent_sync:
   branch: feature/Ops/503-recovery-be
   paths:
   - requirements.txt
-  - web/routes/settings.py
+  - apps/web/routes/settings.py
   - reports/2025-09-24-handoff-503-recovery-tl.yaml
   ttl: 120
   status: Done
@@ -185,3 +185,26 @@ agent_sync:
   status: Done
   note: pip-audit выявил GHSA-9548-qrrj-x5pj (aiohttp 3.11.18); follow-up OPS-503-FU3
     на апгрейд
+- since: '2025-09-26T21:56:59Z'
+  owner: codex-cli::devops
+  branch: feature/Ops/db-restore-devops
+  paths:
+  - apps/backend/
+  - scripts/devops/
+  - reports/devops/
+  - agent_sync.yaml
+  ttl: 0
+  status: Done
+  note: DBs restored; deps rebuilt; systemd PATH updated; logs clean after restart
+- since: '2025-09-26T22:33:50Z'
+  owner: codex-cli::qa
+  branch: feature/Ops/site-availability
+  paths:
+  - apps/web/app/
+  - apps/web/components/
+  - apps/web/lib/
+  - reports/test/2025-09-26-site-availability.md
+  - agent_sync.yaml
+  ttl: 0
+  status: Done
+  note: 'QA sweep complete: all routes 200 (redirects verified); report → reports/test/2025-09-26-site-availability.md; follow-up: migrate apps/web/static → public to silence warning'

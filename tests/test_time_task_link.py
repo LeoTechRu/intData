@@ -3,7 +3,7 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from base import Base
+from backend.base import Base
 from backend.models import Task, TaskStatus, Area, TgUser
 from backend.services.time_service import TimeService
 from backend.services.task_service import TaskService

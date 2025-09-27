@@ -1,12 +1,12 @@
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 
-from base import Base
+from backend.base import Base
 import backend.db as db
 import backend.models  # ensure models loaded
 import backend.settings_store as settings_store
-from main import app
+from orchestrator.main import app
 
 
 @pytest_asyncio.fixture
@@ -15,7 +15,7 @@ async def client(postgres_db):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await conn.run_sync(settings_store.metadata.create_all)
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
 

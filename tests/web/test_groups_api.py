@@ -1,8 +1,8 @@
 import pytest
 import pytest_asyncio
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 
-from base import Base
+from backend.base import Base
 import backend.db as db
 from backend.models import TgUser, WebUser, UserRole
 from backend.services.telegram_user_service import TelegramUserService
@@ -12,9 +12,9 @@ from backend.services.group_moderation_service import GroupModerationService
 from backend.models import GroupType, ProductStatus
 
 try:
-    from main import app  # type: ignore
+    from orchestrator.main import app  # type: ignore
 except ModuleNotFoundError:  # pragma: no cover
-    from main import app  # type: ignore
+    from orchestrator.main import app  # type: ignore
 
 
 @pytest_asyncio.fixture
@@ -32,7 +32,7 @@ async def client(monkeypatch, postgres_db):
     monkeypatch.setattr(db.bot, "ban_chat_member", fake_ban)
     monkeypatch.setattr(db.bot, "unban_chat_member", fake_unban)
 
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
 
