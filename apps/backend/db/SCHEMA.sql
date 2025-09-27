@@ -326,7 +326,7 @@ CREATE TABLE dailies (
 	archived_at TIMESTAMP WITH TIME ZONE, 
 	created_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 
-	CONSTRAINT ck_dailies_single_container CHECK ((project_id IS NOT NULL) OR (area_id IS NOT NULL)), 
+	CONSTRAINT ck_dailies_single_container CHECK ((project_id IS NOT NULL) <> (area_id IS NOT NULL)), 
 	FOREIGN KEY(owner_id) REFERENCES users_web (id), 
 	FOREIGN KEY(area_id) REFERENCES areas (id), 
 	FOREIGN KEY(project_id) REFERENCES projects (id)
@@ -582,6 +582,19 @@ CREATE TABLE log_settings (
 	PRIMARY KEY (id)
 );
 
+CREATE TABLE nav_sidebar_layouts (
+	id SERIAL NOT NULL, 
+	scope VARCHAR(16) NOT NULL, 
+	owner_id INTEGER, 
+	version INTEGER DEFAULT '1' NOT NULL, 
+	payload JSONB DEFAULT '{}'::jsonb NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	CONSTRAINT ck_nav_sidebar_layouts_scope CHECK (scope IN ('user', 'global')), 
+	CONSTRAINT uq_nav_sidebar_layouts_scope_owner UNIQUE (scope, owner_id)
+);
+
 CREATE TABLE notes (
 	id SERIAL NOT NULL, 
 	owner_id BIGINT, 
@@ -598,7 +611,7 @@ CREATE TABLE notes (
 	created_at TIMESTAMP WITH TIME ZONE, 
 	updated_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 
-	CONSTRAINT ck_notes_single_container CHECK ((project_id IS NOT NULL) <> (area_id IS NOT NULL)), 
+	CONSTRAINT ck_notes_single_container CHECK ((project_id IS NOT NULL) OR (area_id IS NOT NULL)), 
 	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id), 
 	FOREIGN KEY(area_id) REFERENCES areas (id), 
 	FOREIGN KEY(project_id) REFERENCES projects (id)
@@ -724,7 +737,7 @@ CREATE TABLE rewards (
 	archived_at TIMESTAMP WITH TIME ZONE, 
 	created_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 
-	CONSTRAINT ck_rewards_single_container CHECK ((project_id IS NOT NULL) OR (area_id IS NOT NULL)), 
+	CONSTRAINT ck_rewards_single_container CHECK ((project_id IS NOT NULL) <> (area_id IS NOT NULL)), 
 	FOREIGN KEY(owner_id) REFERENCES users_web (id), 
 	FOREIGN KEY(area_id) REFERENCES areas (id), 
 	FOREIGN KEY(project_id) REFERENCES projects (id)
@@ -824,7 +837,7 @@ CREATE TABLE tasks (
 	created_at TIMESTAMP WITH TIME ZONE, 
 	updated_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 
-	CONSTRAINT ck_tasks_single_container CHECK ((project_id IS NOT NULL) <> (area_id IS NOT NULL)), 
+	CONSTRAINT ck_tasks_single_container CHECK ((project_id IS NOT NULL) OR (area_id IS NOT NULL)), 
 	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id), 
 	FOREIGN KEY(project_id) REFERENCES projects (id), 
 	FOREIGN KEY(area_id) REFERENCES areas (id)
@@ -848,7 +861,6 @@ CREATE TABLE time_entries (
 	created_at TIMESTAMP WITH TIME ZONE, 
 	updated_at TIMESTAMP WITH TIME ZONE, 
 	PRIMARY KEY (id), 
-	CONSTRAINT ck_time_entries_single_container CHECK ((project_id IS NOT NULL) <> (area_id IS NOT NULL)), 
 	FOREIGN KEY(owner_id) REFERENCES users_tg (telegram_id), 
 	FOREIGN KEY(task_id) REFERENCES tasks (id), 
 	FOREIGN KEY(project_id) REFERENCES projects (id), 
@@ -896,22 +908,6 @@ CREATE TABLE user_settings (
 	CONSTRAINT uq_user_settings_user_key UNIQUE (user_id, key), 
 	FOREIGN KEY(user_id) REFERENCES users_web (id) ON DELETE CASCADE
 );
-
-CREATE TABLE nav_sidebar_layouts (
-	id SERIAL NOT NULL, 
-	scope VARCHAR(16) NOT NULL, 
-	owner_id INTEGER, 
-	version INTEGER DEFAULT 1 NOT NULL, 
-	payload JSONB DEFAULT '{}'::jsonb NOT NULL, 
-	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
-	updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
-	PRIMARY KEY (id), 
-	CONSTRAINT ck_nav_sidebar_layouts_scope CHECK (scope IN ('user', 'global'))
-);
-
-CREATE UNIQUE INDEX uq_nav_sidebar_layouts_scope_owner ON nav_sidebar_layouts (scope, owner_id);
-
-CREATE INDEX ix_nav_sidebar_layouts_owner ON nav_sidebar_layouts (owner_id) WHERE owner_id IS NOT NULL;
 
 CREATE TABLE user_stats (
 	owner_id BIGINT NOT NULL, 
@@ -1018,6 +1014,8 @@ CREATE INDEX ix_group_removal_product ON group_removal_log (product_id);
 CREATE INDEX idx_habits_owner_area ON habits (owner_id, area_id);
 
 CREATE INDEX idx_habits_owner_project ON habits (owner_id, project_id);
+
+CREATE INDEX ix_nav_sidebar_layouts_owner ON nav_sidebar_layouts (owner_id);
 
 CREATE INDEX idx_notes_owner_area ON notes (owner_id, area_id);
 

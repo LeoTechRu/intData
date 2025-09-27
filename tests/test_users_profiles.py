@@ -75,7 +75,7 @@ def _patch_profile_service(monkeypatch):
 
 
 app = FastAPI()
-static_dir = Path(__file__).resolve().parents[1] / "web" / "static"
+static_dir = Path(__file__).resolve().parents[1] / "apps" / "web" / "static"
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 app.include_router(api_profiles.router, prefix="/api/v1")
 client = TestClient(app)

@@ -2,7 +2,7 @@ import asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
-import decorators
+from bot import decorators
 from backend.models import UserRole
 
 

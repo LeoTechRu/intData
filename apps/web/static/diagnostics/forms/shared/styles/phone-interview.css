@@ -1,0 +1,311 @@
+@media screen and (max-width: 1000px) {
+    h2 {
+        font-size: 24px;
+    }
+
+    h3 {
+        font-size: 12px;
+    }
+
+    p, .p1 {
+        font-size: 12px;
+        line-height: normal;
+    }
+    
+    .p1-strong {
+        font-size: 12px;
+    }
+
+    .p2, .p2-strong {
+        font-size: 12px;
+        line-height: 112%;
+        word-break: break-word;
+    }
+}
+    
+@media screen and (max-width: 1000px) {
+    #top-left-logo {
+        width: 100px;
+        top: 24px;
+        left: 24px;
+    }
+}
+
+@media screen and (max-width: 1000px) {
+    article {
+        flex-direction: column;
+        justify-content: flex-start;
+
+        height: auto;
+        padding-bottom: 70px;
+
+        overflow: visible;
+    }
+
+    #form-aside {
+        width: 100%;
+        padding: 0 25px;
+        box-sizing: border-box;
+
+        justify-content: flex-start;
+        align-items: flex-start;
+
+        margin: 101px 0 0 0
+    }
+
+    #form-aside h3 {
+        width: 100%;
+        height: auto;
+
+        font-size: 20px;
+        line-height: 112%;
+
+        margin-right: 0;
+    }
+
+    #form-aside p {
+        width: 100%;
+        height: auto;
+
+        font-size: 12px;
+        line-height: 112%;
+        font-weight: 500;
+
+        margin-right: 0;
+    }
+}
+
+@media screen and (max-width: 1000px) {
+    #form-section {
+        width: 100%;
+        padding: 0 25px;
+        box-sizing: border-box;
+
+        margin: 0 auto;
+    }
+
+    #form-section form {
+        width: 100%;
+        padding: 61px 20px 30px 20px;
+
+        border-radius: 10px;
+
+        margin-left: 0;
+        margin-top: 17px;
+    }
+
+
+    #form-logo {
+        margin-bottom: 24px;
+    }
+
+
+    form input {
+        height: 30px;
+        padding: 0 8px;
+
+        border-radius: 5px;
+
+        margin-bottom: 12px;
+    }
+
+    #form-error {
+        margin-bottom: 8px;
+    }
+    
+
+    button {
+        height: 30px;
+        font-size: 12px !important;
+        border-radius: 5px;
+    }
+}
+
+.svg-phone {
+    display: none;
+}
+@media screen and (max-width: 1000px) {
+    .article-content {
+        width: 100%;
+        height: auto;
+        flex-direction: column;
+        position: relative;
+
+        box-sizing: border-box;
+        padding: 0px 0px 70px 0px; /* На 70px снизу меньше так как снизу плашка от тильды */
+    }
+
+
+    #section-content {
+        width: 100%;
+        height: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* Заголовок страницы */
+    #section-title {
+        width: 233px;
+        height: 38px;
+        padding-top: 125px;
+        padding-bottom: 40px;
+
+        font-size: 36px;
+
+        margin-left: 20px;
+    }
+
+
+    /* Правила */
+    .rules {
+        flex-direction: column;
+    }
+
+    .rules-pink {
+        width: 100%;
+
+        padding: 20px 20px 55px 20px;
+    }
+
+    .rules-pink h3 {
+        font-size: 16px;
+    }
+
+    .rules-green {
+        width: 100%;
+
+        padding: 20px 20px 55px 20px;
+
+        margin-left: 0px;
+        margin-top: -35px;
+    }
+
+    .rules-green h3 {
+        font-size: 16px;
+    }
+
+    .rules-green h3 br {
+        display: none;
+    }
+
+    .rules-yellow {
+        width: 100%;
+
+        padding: 20px 20px 20px 20px;
+
+        margin-left: 0px;
+        margin-top: -35px;
+    }
+
+    .rules-yellow h3 {
+        font-size: 16px;
+    }
+
+
+    /* Три фигуры пд правилами */
+    .figures {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        gap: 77px;
+
+        margin-top: 80px;
+    }
+
+    
+    /* Видео */
+    .iframe-wrapper {
+        width: 100%;
+        height: 257px;
+
+        margin-top: 134px;
+
+    }
+
+    iframe {
+        width: 100%;
+        height: 257px;
+        
+        border-radius: 0px;
+        border: 8px solid #D9D9D9;
+        z-index: 1;
+    }
+
+    .iframe-wrapper svg:nth-of-type(1) {
+        display: none;
+    }
+
+    .iframe-wrapper svg:nth-of-type(2) {
+        display: none;
+    }
+
+
+    .svg-phone {
+        display: block;
+    }
+
+    .iframe-wrapper svg:nth-of-type(3) {
+        position: absolute;
+        left: 0px;
+        top: -94px;
+    }
+
+    .iframe-wrapper svg:nth-of-type(4) {
+        position: absolute;
+        right: 0px;
+        bottom: -92px;
+    }
+
+
+    /* Инпуты после видео */
+    .section-inputs {
+        width: 90%;
+        display: flex;
+        flex-direction: column;
+        gap: 40px;
+
+        margin-top: 132px;
+    }
+    
+    .section-inputs__block {
+        width: 100%;
+        height: 160px;
+
+        position: relative;
+    }
+
+    .section-inputs__block h3 {
+        position: absolute;
+        top: 25px;
+        left: 40px;
+
+        font-size: 24px;
+        font-weight: 400;
+    }
+
+    .section-inputs__block textarea {
+        padding-left: 80px;
+        padding-top: 30px;
+
+        font-size: 16px;
+    }
+
+
+    #button-end, #button-back {
+
+        width: 90%;
+        height: 60px;
+
+        border-radius: 10px;
+
+        font-size: 24px !important;
+
+        margin-top: 80px;
+
+    }
+
+    #button-back {
+        margin-top: 40px;
+    }
+}

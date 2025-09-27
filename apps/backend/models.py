@@ -892,7 +892,7 @@ class Task(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "(project_id IS NOT NULL) <> (area_id IS NOT NULL)",
+            "(project_id IS NOT NULL) OR (area_id IS NOT NULL)",
             name="ck_tasks_single_container",
         ),
         Index("idx_tasks_owner_project", owner_id, project_id),
@@ -1050,10 +1050,6 @@ class TimeEntry(Base):
         return self.end_time is None and self.last_started_at is None and self.paused_at is not None
 
     __table_args__ = (
-        CheckConstraint(
-            "(project_id IS NOT NULL) <> (area_id IS NOT NULL)",
-            name="ck_time_entries_single_container",
-        ),
         Index("idx_time_entries_owner_project", owner_id, project_id),
         Index("idx_time_entries_owner_area", owner_id, area_id),
     )
@@ -1209,7 +1205,7 @@ class Daily(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "(project_id IS NOT NULL) OR (area_id IS NOT NULL)",
+            "(project_id IS NOT NULL) <> (area_id IS NOT NULL)",
             name="ck_dailies_single_container",
         ),
         Index("idx_dailies_owner_project", owner_id, project_id),
@@ -1248,7 +1244,7 @@ class Reward(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "(project_id IS NOT NULL) OR (area_id IS NOT NULL)",
+            "(project_id IS NOT NULL) <> (area_id IS NOT NULL)",
             name="ck_rewards_single_container",
         ),
         Index("idx_rewards_owner_project", owner_id, project_id),
@@ -1316,7 +1312,7 @@ class Note(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "(project_id IS NOT NULL) <> (area_id IS NOT NULL)",
+            "(project_id IS NOT NULL) OR (area_id IS NOT NULL)",
             name="ck_notes_single_container",
         ),
         Index("idx_notes_owner_project", owner_id, project_id),

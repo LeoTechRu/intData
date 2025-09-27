@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ENV_FILE = Path(os.getenv("ENV_FILE") or PROJECT_ROOT / ".env")
 dotenv_loaded = load_dotenv(ENV_FILE)
 

@@ -208,3 +208,28 @@ agent_sync:
   ttl: 0
   status: Done
   note: 'QA sweep complete: all routes 200 (redirects verified); report → reports/test/2025-09-26-site-availability.md; follow-up: migrate apps/web/static → public to silence warning'
+- since: '2025-09-27T06:20:00Z'
+  owner: codex-cli::backend
+  branch: feature/Ops/site-availability
+  paths:
+  - apps/backend/**
+  - tests/**
+  - apps/orchestrator/**
+  - apps/backend/api/openapi.json
+  ttl: 120
+  status: In Progress
+  note: 'Рефакторинг структуры apps/, обновление схем SCHEMA/OpenAPI и тестов; pytest --maxfail=1 пройден полностью'
+- since: '2025-09-27T12:09:46Z'
+  owner: codex-cli::dev
+  branch: feature/Ops/site-availability
+  paths:
+  - AGENTS.md
+  - README.md
+  - agent_sync.yaml
+  - apps/web/static/diagnostics/**
+  - 'apps/web/.next*'
+  - .gitignore
+  ttl: 180
+  status: In Progress
+  note: 'Рефакторинг структуры diagnostics, очистка build-артефактов, обновление документации по структуре.'
+

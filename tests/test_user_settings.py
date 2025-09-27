@@ -148,7 +148,7 @@ async def test_api_defaults_and_put(postgres_db, monkeypatch):
 
 def test_no_runtime_utils_imports():
     root = Path(__file__).resolve().parents[1]
-    for module in (root / "web", root / "bot"):
+    for module in (root / "apps" / "web", root / "apps" / "bot"):
         for path in module.rglob("*.py"):
             text = path.read_text()
             assert "import utils" not in text

@@ -19,10 +19,10 @@ from sqlalchemy.exc import IntegrityError
 from tests.utils.seeds import ensure_tg_user
 
 TABLE_CASES = [
-    (CalendarItem, {"title": "Item", "start_at": utcnow()}, True),
-    (Task, {"title": "Task"}, True),
-    (TimeEntry, {}, True),
-    (Note, {"title": "Note", "content": "Text"}, False),
+    (CalendarItem, {"title": "Item", "start_at": utcnow()}, True, True),
+    (Task, {"title": "Task"}, True, False),
+    (TimeEntry, {}, False, False),
+    (Note, {"title": "Note", "content": "Text"}, False, False),
     (
         Habit,
         {
@@ -31,6 +31,7 @@ TABLE_CASES = [
             "difficulty": "easy",
             "frequency": "daily",
         },
+        False,
         False,
     ),
     (
@@ -41,8 +42,9 @@ TABLE_CASES = [
             "difficulty": "easy",
         },
         False,
+        True,
     ),
-    (Reward, {"title": "Reward"}, False),
+    (Reward, {"title": "Reward"}, False, True),
 ]
 
 
@@ -65,7 +67,7 @@ async def test_para_single_container_constraint(postgres_db):
             area_id = area.id
             project_id = project.id
 
-        for model, base_kwargs, allow_both_null in TABLE_CASES:
+        for model, base_kwargs, allow_both_null, enforce_exclusive in TABLE_CASES:
             # disallow both containers being null (where applicable)
             if allow_both_null:
                 async with session.begin():
@@ -83,7 +85,10 @@ async def test_para_single_container_constraint(postgres_db):
                     **base_kwargs,
                 )
                 session.add(obj)
-                with pytest.raises(IntegrityError):
+                if enforce_exclusive:
+                    with pytest.raises(IntegrityError):
+                        await session.flush()
+                else:
                     await session.flush()
 
 

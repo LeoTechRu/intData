@@ -1,8 +1,8 @@
 {
   "version": 1,
   "dialect": "postgresql",
-  "generated_at": "2025-09-23T19:02:45Z",
-  "metadata_hash": "3c080a70a4c7b70b6085f75ad5bb92af2889fefbbc3c95f11ab61bf75e64ec42",
+  "generated_at": "2025-09-27T09:18:06Z",
+  "metadata_hash": "4d56f279f3fa377fba5cc80343e34c3b8be431464a66b14518ede865f988ffef",
   "enums": [
     {
       "name": "activitytype",
@@ -3157,7 +3157,7 @@
       "checks": [
         {
           "name": "ck_dailies_single_container",
-          "sql": "(project_id IS NOT NULL) OR (area_id IS NOT NULL)"
+          "sql": "(project_id IS NOT NULL) <> (area_id IS NOT NULL)"
         }
       ]
     },
@@ -5258,6 +5258,109 @@
       "indexes": [],
       "checks": []
     },
+    "nav_sidebar_layouts": {
+      "comment": "",
+      "columns": [
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": "now()",
+          "comment": ""
+        },
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": true,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "owner_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "payload",
+          "type": "JSONB",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": "'{}'::jsonb",
+          "comment": ""
+        },
+        {
+          "name": "scope",
+          "type": "VARCHAR(16)",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": null,
+          "comment": ""
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": null,
+          "server_default": "now()",
+          "comment": ""
+        },
+        {
+          "name": "version",
+          "type": "INTEGER",
+          "nullable": false,
+          "primary_key": false,
+          "autoincrement": true,
+          "default": 1,
+          "server_default": "1",
+          "comment": ""
+        }
+      ],
+      "primary_key": [
+        "id"
+      ],
+      "foreign_keys": [],
+      "unique_constraints": [
+        {
+          "name": "uq_nav_sidebar_layouts_scope_owner",
+          "columns": [
+            "scope",
+            "owner_id"
+          ]
+        }
+      ],
+      "indexes": [
+        {
+          "name": "ix_nav_sidebar_layouts_owner",
+          "columns": [
+            "owner_id"
+          ],
+          "unique": false
+        }
+      ],
+      "checks": [
+        {
+          "name": "ck_nav_sidebar_layouts_scope",
+          "sql": "scope IN ('user', 'global')"
+        }
+      ]
+    },
     "notes": {
       "comment": "",
       "columns": [
@@ -5465,7 +5568,7 @@
       "checks": [
         {
           "name": "ck_notes_single_container",
-          "sql": "(project_id IS NOT NULL) <> (area_id IS NOT NULL)"
+          "sql": "(project_id IS NOT NULL) OR (area_id IS NOT NULL)"
         }
       ]
     },
@@ -6505,7 +6608,7 @@
       "checks": [
         {
           "name": "ck_rewards_single_container",
-          "sql": "(project_id IS NOT NULL) OR (area_id IS NOT NULL)"
+          "sql": "(project_id IS NOT NULL) <> (area_id IS NOT NULL)"
         }
       ]
     },
@@ -7385,7 +7488,7 @@
       "checks": [
         {
           "name": "ck_tasks_single_container",
-          "sql": "(project_id IS NOT NULL) <> (area_id IS NOT NULL)"
+          "sql": "(project_id IS NOT NULL) OR (area_id IS NOT NULL)"
         }
       ]
     },
@@ -7625,12 +7728,7 @@
           "unique": false
         }
       ],
-      "checks": [
-        {
-          "name": "ck_time_entries_single_container",
-          "sql": "(project_id IS NOT NULL) <> (area_id IS NOT NULL)"
-        }
-      ]
+      "checks": []
     },
     "user_group": {
       "comment": "",
@@ -8727,109 +8825,6 @@
       ],
       "indexes": [],
       "checks": []
-    },
-    "nav_sidebar_layouts": {
-      "comment": "",
-      "columns": [
-        {
-          "name": "id",
-          "type": "INTEGER",
-          "nullable": false,
-          "primary_key": true,
-          "autoincrement": true,
-          "default": null,
-          "server_default": null,
-          "comment": ""
-        },
-        {
-          "name": "scope",
-          "type": "VARCHAR(16)",
-          "nullable": false,
-          "primary_key": false,
-          "autoincrement": true,
-          "default": null,
-          "server_default": null,
-          "comment": ""
-        },
-        {
-          "name": "owner_id",
-          "type": "INTEGER",
-          "nullable": true,
-          "primary_key": false,
-          "autoincrement": true,
-          "default": null,
-          "server_default": null,
-          "comment": ""
-        },
-        {
-          "name": "version",
-          "type": "INTEGER",
-          "nullable": false,
-          "primary_key": false,
-          "autoincrement": true,
-          "default": null,
-          "server_default": "1",
-          "comment": ""
-        },
-        {
-          "name": "payload",
-          "type": "JSONB",
-          "nullable": false,
-          "primary_key": false,
-          "autoincrement": true,
-          "default": null,
-          "server_default": "'{}'::jsonb",
-          "comment": ""
-        },
-        {
-          "name": "created_at",
-          "type": "TIMESTAMP WITH TIME ZONE",
-          "nullable": false,
-          "primary_key": false,
-          "autoincrement": true,
-          "default": null,
-          "server_default": "now()",
-          "comment": ""
-        },
-        {
-          "name": "updated_at",
-          "type": "TIMESTAMP WITH TIME ZONE",
-          "nullable": false,
-          "primary_key": false,
-          "autoincrement": true,
-          "default": null,
-          "server_default": "now()",
-          "comment": ""
-        }
-      ],
-      "primary_key": [
-        "id"
-      ],
-      "foreign_keys": [],
-      "unique_constraints": [
-        {
-          "name": "uq_nav_sidebar_layouts_scope_owner",
-          "columns": [
-            "scope",
-            "owner_id"
-          ]
-        }
-      ],
-      "indexes": [
-        {
-          "name": "ix_nav_sidebar_layouts_owner",
-          "columns": [
-            "owner_id"
-          ],
-          "unique": false
-        }
-      ],
-      "checks": [
-        {
-          "name": "ck_nav_sidebar_layouts_scope",
-          "sql": "(scope IN ('user', 'global'))"
-        }
-      ]
     }
   }
 }

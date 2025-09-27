@@ -9,7 +9,7 @@
 
 ## Как мы работаем
 1. Intake: TL фиксирует запрос владельца и брони в `agent_sync.yaml`.
-2. Разработка: задачи ведём в `feature/*`, работая строго в своих каталогах (`backend/**`, `backend/**`, `api/**`, `web/**`).
+2. Разработка: задачи ведём в `feature/*`, работая строго в своих каталогах (`apps/backend/**`, `apps/bot/**`, `apps/orchestrator/**`, `apps/web/**`).
 3. Review TL: code review у Team Lead, только после апрува разрешён merge.
 4. Merge в `main`: fast-forward из `feature/*` (TL) без дополнительных stage-gate.
 5. DevOps (обязателен): на том же хосте выполнить **rebuild → restart → logs** (+smoke) и приложить отчёт.
@@ -24,7 +24,7 @@
       owner: codex-cli::fe
       branch: feature/E17/new-ui-fe
       paths:
-        - web/components/*
+        - apps/web/components/*
       ttl: 120
       status: In Progress
       note: 'Что делаем и какие ожидания'
@@ -59,7 +59,7 @@
 
 ## Роли
 - **TL** — проводит intake, ревью, мержит и синхронизирует ветки.
-- **Dev** — работает только в своих путях (`backend/**`, `backend/**`, `api/**`, `web/**`), фиксирует брони.
+- **Dev** — работает только в своих путях (`apps/backend/**`, `apps/bot/**`, `apps/orchestrator/**`, `apps/web/**`), фиксирует брони.
 - **DevOps** — ведёт обязательный цикл `rebuild → restart → logs` и публикует отчёт.
 - **Tech Writer** — обновляет README/Changelog после фактических изменений.
 - **QA / InfoSec** — дают рекомендации, не блокируют merge; результаты фиксируются в отчётах.

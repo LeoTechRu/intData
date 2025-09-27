@@ -77,7 +77,7 @@ def _compose_database_url(async_mode: bool) -> str:
 def _apply_schema_to_url(url: str, schema: str) -> str:
     parts = urlsplit(url)
     query = dict(parse_qsl(parts.query, keep_blank_values=True))
-    extra = f"-csearch_path={schema},public"
+    extra = f"-csearch_path={schema}"
     options = query.get("options")
     query["options"] = (f"{options} {extra}" if options else extra).strip()
     new_query = urlencode(query, doseq=True)
@@ -117,7 +117,7 @@ async def async_engine(schema: str | None = None) -> AsyncIterator[AsyncEngine]:
         engine = create_async_engine(
             build_async_url(schema_name),
             future=True,
-            connect_args={"server_settings": {"search_path": f"{schema_name},public"}},
+            connect_args={"server_settings": {"search_path": schema_name}},
         )
         try:
             yield engine

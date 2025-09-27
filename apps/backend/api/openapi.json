@@ -1564,6 +1564,296 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "HabitDashboardDaily": {
+        "properties": {
+          "area_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area Id"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "difficulty": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difficulty"
+          },
+          "frozen": {
+            "default": false,
+            "title": "Frozen",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "rrule": {
+            "title": "Rrule",
+            "type": "string"
+          },
+          "streak": {
+            "default": 0,
+            "title": "Streak",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "rrule"
+        ],
+        "title": "HabitDashboardDaily",
+        "type": "object"
+      },
+      "HabitDashboardHabit": {
+        "properties": {
+          "area_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area Id"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "difficulty": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difficulty"
+          },
+          "frequency": {
+            "title": "Frequency",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "progress": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Progress",
+            "type": "array"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          }
+        },
+        "required": [
+          "id",
+          "frequency"
+        ],
+        "title": "HabitDashboardHabit",
+        "type": "object"
+      },
+      "HabitDashboardResponse": {
+        "properties": {
+          "dailies": {
+            "items": {
+              "$ref": "#/components/schemas/HabitDashboardDaily"
+            },
+            "title": "Dailies",
+            "type": "array"
+          },
+          "habits": {
+            "items": {
+              "$ref": "#/components/schemas/HabitDashboardHabit"
+            },
+            "title": "Habits",
+            "type": "array"
+          },
+          "rewards": {
+            "items": {
+              "$ref": "#/components/schemas/HabitDashboardReward"
+            },
+            "title": "Rewards",
+            "type": "array"
+          },
+          "stats": {
+            "$ref": "#/components/schemas/StatsOut"
+          }
+        },
+        "required": [
+          "stats"
+        ],
+        "title": "HabitDashboardResponse",
+        "type": "object"
+      },
+      "HabitDashboardReward": {
+        "properties": {
+          "area_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area Id"
+          },
+          "cost_gold": {
+            "title": "Cost Gold",
+            "type": "integer"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "cost_gold"
+        ],
+        "title": "HabitDashboardReward",
+        "type": "object"
+      },
       "HabitIn": {
         "properties": {
           "area_id": {
@@ -4145,7 +4435,7 @@
         },
         "summary": "List Areas",
         "tags": [
-          "areas"
+          "Tasks & Projects"
         ]
       },
       "post": {
@@ -4184,7 +4474,7 @@
         },
         "summary": "Create Area",
         "tags": [
-          "areas"
+          "Tasks & Projects"
         ]
       }
     },
@@ -4236,7 +4526,7 @@
         },
         "summary": "Move Area",
         "tags": [
-          "areas"
+          "Tasks & Projects"
         ]
       }
     },
@@ -4288,7 +4578,7 @@
         },
         "summary": "Rename Area",
         "tags": [
-          "areas"
+          "Tasks & Projects"
         ]
       }
     },
@@ -4312,7 +4602,7 @@
         },
         "summary": "Api:Auth Options",
         "tags": [
-          "auth"
+          "Users"
         ]
       }
     },
@@ -4351,7 +4641,7 @@
         },
         "summary": "Api:Auth Webapp Exchange",
         "tags": [
-          "auth"
+          "Users"
         ]
       }
     },
@@ -4377,7 +4667,7 @@
         },
         "summary": "List Events",
         "tags": [
-          "calendar"
+          "Control Hub"
         ]
       },
       "post": {
@@ -4417,7 +4707,7 @@
         },
         "summary": "Create Event",
         "tags": [
-          "calendar"
+          "Control Hub"
         ]
       }
     },
@@ -4507,7 +4797,7 @@
         },
         "summary": "Agenda",
         "tags": [
-          "calendar"
+          "Control Hub"
         ]
       }
     },
@@ -4581,7 +4871,7 @@
         },
         "summary": "Feed",
         "tags": [
-          "calendar"
+          "Control Hub"
         ]
       }
     },
@@ -4623,7 +4913,7 @@
         },
         "summary": "Create Item",
         "tags": [
-          "calendar"
+          "Control Hub"
         ]
       }
     },
@@ -4659,7 +4949,7 @@
         },
         "summary": "Delete Item",
         "tags": [
-          "calendar"
+          "Control Hub"
         ]
       },
       "get": {
@@ -4700,7 +4990,7 @@
         },
         "summary": "Get Item",
         "tags": [
-          "calendar"
+          "Control Hub"
         ]
       },
       "patch": {
@@ -4751,7 +5041,7 @@
         },
         "summary": "Update Item",
         "tags": [
-          "calendar"
+          "Control Hub"
         ]
       }
     },
@@ -4798,7 +5088,7 @@
         },
         "summary": "List Alarms",
         "tags": [
-          "calendar"
+          "Control Hub"
         ]
       },
       "post": {
@@ -4849,7 +5139,7 @@
         },
         "summary": "Create Alarm",
         "tags": [
-          "calendar"
+          "Control Hub"
         ]
       }
     },
@@ -4875,7 +5165,7 @@
         },
         "summary": "List Events Today",
         "tags": [
-          "calendar"
+          "Control Hub"
         ]
       }
     },
@@ -5124,7 +5414,7 @@
         },
         "summary": "Api Create Daily",
         "tags": [
-          "Dailies"
+          "Habits"
         ]
       }
     },
@@ -5183,7 +5473,7 @@
         },
         "summary": "Api Daily Done",
         "tags": [
-          "Dailies"
+          "Habits"
         ]
       }
     },
@@ -5242,7 +5532,7 @@
         },
         "summary": "Api Daily Undo",
         "tags": [
-          "Dailies"
+          "Habits"
         ]
       }
     },
@@ -5261,7 +5551,7 @@
         },
         "summary": "Dashboard Overview",
         "tags": [
-          "dashboard"
+          "Control Hub"
         ]
       }
     },
@@ -5286,7 +5576,7 @@
         },
         "summary": "List Groups",
         "tags": [
-          "groups"
+          "Team Hub"
         ]
       }
     },
@@ -5342,7 +5632,7 @@
         },
         "summary": "Get Group Detail",
         "tags": [
-          "groups"
+          "Team Hub"
         ]
       }
     },
@@ -5403,7 +5693,7 @@
         },
         "summary": "Assign Product To Member",
         "tags": [
-          "groups"
+          "Team Hub"
         ]
       }
     },
@@ -5463,7 +5753,7 @@
         },
         "summary": "Remove Product From Member",
         "tags": [
-          "groups"
+          "Team Hub"
         ]
       }
     },
@@ -5524,7 +5814,7 @@
         },
         "summary": "Update Member Profile",
         "tags": [
-          "groups"
+          "Team Hub"
         ]
       }
     },
@@ -5576,7 +5866,7 @@
         },
         "summary": "Prune Group Members",
         "tags": [
-          "groups"
+          "Team Hub"
         ]
       }
     },
@@ -5675,6 +5965,88 @@
         ]
       }
     },
+    "/api/v1/habits/dashboard": {
+      "get": {
+        "operationId": "api_habits_dashboard_api_v1_habits_dashboard_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "area_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Area Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "project_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_sub",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": 0,
+              "title": "Include Sub"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HabitDashboardResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Habits Dashboard",
+        "tags": [
+          "Habits"
+        ]
+      }
+    },
     "/api/v1/habits/stats": {
       "get": {
         "operationId": "api_stats_api_v1_habits_stats_get",
@@ -5692,7 +6064,7 @@
         },
         "summary": "Api Stats",
         "tags": [
-          "Stats"
+          "Habits"
         ]
       }
     },
@@ -6041,7 +6413,7 @@
         },
         "summary": "List Inbox Notes",
         "tags": [
-          "inbox"
+          "Control Hub"
         ]
       }
     },
@@ -6452,7 +6824,7 @@
         },
         "summary": "List Notes",
         "tags": [
-          "notes"
+          "Tasks & Projects"
         ]
       },
       "post": {
@@ -6492,7 +6864,7 @@
         },
         "summary": "Create Note",
         "tags": [
-          "notes"
+          "Tasks & Projects"
         ]
       }
     },
@@ -6526,7 +6898,7 @@
         },
         "summary": "Reorder Notes",
         "tags": [
-          "notes"
+          "Tasks & Projects"
         ]
       }
     },
@@ -6562,7 +6934,7 @@
         },
         "summary": "Delete Note",
         "tags": [
-          "notes"
+          "Tasks & Projects"
         ]
       },
       "patch": {
@@ -6612,7 +6984,7 @@
         },
         "summary": "Update Note",
         "tags": [
-          "notes"
+          "Tasks & Projects"
         ]
       }
     },
@@ -6647,7 +7019,7 @@
         },
         "summary": "Archive Note",
         "tags": [
-          "notes"
+          "Tasks & Projects"
         ]
       }
     },
@@ -6699,7 +7071,7 @@
         },
         "summary": "Assign Note",
         "tags": [
-          "notes"
+          "Tasks & Projects"
         ]
       }
     },
@@ -6739,7 +7111,7 @@
         },
         "summary": "Note Backlinks",
         "tags": [
-          "notes"
+          "Tasks & Projects"
         ]
       }
     },
@@ -6774,7 +7146,7 @@
         },
         "summary": "Unarchive Note",
         "tags": [
-          "notes"
+          "Tasks & Projects"
         ]
       }
     },
@@ -7158,7 +7530,7 @@
         },
         "summary": "List Projects",
         "tags": [
-          "projects"
+          "Tasks & Projects"
         ]
       },
       "post": {
@@ -7197,7 +7569,7 @@
         },
         "summary": "Create Project",
         "tags": [
-          "projects"
+          "Tasks & Projects"
         ]
       }
     },
@@ -7243,7 +7615,7 @@
         },
         "summary": "List Project Notifications",
         "tags": [
-          "projects"
+          "Tasks & Projects"
         ]
       },
       "post": {
@@ -7293,7 +7665,7 @@
         },
         "summary": "Create Project Notification",
         "tags": [
-          "projects"
+          "Tasks & Projects"
         ]
       }
     },
@@ -7318,7 +7690,7 @@
         },
         "summary": "List Resources",
         "tags": [
-          "resources"
+          "Tasks & Projects"
         ]
       },
       "post": {
@@ -7357,7 +7729,7 @@
         },
         "summary": "Create Resource",
         "tags": [
-          "resources"
+          "Tasks & Projects"
         ]
       }
     },
@@ -7376,7 +7748,7 @@
         },
         "summary": "Api List Rewards",
         "tags": [
-          "Rewards"
+          "Habits"
         ]
       },
       "post": {
@@ -7423,7 +7795,7 @@
         },
         "summary": "Api Create Reward",
         "tags": [
-          "Rewards"
+          "Habits"
         ]
       }
     },
@@ -7473,7 +7845,7 @@
         },
         "summary": "Api Buy Reward",
         "tags": [
-          "Rewards"
+          "Habits"
         ]
       }
     },
@@ -7560,7 +7932,7 @@
         },
         "summary": "List Tasks",
         "tags": [
-          "tasks"
+          "Tasks & Projects"
         ]
       },
       "post": {
@@ -7600,7 +7972,7 @@
         },
         "summary": "Create Task",
         "tags": [
-          "tasks"
+          "Tasks & Projects"
         ]
       }
     },
@@ -7621,7 +7993,7 @@
         },
         "summary": "Task Stats",
         "tags": [
-          "tasks"
+          "Tasks & Projects"
         ]
       }
     },
@@ -7647,7 +8019,7 @@
         },
         "summary": "List Tasks Today",
         "tags": [
-          "tasks"
+          "Tasks & Projects"
         ]
       }
     },
@@ -7690,7 +8062,7 @@
         },
         "summary": "Mark Task Done",
         "tags": [
-          "tasks"
+          "Tasks & Projects"
         ]
       }
     },
@@ -7732,7 +8104,7 @@
         },
         "summary": "Api:Tasks Start Timer",
         "tags": [
-          "tasks"
+          "Tasks & Projects"
         ]
       }
     },
@@ -7774,7 +8146,7 @@
         },
         "summary": "Api:Tasks Stop Timer",
         "tags": [
-          "tasks"
+          "Tasks & Projects"
         ]
       }
     },
@@ -7877,7 +8249,7 @@
         },
         "summary": "Api:Time Status",
         "tags": [
-          "time"
+          "Control Hub"
         ]
       }
     },
@@ -7920,7 +8292,7 @@
         },
         "summary": "Api:Time Resume",
         "tags": [
-          "time"
+          "Control Hub"
         ]
       }
     },
@@ -7949,7 +8321,7 @@
         },
         "summary": "Api:Time Running",
         "tags": [
-          "time"
+          "Control Hub"
         ]
       }
     },
@@ -7991,7 +8363,7 @@
         },
         "summary": "Api:Time Start",
         "tags": [
-          "time"
+          "Control Hub"
         ]
       }
     },
@@ -8039,7 +8411,7 @@
         },
         "summary": "Api:Time Summary",
         "tags": [
-          "time"
+          "Control Hub"
         ]
       }
     },
@@ -8091,7 +8463,7 @@
         },
         "summary": "Api:Time Assign Task",
         "tags": [
-          "time"
+          "Control Hub"
         ]
       }
     },
@@ -8133,7 +8505,7 @@
         },
         "summary": "Api:Time Pause",
         "tags": [
-          "time"
+          "Control Hub"
         ]
       }
     },
@@ -8175,7 +8547,7 @@
         },
         "summary": "Api:Time Resume Entry",
         "tags": [
-          "time"
+          "Control Hub"
         ]
       }
     },
@@ -8218,7 +8590,7 @@
         },
         "summary": "Api:Time Stop",
         "tags": [
-          "time"
+          "Control Hub"
         ]
       }
     },
@@ -8237,7 +8609,7 @@
         },
         "summary": "List Favorites",
         "tags": [
-          "user"
+          "Users"
         ]
       },
       "post": {
@@ -8274,7 +8646,7 @@
         },
         "summary": "Add Favorite",
         "tags": [
-          "user"
+          "Users"
         ]
       }
     },
@@ -8309,7 +8681,7 @@
         },
         "summary": "Delete Favorite",
         "tags": [
-          "user"
+          "Users"
         ]
       },
       "put": {
@@ -8357,7 +8729,7 @@
         },
         "summary": "Update Favorite",
         "tags": [
-          "user"
+          "Users"
         ]
       }
     },
@@ -8404,7 +8776,7 @@
         },
         "summary": "List Settings",
         "tags": [
-          "user-settings"
+          "Users"
         ]
       }
     },
@@ -8444,7 +8816,7 @@
         },
         "summary": "Get Setting",
         "tags": [
-          "user-settings"
+          "Users"
         ]
       },
       "put": {
@@ -8492,7 +8864,7 @@
         },
         "summary": "Put Setting",
         "tags": [
-          "user-settings"
+          "Users"
         ]
       }
     }
@@ -8504,84 +8876,68 @@
   ],
   "tags": [
     {
-      "description": "Task management API",
-      "name": "tasks"
+      "description": "PARA planning endpoints covering tasks, projects, areas, resources, and notes.",
+      "name": "Tasks & Projects"
     },
     {
-      "description": "Calendar events API",
-      "name": "calendar"
+      "description": "Personal effectiveness suite: inbox, reminders, calendar, dashboard, and time tracking.",
+      "name": "Control Hub"
     },
     {
-      "description": "Notes CRUD API",
-      "name": "notes"
+      "description": "Authentication, user preferences, and account management APIs.",
+      "name": "Users"
     },
     {
-      "description": "Time tracking API",
-      "name": "time"
-    },
-    {
-      "description": "PARA Areas API",
-      "name": "areas"
-    },
-    {
-      "description": "PARA Projects API",
-      "name": "projects"
-    },
-    {
-      "description": "PARA Resources API",
-      "name": "resources"
-    },
-    {
-      "description": "Inbox API",
-      "name": "inbox"
-    },
-    {
-      "description": "Admin operations (requires admin role)",
-      "name": "admin"
-    },
-    {
-      "description": "Application settings API",
-      "name": "app-settings"
-    },
-    {
-      "description": "Authentication API",
-      "name": "auth"
-    },
-    {
-      "description": "User favorites API",
-      "name": "user"
-    },
-    {
-      "description": "User settings API",
-      "name": "user-settings"
-    },
-    {
-      "description": "Habits API",
-      "name": "habits"
-    },
-    {
-      "description": "Habits API",
+      "description": "Habitica-inspired habit, daily, reward, and stats endpoints.",
       "name": "Habits"
     },
     {
-      "description": "Dailies API",
-      "name": "Dailies"
+      "description": "Group and team collaboration tools, including Telegram group CRM.",
+      "name": "Team Hub"
     },
     {
-      "description": "Rewards API",
-      "name": "Rewards"
+      "description": "Admin operations (requires admin role).",
+      "name": "admin"
     },
     {
-      "description": "Habits statistics API",
-      "name": "Stats"
+      "description": "Application settings API.",
+      "name": "app-settings"
     },
     {
-      "description": "Calendar API",
-      "name": "Calendar"
+      "description": "Customer relationship management endpoints.",
+      "name": "crm"
     },
     {
-      "description": "Telegram group CRM",
-      "name": "groups"
+      "description": "Internal admin UI helpers.",
+      "name": "cup"
+    },
+    {
+      "description": "Diagnostics and health-check APIs.",
+      "name": "diagnostics"
+    },
+    {
+      "description": "Public documentation routes.",
+      "name": "docs"
+    },
+    {
+      "description": "External integrations APIs.",
+      "name": "integrations"
+    },
+    {
+      "description": "Navigation layout customization endpoints.",
+      "name": "navigation"
+    },
+    {
+      "description": "Pricing and plans APIs.",
+      "name": "pricing"
+    },
+    {
+      "description": "Product catalogue APIs.",
+      "name": "products"
+    },
+    {
+      "description": "Profile and public page management APIs.",
+      "name": "profiles"
     }
   ]
 }
