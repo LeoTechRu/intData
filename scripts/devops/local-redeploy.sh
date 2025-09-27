@@ -56,9 +56,9 @@ run_cmd() {
   shift
   log "$description"
   if "$@"; then
-    add_summary("✔ $description")
+    add_summary "✔ $description"
   else
-    add_summary("✖ $description")
+    add_summary "✖ $description"
     status=1
   fi
 }
@@ -75,7 +75,7 @@ if [[ "$MODE" == "compose" ]]; then
   if docker compose "${compose_args[@]}" config --services >"$REPORT_ROOT/compose-services.txt" 2>"$REPORT_ROOT/compose-config.err"; then
     mapfile -t compose_services <"$REPORT_ROOT/compose-services.txt"
   else
-    add_summary("✖ Не удалось получить список сервисов compose")
+    add_summary "✖ Не удалось получить список сервисов compose"
     status=1
   fi
   if (( ${#compose_services[@]} )); then
@@ -101,7 +101,7 @@ else
   if [[ -x "$ROOT/scripts/rebuild_service.sh" ]]; then
     run_cmd "Fallback rebuild_service.sh" "$ROOT/scripts/rebuild_service.sh"
   else
-    add_summary("✖ Fallback: отсутствует scripts/rebuild_service.sh")
+    add_summary "✖ Fallback: отсутствует scripts/rebuild_service.sh"
     status=1
   fi
 fi
@@ -120,7 +120,7 @@ if [[ "$MODE" == "compose" ]]; then
     if docker compose "${compose_args[@]}" logs --no-color --tail=400 "$svc" >"$logfile" 2>&1; then
       log_files+=("$logfile")
     else
-      add_summary("✖ Не удалось собрать логи compose для $svc")
+      add_summary "✖ Не удалось собрать логи compose для $svc"
       status=1
     fi
   done
@@ -130,7 +130,7 @@ elif [[ "$MODE" == "systemd" ]]; then
     if sudo -n journalctl -u "$unit" -n 400 --no-pager >"$logfile" 2>&1; then
       log_files+=("$logfile")
     else
-      add_summary("✖ Не удалось собрать логи systemd для $unit")
+      add_summary "✖ Не удалось собрать логи systemd для $unit"
       status=1
     fi
   done
@@ -151,14 +151,14 @@ if [[ -x "$LOG_SCAN" ]]; then
     [[ -f "$file" ]] || continue
     scan_out="${file%.log}.scan"
     if python3 "$LOG_SCAN" "$file" "$PATTERN_LABELS" >"$scan_out" 2>&1; then
-      add_summary("✔ Логи без критических ошибок: $(basename "$file")")
+      add_summary "✔ Логи без критических ошибок: $(basename "$file")"
     else
-      add_summary("✖ Критические ошибки в логах: $(basename "$file")")
+      add_summary "✖ Критические ошибки в логах: $(basename "$file")"
       status=1
     fi
   done
 else
-  add_summary("✖ log-scan.py не найден или не исполняем")
+  add_summary "✖ log-scan.py не найден или не исполняем"
   status=1
 fi
 
@@ -176,14 +176,14 @@ if (( ${#SMOKE_URLS[@]} )); then
     end=$(date +%s%3N)
     printf '%s %s %s %sms\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$url" "$http_line" "$((end-start))" >>"$SMOKE_FILE"
     if [[ "$http_line" =~ ^2 ]]; then
-      add_summary("✔ Smoke ${url}")
+      add_summary "✔ Smoke ${url}"
     else
-      add_summary("✖ Smoke ${url}")
+      add_summary "✖ Smoke ${url}"
       status=1
     fi
   done
 else
-  add_summary("ℹ Smoke не настроен: переменная DEVOPS_SMOKE_URLS пуста")
+  add_summary "ℹ Smoke не настроен: переменная DEVOPS_SMOKE_URLS пуста"
 fi
 
 SUMMARY_FILE="$REPORT_ROOT/summary.txt"

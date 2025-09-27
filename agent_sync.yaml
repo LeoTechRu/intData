@@ -229,7 +229,7 @@ agent_sync:
   - apps/web/static/diagnostics/**
   - 'apps/web/.next*'
   - .gitignore
-  ttl: 180
-  status: In Progress
-  note: 'Рефакторинг структуры diagnostics, очистка build-артефактов, обновление документации по структуре.'
+  ttl: 0
+  status: Done
+  note: 'Статика diagnostics приведена к shared-ресурсам, дубли удалены, документация обновлена.'
 

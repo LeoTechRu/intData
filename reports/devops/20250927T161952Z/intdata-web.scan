@@ -1,0 +1,22 @@
+intdata-web.log: FOUND 56 pattern hits (ERROR|FATAL|CRITICAL|Traceback|Unhandled|panic|OOM|bind: address already in use|Migrations failed|connection refused)
+  line 9: сен 27 19:17:04 5293725-iz74058 uvicorn[1056484]:     |     raise RuntimeError(f"File at path {self.path} does not exist.")
+  line 10: сен 27 19:17:04 5293725-iz74058 uvicorn[1056484]:     | RuntimeError: File at path /sd/intdata/web/static/img/brand/favicon.svg does not exist.
+  line 13: сен 27 19:17:04 5293725-iz74058 uvicorn[1056484]: Traceback (most recent call last):
+  line 24: сен 27 19:17:04 5293725-iz74058 uvicorn[1056484]:   File "/sd/intdata/venv/lib/python3.11/site-packages/starlette/middleware/errors.py", line 186, in __call__
+  line 26: сен 27 19:17:04 5293725-iz74058 uvicorn[1056484]:   File "/sd/intdata/venv/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
+  line 31: сен 27 19:17:04 5293725-iz74058 uvicorn[1056484]:     self.gen.throw(typ, value, traceback)
+  line 41: сен 27 19:17:04 5293725-iz74058 uvicorn[1056484]:     await self.app(scope, receive_or_disconnect, send_no_error)
+  line 45: сен 27 19:17:04 5293725-iz74058 uvicorn[1056484]:     self.gen.throw(typ, value, traceback)
+  line 55: сен 27 19:17:04 5293725-iz74058 uvicorn[1056484]:     await self.app(scope, receive_or_disconnect, send_no_error)
+  line 61: сен 27 19:17:04 5293725-iz74058 uvicorn[1056484]:     self.gen.throw(typ, value, traceback)
+  line 71: сен 27 19:17:04 5293725-iz74058 uvicorn[1056484]:     await self.app(scope, receive_or_disconnect, send_no_error)
+  line 75: сен 27 19:17:04 5293725-iz74058 uvicorn[1056484]:     self.gen.throw(typ, value, traceback)
+  line 85: сен 27 19:17:04 5293725-iz74058 uvicorn[1056484]:     await self.app(scope, receive_or_disconnect, send_no_error)
+  line 89: сен 27 19:17:04 5293725-iz74058 uvicorn[1056484]:     self.gen.throw(typ, value, traceback)
+  line 99: сен 27 19:17:04 5293725-iz74058 uvicorn[1056484]:     await self.app(scope, receive_or_disconnect, send_no_error)
+  line 121: сен 27 19:17:04 5293725-iz74058 uvicorn[1056484]:     raise RuntimeError(f"File at path {self.path} does not exist.")
+  line 122: сен 27 19:17:04 5293725-iz74058 uvicorn[1056484]: RuntimeError: File at path /sd/intdata/web/static/img/brand/favicon.svg does not exist.
+  line 124: сен 27 19:17:04 5293725-iz74058 uvicorn[1056484]: INFO:     217.15.205.24:0 - "GET /favicon.ico HTTP/1.1" 500 Internal Server Error
+  line 125: сен 27 19:17:04 5293725-iz74058 uvicorn[1056484]: ERROR:    Exception in ASGI application
+  line 126: сен 27 19:17:04 5293725-iz74058 uvicorn[1056484]:   + Exception Group Traceback (most recent call last):
+  ... ещё 36 совпадений

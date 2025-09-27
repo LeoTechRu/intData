@@ -1,0 +1,7 @@
+DevOps run (UTC): 20250927T161952Z
+✔ Обновление Python-зависимостей
+✔ npm install (web)
+✔ npm build (web)
+✔ Restart systemd unit intdata-web
+✖ Критические ошибки в логах: intdata-web.log
+ℹ Smoke не настроен: переменная DEVOPS_SMOKE_URLS пуста

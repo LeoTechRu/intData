@@ -231,6 +231,7 @@ __marimo__/
 # Frontend
 apps/web/node_modules/
 apps/web/.next/
+apps/web/.next*/
 
 # Logs
 logs/
